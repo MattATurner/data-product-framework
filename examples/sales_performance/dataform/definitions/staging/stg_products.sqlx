@@ -1,0 +1,25 @@
+config {
+  type: "view",
+  schema: dataform.projectConfig.vars.stg_dataset,
+  description: "Typed, deduplicated products. Latest state per product_id.",
+  tags: ["staging"]
+}
+
+-- Skill: transform-raw-to-staging   Satisfies: BRD-SALES-002 R-6
+
+WITH ranked AS (
+  SELECT
+    CAST(PROD_ID       AS STRING) AS product_id,
+    CAST(PROD_NAME     AS STRING) AS product_name,
+    CAST(CATEGORY_CD   AS STRING) AS product_category,
+    CAST(LAST_MODIFIED_TS AS TIMESTAMP) AS source_modified_ts,
+    _ingest_ts,
+    ROW_NUMBER() OVER (
+      PARTITION BY PROD_ID
+      ORDER BY LAST_MODIFIED_TS DESC, _ingest_ts DESC
+    ) AS rn
+  FROM ${ref("raw_products")}
+)
+SELECT * EXCEPT (rn)
+FROM ranked
+WHERE rn = 1

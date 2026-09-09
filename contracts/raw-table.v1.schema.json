@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dpf.dev/contracts/raw-table.v1.json",
+  "title": "Raw table",
+  "description": "Append-only, immutable landing table. Source-shaped; no methodology applies.",
+  "type": "object",
+  "required": [
+    "table_ref",
+    "is_append_only",
+    "storage_format",
+    "lineage_columns"
+  ],
+  "properties": {
+    "table_ref": {
+      "type": "string"
+    },
+    "storage_format": {
+      "type": "string",
+      "enum": [
+        "bigquery_native",
+        "iceberg_managed",
+        "gcs_parquet_external",
+        "object_table",
+        "cross_cloud"
+      ]
+    },
+    "partition_spec": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "cluster_spec": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "lineage_columns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "op_semantics": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        null,
+        "insert_only",
+        "cdc_ops"
+      ]
+    },
+    "schema_fingerprint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "is_append_only": {
+      "type": "boolean",
+      "const": true
+    },
+    "brd_requirement_id": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "BRD requirement IDs this artefact satisfies. Empty = orphan design, fails G1."
+    }
+  },
+  "additionalProperties": false
+}

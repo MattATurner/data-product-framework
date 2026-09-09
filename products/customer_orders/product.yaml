@@ -1,0 +1,76 @@
+product_id: customer_orders
+version: 1.0.0
+brd_id: BRD-SALES-001
+tdd_id: TDD-SALES-001
+satisfies: BRD-SALES-001@1.0.0
+semantics_signed: true
+status: draft
+owner: sales-operations
+domain: sales
+classification: INTERNAL
+
+sources:
+  - system_id: example_files
+    engine: gcs_objects
+    capture_mode: watermark
+    entities: [orders, order_lines, customers]
+    tool_tier: 4
+
+layers:
+  raw:
+    engine: dataform
+    storage: bigquery_native
+  silver:
+    methodology: direct
+    engine: dataform
+    storage: bigquery_native
+    models:
+      - name: stg_orders
+        role: typed_source
+        grain_statement: one row per customer order as most recently amended
+        grain_columns: [order_id]
+        history_semantics: current_only
+        brd_requirement_id: [R-3]
+      - name: stg_order_lines
+        role: typed_source
+        grain_statement: one row per line on a customer order
+        grain_columns: [order_id, order_line_no]
+        history_semantics: current_only
+        brd_requirement_id: [R-1]
+  gold:
+    methodology: direct
+    engine: dataform
+    storage: bigquery_native
+    models:
+      - name: customer_orders
+        role: business_view
+        materialisation: table
+        grain_statement: one row per customer order, with its lines nested
+        grain_columns: [order_id]
+        history_semantics: current_only
+        nesting:
+          - child: stg_order_lines
+            as: order_lines
+            depth: 1
+        brd_requirement_id: [R-1, R-2, R-3, R-4]
+
+output_ports:
+  - name: customer_orders
+    type: bigquery_view
+    consumers: [sales-operations, data-analytics]
+
+slo:
+  freshness: daily by 07:00
+  quality: blocking rules must pass
+
+quality:
+  gate_behaviour: block
+
+orchestration:
+  engine: dataform
+  schedule: "0 6 * * *"
+  timezone: Australia/Perth        # business cadence; infra region is us-central1
+
+governance:
+  register: knowledge_catalog
+  registered_via: knowledge-catalog-mcp

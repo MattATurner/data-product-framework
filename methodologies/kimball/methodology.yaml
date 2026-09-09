@@ -1,0 +1,73 @@
+id: kimball
+label: Kimball dimensional
+is_default: false
+
+roles:
+  - id: dimension
+    description: Conformed or local dimension with declared history behaviour.
+    skill: kimball/model-scd
+    emits: semantic-model.v1
+  - id: fact
+    description: Transaction, periodic snapshot, accumulating snapshot or factless fact.
+    skill: kimball/model-transaction-fact
+    emits: semantic-model.v1
+  - id: bridge
+    description: Many-to-many or ragged hierarchy resolution.
+    skill: kimball/model-bridge-hierarchy
+    emits: semantic-model.v1
+
+supported_engines:
+  dimension: [dataform, dbt, spark]        # NOT dataflow - see note
+  fact:      [dataform, dbt, dataflow, spark]
+  bridge:    [dataform, dbt, spark]
+
+engine_notes:
+  dimension: >
+    SCD2 under a streaming engine needs stateful processing, late-arrival handling and a
+    durable current-state store. No streaming variant is shipped, so dataflow is not
+    declared as supported. compose-pipeline will fail the pairing rather than generate
+    something that misbehaves.
+
+required_tdd_declarations:
+  - grain_statement
+  - grain_columns
+  - scd_type
+  - fact_type
+  - conformed_as
+  - additivity
+  - surrogate_key
+
+brd_elicitation_questions:
+  - id: Q-DETAIL
+    text: What is the finest level of detail you need to drill down to?
+    derives: grain
+  - id: Q-HISTORY
+    text: If a customer moves segment, should last quarter's figures move with them, or stay as they were?
+    derives: scd_type
+  - id: Q-CONFORM
+    text: Do other teams report on this too? Must your numbers agree with theirs?
+    derives: conformance
+  - id: Q-ADDITIVE
+    text: Can these figures be added up across months? Across regions?
+    derives: additivity
+  - id: Q-EMPTY
+    text: Do you need a figure for every day, even days with no activity?
+    derives: fact_type
+
+rules:
+  - grain-declared-and-asserted
+  - fact-fk-integrity
+  - dimension-single-grain
+  - surrogate-key-required
+  - additivity-declared
+  - no-fact-to-fact-join
+
+anti_patterns:
+  - id: mixed-grain-fact
+    flag: A fact holding rows at more than one grain.
+  - id: attributes-on-fact
+    flag: Dimension attributes stored on the fact.
+  - id: gratuitous-scd2
+    flag: SCD2 where no consumer queries history.
+  - id: surrogate-equals-natural
+    flag: Surrogate key that is just the natural key renamed.

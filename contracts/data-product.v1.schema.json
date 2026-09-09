@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dpf.dev/contracts/data-product.v1.json",
+  "title": "Data product",
+  "description": "The unit of delivery. Versioned, owned, and accepted by the business.",
+  "type": "object",
+  "required": [
+    "product_id",
+    "version",
+    "brd_id",
+    "status",
+    "owner",
+    "domain",
+    "output_ports",
+    "classification"
+  ],
+  "properties": {
+    "product_id": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "brd_id": {
+      "type": "string"
+    },
+    "tdd_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "semantics_signed": {
+      "type": "boolean",
+      "description": "G1 requires a formal business go on semantics.md."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "provisional",
+        "published",
+        "deprecated"
+      ]
+    },
+    "owner": {
+      "type": "string"
+    },
+    "domain": {
+      "type": "string"
+    },
+    "output_ports": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "type"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "bigquery_view",
+              "bigquery_table",
+              "materialized_view",
+              "bigquery_sharing_listing",
+              "iceberg_table",
+              "extract_file"
+            ]
+          },
+          "consumers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "slo": {
+      "type": "object",
+      "properties": {
+        "freshness": {
+          "type": "string"
+        },
+        "availability": {
+          "type": "string"
+        },
+        "quality": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "classification": {
+      "type": "string"
+    },
+    "consumers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Live BRD assumptions. Non-empty forces status=provisional."
+    },
+    "deprecation_policy": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "brd_requirement_id": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "BRD requirement IDs this artefact satisfies. Empty = orphan design, fails G1."
+    }
+  },
+  "additionalProperties": false
+}

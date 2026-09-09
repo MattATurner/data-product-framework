@@ -1,0 +1,53 @@
+# Known MCP servers and agent surfaces, in tier order (see AGENTS.md).
+# Skills MUST consult this before writing integration code.
+# Verify availability and IAM against live docs before customer use.
+
+servers:
+  - id: bigquery-mcp
+    tier: 1
+    kind: managed_remote_mcp
+    covers: [bigquery_query, bigquery_metadata, information_schema]
+    iam: [roles/mcp.toolUser, roles/bigquery.jobUser, roles/bigquery.dataViewer]
+    docs: https://docs.cloud.google.com/bigquery/docs/use-bigquery-mcp
+    notes: Preferred for any BigQuery read, metadata or profiling operation.
+
+  - id: knowledge-catalog-mcp
+    tier: 1
+    kind: managed_remote_mcp
+    covers: [catalog_entries, entry_groups, glossaries, data_products]
+    iam: [roles/mcp.toolUser, roles/dataplex.catalogAdmin]
+    docs: https://docs.cloud.google.com/dataplex/docs/use-remote-mcp
+    notes: >
+      Preferred for catalog registration, glossary binding and discovery.
+      Offered as-is with limited support at time of writing - confirm before relying on
+      it in a production gate.
+
+  - id: mcp-toolbox-databases
+    tier: 2
+    kind: self_hosted_mcp
+    covers: [oracle, postgres, mysql, sqlserver, alloydb, cloudsql, spanner, bigquery]
+    docs: https://github.com/googleapis/genai-toolbox
+    notes: >
+      Self-hosted control plane exposing databases as MCP tools via tools.yaml.
+      Preferred for source-system inspection during BRD feasibility checks, where no
+      managed MCP server exists.
+
+  - id: conversational-analytics-api
+    tier: 3
+    kind: managed_agent
+    covers: [natural_language_query, data_qa]
+    notes: Use for NL access to a published product rather than building a bespoke NL2SQL layer.
+
+  - id: document-ai
+    tier: 3
+    kind: managed_api
+    covers: [document_parsing, layout_extraction]
+    notes: Reachable from BigQuery via ML.PROCESS_DOCUMENT - prefer that to a custom parser.
+
+# Capabilities with no MCP/agent option today. Skills covering these may sit at tier 4
+# without an ADR. Review this list whenever the platform ships new MCP surfaces.
+no_mcp_option_yet:
+  - datastream_stream_management
+  - dataform_repository_management
+  - terraform_provisioning
+  - composer_dag_deployment

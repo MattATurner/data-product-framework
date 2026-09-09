@@ -1,0 +1,39 @@
+config {
+  type: "view",
+  schema: dataform.projectConfig.vars.stg_dataset,
+  description: "Typed order lines, one row per line at its latest amended values.",
+  tags: ["staging"],
+  assertions: {
+    uniqueKey: ["order_id", "order_line_no"],
+    nonNull: ["order_id", "order_line_no", "customer_id"]
+  }
+}
+
+-- Skill: transform-raw-to-staging   Satisfies: BRD-SALES-002 R-3, R-11
+-- R-3: each line counts once, at its latest amended values.
+
+WITH ranked AS (
+  SELECT
+    CAST(l.ORDER_ID       AS STRING)    AS order_id,
+    CAST(l.LINE_NO        AS INT64)     AS order_line_no,
+    CAST(o.CUST_ID        AS STRING)    AS customer_id,
+    CAST(l.PROD_ID        AS STRING)    AS product_id,
+    DATE(o.ORDER_DT)                    AS order_date,
+    CAST(o.STATUS_CD      AS STRING)    AS order_status,
+    CAST(l.QTY            AS NUMERIC)   AS quantity,
+    CAST(l.GROSS_AMT      AS NUMERIC)   AS gross_amount,
+    CAST(l.DISCOUNT_AMT   AS NUMERIC)   AS discount_amount,
+    CAST(l.GROSS_AMT AS NUMERIC) - CAST(l.DISCOUNT_AMT AS NUMERIC) AS net_amount,
+    CAST(l.LAST_MODIFIED_TS AS TIMESTAMP) AS source_modified_ts,
+    ROW_NUMBER() OVER (
+      PARTITION BY l.ORDER_ID, l.LINE_NO
+      ORDER BY l.LAST_MODIFIED_TS DESC, l._ingest_ts DESC
+    ) AS rn
+  FROM ${ref("raw_order_lines")} l
+  JOIN ${ref("raw_orders")}      o USING (ORDER_ID)
+)
+SELECT * EXCEPT (rn)
+FROM ranked
+WHERE rn = 1
+  AND customer_id IS NOT NULL          -- R-11
+  AND quantity >= 0                    -- R-11

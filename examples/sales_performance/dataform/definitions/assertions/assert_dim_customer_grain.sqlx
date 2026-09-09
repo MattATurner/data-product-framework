@@ -1,0 +1,13 @@
+config {
+  type: "assertion",
+  schema: dataform.projectConfig.vars.slv_dataset,
+  description: "One current row per customer; no overlapping validity windows."
+}
+
+-- grain_columns: [customer_id, valid_from]
+
+SELECT customer_id, COUNT(*) AS current_rows
+FROM ${ref("dim_customer")}
+WHERE is_current
+GROUP BY customer_id
+HAVING COUNT(*) > 1

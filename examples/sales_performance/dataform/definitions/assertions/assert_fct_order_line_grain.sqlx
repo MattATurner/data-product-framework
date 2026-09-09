@@ -1,0 +1,14 @@
+config {
+  type: "assertion",
+  schema: dataform.projectConfig.vars.slv_dataset,
+  description: "Generated from TDD D-3 grain_columns. Duplicates FAIL the build."
+}
+
+-- Generated from the declared grain, not hand-written.
+-- grain_statement: one row per order line at its latest amended values
+-- grain_columns:   [order_id, order_line_no]
+
+SELECT order_id, order_line_no, COUNT(*) AS n
+FROM ${ref("fct_order_line")}
+GROUP BY order_id, order_line_no
+HAVING COUNT(*) > 1

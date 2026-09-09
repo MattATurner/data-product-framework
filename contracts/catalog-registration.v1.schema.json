@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dpf.dev/contracts/catalog-registration.v1.json",
+  "title": "Catalog registration",
+  "description": "What must exist in Knowledge Catalog before a product can be published.",
+  "type": "object",
+  "required": [
+    "entry_ref",
+    "aspect_types",
+    "steward",
+    "brd_link"
+  ],
+  "properties": {
+    "entry_ref": {
+      "type": "string"
+    },
+    "aspect_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "glossary_terms": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "steward": {
+      "type": "string"
+    },
+    "lineage_edges": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "quality_scan_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "brd_link": {
+      "type": "string"
+    },
+    "tdd_link": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "semantics_link": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "registered_via": {
+      "type": "string",
+      "enum": [
+        "knowledge-catalog-mcp",
+        "dataplex_api",
+        "terraform"
+      ],
+      "description": "Tier 1 MCP preferred - see registry/mcp_servers.yaml."
+    },
+    "brd_requirement_id": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "BRD requirement IDs this artefact satisfies. Empty = orphan design, fails G1."
+    }
+  },
+  "additionalProperties": false
+}

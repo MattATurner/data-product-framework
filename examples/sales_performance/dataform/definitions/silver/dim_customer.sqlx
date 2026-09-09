@@ -1,0 +1,82 @@
+config {
+  type: "operations",
+  schema: dataform.projectConfig.vars.slv_dataset,
+  name: "dim_customer",
+  hasOutput: true,
+  description: "Conformed customer dimension, Type 2. Owned by the sales domain.",
+  tags: ["silver", "dimension"]
+}
+
+-- Skill: kimball/model-scd            Satisfies: BRD-SALES-002 R-4, R-5
+-- TDD D-4. Type 2 because HB-1 requires sales to keep the segment that applied
+-- on the sale date. Type 1 would silently restate history and break AX-4.
+--
+-- LIMITATION (stated in semantics.md): the source keeps no segment history, so
+-- Type 2 tracking begins at first load and cannot be backfilled.
+
+CREATE TABLE IF NOT EXISTS ${self()} (
+  sk_customer      INT64   NOT NULL,
+  customer_id      STRING  NOT NULL,
+  customer_name    STRING,
+  customer_segment STRING,
+  region           STRING,
+  customer_email   STRING,
+  customer_phone   STRING,
+  valid_from       TIMESTAMP NOT NULL,
+  valid_to         TIMESTAMP NOT NULL,
+  is_current       BOOL      NOT NULL
+)
+CLUSTER BY customer_id;
+
+---
+
+-- Unknown member. Facts resolve to this rather than null or dropping a row.
+MERGE ${self()} T
+USING (SELECT -1 AS sk_customer) S
+ON T.sk_customer = S.sk_customer
+WHEN NOT MATCHED THEN INSERT (
+  sk_customer, customer_id, customer_name, customer_segment, region,
+  customer_email, customer_phone, valid_from, valid_to, is_current
+) VALUES (
+  -1, 'UNKNOWN', 'Unknown customer', 'UNKNOWN', 'UNKNOWN',
+  NULL, NULL, TIMESTAMP '1900-01-01', TIMESTAMP '9999-12-31', TRUE
+);
+
+---
+
+-- Close any current row whose tracked attributes have changed.
+MERGE ${self()} T
+USING ${ref("stg_customers")} S
+ON  T.customer_id = S.customer_id
+AND T.is_current
+WHEN MATCHED AND (
+      T.customer_segment IS DISTINCT FROM S.customer_segment
+   OR T.region           IS DISTINCT FROM S.region
+   OR T.customer_name    IS DISTINCT FROM S.customer_name
+) THEN UPDATE SET
+  valid_to   = S.source_modified_ts,   -- source change time, not load time
+  is_current = FALSE;
+
+---
+
+-- Insert new versions: customers never seen, or whose current row was just closed.
+INSERT ${self()} (
+  sk_customer, customer_id, customer_name, customer_segment, region,
+  customer_email, customer_phone, valid_from, valid_to, is_current
+)
+SELECT
+  FARM_FINGERPRINT(CONCAT(S.customer_id, '|',
+    CAST(UNIX_MICROS(S.source_modified_ts) AS STRING)))  AS sk_customer,
+  S.customer_id, S.customer_name, S.customer_segment, S.region,
+  S.customer_email, S.customer_phone,
+  -- First version of a customer opens at the floor date so historical facts
+  -- resolve to it. Later versions open at the source change time.
+  IF(seen.customer_id IS NULL, TIMESTAMP '1900-01-01', S.source_modified_ts) AS valid_from,
+  TIMESTAMP '9999-12-31'       AS valid_to,
+  TRUE                         AS is_current
+FROM ${ref("stg_customers")} S
+LEFT JOIN ${self()} T
+  ON T.customer_id = S.customer_id AND T.is_current
+LEFT JOIN (SELECT DISTINCT customer_id FROM ${self()}) seen
+  ON seen.customer_id = S.customer_id
+WHERE T.customer_id IS NULL

@@ -1,0 +1,21 @@
+id: unsupported-engine
+asserts: >
+  Pairing a history-bearing methodology role with a streaming engine must fail at
+  compose time, not generate code that compiles and misbehaves.
+
+given:
+  methodology: kimball
+  role: dimension
+  engine: dataflow
+
+expect:
+  verdict: fail
+  gate: G1
+  message_contains:
+    - "engine 'dataflow' not supported for role 'dimension'"
+    - "no streaming variant"
+
+rationale: >
+  SCD2 under a streaming engine needs stateful processing, late-arrival handling and a
+  durable current-state store. The Kimball pack ships no streaming variant, so it does
+  not declare dataflow support for the dimension role.

@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dpf.dev/contracts/landing-manifest.v1.json",
+  "title": "Landing manifest",
+  "description": "One immutable batch landed in the raw zone.",
+  "type": "object",
+  "required": [
+    "batch_id",
+    "source_system",
+    "entity",
+    "ingest_ts",
+    "row_count"
+  ],
+  "properties": {
+    "batch_id": {
+      "type": "string"
+    },
+    "source_system": {
+      "type": "string"
+    },
+    "entity": {
+      "type": "string"
+    },
+    "ingest_ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "watermark_low": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "watermark_high": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "row_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "byte_count": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "checksum": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "schema_fingerprint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "uri_prefix": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "brd_requirement_id": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "BRD requirement IDs this artefact satisfies. Empty = orphan design, fails G1."
+    }
+  },
+  "additionalProperties": false
+}

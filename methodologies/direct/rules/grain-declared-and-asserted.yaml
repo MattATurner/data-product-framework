@@ -1,0 +1,10 @@
+id: grain-declared-and-asserted
+severity: block
+applies_to: [typed_source, business_view, materialised_view]
+description: >
+  Every model declares a grain statement and grain columns, and a uniqueness assertion
+  is generated from those columns.
+check:
+  - semantic_model.grain_statement is non-empty
+  - semantic_model.grain_columns has at least one entry
+  - generated artefacts include an assertion enforcing uniqueness on grain_columns

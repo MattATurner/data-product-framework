@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dpf.dev/contracts/semantic-model.v1.json",
+  "title": "Semantic model",
+  "description": "A modelled table or view. Methodology-neutral core; pack-specific detail in attributes.",
+  "type": "object",
+  "required": [
+    "model_ref",
+    "methodology",
+    "role",
+    "grain_statement",
+    "grain_columns",
+    "engine",
+    "storage_format"
+  ],
+  "properties": {
+    "model_ref": {
+      "type": "string"
+    },
+    "methodology": {
+      "type": "string",
+      "description": "Pack id: direct, kimball, dv2, obt, activity-schema, property-graph."
+    },
+    "role": {
+      "type": "string",
+      "description": "Legal roles are supplied by the active pack's methodology.yaml."
+    },
+    "grain_statement": {
+      "type": "string",
+      "minLength": 10,
+      "description": "Plain-language grain. Copied from the TDD, which derived it from the BRD."
+    },
+    "grain_columns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "description": "Generates the uniqueness assertion. Every methodology needs this."
+    },
+    "grain_checksum": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Hash of the TDD grain declaration. Divergence fails the build."
+    },
+    "natural_key": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "surrogate_key": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "history_semantics": {
+      "type": "string",
+      "enum": [
+        "current_only",
+        "point_in_time",
+        "full_history",
+        "append_only"
+      ]
+    },
+    "engine": {
+      "type": "string",
+      "enum": [
+        "dataform",
+        "dbt",
+        "dataflow",
+        "spark"
+      ]
+    },
+    "storage_format": {
+      "type": "string",
+      "enum": [
+        "bigquery_native",
+        "iceberg_managed",
+        "gcs_parquet_external",
+        "object_table",
+        "cross_cloud"
+      ]
+    },
+    "materialisation": {
+      "type": "string",
+      "enum": [
+        "view",
+        "materialized_view",
+        "table",
+        "incremental_table"
+      ]
+    },
+    "attributes": {
+      "type": "object",
+      "description": "Pack-scoped: scd_type, fact_type, dim_refs, additivity for Kimball; nesting for direct."
+    },
+    "brd_requirement_id": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "BRD requirement IDs this artefact satisfies. Empty = orphan design, fails G1."
+    }
+  },
+  "additionalProperties": false
+}

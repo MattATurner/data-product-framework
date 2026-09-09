@@ -1,0 +1,490 @@
+#!/usr/bin/env python3
+"""dpf — the Data Product Framework CLI.
+
+Commands mirror the promotion gates:
+
+    dpf validate                       structural check of specs, contracts, skills
+    dpf lint                           tool-tier / MCP preference enforcement
+    dpf brd validate  <product>        G0 — rubric completeness, emits gaps.md
+    dpf tdd resolve   <product>        show derivations BRD -> TDD
+    dpf tdd stale                      TDDs whose satisfies: BRD version has moved on
+    dpf trace         <product>        G1 — bidirectional traceability
+    dpf compose       <product>        type-check the contract DAG and engine support
+    dpf check         <product>        run validate, lint, brd, trace, compose
+"""
+
+from __future__ import annotations
+
+import json
+import re
+import sys
+from pathlib import Path
+
+try:
+    import yaml
+except ImportError:
+    sys.exit("dpf requires PyYAML:  pip install pyyaml")
+
+ROOT = Path(__file__).resolve().parent.parent
+
+OK, WARN, FAIL = "  ok ", "warn ", "FAIL "
+_status = {"fail": 0, "warn": 0}
+
+
+def say(level: str, msg: str) -> None:
+    if level == FAIL:
+        _status["fail"] += 1
+    elif level == WARN:
+        _status["warn"] += 1
+    print(f"{level}| {msg}")
+
+
+def head(title: str) -> None:
+    print(f"\n\033[1m{title}\033[0m")
+
+
+def load_yaml(p: Path):
+    return yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+
+
+def front_matter(md: Path) -> dict:
+    txt = md.read_text(encoding="utf-8")
+    m = re.match(r"^---\n(.*?)\n---\n", txt, re.S)
+    return yaml.safe_load(m.group(1)) if m else {}
+
+
+def product_dir(product: str) -> Path:
+    hits = list((ROOT / "openspec/specs/products").glob(f"*/{product}"))
+    if not hits:
+        sys.exit(f"unknown product '{product}'")
+    return hits[0]
+
+
+# ---------------------------------------------------------------- validate
+RETIRED = {
+    "Dataplex Universal Catalog": "Knowledge Catalog",
+    "BigLake metastore": "Lakehouse runtime catalog",
+    "Analytics Hub": "BigQuery sharing",
+    "Dataproc Serverless": "Managed Service for Apache Spark",
+    "BigQuery Omni": "cross-cloud connections",
+}
+NAMING_EXEMPT = {"openspec/project.md"}
+
+
+def cmd_validate() -> None:
+    head("Capability specs")
+    for spec in sorted((ROOT / "openspec/specs/platform").glob("*/spec.md")):
+        txt = spec.read_text(encoding="utf-8")
+        name = spec.parent.name
+        reqs = re.findall(r"^### Requirement: (.+)$", txt, re.M)
+        if not reqs:
+            say(FAIL, f"{name}: no requirements")
+            continue
+        blocks = re.split(r"^### Requirement: ", txt, flags=re.M)[1:]
+        missing = [b.splitlines()[0].strip() for b in blocks if "#### Scenario:" not in b]
+        if missing:
+            say(FAIL, f"{name}: requirement without a scenario -> {missing[0]}")
+        else:
+            say(OK, f"{name}: {len(reqs)} requirements, all with scenarios")
+
+    head("Contracts")
+    for c in sorted((ROOT / "contracts").glob("*.schema.json")):
+        try:
+            d = json.loads(c.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as e:
+            say(FAIL, f"{c.name}: invalid JSON — {e}")
+            continue
+        missing = [k for k in ("$schema", "$id", "title", "properties", "required") if k not in d]
+        say(FAIL if missing else OK,
+            f"{c.name}: missing {missing}" if missing else f"{c.name}: {len(d['properties'])} properties")
+
+    head("Skills")
+    for s in sorted(ROOT.glob("skills/*/SKILL.md")) + sorted(ROOT.glob("methodologies/*/skills/*/SKILL.md")):
+        fm = front_matter(s)
+        sid = fm.get("skill_id", s.parent.name)
+        if not fm:
+            say(FAIL, f"{sid}: no front-matter")
+        elif "tool_tier" not in fm:
+            say(FAIL, f"{sid}: no tool_tier declared")
+        else:
+            say(OK, f"{sid}: tier {fm['tool_tier']}"
+                    f"{'  consumes ' + str(fm.get('consumes')) if fm.get('consumes') else ''}")
+
+    head("Product naming")
+    # A rename table must be able to name the old term. Lines that explicitly
+    # document a rename are exempt; prose using the retired name is not.
+    rename_ctx = re.compile(r"formerly|replacing|renamed|retired|superseded", re.I)
+    bad = 0
+    for md in ROOT.rglob("*.md"):
+        rel = md.relative_to(ROOT).as_posix()
+        if rel in NAMING_EXEMPT:
+            continue
+        for n, line in enumerate(md.read_text(encoding="utf-8").splitlines(), 1):
+            if rename_ctx.search(line):
+                continue
+            for old_name, new_name in RETIRED.items():
+                if old_name in line:
+                    say(FAIL, f"{rel}:{n}: retired name '{old_name}' — use '{new_name}'")
+                    bad += 1
+    if not bad:
+        say(OK, "no retired product names outside documented rename tables")
+
+
+# -------------------------------------------------------------------- lint
+def cmd_lint() -> None:
+    reg = load_yaml(ROOT / "registry/mcp_servers.yaml")
+    servers = {s["id"]: s for s in reg.get("servers", [])}
+    no_option = set(reg.get("no_mcp_option_yet", []))
+
+    head("Tool selection (MCP / agent preference)")
+    tiers: dict[int, list[str]] = {}
+    for s in sorted(ROOT.glob("skills/*/SKILL.md")) + sorted(ROOT.glob("methodologies/*/skills/*/SKILL.md")):
+        fm = front_matter(s)
+        sid = fm.get("skill_id", s.parent.name)
+        tier, tool = fm.get("tool_tier"), fm.get("tool")
+        if tier is None:
+            say(FAIL, f"{sid}: no tool_tier")
+            continue
+        tiers.setdefault(tier, []).append(sid)
+
+        if tier <= 3:
+            if tool not in servers:
+                say(FAIL, f"{sid}: tier {tier} names unknown tool '{tool}' "
+                          f"— not in registry/mcp_servers.yaml")
+            elif servers[tool]["tier"] > tier:
+                say(FAIL, f"{sid}: claims tier {tier} but '{tool}' is registered "
+                          f"tier {servers[tool]['tier']}")
+            else:
+                say(OK, f"{sid}: tier {tier} via {tool}")
+        elif tier == 5 and not fm.get("adr"):
+            say(FAIL, f"{sid}: tier 5 (bespoke) requires an 'adr:' reference")
+        else:
+            say(OK, f"{sid}: tier {tier} ({tool})")
+
+    head("Tier summary")
+    for t in sorted(tiers):
+        label = {1: "managed MCP", 2: "self-hosted MCP", 3: "managed agent/API",
+                 4: "SDK/CLI/Terraform", 5: "bespoke"}[t]
+        print(f"      tier {t} ({label}): {len(tiers[t])} skills")
+    if 4 in tiers:
+        print(f"\n      Review tier-4 skills whenever the platform ships new MCP surfaces.")
+        print(f"      Capabilities with no MCP option today: {', '.join(sorted(no_option))}")
+
+
+# --------------------------------------------------------------- brd validate
+RUBRIC = {
+    "A. Purpose & consumers": ["business_questions"],
+    "B. Required outputs": ["required_outputs"],
+    "C. Level of detail": ["level_of_detail"],
+    "D. History behaviour": ["history_behaviour"],
+    "E. Timeliness & volume": ["timeliness"],
+    "F. Exceptions & edge cases": ["exceptions"],
+    "G. Fitness & bad data": ["fitness"],
+    "H. Sources believed": ["sources_believed"],
+    "I. Protection & access": ["sensitivity"],
+    "J. Acceptance examples": ["acceptance_examples"],
+    "K. Scope": ["non_goals"],
+}
+MODELLING_WORDS = [
+    "grain", "scd", "slowly changing", "surrogate key", "star schema",
+    "fact table", "data vault", "conformed dimension", "partitioned by",
+]
+QUESTION_FOR = {
+    "business_questions": "What questions must this answer, and who needs them?",
+    "required_outputs": "What exactly do you want to see - a report, dashboard or extract?",
+    "level_of_detail": "What is the finest level of detail you need to drill down to?",
+    "history_behaviour": "If a value changes, should past figures follow it or stay as they were?",
+    "timeliness": "How fresh does this need to be, and what decision depends on that?",
+    "exceptions": "What happens with cancellations, refunds, amendments or late corrections?",
+    "fitness": "What would make a row unusable to you? Should bad data stop publication?",
+    "sources_believed": "Which systems do you believe hold this data?",
+    "sensitivity": "How sensitive is this, and who may not see it?",
+    "acceptance_examples": "Can you give a worked example of a correct answer?",
+    "non_goals": "What is explicitly out of scope?",
+}
+
+
+def cmd_brd_validate(product: str) -> None:
+    pdir = product_dir(product)
+    brd = load_yaml(pdir / "brd/brd.yaml")
+    spec_txt = (pdir / "brd/spec.md").read_text(encoding="utf-8")
+    gaps: list[str] = []
+
+    head(f"G0 — BRD completeness: {product}")
+    for group, keys in RUBRIC.items():
+        missing = [k for k in keys if not brd.get(k)]
+        if missing:
+            say(FAIL, f"{group}: missing {missing[0]}")
+            gaps.append(f"- **{group}** — {QUESTION_FOR.get(missing[0], missing[0])}")
+        else:
+            say(OK, group)
+
+    head("Freshness justification")
+    t = brd.get("timeliness") or {}
+    if t.get("freshness_need") and not t.get("justification"):
+        say(FAIL, "freshness stated with no business justification")
+        gaps.append("- **E. Timeliness** — What decision depends on that freshness?")
+    else:
+        say(OK, "freshness is justified")
+
+    head("Acceptance examples")
+    ax = brd.get("acceptance_examples") or []
+    bq = brd.get("business_questions") or []
+    say(OK if ax else FAIL, f"{len(ax)} acceptance examples for {len(bq)} business questions")
+
+    head("Open questions")
+    oq = brd.get("open_questions") or []
+    if not oq:
+        say(OK, "none outstanding")
+    for q in oq:
+        need = [f for f in ("owner", "due", "assumption", "blast_radius") if not q.get(f)]
+        say(FAIL if need else WARN,
+            f"{q.get('id', '?')}: missing {need}" if need
+            else f"{q.get('id', '?')}: owned, assumption recorded — product will be provisional")
+
+    head("No modelling vocabulary")
+    found = sorted({w for w in MODELLING_WORDS
+                    if re.search(rf"\b{re.escape(w)}\b", spec_txt, re.I)})
+    say(FAIL if found else OK,
+        f"modelling vocabulary in a business document: {found}" if found
+        else "BRD is free of modelling vocabulary")
+
+    if gaps:
+        out = pdir / "brd/gaps.md"
+        out.write_text("# Gap register — " + product + "\n\n"
+                       "Questions to put to the business. This is the workshop agenda,\n"
+                       "not a defect list.\n\n" + "\n".join(gaps) + "\n", encoding="utf-8")
+        print(f"\n      gap register written to {out.relative_to(ROOT)}")
+
+
+# ------------------------------------------------------------------ tdd
+def _brd_version(pdir: Path) -> str:
+    return str(load_yaml(pdir / "brd/brd.yaml").get("version", "?"))
+
+
+def _satisfies(pdir: Path):
+    txt = (pdir / "tdd/spec.md").read_text(encoding="utf-8")
+    m = re.search(r"\*\*satisfies:\*\*\s*([A-Z0-9\-]+)@([\d.]+)", txt)
+    return (m.group(1), m.group(2)) if m else (None, None)
+
+
+def cmd_tdd_stale() -> None:
+    head("TDD staleness")
+    for tdd in sorted((ROOT / "openspec/specs/products").glob("*/*/tdd/spec.md")):
+        pdir = tdd.parent.parent
+        brd_id, ver = _satisfies(pdir)
+        cur = _brd_version(pdir)
+        if ver is None:
+            say(FAIL, f"{pdir.name}: TDD declares no 'satisfies:' version")
+        elif ver != cur:
+            say(FAIL, f"{pdir.name}: TDD satisfies {brd_id}@{ver} but BRD is at {cur} — stale")
+        else:
+            say(OK, f"{pdir.name}: satisfies {brd_id}@{ver} (current)")
+
+
+DERIVATIONS = [
+    ("level_of_detail.drill_to", "grain statement"),
+    ("level_of_detail.distinct_by", "grain columns / uniqueness assertion"),
+    ("history_behaviour[].answer", "history semantics (SCD type where applicable)"),
+    ("timeliness.freshness_need", "capture mode and orchestration cadence"),
+    ("timeliness.expected_users", "materialisation (view / MV / table)"),
+    ("exceptions", "retention and exclusion rules"),
+    ("fitness", "quality rules and gate behaviour"),
+    ("external_readers.required", "storage format"),
+    ("sensitivity", "classification, masking, access model"),
+]
+
+
+def cmd_tdd_resolve(product: str) -> None:
+    pdir = product_dir(product)
+    brd = load_yaml(pdir / "brd/brd.yaml")
+    head(f"Derivations available from BRD: {product}")
+    for src, target in DERIVATIONS:
+        root_key = src.split(".")[0].split("[")[0]
+        present = bool(brd.get(root_key))
+        say(OK if present else WARN,
+            f"{src:38s} -> {target}" if present
+            else f"{src:38s} -> {target}  (no BRD answer; cannot derive)")
+
+    tdd = pdir / "tdd/spec.md"
+    head("TDD")
+    if tdd.exists():
+        brd_id, ver = _satisfies(pdir)
+        n = len(re.findall(r"^### Requirement: ", tdd.read_text(encoding="utf-8"), re.M))
+        say(OK, f"exists: {n} requirements, satisfies {brd_id}@{ver}")
+        say(OK if (pdir / "semantics.md").exists() else FAIL,
+            "semantics.md present" if (pdir / "semantics.md").exists() else "semantics.md missing")
+    else:
+        say(WARN, "no TDD yet — scaffold one that cites BRD requirement ids")
+
+
+# ---------------------------------------------------------------- trace
+def cmd_trace(product: str) -> None:
+    pdir = product_dir(product)
+    brd_txt = (pdir / "brd/spec.md").read_text(encoding="utf-8")
+    tdd_txt = (pdir / "tdd/spec.md").read_text(encoding="utf-8")
+
+    reqs = re.findall(r"\[(R-\d+)\]", brd_txt)
+    reqs = sorted(set(reqs), key=lambda x: int(x.split("-")[1]))
+    decisions = re.findall(r"\[(D-\d+)\]\s*satisfies:\s*([^\n]+)", tdd_txt)
+    all_d = re.findall(r"\[(D-\d+)\]", tdd_txt)
+
+    covered: dict[str, list[str]] = {}
+    for d, sat in decisions:
+        for r in re.findall(r"R-\d+", sat):
+            covered.setdefault(r, []).append(d)
+
+    head(f"G1 — traceability: {product}")
+    for r in reqs:
+        say(OK if r in covered else FAIL,
+            f"{r} -> {', '.join(covered[r])}" if r in covered
+            else f"{r} -> ORPHAN REQUIREMENT (asked for, not designed)")
+
+    head("Orphan design")
+    cited = {d for d, _ in decisions}
+    orphans = [d for d in dict.fromkeys(all_d) if d not in cited]
+    if orphans:
+        for d in orphans:
+            say(FAIL, f"{d} cites no BRD requirement (built but nobody asked)")
+    else:
+        say(OK, f"all {len(cited)} decisions cite a requirement")
+
+    head("Version binding")
+    brd_id, ver = _satisfies(pdir)
+    cur = _brd_version(pdir)
+    say(OK if ver == cur else FAIL,
+        f"TDD satisfies {brd_id}@{ver}, BRD at {cur}"
+        + ("" if ver == cur else "  — STALE, re-resolve before build"))
+
+
+# --------------------------------------------------------------- compose
+def _skill_index() -> dict:
+    idx = {}
+    for s in list(ROOT.glob("skills/*/SKILL.md")) + list(ROOT.glob("methodologies/*/skills/*/SKILL.md")):
+        fm = front_matter(s)
+        if fm.get("skill_id"):
+            idx[fm["skill_id"]] = fm
+    return idx
+
+
+def cmd_compose(product: str) -> None:
+    man = load_yaml(ROOT / f"products/{product}/product.yaml")
+    skills = _skill_index()
+    layers = man.get("layers", {})
+
+    head(f"Methodology and engine support: {product}")
+    chain: list[str] = ["extract-files-object-store", "load-gcs-raw-zone", "load-bq-raw-table"]
+    for layer in ("silver", "gold"):
+        cfg = layers.get(layer) or {}
+        meth, engine = cfg.get("methodology"), cfg.get("engine")
+        if not meth:
+            continue
+        mfile = ROOT / f"methodologies/{meth}/methodology.yaml"
+        if not mfile.exists():
+            say(FAIL, f"{layer}: unknown methodology '{meth}'")
+            continue
+        pack = load_yaml(mfile)
+        roles = {r["id"] for r in pack.get("roles", [])}
+        role_skill = {r["id"]: r.get("skill") for r in pack.get("roles", [])}
+        supported = pack.get("supported_engines", {})
+        for model in cfg.get("models", []):
+            role = model.get("role")
+            if role not in roles:
+                say(FAIL, f"{layer}/{model['name']}: role '{role}' not offered by pack '{meth}'")
+                continue
+            if engine not in supported.get(role, []):
+                say(FAIL, f"{layer}/{model['name']}: engine '{engine}' not supported for "
+                          f"role '{role}' in pack '{meth}' — "
+                          f"{pack.get('engine_notes', {}).get(role, 'no streaming variant shipped')}")
+                continue
+            say(OK, f"{layer}/{model['name']}: {meth}/{role} on {engine}")
+            step = role_skill.get(role)
+            if not step:
+                say(FAIL, f"{layer}/{model['name']}: pack '{meth}' declares no skill for role '{role}'")
+                continue
+            if step not in chain:          # a step is a skill, invoked once per model
+                chain.append(step)
+
+    # bridge: some packs model from staging rather than straight off raw
+    if any((skills.get(s0) or {}).get("consumes") == "staging-model.v1" for s0 in chain):
+        chain.insert(chain.index("load-bq-raw-table") + 1, "transform-raw-to-staging")
+
+    chain += ["assemble-data-product", "publish-data-product", "register-knowledge-catalog"]
+
+    head("Grain declared on every model")
+    for layer in ("silver", "gold"):
+        for model in (layers.get(layer) or {}).get("models", []):
+            gs, gc = model.get("grain_statement"), model.get("grain_columns")
+            say(OK if gs and gc else FAIL,
+                f"{model['name']}: one row per {gs.split('one row per ')[-1] if gs else '?'} "
+                f"-> assert unique({', '.join(gc)})" if gs and gc
+                else f"{model['name']}: grain not declared")
+
+    head("Contract DAG")
+    print("      (a step is one skill; siblings may share an upstream contract —")
+    print("       dimensions and facts both build from staging, for instance)")
+    available = {"source-binding.v1"}          # contracts produced upstream so far
+    produced_by = {"source-binding.v1": "manifest"}
+    ok, last = True, "source-binding.v1"
+    for sid in chain:
+        fm = skills.get(sid)
+        if not fm:
+            say(FAIL, f"{sid}: skill not found")
+            ok = False
+            continue
+        want, gives = fm.get("consumes"), fm.get("produces")
+        if want and want not in available:
+            say(FAIL, f"{sid}: consumes {want}, which no upstream step produces "
+                      f"(available: {', '.join(sorted(available))})")
+            ok = False
+        else:
+            src = produced_by.get(want, "manifest") if want else "-"
+            say(OK, f"{sid}: {want or '-'} (from {src})  ->  {gives}")
+        if gives:
+            available.add(gives)
+            produced_by.setdefault(gives, sid)
+            last = gives
+    if ok:
+        print(f"\n      DAG type-checks: {len(chain)} steps, "
+              f"{len(available)} contracts, terminal {last}")
+
+
+# ----------------------------------------------------------------- main
+def main(argv: list[str]) -> int:
+    if len(argv) < 2:
+        print(__doc__)
+        return 0
+    cmd, rest = argv[1], argv[2:]
+
+    if cmd == "validate":
+        cmd_validate()
+    elif cmd == "lint":
+        cmd_lint()
+    elif cmd == "brd" and rest[:1] == ["validate"]:
+        cmd_brd_validate(rest[1])
+    elif cmd == "tdd" and rest[:1] == ["stale"]:
+        cmd_tdd_stale()
+    elif cmd == "tdd" and rest[:1] == ["resolve"]:
+        cmd_tdd_resolve(rest[1])
+    elif cmd == "trace":
+        cmd_trace(rest[0])
+    elif cmd == "compose":
+        cmd_compose(rest[0])
+    elif cmd == "check":
+        p = rest[0]
+        cmd_validate(); cmd_lint(); cmd_brd_validate(p)
+        cmd_tdd_stale(); cmd_trace(p); cmd_compose(p)
+    else:
+        print(__doc__)
+        return 0
+
+    print()
+    if _status["fail"]:
+        print(f"\033[31m{_status['fail']} failure(s), {_status['warn']} warning(s)\033[0m")
+        return 1
+    print(f"\033[32mall checks passed ({_status['warn']} warning(s))\033[0m")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

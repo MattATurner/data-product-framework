@@ -1,0 +1,9 @@
+config {
+  type: "assertion",
+  schema: dataform.projectConfig.vars.slv_dataset,
+  description: "Generated from BRD R-11 fitness: negative quantity is unusable. Severity: block."
+}
+
+SELECT order_id, order_line_no, quantity, net_amount
+FROM ${ref("fct_order_line")}
+WHERE quantity < 0

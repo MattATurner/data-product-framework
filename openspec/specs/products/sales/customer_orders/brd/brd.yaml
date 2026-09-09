@@ -1,0 +1,86 @@
+brd_id: BRD-SALES-001
+product_id: customer_orders
+status: approved
+version: 1.0.0
+business_owner: sales-operations
+data_steward: data-analytics
+domain: sales
+sensitivity: INTERNAL
+residency: us-central1
+
+business_questions:
+  - id: BQ-1
+    text: What was on a given customer order, and what is its status?
+    decision_supported: daily order enquiry and fulfilment follow-up
+    consumers: [sales-operations]
+  - id: BQ-2
+    text: What was the total value of orders placed in a period?
+    decision_supported: monthly sales reporting
+    consumers: [sales-operations, data-analytics]
+
+required_outputs:
+  - id: OUT-1
+    type: table
+    figures: [order value]
+    attributes: [customer, order date, status, product, quantity, line amount]
+    slices: [order date, status, customer]
+
+level_of_detail:
+  drill_to: a single customer order, with its lines available alongside it
+  distinct_by: each customer order appears once
+  satisfies: [R-1, R-2, R-3]
+
+history_behaviour:
+  - id: HB-1
+    attribute: customer details
+    question: If a customer's details change, should past orders show the old or current details?
+    answer: Current details are fine. There is no need to see them as they were.
+    satisfies: [R-5]
+
+timeliness:
+  freshness_need: available the morning after the order is placed
+  justification: reviewed in a morning stand-up; intraday freshness would change no decision
+  expected_users: about 25 people, a few times each day
+  satisfies: [R-6]
+
+exceptions:
+  - Cancelled orders remain visible, marked as cancelled, excluded from value totals
+  - Amendments replace prior values; only the latest state is shown
+
+fitness:
+  unusable_row: no customer recorded, or a negative quantity on any line
+  on_bad_data: stop and alert - do not publish
+  satisfies: [R-7]
+
+sources_believed:
+  - system: example_files
+    holds: orders, order lines, customers
+    authority: system of record for orders
+
+external_readers:
+  required: false
+  note: BI tool only; nothing outside BigQuery needs to read this
+  satisfies: [R-8]
+
+acceptance_examples:
+  - id: AX-1
+    text: Order SO-10432 shows customer, date, status and all three of its lines.
+    satisfies: [R-1]
+  - id: AX-2
+    text: Retrieving an order returns its lines together with it.
+    satisfies: [R-2]
+  - id: AX-3
+    text: An order amended twice appears once, with Tuesday's values.
+    satisfies: [R-3]
+  - id: AX-4
+    text: An order cancelled in April is visible in April but excluded from April totals.
+    satisfies: [R-4]
+  - id: AX-5
+    text: A customer who moves in June shows their current address on a March order.
+    satisfies: [R-5]
+
+non_goals:
+  - Forecasting and pipeline reporting
+  - Margin and cost analysis
+
+open_questions: []

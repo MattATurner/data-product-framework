@@ -1,0 +1,65 @@
+id: direct
+label: Direct (typed staging plus business view)
+is_default: true
+
+roles:
+  - id: typed_source
+    description: Raw rows typed, renamed to business language, deduplicated.
+    skill: direct/model-typed-source
+    emits: semantic-model.v1
+  - id: business_view
+    description: Business logic, derived fields, filters, nested shaping.
+    skill: direct/model-business-view
+    emits: semantic-model.v1
+  - id: materialised_view
+    description: A business view persisted for cost or latency reasons.
+    skill: direct/model-materialisation
+    emits: semantic-model.v1
+
+# Which engines can render each role. compose-pipeline fails unsupported pairings.
+supported_engines:
+  typed_source:     [dataform, dbt, dataflow, spark]
+  business_view:    [dataform, dbt, dataflow, spark]
+  materialised_view: [dataform, dbt]
+
+# What the TDD must declare when this pack is active.
+required_tdd_declarations:
+  - grain_statement
+  - grain_columns
+  - history_semantics
+  - materialisation
+  - nesting_strategy
+
+# Business-language questions this pack adds to the BRD interview.
+# Never modelling vocabulary.
+brd_elicitation_questions:
+  - id: Q-DETAIL
+    text: What is the finest level of detail you need to drill down to?
+    derives: grain
+  - id: Q-DISTINCT
+    text: Could two rows ever describe the same thing? What makes each one distinct?
+    derives: grain_columns
+  - id: Q-VOLUME
+    text: Roughly how many people will use this, and how often?
+    derives: materialisation
+  - id: Q-NESTED
+    text: When you look at an order, do you want its lines together with it, or separately?
+    derives: nesting_strategy
+  - id: Q-EXTERNAL
+    text: Will anything other than your BI tool need to read this?
+    derives: storage_format
+
+rules:
+  - grain-declared-and-asserted
+  - nesting-depth-limit
+  - view-chain-depth-limit
+
+anti_patterns:
+  - id: undeclared-grain
+    flag: A view with no stated grain.
+  - id: deep-nesting
+    flag: Nesting beyond two levels; most BI tools handle it poorly.
+  - id: view-tower
+    flag: Views built on views built on views; cost is invisible until it is not.
+  - id: methodology-envy
+    flag: Star-schema structures hand-rolled inside a direct product. Graduate instead.

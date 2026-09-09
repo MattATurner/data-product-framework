@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.venv/
+generated/**
+!generated/.gitkeep
+.DS_Store
+*.log
+examples/*/seed/out/

@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dpf.dev/contracts/staging-model.v1.json",
+  "title": "Staging model",
+  "description": "Typed, deduplicated, conformed-to-house-standards. Still methodology-neutral.",
+  "type": "object",
+  "required": [
+    "table_ref",
+    "natural_key",
+    "dedupe_strategy",
+    "engine"
+  ],
+  "properties": {
+    "table_ref": {
+      "type": "string"
+    },
+    "engine": {
+      "type": "string",
+      "enum": [
+        "dataform",
+        "dbt",
+        "dataflow",
+        "spark"
+      ]
+    },
+    "natural_key": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "dedupe_strategy": {
+      "type": "string"
+    },
+    "type_map": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "reject_table_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "quality_gate": {
+      "type": "string",
+      "enum": [
+        "block",
+        "warn"
+      ]
+    },
+    "brd_requirement_id": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "BRD requirement IDs this artefact satisfies. Empty = orphan design, fails G1."
+    }
+  },
+  "additionalProperties": false
+}

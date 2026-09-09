@@ -1,0 +1,35 @@
+# Platform-wide defaults. Per-product overrides live in products/<id>/product.yaml
+# and must be justified by a BRD signal.
+
+region: us-central1                   # all deployments
+gcp_project: data-product-framework
+billing_project: data-product-framework
+
+# Infrastructure region and business scheduling timezone are deliberately separate:
+# deployments run in us-central1, business cadence follows the consuming team.
+business_timezone: Australia/Perth
+
+defaults:
+  methodology:
+    silver: direct                    # 'a methodology is a cost paid for a benefit'
+    gold: direct
+  engine:
+    raw: dataform
+    silver: dataform
+    gold: dataform
+  storage:
+    raw: bigquery_native
+    silver: bigquery_native
+    gold: bigquery_native
+
+naming:
+  raw_dataset: "raw_{source_system}"
+  staging_dataset: "stg_{domain}"
+  silver_dataset: "slv_{domain}"
+  gold_dataset: "gold_{domain}"
+  lineage_columns: [_ingest_ts, _batch_id, _source_system, _op, _source_pk_hash]
+
+gates:
+  g0_approver: business_owner         # data steward consulted, not blocking
+  g1_requires_formal_business_go: true
+  quality_gate_default: block

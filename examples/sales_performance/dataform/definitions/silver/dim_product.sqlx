@@ -1,0 +1,67 @@
+config {
+  type: "operations",
+  schema: dataform.projectConfig.vars.slv_dataset,
+  name: "dim_product",
+  hasOutput: true,
+  description: "Conformed product dimension, Type 2. Categories agreed with Merchandising.",
+  tags: ["silver", "dimension"]
+}
+
+-- Skill: kimball/model-scd            Satisfies: BRD-SALES-002 R-6
+-- TDD D-5. Type 2 so category trends stay comparable over time (HB-2).
+
+CREATE TABLE IF NOT EXISTS ${self()} (
+  sk_product       INT64   NOT NULL,
+  product_id       STRING  NOT NULL,
+  product_name     STRING,
+  product_category STRING,
+  valid_from       TIMESTAMP NOT NULL,
+  valid_to         TIMESTAMP NOT NULL,
+  is_current       BOOL      NOT NULL
+)
+CLUSTER BY product_id;
+
+---
+
+MERGE ${self()} T
+USING (SELECT -1 AS sk_product) S
+ON T.sk_product = S.sk_product
+WHEN NOT MATCHED THEN INSERT (
+  sk_product, product_id, product_name, product_category,
+  valid_from, valid_to, is_current
+) VALUES (
+  -1, 'UNKNOWN', 'Unknown product', 'UNKNOWN',
+  TIMESTAMP '1900-01-01', TIMESTAMP '9999-12-31', TRUE
+);
+
+---
+
+MERGE ${self()} T
+USING ${ref("stg_products")} S
+ON  T.product_id = S.product_id
+AND T.is_current
+WHEN MATCHED AND (
+      T.product_category IS DISTINCT FROM S.product_category
+   OR T.product_name     IS DISTINCT FROM S.product_name
+) THEN UPDATE SET
+  valid_to   = S.source_modified_ts,   -- source change time, not load time
+  is_current = FALSE;
+
+---
+
+INSERT ${self()} (
+  sk_product, product_id, product_name, product_category,
+  valid_from, valid_to, is_current
+)
+SELECT
+  FARM_FINGERPRINT(CONCAT(S.product_id, '|',
+    CAST(UNIX_MICROS(S.source_modified_ts) AS STRING))) AS sk_product,
+  S.product_id, S.product_name, S.product_category,
+  IF(seen.product_id IS NULL, TIMESTAMP '1900-01-01', S.source_modified_ts),
+  TIMESTAMP '9999-12-31', TRUE
+FROM ${ref("stg_products")} S
+LEFT JOIN ${self()} T
+  ON T.product_id = S.product_id AND T.is_current
+LEFT JOIN (SELECT DISTINCT product_id FROM ${self()}) seen
+  ON seen.product_id = S.product_id
+WHERE T.product_id IS NULL

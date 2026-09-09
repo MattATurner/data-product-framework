@@ -1,0 +1,33 @@
+# Watermark extract configuration.
+# Capture mode is 'watermark' because the source is unreachable from GCP (TDD D-10).
+
+source:
+  system_id: ora_local
+  jdbc_url: jdbc:oracle:thin:@//localhost:1521/XEPDB1
+  dsn: localhost:1521/XEPDB1        # python-oracledb thin mode
+  user_env: ORACLE_USER
+  password_env: ORACLE_PASSWORD
+
+target:
+  project: data-product-framework
+  location: us-central1
+  raw_dataset: raw_ora_local
+  control_dataset: dpf_control
+
+entities:
+  - name: orders
+    source_table: SALES.ORDERS
+    watermark_column: LAST_MODIFIED_TS
+    natural_key: [ORDER_ID]
+  - name: order_lines
+    source_table: SALES.ORDER_LINES
+    watermark_column: LAST_MODIFIED_TS
+    natural_key: [ORDER_ID, LINE_NO]
+  - name: customers
+    source_table: SALES.CUSTOMERS
+    watermark_column: LAST_MODIFIED_TS
+    natural_key: [CUST_ID]
+  - name: products
+    source_table: SALES.PRODUCTS
+    watermark_column: LAST_MODIFIED_TS
+    natural_key: [PROD_ID]

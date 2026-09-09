@@ -1,0 +1,103 @@
+product_id: sales_performance
+version: 1.0.0
+brd_id: BRD-SALES-002
+tdd_id: TDD-SALES-002
+satisfies: BRD-SALES-002@1.1.0
+semantics_signed: true
+status: draft
+owner: sales-operations
+domain: sales
+classification: INTERNAL-COMMERCIAL
+
+deployment:
+  gcp_project: data-product-framework
+  region: us-central1
+
+sources:
+  - system_id: ora_local
+    engine: oracle
+    capture_mode: watermark        # constrained by source reachability - see TDD D-10
+    watermark_column: last_modified_ts
+    schedule: "0 * * * *"
+    entities: [orders, order_lines, customers, products, sales_reps]
+    inspection_mcp_server: mcp-toolbox-databases
+    tool_tier: 2
+    brd_requirement_id: [R-10]
+
+layers:
+  raw:
+    engine: dataform
+    storage: bigquery_native
+  silver:
+    methodology: kimball          # deviation from the 'direct' default - ADR-SALES-002-01
+    engine: dataform
+    storage: bigquery_native
+    models:
+      - name: dim_customer
+        role: dimension
+        grain_statement: one row per customer per validity period
+        grain_columns: [customer_id, valid_from]
+        history_semantics: point_in_time
+        conformed_as: dim_customer
+        attributes: {scd_type: 2}
+        brd_requirement_id: [R-4, R-5]
+      - name: dim_product
+        role: dimension
+        grain_statement: one row per product per validity period
+        grain_columns: [product_id, valid_from]
+        history_semantics: point_in_time
+        conformed_as: dim_product
+        attributes: {scd_type: 2}
+        brd_requirement_id: [R-6]
+      - name: fct_order_line
+        role: fact
+        grain_statement: one row per order line at its latest amended values
+        grain_columns: [order_id, order_line_no]
+        history_semantics: current_only
+        attributes:
+          fact_type: transaction
+          additivity: additive
+          dim_refs: [dim_customer, dim_product, dim_date]
+        brd_requirement_id: [R-2, R-3, R-7]
+  gold:
+    methodology: direct           # presentation only - modelling is done in silver
+    engine: dataform
+    storage: bigquery_native
+    models:
+      - name: sales_performance_monthly
+        role: business_view
+        materialisation: table
+        grain_statement: one row per month per customer segment per product category per region
+        grain_columns: [month, customer_segment, product_category, region]
+        history_semantics: current_only
+        brd_requirement_id: [R-1, R-7, R-8]
+
+output_ports:
+  - name: sales_performance_monthly
+    type: bigquery_view
+    consumers: [sales-leadership, sales-operations, finance]
+  - name: sales_performance_partner_extract
+    type: bigquery_sharing_listing
+    consumers: [external-analytics-partner]
+
+slo:
+  freshness: hourly during the working day
+  quality: blocking rules must pass
+
+quality:
+  gate_behaviour: block
+
+orchestration:
+  engine: dataform
+  schedule: "0 * * * *"
+  timezone: Australia/Perth
+  restatement_window_days: 90
+
+governance:
+  register: knowledge_catalog
+  registered_via: knowledge-catalog-mcp
+  policy_tags:
+    - columns: [customer_email, customer_phone]
+      tag: pii/contact
+      masked_for: [analyst]
+      brd_requirement_id: [R-12]

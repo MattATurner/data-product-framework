@@ -1,0 +1,139 @@
+brd_id: BRD-SALES-002
+product_id: sales_performance
+status: approved
+version: 1.1.0
+business_owner: sales-operations
+data_steward: data-analytics
+domain: sales
+sensitivity: INTERNAL-COMMERCIAL
+residency: us-central1
+
+changelog:
+  - version: 1.1.0
+    change: >
+      R-10 freshness relaxed from 15 minutes to hourly following the design feasibility
+      pass. The source database cannot currently be read continuously without network
+      connectivity work. Business accepted hourly; the shorter interval remains
+      achievable later without redesign.
+    raised_by: design feasibility pass (TDD-SALES-002)
+    accepted_by: sales-operations
+  - version: 1.0.0
+    change: Initial approved version.
+
+business_questions:
+  - id: BQ-1
+    text: Which customer segments drove net sales growth this period?
+    decision_supported: quarterly segment investment allocation
+    consumers: [sales-leadership, sales-operations]
+  - id: BQ-2
+    text: Which products and regions are growing or declining?
+    decision_supported: range and territory planning
+    consumers: [sales-leadership, merchandising]
+  - id: BQ-3
+    text: What makes up a given period's net sales figure?
+    decision_supported: variance investigation and month-end reconciliation
+    consumers: [sales-operations, finance]
+
+required_outputs:
+  - id: OUT-1
+    type: dashboard
+    figures: [net sales, units sold]
+    attributes: [customer segment, product category, region, month]
+    slices: [customer segment, product category, region, month]
+  - id: OUT-2
+    type: extract
+    figures: [net sales, units sold]
+    attributes: [product category, region, month]
+    recipient: external analytics partner
+    frequency: monthly
+
+level_of_detail:
+  drill_to: an individual line on a customer order
+  distinct_by: each line on each order counts once, at its latest amended values
+  satisfies: [R-2, R-3]
+
+history_behaviour:
+  - id: HB-1
+    attribute: customer segment
+    question: If a customer moves segment, should past sales move with them or stay as they were?
+    answer: Stay as they were. Past sales keep the segment that applied on the sale date.
+    satisfies: [R-4]
+  - id: HB-2
+    attribute: product category
+    question: If a product is recategorised, should past sales move to the new category?
+    answer: Stay as they were, so category trends remain comparable over time.
+    satisfies: [R-6]
+
+agreement_with_other_teams:
+  - id: AG-1
+    team: finance
+    must_agree_on: net sales / revenue for a period
+    satisfies: [R-5]
+  - id: AG-2
+    team: merchandising
+    must_agree_on: product category definitions
+    satisfies: [R-6]
+
+totalling:
+  can_be_summed_across: [days, months, regions, categories, segments]
+  satisfies: [R-7]
+
+timeliness:
+  freshness_need: hourly during the working day
+  justification: leads are reallocated through the day; a stale picture causes duplicate outreach
+  expected_users: about 120 people, several times daily
+  peak_volume: roughly 40,000 order lines per day
+  satisfies: [R-10]
+
+exceptions:
+  - Cancelled order lines remain visible but do not contribute to net sales
+  - Amendments replace prior values; each line counts once at its latest values
+  - Corrections within 90 days restate the period; later corrections do not
+
+fitness:
+  unusable_row: no customer recorded, or a negative quantity
+  on_bad_data: stop and alert - do not publish
+  satisfies: [R-11]
+
+sources_believed:
+  - system: ora_local
+    holds: orders, order lines, customers, products, sales reps
+    authority: system of record for sales
+
+protection:
+  restricted_attributes: [customer contact details]
+  visible_to_analysts: [customer identity, customer segment]
+  satisfies: [R-12]
+
+external_readers:
+  required: true
+  who: external analytics partner
+  access: must not be granted internal system access
+  satisfies: [R-13]
+
+acceptance_examples:
+  - id: AX-1
+    text: Net sales per customer segment for Q1 and Q4, comparable.
+    satisfies: [R-1]
+  - id: AX-2
+    text: A March regional total drills to the individual order lines composing it.
+    satisfies: [R-2]
+  - id: AX-3
+    text: A line amended twice contributes once, at the later values.
+    satisfies: [R-3]
+  - id: AX-4
+    text: A customer SMB in March and Enterprise in June shows March sales under SMB.
+    satisfies: [R-4]
+  - id: AX-5
+    text: March net sales reconciles to Finance's March revenue, or the variance is explainable.
+    satisfies: [R-5]
+  - id: AX-6
+    text: A line cancelled in April is visible in April detail but excluded from April net sales.
+    satisfies: [R-8]
+
+non_goals:
+  - Forecasting and pipeline reporting
+  - Margin, cost and profitability analysis
+  - Commission calculation
+
+open_questions: []

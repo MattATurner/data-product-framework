@@ -1,0 +1,62 @@
+config {
+  type: "incremental",
+  schema: dataform.projectConfig.vars.slv_dataset,
+  description: "Transaction fact: one row per order line at its latest amended values.",
+  tags: ["silver", "fact"],
+  bigquery: {
+    partitionBy: "order_date",
+    clusterBy: ["sk_customer", "sk_product"]
+  },
+  uniqueKey: ["order_id", "order_line_no"],
+  assertions: {
+    uniqueKey: ["order_id", "order_line_no"],
+    nonNull: ["sk_customer", "sk_product", "order_date"]
+  }
+}
+
+-- Skill: kimball/model-transaction-fact
+-- Satisfies: BRD-SALES-002 R-2, R-3, R-7, R-8, R-9
+-- TDD D-3 (grain), D-7 (additivity, as-at keys), D-8 (cancelled retained), D-9 (restatement).
+
+pre_operations {
+  DECLARE restate_from DATE DEFAULT DATE_SUB(
+    CURRENT_DATE(),
+    INTERVAL CAST(${dataform.projectConfig.vars.restatement_window_days} AS INT64) DAY
+  );
+}
+
+SELECT
+  l.order_id,
+  l.order_line_no,
+  l.order_date,
+  CAST(FORMAT_DATE('%Y%m%d', l.order_date) AS INT64) AS date_key,
+
+  -- Surrogate keys resolved AS AT the order date (R-4). Unknown member, never null.
+  COALESCE(c.sk_customer, -1) AS sk_customer,
+  COALESCE(p.sk_product,  -1) AS sk_product,
+
+  l.order_status,
+  l.order_status = 'CANCELLED' AS is_cancelled,   -- R-8: retained, excluded in gold
+
+  l.quantity,
+  l.gross_amount,
+  l.discount_amount,
+  l.net_amount,
+
+  l.source_modified_ts,
+  CURRENT_TIMESTAMP() AS _built_at
+
+FROM ${ref("stg_order_lines")} l
+
+LEFT JOIN ${ref("dim_customer")} c
+  ON  c.customer_id = l.customer_id
+  AND TIMESTAMP(l.order_date) >= c.valid_from
+  AND TIMESTAMP(l.order_date) <  c.valid_to
+
+LEFT JOIN ${ref("dim_product")} p
+  ON  p.product_id = l.product_id
+  AND TIMESTAMP(l.order_date) >= p.valid_from
+  AND TIMESTAMP(l.order_date) <  p.valid_to
+
+${when(incremental(),
+  `WHERE l.order_date >= restate_from`)}   -- R-9: restate only inside the 90-day window

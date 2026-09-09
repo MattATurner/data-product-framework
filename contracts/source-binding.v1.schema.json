@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dpf.dev/contracts/source-binding.v1.json",
+  "title": "Source binding",
+  "description": "How a source system is reached and what is captured from it.",
+  "type": "object",
+  "required": [
+    "system_id",
+    "engine",
+    "capture_mode",
+    "entities"
+  ],
+  "properties": {
+    "system_id": {
+      "type": "string"
+    },
+    "engine": {
+      "type": "string",
+      "enum": [
+        "oracle",
+        "postgres",
+        "mysql",
+        "sqlserver",
+        "gcs_objects",
+        "s3",
+        "azure_blob",
+        "pubsub",
+        "kafka",
+        "rest_api",
+        "salesforce"
+      ]
+    },
+    "connectivity": {
+      "type": "string"
+    },
+    "secret_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "capture_mode": {
+      "type": "string",
+      "enum": [
+        "snapshot",
+        "cdc",
+        "watermark",
+        "stream"
+      ]
+    },
+    "watermark_column": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "schedule": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "cron or interval"
+    },
+    "authority_rank": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "entities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "inspection_mcp_server": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "MCP server id from registry/mcp_servers.yaml used for feasibility checks."
+    },
+    "tool_tier": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "brd_requirement_id": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "BRD requirement IDs this artefact satisfies. Empty = orphan design, fails G1."
+    }
+  },
+  "additionalProperties": false
+}
