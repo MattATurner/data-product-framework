@@ -3,7 +3,7 @@
 Build a single-file, offline HTML method diagram for the Data Product Framework.
 
 Reads  : data-product-framework-plan.md
-Writes : data-product-framework-method.html
+Writes : index.html  (GitHub Pages entry point for /docs)
 
 Every node in the diagram links to the relevant section(s) of the plan, whose
 content is embedded in the page so it works from disk with no network access.
@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 
 SRC = Path("data-product-framework-plan.md")
-OUT = Path("data-product-framework-method.html")
+OUT = Path("index.html")          # index.html so GitHub Pages serves it from /docs
 
 
 # --------------------------------------------------------------------------

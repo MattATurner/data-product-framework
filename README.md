@@ -103,6 +103,21 @@ inbound from Google Cloud, so the 15-minute freshness requirement was **raised b
 the business** rather than quietly downgraded. They accepted hourly, and the BRD moved to
 1.1.0 with the reason recorded.
 
+## Documentation
+
+| | |
+|---|---|
+| **Method diagram** (interactive, offline) | `docs/index.html` — open it from disk, no server or network needed |
+| Design narrative | `docs/data-product-framework-plan.md` |
+| Connecting an on-premises source | `docs/local-source-connectivity.md` |
+| Regenerate the diagram | `cd docs && python3 build_method_diagram.py` |
+
+The diagram is generated from the plan document, so the two cannot drift. Every card opens
+the relevant section — instructions and worked example — in a side panel.
+
+`docs/index.html` is named for GitHub Pages: enable Pages on `main` / `/docs` and the
+method diagram is served directly.
+
 ## Layout
 
 ```
