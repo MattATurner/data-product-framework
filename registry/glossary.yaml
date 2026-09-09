@@ -1,14 +1,14 @@
 # Agreed business terms. BRDs bind to these; gold column names derive from them.
 # If an enterprise glossary already exists, mirror it here rather than competing with it.
+#
+# EMPTY BY DESIGN. For a worked example see examples/registry/.
 
-terms:
-  - id: net_amount
-    label: Net amount
-    definition: Gross amount less discount, excluding tax.
-    unit: AUD
-    owner: finance
+terms: []
 
-  - id: order_status
-    label: Order status
-    definition: Lifecycle state of an order - placed, fulfilled or cancelled.
-    owner: sales
+# Template:
+#
+# - id: net_amount
+#   label: Net amount
+#   definition: Gross amount less discount, excluding tax.
+#   unit: AUD
+#   owner: finance

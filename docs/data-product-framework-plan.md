@@ -892,35 +892,85 @@ data-product-framework/
 │   ├── references/                         # GCP service notes, Kimball guidance, gotchas
 │   ├── scripts/                            # deterministic generators + validators
 │   └── assets/                             # SQLX / Terraform / DAG templates
-├── registry/                               # config, not code
-│   ├── source_systems.yaml
-│   ├── entities.yaml
-│   ├── methodology.yaml                    # per-domain default methodology, per layer
-│   ├── conformance.yaml                    # the bus matrix — conformed dims and their grain
-│   └── glossary.yaml
+├── engines/<engine>/                       # transform engine adapters (§7)
+│   └── ADAPTER.md                          # what each semantic-model role renders to
+├── registry/                               # config, not code — EMPTY BY DESIGN
+│   ├── mcp_servers.yaml                    # MCP/agent catalogue — genuine platform infra
+│   ├── platform-defaults.yaml              # region, per-layer defaults, gate approvers
+│   ├── source_systems.yaml                 # stub: systems: []
+│   ├── entities.yaml                       # stub: entities: []
+│   ├── conformance.yaml                    # stub: conformed_dimensions: []
+│   └── glossary.yaml                       # stub: terms: []
 ├── products/<product_id>/product.yaml      # resolved manifest (TDD output)
 ├── generated/<product_id>/                 # disposable: dataform/ terraform/ dags/ catalog/
+├── examples/                               # EXAMPLE MATERIAL — delete for a clean start
+│   ├── registry/                           # registry overlay the examples need
+│   └── <product>/                          # dataform/ extract/ terraform/ seed/ RUNBOOK.md
+├── docs/                                   # design narrative and the method diagram
 ├── tests/
 │   ├── contracts/                          # schema round-trip tests
 │   ├── golden/                             # BRD+TDD → expected artefact fixtures
 │   └── evals/                              # agent evaluation harness
 └── tools/
-    └── dpf                                 # CLI: validate-brd · resolve-tdd · trace · compose
+    └── dpf                                 # the CLI
 ```
 
-**`registry/` vs `products/`:** the registry describes the *world* — which systems and entities exist, which dimensions are conformed and at what grain. A product folder describes *one deliverable*. Keeping them apart is what stops per-customer logic leaking into skills.
+### 13.1 Template versus example
 
-**The `dpf` CLI** is the single entry point and mirrors the gates exactly:
+The repository is both a **template** and its own **reference implementation**. The seam is
+mechanical, not a matter of discipline:
+
+| | Paths | Notes |
+|---|---|---|
+| **Template** | `openspec/specs/platform/`, `contracts/`, `methodologies/`, `engines/`, `skills/`, `registry/`, `tools/`, `tests/` | Reusable as-is |
+| **Example** | `openspec/specs/products/`, `products/`, `examples/`, `docs/` | Deletable in one command |
+
+**`registry/` ships empty.** A new project must not inherit someone else's bus matrix,
+glossary, entities or source systems — that would make sample data a specification, which
+is precisely what the framework forbids. The registry content the worked examples need
+lives in `examples/registry/` as an overlay.
+
+`registry/mcp_servers.yaml` is the exception and stays populated: the MCP and agent
+catalogue is genuine platform infrastructure, not example data.
+
+**`registry/` vs `products/`:** the registry describes the *world* — which systems and
+entities exist, which dimensions are conformed and at what grain. A product folder
+describes *one deliverable*. Keeping them apart is what stops per-customer logic leaking
+into skills.
+
+### 13.2 The `dpf` CLI
+
+The single entry point, mirroring the gates.
 
 ```
-dpf brd validate  <product>     # G0 — rubric completeness; emits gaps.md
-dpf tdd resolve   <product>     # derive the TDD spec + semantics.md from an approved BRD
-dpf tdd stale     <product>     # list TDDs whose satisfies: BRD version has moved on
-dpf trace         <change>      # G1 — bidirectional coverage; fails on orphans
-dpf methodology   <product>     # show/set the per-layer packs and their rubric extensions
-dpf compose       <product>     # type-check the contract DAG, then invoke skills
-dpf verify        <product>     # G3/G4 — compile, dry-run, assertions, acceptance
+dpf init          <target-dir>  scaffold a clean workspace — template only, no examples
+dpf validate                    structural: specs, contracts, skills, product naming
+dpf lint                        tool-tier / MCP preference enforcement
+dpf brd validate  <product>     G0 — rubric completeness; emits gaps.md
+dpf tdd resolve   <product>     derivations available from the BRD; TDD + semantics status
+dpf tdd stale                   TDDs whose satisfies: BRD version has moved on
+dpf trace         <product>     G1 — bidirectional coverage; fails on orphans
+dpf compose       <product>     type-check the contract DAG and methodology × engine support
+dpf check         <product>     all of the above for one product
 ```
+
+Starting a new project:
+
+```bash
+dpf init ../my-workspace     # clean template, empty registry
+```
+
+Running the worked examples in place:
+
+```bash
+cp examples/registry/*.yaml registry/     # apply the example overlay
+dpf check customer_orders
+dpf check sales_performance
+```
+
+*Not yet implemented:* `dpf methodology` (show/set per-layer packs) and `dpf verify`
+(G3/G4 compile, dry-run, assertions). The conformance and glossary checks described for
+`validate-brd` are specified but not yet enforced by the CLI.
 
 ---
 

@@ -1,0 +1,22 @@
+# The bus matrix. Only relevant when a methodology with conformed dimensions is in use.
+# A BRD requesting a conformed entity at a different grain or key fails G0 with a
+# conflict report naming the owning domain.
+
+conformed_dimensions:
+  - name: dim_customer
+    owning_domain: sales
+    grain: one row per customer per validity period
+    natural_key: [customer_id]
+    used_by: [sales_performance]
+
+  - name: dim_product
+    owning_domain: sales
+    grain: one row per product per validity period
+    natural_key: [product_id]
+    used_by: [sales_performance]
+
+  - name: dim_date
+    owning_domain: shared
+    grain: one row per calendar day
+    natural_key: [date_key]
+    used_by: [sales_performance]

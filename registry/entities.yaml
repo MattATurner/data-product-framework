@@ -1,20 +1,13 @@
-# Business entities and where they come from. Keeps per-product logic out of skills.
+# Business entities and their systems of record. Keeps per-customer logic out of skills.
+#
+# EMPTY BY DESIGN. For a worked example see examples/registry/.
 
-entities:
-  - name: order
-    domain: sales
-    description: A customer order header.
-    system_of_record: example_files
-    natural_key: [order_id]
+entities: []
 
-  - name: order_line
-    domain: sales
-    description: A line on a customer order.
-    system_of_record: example_files
-    natural_key: [order_id, order_line_no]
-
-  - name: customer
-    domain: sales
-    description: A party that places orders.
-    system_of_record: example_files
-    natural_key: [customer_id]
+# Template:
+#
+# - name: order
+#   domain: sales
+#   description: A customer order header.
+#   system_of_record: ora_erp_prod
+#   natural_key: [order_id]

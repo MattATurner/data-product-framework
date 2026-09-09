@@ -2,8 +2,8 @@
 # and must be justified by a BRD signal.
 
 region: us-central1                   # all deployments
-gcp_project: data-product-framework
-billing_project: data-product-framework
+gcp_project: null                     # set per deployment
+billing_project: null                 # set per deployment
 
 # Infrastructure region and business scheduling timezone are deliberately separate:
 # deployments run in us-central1, business cadence follows the consuming team.

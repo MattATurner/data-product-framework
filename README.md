@@ -33,14 +33,45 @@ every pipeline exists to serve one.
 4. **Nothing is built that cannot be traced to a business requirement**, and no design
    decision exists without a requirement ID.
 
+## Template or example?
+
+This repository is both a **template** and its own **reference implementation**. The seam
+is mechanical, not a matter of discipline.
+
+| | Paths | |
+|---|---|---|
+| **Template** | `openspec/specs/platform/` · `contracts/` · `methodologies/` · `engines/` · `skills/` · `registry/` · `tools/` · `tests/` | Reusable as-is |
+| **Example** | `openspec/specs/products/` · `products/` · `examples/` · `docs/` | Deletable in one command |
+
+**`registry/` ships empty by design.** A new project must not inherit someone else's bus
+matrix, glossary, entities or source systems — that would make sample data a
+specification, which is exactly what this framework forbids. The registry content the
+worked examples need lives in `examples/registry/` as an overlay.
+
+`registry/mcp_servers.yaml` is the exception and stays populated: the MCP and agent
+catalogue is genuine platform infrastructure, not example data.
+
 ## Quickstart
 
+### Starting a new project
+
 ```bash
-tools/dpf validate                        # structural check of specs and contracts
-tools/dpf brd validate customer_orders    # G0 — rubric completeness, emits gaps.md
-tools/dpf tdd resolve  customer_orders    # derive TDD skeleton + semantics.md
-tools/dpf trace        customer_orders    # G1 — bidirectional traceability
-tools/dpf compose      customer_orders --dry-run   # type-check the contract DAG
+tools/dpf init ../my-workspace     # template only, empty registry, no examples
+```
+
+Then set `gcp_project` and `region` in `registry/platform-defaults.yaml`, add your source
+systems, and author a BRD with `skills/author-brd`.
+
+### Running the worked examples in place
+
+```bash
+cp examples/registry/*.yaml registry/     # apply the example overlay first
+
+tools/dpf validate                        # specs, contracts, skills, naming
+tools/dpf lint                            # MCP / tool-tier enforcement
+tools/dpf check customer_orders           # G0, G1, traceability, contract DAG
+tools/dpf check sales_performance
+make check                                # everything, including contract tests
 ```
 
 ## Worked examples

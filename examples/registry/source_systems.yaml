@@ -1,0 +1,41 @@
+# Systems of record. Referenced by BRDs (as 'sources believed to hold it') and
+# resolved into source-binding.v1 contracts by the TDD.
+
+systems:
+  - system_id: example_files
+    label: Example object-store drop
+    engine: gcs_objects
+    connectivity: gcs
+    authority: system of record for the worked example only
+    entities: [orders, order_lines, customers]
+    inspection:
+      mcp_server: null            # object listings need no MCP server
+      tier: 4
+
+  - system_id: ora_local
+    label: Oracle (on-premises, developer workstation)
+    engine: oracle
+    authority: system of record for the reference implementation
+    entities: [orders, order_lines, customers, products, sales_reps]
+
+    # Reachability is the deciding constraint, not preference.
+    # The database sits behind corporate NAT with no inbound route, so a
+    # Google-managed service cannot connect to it. See
+    # docs/local-source-connectivity.md before choosing a capture mode.
+    connectivity:
+      inbound_from_gcp: false
+      outbound_to_gcp: true
+      jdbc_url: jdbc:oracle:thin:@//localhost:1521/XEPDB1
+      secret_ref: null            # local credentials; never commit them
+
+    capture:
+      supported_now: [watermark]         # pull-based, runs where the DB is reachable
+      requires_connectivity: [cdc]       # Datastream needs a route in - see doc
+      cdc_prerequisites:
+        - ARCHIVELOG mode enabled
+        - supplemental logging enabled on captured tables
+        - LogMiner privileges granted to the capture user
+
+    inspection:
+      mcp_server: mcp-toolbox-databases  # tier 2 - runs locally against the JDBC URL
+      tier: 2

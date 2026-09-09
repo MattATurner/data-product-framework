@@ -11,6 +11,7 @@ Commands mirror the promotion gates:
     dpf trace         <product>        G1 — bidirectional traceability
     dpf compose       <product>        type-check the contract DAG and engine support
     dpf check         <product>        run validate, lint, brd, trace, compose
+    dpf init          <target-dir>     scaffold a clean workspace (no examples)
 """
 
 from __future__ import annotations
@@ -58,6 +59,68 @@ def product_dir(product: str) -> Path:
     if not hits:
         sys.exit(f"unknown product '{product}'")
     return hits[0]
+
+
+# -------------------------------------------------------------------- init
+# What belongs to the template, and what is example material. `dpf init` copies
+# the first list and nothing else, so a new workspace never inherits someone
+# else's bus matrix, glossary or source systems.
+TEMPLATE_PATHS = [
+    "openspec/project.md", "openspec/AGENTS.md", "openspec/changes/README.md",
+    "openspec/specs/platform", "contracts", "methodologies", "engines", "skills",
+    "registry", "tools/dpf", "tests", "Makefile", ".gitignore",
+]
+EXAMPLE_PATHS = [
+    "openspec/specs/products", "products", "examples", "docs",
+]
+EMPTY_DIRS = [
+    "openspec/specs/products", "openspec/changes", "products", "generated",
+]
+
+
+def cmd_init(target: str) -> None:
+    import shutil
+    dst = Path(target).resolve()
+    head(f"Scaffolding a clean workspace at {dst}")
+    if dst.exists() and any(dst.iterdir()):
+        say(FAIL, f"{dst} exists and is not empty")
+        return
+
+    for rel in TEMPLATE_PATHS:
+        src = ROOT / rel
+        if not src.exists():
+            say(WARN, f"{rel}: not found in template, skipped")
+            continue
+        out = dst / rel
+        out.parent.mkdir(parents=True, exist_ok=True)
+        if src.is_dir():
+            shutil.copytree(src, out, dirs_exist_ok=True)
+        else:
+            shutil.copy2(src, out)
+        say(OK, rel)
+
+    for rel in EMPTY_DIRS:
+        d = dst / rel
+        d.mkdir(parents=True, exist_ok=True)
+        (d / ".gitkeep").touch()
+
+    (dst / "README.md").write_text(
+        "# Data Product Framework workspace\n\n"
+        "Scaffolded by `dpf init`. The registry ships empty by design.\n\n"
+        "## First steps\n\n"
+        "1. Set `gcp_project` and `region` in `registry/platform-defaults.yaml`.\n"
+        "2. Add your source systems to `registry/source_systems.yaml`.\n"
+        "3. Author a BRD with `skills/author-brd` - business language only.\n"
+        "4. `tools/dpf brd validate <product>` until G0 is green.\n"
+        "5. `tools/dpf tdd resolve <product>`, then sign `semantics.md`.\n"
+        "6. `tools/dpf check <product>` before generating anything.\n",
+        encoding="utf-8")
+
+    head("Excluded (example material)")
+    for rel in EXAMPLE_PATHS:
+        print(f"      {rel}")
+    print(f"\n      Registry is empty by design. To run the reference examples,")
+    print(f"      copy examples/registry/*.yaml from the framework repo.")
 
 
 # ---------------------------------------------------------------- validate
@@ -470,6 +533,8 @@ def main(argv: list[str]) -> int:
         cmd_trace(rest[0])
     elif cmd == "compose":
         cmd_compose(rest[0])
+    elif cmd == "init":
+        cmd_init(rest[0])
     elif cmd == "check":
         p = rest[0]
         cmd_validate(); cmd_lint(); cmd_brd_validate(p)

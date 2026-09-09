@@ -9,6 +9,10 @@ owner: sales-operations
 domain: sales
 classification: INTERNAL
 
+deployment:
+  gcp_project: data-product-framework
+  region: us-central1
+
 sources:
   - system_id: example_files
     engine: gcs_objects

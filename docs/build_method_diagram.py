@@ -257,7 +257,8 @@ PLANES = [
 FOOTER = [
     dict(id="overview", title="What we are building", refs=[("Overview", "1"),
          ("Design principles", "2"), ("The lifecycle", "3"), ("Architecture", "8")]),
-    dict(id="repo", title="Repository layout", refs=[("Repository layout", "13")]),
+    dict(id="repo", title="Repo layout & CLI", refs=[("Repository layout", "13"),
+         ("Template vs example", "13.1"), ("The dpf CLI", "13.2")]),
     dict(id="delivery", title="Delivery plan", refs=[("Delivery plan", "15")]),
     dict(id="adrs", title="Decisions (ADRs)", refs=[("Decisions to lock", "16")]),
     dict(id="risks", title="Risks & next steps", refs=[("Risks", "17"),
