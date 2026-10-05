@@ -1,0 +1,167 @@
+"""Traceability (`dpf trace`): requirement -> decision -> design element -> artefact -> test -> evidence.
+
+Every link is read from the sources of truth, never declared twice:
+
+* requirements and scenarios from the BRD spec (`**ID:** R-n` / `AX-n`);
+* decisions from the TDD spec (`**Decision:** D-n · **Satisfies:** R-..`);
+* design elements from product.yaml (`brd_requirement_id` on every element);
+* artefacts from the `dpf:` header markers the generators write into each file;
+* tests from the generated test specification (test-spec.v1);
+* evidence from evidence/<product>/*.json bound to the current build digest.
+
+G3 requires every requirement to reach at least one generated artefact and one test. The
+evidence column is informational until G4, where the matrix becomes the acceptance pack.
+"""
+
+from __future__ import annotations
+
+import re
+
+from dpf.core import Product, Report, iter_elements, write_json, write_text
+from dpf.generate import Build, build, out_dir
+from dpf.generate.render import parse_markers
+
+STATUS_ORDER = ("failed", "missing", "stale", "passed")
+
+
+def _idnum(x: str) -> int:
+    m = re.search(r"(\d+)$", x or "")
+    return int(m.group(1)) if m else 0
+
+
+def element_requirements(p: Product) -> dict[str, list[str]]:
+    """element_ref -> requirement ids it cites."""
+    return {ref: list(el.get("brd_requirement_id") or []) for ref, el in iter_elements(p.manifest)}
+
+
+def artefact_links(b: Build) -> dict[str, dict[str, set[str]]]:
+    """path -> {'requirements': {...}, 'elements': {...}} for every non-test file with a dpf marker."""
+    el_reqs = element_requirements(b.product)
+    out: dict[str, dict[str, set[str]]] = {}
+    for path, content in b.files.items():
+        for mk in parse_markers(content):
+            if "test" in mk:
+                continue
+            elements = set()
+            if mk.get("model"):
+                elements.add(f"model:{mk['model']}")
+            for e in (mk.get("element") or "").split(","):
+                if e:
+                    elements.add(e)
+            reqs = {r for r in (mk.get("satisfies") or "").split(",") if r}
+            for e in elements:
+                reqs |= set(el_reqs.get(e, []))
+            if not reqs and not elements:
+                continue
+            slot = out.setdefault(path, {"requirements": set(), "elements": set()})
+            slot["requirements"] |= reqs
+            slot["elements"] |= elements
+    return out
+
+
+def trace_matrix(p: Product, b: Build | None = None) -> dict:
+    """The trace-matrix.v1 document for the product's declared build."""
+    from dpf.testing import case_status, latest_results, run_static
+
+    b = b or build(p)
+    decisions: dict[str, list[str]] = {}
+    for d in p.tdd_spec.requirements:
+        did = d.meta.get("decision")
+        for r in d.ids("satisfies") if did else []:
+            decisions.setdefault(r, []).append(did)
+    elements: dict[str, list[str]] = {}
+    for ref, reqs in element_requirements(p).items():
+        for r in reqs:
+            elements.setdefault(r, []).append(ref)
+    artefacts: dict[str, list[str]] = {}
+    for path, link in artefact_links(b).items():
+        for r in link["requirements"]:
+            artefacts.setdefault(r, []).append(path)
+    tests: dict[str, list[dict]] = {}
+    for case in b.spec.get("cases", []):
+        for r in case.get("satisfies") or []:
+            tests.setdefault(r, []).append(case)
+
+    static = run_static(b) if b.ok else {}
+    current, stale = latest_results(p, b.digest) if b.ok else ({}, {})
+    rows = []
+    for req in p.brd_spec.requirements:
+        rid = req.meta.get("id")
+        if not rid:
+            continue
+        cases = tests.get(rid, [])
+        statuses = [case_status(c, current, stale, static) for c in cases]
+        status = next((s for s in STATUS_ORDER if s in statuses), "missing")
+        passed_at = [current[c["id"]].get("recorded_at") for c in cases
+                     if c["id"] in current and current[c["id"]].get("status") == "passed"]
+        rows.append({
+            "requirement": rid,
+            "title": req.name,
+            "scenarios": [s.meta["id"] for s in req.scenarios if s.meta.get("id")],
+            "decisions": sorted(set(decisions.get(rid, [])), key=_idnum),
+            "elements": sorted(set(elements.get(rid, []))),
+            "artefacts": sorted(set(artefacts.get(rid, []))),
+            "tests": [c["id"] for c in cases],
+            "evidence": {"status": status,
+                         "last_passed": max(passed_at) if status == "passed" and passed_at else None},
+        })
+    rows.sort(key=lambda r: _idnum(r["requirement"]))
+    return {"product_id": p.id, "brd": f"{p.brd.get('brd_id')}@{p.brd.get('version')}",
+            "artefact_digest": b.digest, "rows": rows}
+
+
+def render_markdown(matrix: dict) -> str:
+    rows = matrix["rows"]
+    lines = [f"# Traceability — {matrix['product_id']} ({matrix['brd']})", "",
+             f"Generated by `dpf trace`. Build digest `{matrix.get('artefact_digest', '')[:19]}…`. "
+             "Evidence is evaluated against this digest: a passing result for an older build counts as stale.", "",
+             "| Requirement | Scenarios | Decisions | Elements | Artefacts | Tests | Evidence |",
+             "|---|---|---|---|---|---|---|"]
+    for r in rows:
+        lines.append(f"| {r['requirement']} {r.get('title', '')} | {', '.join(r['scenarios']) or '—'} | "
+                     f"{', '.join(r['decisions']) or '—'} | {len(r['elements'])} | {len(r['artefacts'])} | "
+                     f"{len(r['tests'])} | {r['evidence']['status']} |")
+    for r in rows:
+        lines += ["", f"## {r['requirement']} — {r.get('title', '')}", ""]
+        lines.append(f"- **Decisions:** {', '.join(r['decisions']) or '—'}")
+        lines.append(f"- **Design elements:** {', '.join(f'`{e}`' for e in r['elements']) or '—'}")
+        lines.append("- **Artefacts:**" + ("" if r["artefacts"] else " —"))
+        lines += [f"  - `{a}`" for a in r["artefacts"]]
+        lines.append("- **Tests:**" + ("" if r["tests"] else " —"))
+        lines += [f"  - `{t}`" for t in r["tests"]]
+        ev = r["evidence"]
+        lines.append(f"- **Evidence:** {ev['status']}" + (f" (last passed {ev['last_passed']})" if ev.get("last_passed") else ""))
+    return "\n".join(lines) + "\n"
+
+
+def check_trace(p: Product, report: Report, b: Build | None = None, write: bool = False) -> dict | None:
+    """G3 coverage: every requirement reaches an artefact and a test."""
+    report.head(f"G3 · traceability — {p.id}", gate="G3")
+    b = b or build(p)
+    if not b.ok:
+        report.fail("the build does not generate, so requirements cannot be traced to artefacts")
+        return None
+    m = trace_matrix(p, b)
+    errs = p.ws.validate(m, "trace-matrix.v1")
+    report.check(not errs, "trace matrix conforms to trace-matrix.v1", f"trace matrix invalid: {'; '.join(errs[:3])}")
+    rows = m["rows"]
+    no_art = [r["requirement"] for r in rows if not r["artefacts"]]
+    no_test = [r["requirement"] for r in rows if not r["tests"]]
+    no_dec = [r["requirement"] for r in rows if not r["decisions"]]
+    report.check(not no_dec, f"every requirement has a TDD decision ({len(rows)})",
+                 f"requirement(s) with no TDD decision: {', '.join(no_dec)}")
+    report.check(not no_art, f"every requirement reaches a generated artefact ({len(rows)})",
+                 f"requirement(s) that reach no generated artefact: {', '.join(no_art)}")
+    report.check(not no_test, f"every requirement is verified by at least one test ({len(rows)})",
+                 f"requirement(s) with no test: {', '.join(no_test)}")
+    counts: dict[str, int] = {}
+    for r in rows:
+        counts[r["evidence"]["status"]] = counts.get(r["evidence"]["status"], 0) + 1
+    report.info("evidence by requirement: " + ", ".join(f"{v} {k}" for k, v in sorted(counts.items()))
+                + " (evaluated at G4)")
+    if write:
+        d = out_dir(b)
+        write_json(d / "trace.json", m)
+        write_text(d / "trace.md", render_markdown(m))
+        report.info(f"wrote {(d / 'trace.md').relative_to(p.ws.root)} and trace.json")
+    return m

@@ -1,20 +1,33 @@
-.PHONY: check validate lint contracts product
+.PHONY: help install check gates golden evals test openspec ci
 
-PRODUCT ?= customer_orders
+PY      ?= python3
+DPF     ?= $(PY) -m dpf
+OPENSPEC ?= openspec
+PRODUCT ?= --all
 
-check: validate lint contracts product ## run everything
+help: ## list targets
+	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | sed 's/:.*## /\t/'
 
-validate:
-	tools/dpf validate
+install: ## install dpf (editable) with test dependencies
+	$(PY) -m pip install -e '.[dev]'
 
-lint:
-	tools/dpf lint
+check: ## framework validation and lint, then every gate up to G3 for every product
+	$(DPF) check $(PRODUCT) --gate G3
 
-contracts:
-	python3 tests/contracts/test_contracts.py
+gates: ## G4 too (fails until deployed-run evidence exists for the current build)
+	$(DPF) check $(PRODUCT) --gate G4
 
-product:
-	tools/dpf brd validate $(PRODUCT)
-	tools/dpf tdd stale
-	tools/dpf trace $(PRODUCT)
-	tools/dpf compose $(PRODUCT)
+golden: ## regenerate every golden copy, alternative engines included (review the diff!)
+	$(DPF) generate --all --update-golden
+
+evals: ## behavioural evals in tests/evals/
+	$(DPF) eval
+
+test: ## unit and contract tests
+	$(PY) -m pytest
+
+openspec: ## OpenSpec structure, strict
+	$(OPENSPEC) validate --all --strict
+
+ci: openspec check evals test ## everything CI runs
+	$(DPF) generate --all --check
