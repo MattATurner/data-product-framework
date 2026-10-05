@@ -1,5 +1,16 @@
 # Data Product Framework — Build Plan
 
+> [!NOTE]
+> **Status: design plan (September 2026).** This is the original plan. The repository now
+> implements it, and where the two differ the implementation and
+> [`docs/user-guide.md`](user-guide.md) are authoritative. Known differences:
+> the `direct` pack is the default methodology (Kimball is opted into per layer with an ADR);
+> the worked example (§12) is BRD-SALES-002 v1.2.0 and uses an outbound watermark extractor
+> (ADR-015, ADR-SALES-002-02) on an hourly cadence rather than Datastream CDC every 15 minutes;
+> the contract registry has 22 contracts, not 8; G2 (compose and acceptance mapping) sits
+> between G1 and G3; and the monitor stage (`dpf monitor`) closes the loop by opening an
+> OpenSpec change on a breach. Sections 13, 13.1, 13.2 and 14 are updated to the as-built state.
+
 **The Data Product Framework (DPF)** — an OpenSpec-anchored, skill-composable framework for specifying, designing, building and governing data products on Google Cloud.
 
 **Author:** Matt Turner (Data Analytics)
@@ -265,7 +276,7 @@ The TDD spec is where **all** modelling and mechanism lives — methodology, gra
 |---|---|---|
 | Drill to "an individual line on a customer order"; each line appears once | **Grain:** one row per order line; grain columns `(order_id, order_line_no)`; uniqueness assertion generated | `kimball/model-transaction-fact` |
 | "Past sales keep the segment that applied at the time" (HB-1) | **SCD Type 2** on `dim_customer`; full CDC op stream landed and applied by `MERGE`, since Datastream native BQ mode yields current state only | `load-gcs-raw-zone`, `kimball/model-scd` |
-| Conformed reporting; BI consumers; agreed enterprise dimensions | **Methodology:** Kimball for silver and gold (domain default, confirmed) | methodology pack selection |
+| Conformed reporting; BI consumers; agreed enterprise dimensions | **Methodology:** Kimball in silver, `direct` in gold (a departure from the `direct` default, recorded in ADR-SALES-002-01) | methodology pack selection |
 | Freshness 15 min, justified by intraday lead re-allocation | CDC over micro-batch; Datastream; 15-minute workflow cadence | `extract-rdbms-cdc`, `orchestrate-pipeline` |
 | "Corrections can arrive up to 90 days afterwards" | Partition on transaction date; 90-day restatement window; partition-scoped backfill | `orchestrate-pipeline` |
 | "Cancelled lines visible but excluded from net sales" | Row retained with status flag; exclusion enforced in the gold semantic layer, not left to the consumer | `transform-silver-to-gold-product` |
@@ -476,7 +487,7 @@ Equally, `silver: kimball` + `gold: obt` covers the "star for governance, wide t
 
 **Methodology is chosen in the TDD.** It is a *how*, it is chosen by engineering, and it is recorded as a TDD declaration with an ADR. The BRD never names one — it would be meaningless to the SME who wrote it.
 
-1. **A domain default** is set in `registry/methodology.yaml` (for most enterprises, `silver: kimball`). Its only role before the TDD exists is to tell `author-brd` **which business questions to ask** (§6.2, contribution 1b).
+1. **A platform default** is set in `registry/platform-defaults.yaml` (`direct` for every layer; a domain may override it). Its only role before the TDD exists is to tell `author-brd` **which business questions to ask** (§6.2, contribution 1b).
 2. **The BRD supplies signals, not choices**: consumption pattern, audit obligations, source volatility, history behaviour, whether numbers must agree with other teams.
 3. **`resolve-tdd` recommends** a per-layer methodology from those signals and either confirms the domain default or proposes a deviation.
 4. **The engineer decides.** Saying "I want a star schema" is a perfectly legitimate TDD decision — the framework simply records it as a decision with a rationale rather than an unexamined habit, and a deviation from the domain default needs an ADR and lead sign-off at G1.
@@ -517,10 +528,10 @@ Because methodology sits in the TDD, **changing it is a TDD-only delta** where t
 | Capabilities (§9) | `model-dimension` and `model-fact` are replaced by methodology-neutral `model-integration-layer` and `model-consumption-layer`, plus two new capabilities: `methodology-pack` (what a pack must provide) and `select-methodology` (selection and deviation rules) |
 | Skills (§10) | `transform-staging-to-dim-scd2` and `transform-staging-to-fact` move into the Kimball pack as `kimball/model-scd` and `kimball/model-transaction-fact`; the core catalogue keeps only methodology-neutral transform skills (`transform-raw-to-staging`, `transform-silver-to-gold-product`, `transform-nonsql-heavy`) |
 | Contracts (§11) | `semantic-model.v1` is generalised to **`semantic-model.v1`**, carrying `methodology`, `role` (valid roles supplied by the pack), and the universal fields every methodology needs: `grain_statement`, `grain_columns`, `brd_requirement_id`, `natural_key`, `history_semantics` |
-| BRD rubric (§4.2) | Group B becomes *core declarations plus the active methodology's extension*, resolved at validation time from `registry/methodology.yaml` |
-| Repo layout (§13) | New top-level `methodologies/` tree; `registry/methodology.yaml` for domain defaults |
+| BRD rubric (§4.2) | Group B becomes *core declarations plus the active methodology's extension*, resolved at validation time from `registry/brd-rubric.yaml` and the pack's elicitation questions |
+| Repo layout (§13) | New top-level `methodologies/` tree; `registry/platform-defaults.yaml` for defaults |
 | Delivery plan (§15) | New Phase 2 task: define the pack interface **before** writing Kimball skills, so the first pack is not accidentally the interface. New Phase 3 task: `obt` pack as the abstraction test |
-| ADRs (§16) | New **ADR-011 Methodology plane**: packs are pluggable; Kimball is the default; per-layer selection; deviation requires an ADR |
+| ADRs (§16) | New **ADR-011 Methodology plane**: packs are pluggable; `direct` is the default; per-layer selection; deviation requires an ADR |
 
 The important sequencing point: **build the pack interface first, then Kimball as its first implementation.** If Kimball is written first and the interface is reverse-engineered from it, every later pack will fight the abstraction.
 
@@ -776,14 +787,18 @@ Two rules worth locking early:
 
 ## 12. Worked example — `sales_performance`, end to end
 
+> As built, the example lives in `openspec/specs/products/sales/sales-performance/` and `products/sales_performance/`. The extract and cadence decisions in the tables below are the original plan; the built TDD decides watermark extraction (D-10) and hourly refresh (D-11).
+
 ### 12.1 BRD spec — written by the business analyst
 
 ```markdown
-### Requirement: Sales reflect the segment at the time of sale   [BRD-SALES-001 / R-4]
+### Requirement: Sales reflect the segment at the time of sale
+**ID:** R-4
 When a customer moves between segments, sales already recorded SHALL continue to be
 reported under the segment that applied on the date of the sale.
 
-#### Example: Customer re-segmented after a sale                 [AX-1]
+#### Scenario: Customer re-segmented after a sale
+**ID:** AX-4
 - A customer is classified "SMB" in March and reclassified "Enterprise" in June.
 - March sales must still be reported under "SMB".
 ```
@@ -793,9 +808,10 @@ Note what is absent: no grain, no SCD, no BigQuery, no surrogate keys. The analy
 ### 12.2 TDD spec — written by the data engineer
 
 ```markdown
-satisfies: BRD-SALES-001@1.0
+**TDD:** TDD-SALES-002 · **Satisfies:** BRD-SALES-002@1.2.0
 
-### Requirement: Customer dimension history                      [TDD-SALES-001 / D-7]
+### Requirement: Customer dimension history
+**Decision:** D-4 · **Satisfies:** R-4 · **Model:** dim_customer · **Grain:** customer_id, valid_from
 `dim_customer` SHALL be modelled as a Kimball Type 2 slowly changing dimension with
 `valid_from`, `valid_to`, `is_current` and an unknown member, satisfying BRD R-4.
 Facts SHALL resolve the customer surrogate key as at the transaction date.
@@ -803,7 +819,7 @@ Facts SHALL resolve the customer surrogate key as at the transaction date.
 
 | Decision | Satisfies | Rationale |
 |---|---|---|
-| Methodology: Kimball, silver **and** gold (domain default, confirmed) | R-1, R-11 | Conformed cross-domain reporting with self-service BI consumers |
+| Methodology: Kimball in silver, `direct` in gold (departure from the default, ADR-SALES-002-01) | R-4, R-5, R-6 | Shared customer and product history that Finance and Merchandising must agree on |
 | **Grain derived:** one row per order line; grain columns `(order_id, order_line_no)` | R-3 (drill to an individual order line; each line appears once) | Derived from the level-of-detail answers, not authored by the business |
 | SCD Type 2 on `dim_customer` | R-4 | Only SCD2 preserves attribute state as at the sale date |
 | Land full CDC op stream to GCS; apply with Dataform `MERGE` rather than Datastream native BQ mode | R-4, R-9 | Native mode yields current state only, which cannot satisfy R-4 |
@@ -820,11 +836,11 @@ Facts SHALL resolve the customer surrogate key as at the transaction date.
 > - Sales stay with the segment that applied on the sale date; later moves do not change history.
 > - Corrections within 90 days restate the affected days; later corrections do not.
 
-The analyst can verify every line of that against AX-1 without anyone explaining SCD2.
+The analyst can verify every line of that against AX-4 without anyone explaining SCD2.
 
 | Decision | Cites | Rationale |
 |---|---|---|
-| Methodology: Kimball for silver **and** gold (domain default, confirmed not deviated) | R-1, R-11 | Conformed cross-domain reporting with self-service BI consumers |
+| Methodology: Kimball in silver, `direct` in gold (departure from the default, ADR-SALES-002-01) | R-4, R-5, R-6 | Shared customer and product history that Finance and Merchandising must agree on |
 | SCD Type 2 on `dim_customer` | R-4 | Only SCD2 preserves attribute state at transaction date; supplied by `kimball/model-scd` |
 | Land full CDC op stream to GCS; apply with Dataform `MERGE` (not Datastream native BQ mode) | R-4, R-9 | Native mode yields current state only, which cannot satisfy R-4 |
 | Datastream CDC, 15-minute workflow cadence | R-7 (freshness 15m) | Micro-batch JDBC cannot meet 15m without unacceptable source load |
@@ -849,7 +865,7 @@ The analyst can verify every line of that against AX-1 without anyone explaining
 
 ### 12.4 Acceptance
 
-At G4 the traceability matrix shows BRD R-4 → `semantics.md` statement → TDD D-7 → `kimball/model-scd` → `dim_customer.sqlx` → the re-segmentation test → passed at a timestamp. The business owner accepts against their own worked example (AX-1), not against a technical demo.
+At G4 the traceability matrix (`dpf trace`) shows BRD R-4 → TDD D-4 → `model:dim_customer` → `dim_customer.sqlx` → `acceptance:AT-4` and the SCD integrity tests → passed for the current build digest. The business owner accepts against their own worked example (AX-4), not against a technical demo.
 
 ### 12.5 Why this is the right first slice
 
@@ -859,60 +875,33 @@ It exercises every layer (BRD, TDD, contracts, skills, artefacts), every lifecyc
 
 ## 13. Repository layout
 
+*As built (October 2026).*
+
 ```
 data-product-framework/
 ├── openspec/
-│   ├── project.md                          # platform context: orgs, regions, naming standards
-│   ├── AGENTS.md                           # how agents work in this repo
+│   ├── config.yaml                         # schema: data-product; context and per-artefact rules
+│   ├── schemas/data-product/               # custom change schema + templates
+│   ├── project.md · AGENTS.md              # platform context; how agents work here
 │   ├── specs/
-│   │   ├── platform/<capability>/spec.md   # reusable framework behaviour (§9)
-│   │   └── products/<domain>/<product>/    # two specs per product, both source of truth
-│   │       ├── brd/
-│   │       │   ├── spec.md                 # business requirements + acceptance examples
-│   │       │   └── brd.yaml                # structured half of the rubric (§4.2)
-│   │       ├── tdd/
-│   │       │   ├── spec.md                 # satisfies: BRD-…@v · methodology · grain · SCD
-│   │       │   └── decisions/              # ADRs scoped to this product
-│   │       └── semantics.md                # derived, business-language, signed at G1
-│   └── changes/<change-id>/
-│       ├── proposal.md                     # why / scope / consumers
-│       ├── specs/                          # delta specs against brd/ and/or tdd/
-│       │                                   #   (ADDED / MODIFIED / REMOVED)
-│       ├── tasks.md                        # build breakdown
-│       └── trace.md                        # generated traceability matrix
-├── methodologies/<pack>/                   # pluggable modelling methodologies (§6)
-│   ├── METHODOLOGY.md                      # doctrine: when to use, when not to
-│   ├── methodology.yaml                    # roles, naming, rule bindings
-│   ├── brd-extension.schema.json           # rubric fields this pack adds
-│   ├── process.yaml                        # the design interview (Kimball's 4 steps)
-│   ├── skills/ · rules/ · templates/ · references/
-├── contracts/*.schema.json                 # the 8 contracts, versioned
-├── skills/<skill-id>/
-│   ├── SKILL.md                            # implements / consumes / produces front-matter
-│   ├── references/                         # GCP service notes, Kimball guidance, gotchas
-│   ├── scripts/                            # deterministic generators + validators
-│   └── assets/                             # SQLX / Terraform / DAG templates
-├── engines/<engine>/                       # transform engine adapters (§7)
-│   └── ADAPTER.md                          # what each semantic-model role renders to
-├── registry/                               # config, not code — EMPTY BY DESIGN
-│   ├── mcp_servers.yaml                    # MCP/agent catalogue — genuine platform infra
-│   ├── platform-defaults.yaml              # region, per-layer defaults, gate approvers
-│   ├── source_systems.yaml                 # stub: systems: []
-│   ├── entities.yaml                       # stub: entities: []
-│   ├── conformance.yaml                    # stub: conformed_dimensions: []
-│   └── glossary.yaml                       # stub: terms: []
-├── products/<product_id>/product.yaml      # resolved manifest (TDD output)
-├── generated/<product_id>/                 # disposable: dataform/ terraform/ dags/ catalog/
-├── examples/                               # EXAMPLE MATERIAL — delete for a clean start
-│   ├── registry/                           # registry overlay the examples need
-│   └── <product>/                          # dataform/ extract/ terraform/ seed/ RUNBOOK.md
-├── docs/                                   # design narrative and the method diagram
-├── tests/
-│   ├── contracts/                          # schema round-trip tests
-│   ├── golden/                             # BRD+TDD → expected artefact fixtures
-│   └── evals/                              # agent evaluation harness
-└── tools/
-    └── dpf                                 # the CLI
+│   │   ├── platform/<capability>/spec.md   # behaviour every product inherits (§9)
+│   │   └── products/<domain>/<product>/    # kebab-case, two specs per product
+│   │       ├── brd/spec.md · brd.yaml      # requirements + scenarios; rubric answers
+│   │       └── tdd/spec.md · semantics.md · signoff.yaml
+│   └── changes/<change-id>/                # proposal, specs/, design, verification, operations, tasks
+├── contracts/*.schema.json                 # 22 contracts, versioned
+├── dpf/                                    # the CLI: gates, compose, generate/, trace, testing, monitor, lint, evals
+├── methodologies/<pack>/                   # methodology.yaml · rules/ · skills/ (direct, kimball)
+├── engines/<engine>/                       # adapter.yaml + ADAPTER.md (dataform, dbt implemented)
+├── skills/<skill-id>/SKILL.md              # Agent Skills front-matter + metadata.dpf
+├── registry/                               # platform defaults, MCP servers, BRD rubric + vocabulary; no example data
+├── adr/                                    # ADR-001 … ADR-015
+├── products/<product_id>/                  # product.yaml · sql/ · acceptance.yaml · adr/
+├── generated/<product_id>/                 # disposable build output (gitignored)
+├── evidence/<product_id>/                  # test-evidence.v1 per run, bound to a build digest
+├── examples/                               # registry overlay; extractor, seed, Terraform wrapper, runbook
+├── docs/                                   # user guide, presentation, this plan, method diagram
+└── tests/                                  # unit/ · contracts/ · golden/ · evals/
 ```
 
 ### 13.1 Template versus example
@@ -922,8 +911,11 @@ mechanical, not a matter of discipline:
 
 | | Paths | Notes |
 |---|---|---|
-| **Template** | `openspec/specs/platform/`, `contracts/`, `methodologies/`, `engines/`, `skills/`, `registry/`, `tools/`, `tests/` | Reusable as-is |
-| **Example** | `openspec/specs/products/`, `products/`, `examples/`, `docs/` | Deletable in one command |
+| **Template** | `openspec/` (config, schema, platform specs), `contracts/`, `methodologies/`, `engines/`, `skills/`, `registry/`, `adr/`, `dpf/`, `tests/contracts/` | Copied by `dpf init` |
+| **Example** | `openspec/specs/products/`, `products/`, `examples/`, `tests/golden/*`, `evidence/` | Never copied |
+
+The examples read their registry content through `registry_overlay: examples/registry` in
+the manifest, so running them never changes `registry/`.
 
 **`registry/` ships empty.** A new project must not inherit someone else's bus matrix,
 glossary, entities or source systems — that would make sample data a specification, which
@@ -940,37 +932,31 @@ into skills.
 
 ### 13.2 The `dpf` CLI
 
-The single entry point, mirroring the gates.
+The single entry point, mirroring the gates. *As built:* exit code 0 pass, 1 fail, 2 usage;
+`--json`, `--quiet` and `--root` on every command.
 
 ```
-dpf init          <target-dir>  scaffold a clean workspace — template only, no examples
-dpf validate                    structural: specs, contracts, skills, product naming
-dpf lint                        tool-tier / MCP preference enforcement
-dpf brd validate  <product>     G0 — rubric completeness; emits gaps.md
-dpf tdd resolve   <product>     derivations available from the BRD; TDD + semantics status
-dpf tdd stale                   TDDs whose satisfies: BRD version has moved on
-dpf trace         <product>     G1 — bidirectional coverage; fails on orphans
-dpf compose       <product>     type-check the contract DAG and methodology × engine support
-dpf check         <product>     all of the above for one product
+dpf validate                         contracts, skills, packs, adapters, rules, ADRs, product documents
+dpf lint                             tool tiers, bespoke-code markers + ADRs, retired product names
+dpf brd validate  <product>|--all    G0: rubric, approval, scenarios, vocabulary; gap register in generated/
+dpf tdd resolve   <product>          how the BRD answers drive design decisions
+dpf tdd stale                        TDDs, manifests and sign-offs behind their BRD
+dpf signoff       <product> --by --role   record the business signature, bound to the semantic digest
+dpf compose       <product>|--all    G2: skills per stage, typed DAG, adapters; AX -> AT mapping
+dpf generate      <product>|--all    G3: render generated/<product>/ (--engine dbt, --check, --update-golden)
+dpf trace         <product>|--all    requirement -> decision -> element -> artefact -> test -> evidence
+dpf test plan|run|attest <product>   test cases; static and live runs; human attestations (G4 evidence)
+dpf check         <product>|--all --gate G0..G4   every gate up to the one named
+dpf monitor       <product> [--evidence run.json] [--open-change]
+dpf eval [--id ...]                  behavioural evals
+dpf init          <target-dir>       clean workspace: template only, no examples
 ```
-
-Starting a new project:
 
 ```bash
-dpf init ../my-workspace     # clean template, empty registry
+pip install -e '.[dev]'
+dpf check --all --gate G3            # both worked examples
+dpf init ../my-workspace             # start a new project
 ```
-
-Running the worked examples in place:
-
-```bash
-cp examples/registry/*.yaml registry/     # apply the example overlay
-dpf check customer_orders
-dpf check sales_performance
-```
-
-*Not yet implemented:* `dpf methodology` (show/set per-layer packs) and `dpf verify`
-(G3/G4 compile, dry-run, assertions). The conformance and glossary checks described for
-`validate-brd` are specified but not yet enforced by the CLI.
 
 ---
 
@@ -978,13 +964,20 @@ dpf check sales_performance
 
 Five gates, cheapest first. G0 and G1 are the new ones and they are the reason the rest get easier.
 
-| Gate | What runs | Blocks |
+*As built (October 2026):*
+
+| Gate | What runs (`dpf check <product> --gate Gn`, cumulative) | Blocks |
 |---|---|---|
-| **G0 BRD** | Rubric completeness (§4.2); every business question has ≥1 acceptance scenario; open questions empty or fully owned+assumed; bus matrix conformance; glossary terms resolve; `openspec validate --profile brd` | BRD approval |
-| **G1 TDD** | Bidirectional traceability (no orphan requirements, no orphan design); contract DAG type-check; ADR present for every non-default choice; cost estimate present | Design approval |
-| **G2 Spec hygiene** | `openspec validate --strict`; capability naming lint; every requirement has ≥1 scenario; retired-product-name lint | Merge |
-| **G3 Artefact** | `dataform compile`; `bq query --dry_run` on every model; `terraform validate` + `plan`; DAG import test; golden-fixture diff; regenerate-from-scratch reproducibility check | Merge |
-| **G4 Acceptance** | Sandbox deploy, seeded fixtures, all BRD acceptance scenarios pass, quality scans pass, catalog entry complete with required aspects | `published` status |
+| **G0 BRD** | `brd.v1` schema; rubric answered; every requirement has a SHALL/MUST statement and ≥1 scenario (AX); no modelling vocabulary; figures defined in the glossary; open questions carry a working assumption; approved | BRD approval |
+| **G1 TDD** | `product-manifest.v1` schema; every requirement resolved and every element justified; TDD decisions and grain match the manifest; methodology departures have an ADR; history, staging and operability rules; sign-off matches the semantic digest | Design approval |
+| **G2 Compose** | each stage selects a skill and an implemented engine adapter; typed DAG; every AX maps to an acceptance test (AT) | Build |
+| **G3 Artefact** | `dpf validate` + `dpf lint`; generate twice and compare (determinism); golden-copy diff; trace: every requirement reaches a decision, an artefact and a test | Merge |
+| **G4 Acceptance** | static checks plus passing evidence (automated runs and attestations) for the **current** build digest | `published` status |
+
+Spec hygiene (`openspec validate --all --strict`) runs in CI beside the gates. Compiling
+the generated artefacts with the real tools (`terraform validate`, Dataform `compile`,
+`dbt parse`) runs in CI's artefacts job. `bq query --dry_run`, `terraform plan` and a
+sandbox deploy need credentials, so they are not part of a gate.
 
 **Agent eval harness (`tests/evals/`).** The part teams skip, and then cannot tell whether the framework works. Each eval is a BRD fragment plus the expected properties of the output, scored mechanically as the fraction of acceptance scenarios satisfied. Run on every skill change *and* on model version changes — it is also the honest answer to "did upgrading the model break anything".
 
@@ -1144,7 +1137,7 @@ Effort is indicative for one engineer plus agent assistance; the breadth phases 
 1. **Confirm the BRD rubric (§4.2)** — eleven groups, all business-answerable, plus the elicitation table in §4.3 that extracts grain and SCD type without ever using those words. That table is the piece most worth your review, since it is where a business analyst's answers become a data model.
 2. **Confirm the gate model (§3.3)** — in particular that G1 requires business sign-off on `semantics.md`. That signature is what replaces putting grain in the BRD, and it is the one piece of business ceremony the framework insists on.
 3. **Confirm ADR recommendations 001–004 and 008–010** — especially 008 (business owner accountable for the BRD) and 009 (provisional promotion), since those are organisational commitments rather than technical ones.
-4. **Confirm the methodology plane (§6)** — specifically the per-layer split (silver integration vs gold consumption), Kimball as the domain default, and the initial pack roadmap. If Data Vault is a near-term requirement for a specific agency, say so now and I will pull it forward, because it is the pack that most stresses the interface.
+4. **Confirm the methodology plane (§6)** — specifically the per-layer split (silver integration vs gold consumption), `direct` as the platform default with Kimball opted into per layer, and the initial pack roadmap. If Data Vault is a near-term requirement for a specific agency, say so now and I will pull it forward, because it is the pack that most stresses the interface.
 5. On your go-ahead I will scaffold **Phase 0 + Phase 1** for real: repo, `openspec init`, `project.md`, the meta capability specs, the eight contract schemas, the `brd.yaml` rubric schema, the `validate-brd` skill and the gap-register generator — then we review before any pipeline skill gets written.
 
 I would sequence it that way deliberately: the lifecycle spine is worth more than the first pipeline, and it is what makes the framework yours rather than another ELT accelerator.
@@ -1153,4 +1146,4 @@ I would sequence it that way deliberately: the lifecycle spine is worth more tha
 
 ### Naming note
 
-Product names reflect current Google Cloud naming as of this draft: **Knowledge Catalog** (formerly Dataplex Universal Catalog), **Lakehouse** and **Lakehouse runtime catalog** (formerly BigLake / BigLake metastore), **Apache Iceberg managed tables**, **BigQuery sharing** (formerly Analytics Hub), **Managed Service for Apache Spark** (formerly Dataproc Serverless), and **cross-cloud connections** (replacing BigQuery Omni). CLI and IAM identifiers retain their legacy strings. Re-verify against live docs before any customer-facing use.
+Product names reflect current Google Cloud naming as of this draft: **Knowledge Catalog** (its CLI, API and IAM identifiers keep the legacy `dataplex` string), **Lakehouse** and **Lakehouse runtime catalog** (formerly BigLake / BigLake metastore), **Apache Iceberg managed tables**, **BigQuery sharing** (formerly Analytics Hub), **Managed Service for Apache Spark** (formerly Dataproc Serverless), and **cross-cloud connections** (replacing BigQuery Omni). CLI and IAM identifiers retain their legacy strings. Re-verify against live docs before any customer-facing use.

@@ -6,3 +6,15 @@ generated/**
 .DS_Store
 *.log
 examples/*/seed/out/
+
+# Terraform working state (the example wrapper is applied from a checkout)
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfvars
+# Tool caches created when compiling generated or golden projects
+node_modules/
+.ci-profiles/
+.df-credentials.json
+.pytest_cache/
+*.egg-info/
