@@ -1,7 +1,9 @@
 id: view-chain-depth-limit
 severity: warn
-applies_to: [business_view]
+applies_to: [business_view, nested_view]
 description: >
-  Stacked views are the classic silent cost bomb. Beyond three levels, materialise.
-check:
-  - view dependency chain depth <= 3
+  Stacked views are the classic silent cost bomb. Beyond three declared views in a chain,
+  materialise one of them.
+check: view_chain_depth
+params:
+  max_depth: 3

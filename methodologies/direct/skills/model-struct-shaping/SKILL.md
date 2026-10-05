@@ -1,35 +1,43 @@
 ---
-skill_id: direct/model-struct-shaping
-implements: model-consumption-layer
-methodology: direct
-role: business_view
-consumes: semantic-model.v1
-produces: semantic-model.v1
-tool_tier: 1
-tool: bigquery-mcp
+name: model-struct-shaping
+description: Shape a one-to-many relationship as nested repeated records on the parent row, preserving
+  the parent grain. Use for role nested_view in a direct layer when children are read with their parent.
+metadata:
+  dpf:
+    skill_id: direct/model-struct-shaping
+    stage: consume
+    scope: model
+    implements: model-consumption-layer
+    methodology: direct
+    role: nested_view
+    consumes:
+    - staging-model.v1
+    - semantic-model.v1
+    produces:
+    - semantic-model.v1
+    selects_when:
+      model.role: nested_view
+      layer.methodology: direct
+    tool_tier: 4
+    tool: dpf-local
+    needs:
+    - artefact_generation
+    gcp:
+    - BigQuery
 ---
 
-# Shape 1:N relationships as nested structures
-
-The BigQuery-native alternative to splitting a parent and child into separate tables.
-
-## When to nest
+# Shape 1:N relationships as nested records
 
 | Nest | Keep separate |
 |---|---|
 | Children are almost always read with the parent | Children are queried independently |
 | Child cardinality is bounded and modest | Cardinality is large or unbounded |
-| Consumers can handle `ARRAY<STRUCT>` | Consumers are BI tools that flatten poorly |
+| Consumers handle repeated records | Consumers are BI tools that flatten poorly |
 
 ## Steps
 
-1. Confirm the parent grain. Nesting must not change it — that is the whole point.
-2. Aggregate children into `ARRAY<STRUCT<...>>` on the parent.
-3. Name struct fields from the glossary.
-4. Keep depth within the pack's nesting rule (default: two levels).
-5. Record the decision and its rationale in the TDD.
-
-## Must
-
-- Preserve the parent grain and assert it after nesting.
-- State in `semantics.md`, in business language, that children arrive with their parent.
+1. Confirm the parent grain. Nesting must not change it.
+2. Aggregate children into `ARRAY<STRUCT<...>>` in the authored body; declare
+   `nesting: [{child, as, depth}]` in the manifest.
+3. Keep depth within the pack rule (`nesting-depth-limit`, default 2).
+4. State in `semantics.md`, in business language, that children arrive with their parent.

@@ -1,15 +1,7 @@
----
-engine_id: spark
-status: escape hatch
-tool_tier: 4
-tool: managed_spark_api
----
-
 # Managed Service for Apache Spark adapter
+
+Status: **planned**. `adapter.yaml` declares no implemented roles, so no pack may list
+`spark` as a supported engine and `dpf compose` rejects a layer that uses it.
 
 For logic SQL genuinely cannot express. Reach for this last: every model that leaves SQL
 loses the assertion, lineage and cost tooling the rest of the framework depends on.
-
-Requires a TDD note stating what SQL could not do.
-
-**Not yet implemented.** Scaffold only.

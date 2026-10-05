@@ -1,29 +1,58 @@
 ---
-skill_id: kimball/model-transaction-fact
-implements: model-integration-layer
-methodology: kimball
-role: fact
-consumes: staging-model.v1
-produces: semantic-model.v1
-tool_tier: 1
-tool: bigquery-mcp
+name: model-transaction-fact
+description: Model a Kimball transaction fact at the declared grain with dimension keys resolved as at
+  the event date, additive measures, flags and an incremental restatement window. Use for role fact in
+  a kimball layer.
+metadata:
+  dpf:
+    skill_id: kimball/model-transaction-fact
+    stage: integrate
+    scope: model
+    implements: model-integration-layer
+    methodology: kimball
+    role: fact
+    consumes:
+    - staging-model.v1
+    - semantic-model.v1
+    produces:
+    - semantic-model.v1
+    selects_when:
+      model.role: fact
+      layer.methodology: kimball
+    tool_tier: 4
+    tool: dpf-local
+    inspection_tool: bigquery-mcp
+    needs:
+    - artefact_generation
+    gcp:
+    - BigQuery
 ---
 
 # Model a transaction fact
 
 One row per business event, at the grain the TDD derived from the BRD.
 
-## Steps
+## Declare in the manifest
 
-1. Assert the declared grain. Duplicates fail the build — they do not warn.
-2. Resolve dimension surrogate keys **as at the event date** where the dimension is SCD2.
-3. Fall back to the unknown member for unresolvable references; never null, never drop.
-4. Carry declared measures with their additivity.
-5. Keep degenerate dimensions (order numbers and the like) on the fact.
-6. Partition on the event date; cluster on the highest-selectivity dimension keys.
-7. Emit `semantic-model.v1`.
+```yaml
+attributes:
+  fact_type: transaction
+  source: stg_order_lines
+  event_date: order_date
+  restatement_window_days: 90
+  dim_refs:
+    - {dimension: dim_customer, natural_key: customer_id, as_at: order_date}
+    - {dimension: dim_date, from: order_date}
+  measures:
+    - {name: net_amount, additivity: additive}
+  degenerate: [order_status]
+  flags:
+    - {name: is_cancelled, expression: "order_status = 'CANCELLED'"}
+```
 
-## Must
+## What dpf generates
 
-- Generate the grain uniqueness assertion from `grain_columns`.
-- Honour the restatement window from the BRD when rebuilding partitions.
+An incremental table partitioned on the event date that rebuilds only dates inside the
+restatement window. Type 2 keys are resolved as at the event date; an unresolved member
+maps to `-1` and raises a late-arrival warning, never a dropped row. Tests: grain
+uniqueness and natural keys never null (rule `fact-fk-integrity`).

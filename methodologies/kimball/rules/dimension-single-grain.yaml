@@ -1,0 +1,8 @@
+id: dimension-single-grain
+severity: block
+applies_to: [dimension]
+description: >
+  A dimension holds one row per natural key (Type 1) or one row per natural key per
+  validity period (Type 2). Its grain columns must be exactly the natural key, plus
+  valid_from for Type 2, and its history semantics must match the SCD type.
+check: dimension_single_grain

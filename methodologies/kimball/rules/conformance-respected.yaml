@@ -1,0 +1,8 @@
+id: conformance-respected
+severity: block
+applies_to: [dimension, calendar]
+description: >
+  A model declaring conformed_as must match the bus matrix (registry conformance.yaml):
+  same grain statement and natural key. Products outside the owning domain must be listed
+  in used_by. Conflicts name the owning domain.
+check: conformance_respected

@@ -1,0 +1,7 @@
+id: additivity-declared
+severity: block
+applies_to: [fact]
+description: >
+  Every measure declares its additivity (additive, semi_additive or non_additive). When the
+  BRD says figures can be summed across slices, at least one measure must be additive.
+check: additivity_declared

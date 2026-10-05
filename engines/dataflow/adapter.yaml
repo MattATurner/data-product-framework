@@ -1,0 +1,9 @@
+# Contract: engine-adapter.v1.
+engine_id: dataflow
+status: planned
+implemented_roles: []
+tool_tier: 4
+tool: dpf-local
+notes: >
+  For genuine streaming. Roles needing durable history (Type 2 dimensions) will not be
+  implemented without an explicit streaming variant. No role is implemented yet.

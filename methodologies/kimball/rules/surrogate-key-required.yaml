@@ -1,0 +1,7 @@
+id: surrogate-key-required
+severity: block
+applies_to: [dimension]
+description: >
+  Every dimension declares a surrogate key that is not one of its natural key columns, so
+  history versions and the unknown member can be referenced unambiguously.
+check: surrogate_key_required

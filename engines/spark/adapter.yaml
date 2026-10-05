@@ -1,0 +1,7 @@
+# Contract: engine-adapter.v1.
+engine_id: spark
+status: planned
+implemented_roles: []
+tool_tier: 4
+tool: dpf-local
+notes: Escape hatch for logic SQL cannot express. No role is implemented yet, so no pack may declare it.

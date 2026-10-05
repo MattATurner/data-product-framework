@@ -1,0 +1,12 @@
+# Contract: engine-adapter.v1.
+engine_id: dbt
+status: implemented
+implemented_roles: [staging, business_view, nested_view, materialised_view, dimension, fact, calendar]
+renders:
+  - dbt_project.yml
+  - models/sources.yml (raw sources)
+  - models/<layer>/*.sql (view, table, incremental)
+  - tests/*.sql (singular tests for grain, quality, reject gate, history integrity, acceptance)
+tool_tier: 4
+tool: dbt-cli
+notes: Same semantic models and SQL as the Dataform adapter; rendered by dpf/generate/dbt.py.

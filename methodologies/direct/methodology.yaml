@@ -1,26 +1,35 @@
+# Methodology pack: direct. Contract: methodology-pack.v1.
+# Business views over the platform staging layer. The platform default for every layer.
 id: direct
-label: Direct (typed staging plus business view)
+label: Direct (business views over staging)
 is_default: true
 
 roles:
-  - id: typed_source
-    description: Raw rows typed, renamed to business language, deduplicated.
-    skill: direct/model-typed-source
-    emits: semantic-model.v1
   - id: business_view
-    description: Business logic, derived fields, filters, nested shaping.
+    description: Business logic, derived fields, filters and aggregation over staging or integration models.
     skill: direct/model-business-view
     emits: semantic-model.v1
+    layers: [silver, gold]
+  - id: nested_view
+    description: One row per parent with child rows nested as a repeated record (declared in model.nesting).
+    skill: direct/model-struct-shaping
+    emits: semantic-model.v1
+    layers: [silver, gold]
   - id: materialised_view
-    description: A business view persisted for cost or latency reasons.
+    description: A business view persisted as a materialized view for cost or latency reasons.
     skill: direct/model-materialisation
     emits: semantic-model.v1
+    layers: [silver, gold]
 
-# Which engines can render each role. compose-pipeline fails unsupported pairings.
+# Which engines can render each role. An engine may be listed only when its adapter
+# (engines/<engine>/adapter.yaml) implements the role; dpf validate enforces this.
 supported_engines:
-  typed_source:     [dataform, dbt, dataflow, spark]
-  business_view:    [dataform, dbt, dataflow, spark]
+  business_view: [dataform, dbt]
+  nested_view: [dataform, dbt]
   materialised_view: [dataform, dbt]
+
+engine_notes:
+  business_view: The spark and dataflow adapters are planned; list them here once their adapters implement the role.
 
 # What the TDD must declare when this pack is active.
 required_tdd_declarations:
@@ -28,10 +37,8 @@ required_tdd_declarations:
   - grain_columns
   - history_semantics
   - materialisation
-  - nesting_strategy
 
-# Business-language questions this pack adds to the BRD interview.
-# Never modelling vocabulary.
+# Business-language questions this pack adds to the BRD interview. Never modelling vocabulary.
 brd_elicitation_questions:
   - id: Q-DETAIL
     text: What is the finest level of detail you need to drill down to?
@@ -44,13 +51,14 @@ brd_elicitation_questions:
     derives: materialisation
   - id: Q-NESTED
     text: When you look at an order, do you want its lines together with it, or separately?
-    derives: nesting_strategy
+    derives: nesting
   - id: Q-EXTERNAL
-    text: Will anything other than your BI tool need to read this?
+    text: Will anything other than your reporting tool need to read this?
     derives: storage_format
 
 rules:
   - grain-declared-and-asserted
+  - body-required
   - nesting-depth-limit
   - view-chain-depth-limit
 
@@ -62,4 +70,4 @@ anti_patterns:
   - id: view-tower
     flag: Views built on views built on views; cost is invisible until it is not.
   - id: methodology-envy
-    flag: Star-schema structures hand-rolled inside a direct product. Graduate instead.
+    flag: Star-schema structures hand-rolled inside a direct product. Graduate to a pack instead.

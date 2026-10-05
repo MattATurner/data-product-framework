@@ -1,0 +1,9 @@
+id: fact-fk-integrity
+severity: block
+applies_to: [fact]
+description: >
+  Every dimension reference names a dimension or calendar model declared in the product.
+  Type 2 references resolve as at a declared event column. Generated tests check that the
+  natural key behind each reference is never null; unresolved members map to the unknown
+  member and raise a late-arrival warning instead of being dropped.
+check: fact_fk_integrity

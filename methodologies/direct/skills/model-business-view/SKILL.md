@@ -1,34 +1,43 @@
 ---
-skill_id: direct/model-business-view
-implements: model-consumption-layer
-methodology: direct
-role: business_view
-consumes: semantic-model.v1
-produces: semantic-model.v1
-tool_tier: 1
-tool: bigquery-mcp
+name: model-business-view
+description: Build a business view from an authored SQL body over staging or integration models, enforcing
+  the signed semantics centrally. Use for role business_view in a direct layer.
+metadata:
+  dpf:
+    skill_id: direct/model-business-view
+    stage: consume
+    scope: model
+    implements: model-consumption-layer
+    methodology: direct
+    role: business_view
+    consumes:
+    - staging-model.v1
+    - semantic-model.v1
+    produces:
+    - semantic-model.v1
+    selects_when:
+      model.role: business_view
+      layer.methodology: direct
+    tool_tier: 4
+    tool: dpf-local
+    inspection_tool: bigquery-mcp
+    needs:
+    - artefact_generation
+    gcp:
+    - BigQuery
 ---
 
 # Build the business view
 
-Apply business logic and shape the output for consumers.
-
 ## Steps
 
 1. Read the signed `semantics.md`. Every statement in it must be true of this view.
-2. Apply derived fields, filters and business rules from the TDD.
-3. Enforce exclusion rules centrally — never leave them to the consumer.
-4. Name columns from the glossary.
-5. Nest child entities where the TDD's nesting strategy calls for it
-   (see `direct/model-struct-shaping`).
-6. Emit `semantic-model.v1`.
-
-## Must
-
-- Enforce every rule stated in `semantics.md`.
-- Declare and assert the grain.
-- Cite the BRD requirement id for each business rule implemented.
+2. Write the body in `products/<product>/sql/<model>.sql` using `{{ ref('model') }}` for
+   inputs and `{{ var('name') }}` for variables. Name columns from the glossary.
+3. Enforce exclusion rules in the view, never in the consumer.
+4. Declare grain, history semantics and materialisation in the manifest; dpf generates the
+   grain test and makes the model depend on every reject gate.
 
 ## Must not
 
-- Introduce a rule that is not in the TDD. If it is missing, raise a gap.
+- Introduce a rule that is not in the TDD. If one is missing, raise a gap.

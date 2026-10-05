@@ -1,39 +1,64 @@
 ---
-skill_id: kimball/model-scd
-implements: model-integration-layer
-methodology: kimball
-role: dimension
-consumes: staging-model.v1
-produces: semantic-model.v1
-tool_tier: 1
-tool: bigquery-mcp
+name: model-scd
+description: 'Model a Kimball dimension with Type 1 or Type 2 history from staged change history: validity
+  windows, surrogate key, unknown member and current-valued attributes. Use for role dimension in a kimball
+  layer.'
+metadata:
+  dpf:
+    skill_id: kimball/model-scd
+    stage: integrate
+    scope: model
+    implements: model-integration-layer
+    methodology: kimball
+    role: dimension
+    consumes:
+    - staging-model.v1
+    produces:
+    - semantic-model.v1
+    selects_when:
+      model.role: dimension
+      layer.methodology: kimball
+    tool_tier: 4
+    tool: dpf-local
+    inspection_tool: bigquery-mcp
+    needs:
+    - artefact_generation
+    gcp:
+    - BigQuery
 ---
 
 # Model a slowly changing dimension
 
-## SCD type selection
+## Type selection
 
-Derived from the BRD history answer — never asked directly.
+Derived from the BRD history answer, never asked directly.
 
 | Business answer | Type |
 |---|---|
 | "Past figures should show the value that applied at the time" | **2** |
 | "Past figures should update to the current value" | **1** |
-| "We need the previous value alongside the current one" | **3** |
-| "Both current and as-at views are needed" | **6** |
 
-## Steps
+## Declare in the manifest
 
-1. Read the staging model and the TDD's declared SCD type.
-2. Generate a surrogate key. It must not be the natural key renamed.
-3. For type 2: `valid_from`, `valid_to`, `is_current`; close the prior row on change.
-4. Add an explicit unknown member so fact references never go null.
-5. Handle late-arriving members: create the member, backfill the reference.
-6. If `conformed_as` is set, validate against `registry/conformance.yaml` and fail on
-   grain or key conflict, naming the owning domain.
-7. Emit `semantic-model.v1`.
+```yaml
+- name: dim_customer
+  role: dimension
+  grain_columns: [customer_id, valid_from]
+  natural_key: [customer_id]
+  surrogate_key: sk_customer
+  history_semantics: point_in_time
+  conformed_as: dim_customer
+  attributes:
+    scd_type: 2
+    source: stg_customers
+    tracked: [customer_segment, region]          # Type 2: a change opens a new version
+    current: [customer_name, customer_email]     # Type 1: always the latest value
+```
 
-## Must
+## What dpf generates
 
-- Assert one row per natural key per validity window.
-- Never allow a null foreign key reference.
+A table rebuilt from `<source>_history`: a new version whenever a tracked attribute
+changes, validity windows from the change times (first version from 1900-01-01), a
+surrogate key that is not the natural key, current-valued attributes from the latest
+staging row, an unknown member `-1`, and policy tags on protected columns. Tests: grain
+uniqueness, no overlapping windows, exactly one current row per natural key.

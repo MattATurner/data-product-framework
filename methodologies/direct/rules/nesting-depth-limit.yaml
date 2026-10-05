@@ -1,6 +1,7 @@
 id: nesting-depth-limit
 severity: warn
-applies_to: [business_view, materialised_view]
+applies_to: [nested_view, business_view, materialised_view]
 description: Nested structures deeper than two levels are hard for consumers and BI tools.
-check:
-  - max ARRAY<STRUCT> nesting depth <= 2 unless justified in the TDD
+check: nesting_depth
+params:
+  max_depth: 2

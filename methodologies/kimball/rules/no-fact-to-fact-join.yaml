@@ -1,0 +1,7 @@
+id: no-fact-to-fact-join
+severity: block
+applies_to: [fact, business_view, nested_view, materialised_view]
+description: >
+  Facts are combined through conformed dimensions, never joined to each other directly.
+  A fact may not read another fact, and a consumption model may not reference two facts.
+check: no_fact_to_fact_join

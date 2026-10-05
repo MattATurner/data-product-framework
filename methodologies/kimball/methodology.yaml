@@ -1,32 +1,51 @@
+# Methodology pack: kimball. Contract: methodology-pack.v1.
+# Dimensional modelling in the integration (silver) layer.
 id: kimball
 label: Kimball dimensional
 is_default: false
 
 roles:
   - id: dimension
-    description: Conformed or local dimension with declared history behaviour.
+    description: Conformed or local dimension with declared history behaviour (Type 1 or Type 2).
     skill: kimball/model-scd
     emits: semantic-model.v1
+    layers: [silver]
+    required_attributes: [scd_type, source]
   - id: fact
-    description: Transaction, periodic snapshot, accumulating snapshot or factless fact.
+    description: Transaction fact at a declared grain with dimension keys resolved as at the event date.
     skill: kimball/model-transaction-fact
     emits: semantic-model.v1
-  - id: bridge
-    description: Many-to-many or ragged hierarchy resolution.
-    skill: kimball/model-bridge-hierarchy
+    layers: [silver]
+    required_attributes: [fact_type, source, event_date, dim_refs, measures]
+  - id: calendar
+    description: Generated date dimension, one row per calendar day.
+    skill: kimball/model-date-dimension
     emits: semantic-model.v1
+    layers: [silver]
+    required_attributes: [start_date, end_date]
 
+# Declared so designers can see what is coming; dpf rejects a manifest that uses them.
+planned_roles:
+  - id: bridge
+    description: Many-to-many or ragged hierarchy resolution (skill kimball/model-bridge-hierarchy, not yet shipped).
+  - id: periodic_snapshot
+    description: Periodic snapshot fact (fact_type periodic_snapshot, not yet shipped).
+  - id: accumulating_snapshot
+    description: Accumulating snapshot fact (fact_type accumulating_snapshot, not yet shipped).
+
+# An engine may be listed only when its adapter implements the role (dpf validate).
 supported_engines:
-  dimension: [dataform, dbt, spark]        # NOT dataflow - see note
-  fact:      [dataform, dbt, dataflow, spark]
-  bridge:    [dataform, dbt, spark]
+  dimension: [dataform, dbt]
+  fact: [dataform, dbt]
+  calendar: [dataform, dbt]
 
 engine_notes:
   dimension: >
-    SCD2 under a streaming engine needs stateful processing, late-arrival handling and a
-    durable current-state store. No streaming variant is shipped, so dataflow is not
-    declared as supported. compose-pipeline will fail the pairing rather than generate
-    something that misbehaves.
+    Type 2 history under a streaming engine needs stateful processing, late-arrival
+    handling and a durable current-state store. No streaming variant is shipped, so
+    dataflow is not declared as supported, and compose fails the pairing rather than
+    generating something that misbehaves. The spark adapter is planned.
+  fact: Only fact_type transaction is implemented.
 
 required_tdd_declarations:
   - grain_statement
@@ -56,9 +75,10 @@ brd_elicitation_questions:
 
 rules:
   - grain-declared-and-asserted
-  - fact-fk-integrity
-  - dimension-single-grain
   - surrogate-key-required
+  - dimension-single-grain
+  - conformance-respected
+  - fact-fk-integrity
   - additivity-declared
   - no-fact-to-fact-join
 
@@ -68,6 +88,6 @@ anti_patterns:
   - id: attributes-on-fact
     flag: Dimension attributes stored on the fact.
   - id: gratuitous-scd2
-    flag: SCD2 where no consumer queries history.
+    flag: Type 2 history where no consumer queries history.
   - id: surrogate-equals-natural
     flag: Surrogate key that is just the natural key renamed.

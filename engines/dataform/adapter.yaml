@@ -1,0 +1,12 @@
+# Contract: engine-adapter.v1. A pack may list this engine for a role only if it is here.
+engine_id: dataform
+status: implemented
+implemented_roles: [staging, business_view, nested_view, materialised_view, dimension, fact, calendar]
+renders:
+  - workflow_settings.yaml
+  - definitions/sources/*.sqlx (raw declarations)
+  - definitions/<layer>/*.sqlx (tables, views, incremental tables)
+  - definitions/assertions/*.sqlx (grain, quality, reject gate, history integrity, acceptance)
+tool_tier: 4
+tool: dataform-api
+notes: Default engine. Rendered by dpf/generate/dataform.py.

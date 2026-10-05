@@ -1,29 +1,29 @@
 ---
-skill_id: author-brd
-implements: brd-completeness
-consumes: null
-produces: brd.yaml
-tool_tier: 4
-tool: local
-owner: business SME, facilitated
+name: author-brd
+description: Interview a business owner and write a product BRD (spec.md plus brd.yaml) in business language
+  only. Use when starting a new data product or when a BRD has gaps reported by dpf brd validate.
+metadata:
+  dpf:
+    skill_id: author-brd
+    stage: define
+    scope: product
+    implements: brd-completeness
+    consumes: []
+    produces:
+    - brd.v1
+    tool_tier: 4
+    tool: dpf-local
+    needs:
+    - spec_validation
+    owner: business-analyst
 ---
 
 # Author a BRD
 
-Interview the business against the rubric. **You are facilitating, not authoring.**
+Elicit requirements in business language. The design is derived later from the answers,
+so the questions quietly determine design without ever naming it.
 
-## Hard rules
-
-1. **No modelling vocabulary.** Never write grain, SCD, dimension, surrogate key,
-   partition, or a warehouse product name into a BRD.
-2. **Never invent an answer.** If it is unknown, record `[NEEDS-DECISION: id]` with an
-   owner, due date, default assumption and blast radius.
-3. **Capture what they asked for verbatim**, then ask the rubric questions around it.
-
-## Interview order
-
-Groups A to K of the rubric, plus the elicitation questions contributed by the active
-methodology pack (`brd_elicitation_questions` in its `methodology.yaml`).
+## Ask, and what each answer determines
 
 | Ask this | It quietly determines |
 |---|---|
@@ -35,15 +35,24 @@ methodology pack (`brd_elicitation_questions` in its `methodology.yaml`).
 | "How late can a correction arrive?" | restatement window |
 | "If something is cancelled, should it disappear or stay visible?" | retention and exclusion |
 | "Roughly how many people will use this, how often?" | materialisation |
-| "Will anything other than your BI tool read this?" | storage format |
+| "Will anything other than your reporting tool read this?" | storage format and port type |
+
+The full rubric (groups A to K) is `registry/brd-rubric.yaml`; methodology packs add
+questions in `brd_elicitation_questions`.
+
+## Write
+
+- `openspec/specs/products/<domain>/<product>/brd/spec.md`: `## Purpose` with the
+  `**BRD:** ... · **Version:** ...` line, then one `### Requirement:` per behaviour with an
+  `**ID:** R-n` line, a SHALL statement and at least one `#### Scenario:` with an
+  `**ID:** AX-n` line and GIVEN/WHEN/THEN bullets.
+- `brd/brd.yaml` beside it: the structured answers (contract `brd.v1`).
 
 ## Source-anchored answers
 
-Business analysts often answer with source field names. When that happens, record the
-field as **evidence**, and ask: *"What question does that field answer for you?"* The
-answer is the requirement.
+When an analyst answers with a source field name, record it as evidence and ask "what
+question does that field answer for you?". The answer is the requirement.
 
-## Output
+## Then
 
-`brd/spec.md` (requirements + acceptance examples) and `brd/brd.yaml` (structured half).
-Then run `dpf brd validate`.
+Run `dpf brd validate <product>` and take `generated/<product>/gaps.md` back to the business.
