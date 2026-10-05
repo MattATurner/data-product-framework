@@ -1,80 +1,161 @@
+# Resolved design for customer_orders (contract product-manifest.v1), from TDD-SALES-001.
+# Deliberately simple: one source, no integration layer, the `direct` platform default, and
+# current state only. Every element cites the BRD requirement it satisfies.
 product_id: customer_orders
-version: 1.0.0
-brd_id: BRD-SALES-001
-tdd_id: TDD-SALES-001
-satisfies: BRD-SALES-001@1.0.0
-semantics_signed: true
+version: 1.1.0
 status: draft
 owner: sales-operations
+steward: data-analytics
 domain: sales
 classification: INTERNAL
+registry_overlay: examples/registry
+specs:
+  brd: products/sales/customer-orders/brd
+  tdd: products/sales/customer-orders/tdd
+brd_id: BRD-SALES-001
+tdd_id: TDD-SALES-001
+satisfies: BRD-SALES-001@1.1.0
+adrs: []
+acceptance: acceptance.yaml
 
 deployment:
   gcp_project: data-product-framework
   region: us-central1
+  datasets:
+    raw: raw_example_files
+    staging: stg_orders
+    gold: gold_orders
+    assertions: dpf_assertions
+    control: dpf_control
 
 sources:
   - system_id: example_files
     engine: gcs_objects
     capture_mode: watermark
+    watermark_column: last_modified_ts
+    schedule: "0 5 * * *"            # 05:00 Perth, ahead of the 06:00 build
     entities: [orders, order_lines, customers]
-    tool_tier: 4
+    inspection_mcp_server: null      # object listings need no MCP server
+    brd_requirement_id: [R-6]
 
 layers:
   raw:
-    engine: dataform
     storage: bigquery_native
-  silver:
-    methodology: direct
+
+  staging:
     engine: dataform
     storage: bigquery_native
     models:
       - name: stg_orders
-        role: typed_source
-        grain_statement: one row per customer order as most recently amended
+        role: staging
+        grain_statement: one row per customer order at its latest state
         grain_columns: [order_id]
+        natural_key: [order_id]
+        dedupe_order: [source_modified_ts DESC, _ingest_ts DESC]
         history_semantics: current_only
-        brd_requirement_id: [R-3]
+        materialisation: view
+        body: sql/stg_orders.sql
+        brd_requirement_id: [R-3, R-7]
       - name: stg_order_lines
-        role: typed_source
-        grain_statement: one row per line on a customer order
+        role: staging
+        grain_statement: one row per line on a customer order at its latest state
         grain_columns: [order_id, order_line_no]
+        natural_key: [order_id, order_line_no]
+        dedupe_order: [source_modified_ts DESC, _ingest_ts DESC]
         history_semantics: current_only
-        brd_requirement_id: [R-1]
+        materialisation: view
+        body: sql/stg_order_lines.sql
+        brd_requirement_id: [R-2, R-7]
+      - name: stg_customers
+        role: staging
+        grain_statement: one row per customer with current details
+        grain_columns: [customer_id]
+        natural_key: [customer_id]
+        dedupe_order: [source_modified_ts DESC, _ingest_ts DESC]
+        history_semantics: current_only
+        materialisation: view
+        body: sql/stg_customers.sql
+        brd_requirement_id: [R-1, R-5]
+
   gold:
-    methodology: direct
+    methodology: direct              # the platform default; no decision record needed (D-1)
     engine: dataform
     storage: bigquery_native
     models:
       - name: customer_orders
-        role: business_view
-        materialisation: table
+        role: nested_view
         grain_statement: one row per customer order, with its lines nested
         grain_columns: [order_id]
         history_semantics: current_only
+        materialisation: table
         nesting:
-          - child: stg_order_lines
-            as: order_lines
-            depth: 1
-        brd_requirement_id: [R-1, R-2, R-3, R-4]
+          - {child: stg_order_lines, as: order_lines, depth: 1}
+        body: sql/customer_orders.sql
+        brd_requirement_id: [R-1, R-2, R-3, R-4, R-5]
 
 output_ports:
   - name: customer_orders
-    type: bigquery_view
+    model: customer_orders
+    type: bigquery_table
+    access: dataset_grant
     consumers: [sales-operations, data-analytics]
-
-slo:
-  freshness: daily by 07:00
-  quality: blocking rules must pass
+    brd_requirement_id: [R-1, R-8]
 
 quality:
   gate_behaviour: block
+  rules:
+    - id: QR-1
+      model: stg_orders
+      type: not_null
+      column: customer_id
+      severity: block
+      on_fail: quarantine
+      brd_requirement_id: [R-7]
+    - id: QR-2
+      model: stg_order_lines
+      type: range
+      column: quantity
+      min: 0
+      severity: block
+      on_fail: quarantine
+      brd_requirement_id: [R-7]
 
 orchestration:
   engine: dataform
-  schedule: "0 6 * * *"
-  timezone: Australia/Perth        # business cadence; infra region is us-central1
+  timezone: Australia/Perth          # business cadence; infrastructure region is us-central1
+  schedules:
+    - id: daily
+      cron: "0 6 * * *"
+      brd_requirement_id: [R-6]
+
+observability:
+  freshness:
+    - id: OB-1
+      model: customer_orders
+      max_staleness: PT13H
+      calendar: {days: [MON, TUE, WED, THU, FRI, SAT, SUN], start: "07:00", end: "18:00", timezone: Australia/Perth}
+      check_every: PT1H
+      brd_requirement_id: [R-6]
+  schema_drift:
+    on_additive: land_and_record
+    on_breaking: quarantine_and_alert
+    implements: monitor-data-product
+  alerting:
+    notification_channel_var: alert_channel
+  slo:
+    objective: 0.99
+    window: P28D
 
 governance:
   register: knowledge_catalog
   registered_via: knowledge-catalog-mcp
+  fallback: dataplex_api
+  access:
+    - role: roles/bigquery.dataViewer
+      principal_var: sales_ops_group
+      datasets: [gold]
+      description: Sales Operations
+    - role: roles/bigquery.dataViewer
+      principal_var: data_analytics_group
+      datasets: [gold]
+      description: Data Analytics

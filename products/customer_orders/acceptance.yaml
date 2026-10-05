@@ -1,0 +1,104 @@
+# Acceptance mapping for customer_orders (contract acceptance.v1).
+# The automated checks are data-independent: they hold for any landed drop, so they run
+# against whatever the sandbox holds. Static checks inspect the manifest and generated code.
+product_id: customer_orders
+fixture: any landed drop from example_files; the automated checks do not assume specific rows
+
+tests:
+  - id: AT-1
+    verifies: [AX-1]
+    method: automated
+    model: customer_orders
+    description: Every staged order is present with customer, date, status and complete lines.
+    sql: |
+      SELECT o.order_id, 'incomplete order or line' AS problem
+      FROM {{ ref('customer_orders') }} AS o
+      WHERE o.customer_id IS NULL OR o.order_date IS NULL OR o.order_status IS NULL
+         OR EXISTS (
+           SELECT 1 FROM UNNEST(o.order_lines) AS l
+           WHERE l.product_id IS NULL OR l.quantity IS NULL OR l.line_amount IS NULL
+         )
+      UNION ALL
+      SELECT s.order_id, 'staged order missing' AS problem
+      FROM {{ ref('stg_orders') }} AS s
+      LEFT JOIN {{ ref('customer_orders') }} AS o ON o.order_id = s.order_id
+      WHERE o.order_id IS NULL
+
+  - id: AT-2
+    verifies: [AX-2]
+    method: automated
+    model: customer_orders
+    description: Each order carries all of its lines, nested on the order row.
+    sql: |
+      WITH staged AS (
+        SELECT order_id, COUNT(*) AS staged_lines
+        FROM {{ ref('stg_order_lines') }}
+        GROUP BY order_id
+      )
+      SELECT o.order_id, ARRAY_LENGTH(o.order_lines) AS nested_lines, s.staged_lines
+      FROM {{ ref('customer_orders') }} AS o
+      LEFT JOIN staged AS s ON s.order_id = o.order_id
+      WHERE COALESCE(ARRAY_LENGTH(o.order_lines), 0) != COALESCE(s.staged_lines, 0)
+
+  - id: AT-3
+    verifies: [AX-3]
+    method: automated
+    model: customer_orders
+    description: Each order appears once, showing the status from its latest landed version.
+    sql: |
+      WITH latest AS (
+        SELECT CAST(order_id AS STRING) AS order_id, UPPER(CAST(status AS STRING)) AS latest_status
+        FROM {{ ref('raw_orders') }}
+        WHERE TRUE
+        QUALIFY ROW_NUMBER() OVER (PARTITION BY order_id ORDER BY last_modified_ts DESC, _ingest_ts DESC) = 1
+      )
+      SELECT o.order_id, COUNT(*) AS order_rows,
+             ANY_VALUE(o.order_status) AS shown_status, ANY_VALUE(l.latest_status) AS latest_status
+      FROM {{ ref('customer_orders') }} AS o
+      JOIN latest AS l ON l.order_id = o.order_id
+      GROUP BY o.order_id
+      HAVING COUNT(*) != 1 OR ANY_VALUE(o.order_status) != ANY_VALUE(l.latest_status)
+
+  - id: AT-4
+    verifies: [AX-4]
+    method: automated
+    model: customer_orders
+    description: Cancelled orders are present, flagged, and contribute zero to counted order value.
+    sql: |
+      SELECT order_id, order_status, is_cancelled, counted_order_value
+      FROM {{ ref('customer_orders') }}
+      WHERE (order_status = 'CANCELLED') != is_cancelled
+         OR (is_cancelled AND counted_order_value != 0)
+      UNION ALL
+      SELECT s.order_id, s.order_status, NULL, NULL
+      FROM {{ ref('stg_orders') }} AS s
+      LEFT JOIN {{ ref('customer_orders') }} AS o ON o.order_id = s.order_id
+      WHERE s.order_status = 'CANCELLED' AND o.order_id IS NULL
+
+  - id: AT-5
+    verifies: [AX-5]
+    method: static
+    check: current_state_only
+    element: model:customer_orders
+    description: Every model declares current-state history and no model keeps attribute history.
+
+  - id: AT-6
+    verifies: [AX-6]
+    method: static
+    check: freshness_policy
+    element: observability:OB-1
+    description: A freshness check runs hourly from 07:00 Perth and alerts when data is more than 13 hours old.
+
+  - id: AT-7
+    verifies: [AX-7]
+    method: static
+    check: reject_gate_blocks_publication
+    element: model:customer_orders
+    description: A rejected order or line blocks the refresh and is visible with its reason.
+
+  - id: AT-8
+    verifies: [AX-8]
+    method: static
+    check: access_limited
+    element: port:customer_orders
+    description: Only the Sales Operations and Data Analytics groups hold read access; there is no sharing.

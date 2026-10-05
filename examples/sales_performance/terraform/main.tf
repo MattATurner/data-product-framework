@@ -1,7 +1,21 @@
+# Root module for the sales_performance example.
+#
+# Every resource is generated: run `dpf generate sales_performance` first, which writes the
+# module to generated/sales_performance/terraform/. This wrapper only configures providers
+# and passes inputs, so a change to the product is a change to products/sales_performance/,
+# never to Terraform written by hand.
+
 terraform {
   required_version = ">= 1.5"
   required_providers {
-    google = { source = "hashicorp/google", version = "~> 6.0" }
+    google = {
+      source  = "hashicorp/google"
+      version = ">= 5.30"
+    }
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = ">= 5.30"
+    }
   }
 }
 
@@ -10,61 +24,24 @@ provider "google" {
   region  = var.region
 }
 
-variable "project_id" {
-  type    = string
-  default = "data-product-framework"
+provider "google-beta" {
+  project = var.project_id
+  region  = var.region
 }
 
-variable "region" {
-  type    = string
-  default = "us-central1"
-}
+module "sales_performance" {
+  source = "../../../generated/sales_performance/terraform"
 
-locals {
-  datasets = {
-    raw_ora_local  = "Immutable landing zone. Append-only, source-shaped."
-    stg_sales      = "Typed, deduplicated staging. Methodology-neutral."
-    slv_sales      = "Silver: Kimball dimensional models."
-    gold_sales     = "Gold: published data product output ports."
-    dpf_assertions = "Dataform assertion results."
-    dpf_control    = "Extract watermarks and run control."
-  }
-}
-
-resource "google_bigquery_dataset" "d" {
-  for_each      = local.datasets
-  dataset_id    = each.key
-  location      = var.region
-  description   = each.value
-  friendly_name = each.key
-
-  labels = {
-    managed_by = "data-product-framework"
-    product    = "sales-performance"
-  }
-}
-
-# --- R-12: analysts must not see customer contact details -------------------
-resource "google_data_catalog_taxonomy" "pii" {
-  display_name           = "dpf-pii"
-  region                 = var.region
-  activated_policy_types = ["FINE_GRAINED_ACCESS_CONTROL"]
-}
-
-resource "google_data_catalog_policy_tag" "contact" {
-  taxonomy     = google_data_catalog_taxonomy.pii.id
-  display_name = "pii/contact"
-  description  = "Customer contact details. Masked for the analyst role (BRD R-12)."
-}
-
-# Attach in the table schema; grant fine-grained reader only to roles that need it.
-# Note: the IAM identifier keeps its legacy string.
-#   roles/datacatalog.categoryFineGrainedReader
-
-output "datasets" {
-  value = [for d in google_bigquery_dataset.d : d.dataset_id]
-}
-
-output "contact_policy_tag" {
-  value = google_data_catalog_policy_tag.contact.id
+  project_id                  = var.project_id
+  region                      = var.region
+  consumer_group              = var.consumer_group
+  analyst_group               = var.analyst_group
+  contact_reader_group        = var.contact_reader_group
+  partner_subscriber          = var.partner_subscriber
+  dataform_repository         = var.dataform_repository
+  dataform_git_commitish      = var.dataform_git_commitish
+  dataform_service_account    = var.dataform_service_account
+  alert_channel               = var.alert_channel
+  monitor_service_account     = var.monitor_service_account
+  extractor_log_resource_type = var.extractor_log_resource_type
 }

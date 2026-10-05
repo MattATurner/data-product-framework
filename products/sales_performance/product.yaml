@@ -1,35 +1,90 @@
+# Resolved design for sales_performance (contract product-manifest.v1), from TDD-SALES-002.
+# Every element cites the BRD requirement it satisfies (brd_requirement_id) or the platform
+# capability that mandates it (implements). dpf generate renders everything in generated/.
 product_id: sales_performance
-version: 1.0.0
-brd_id: BRD-SALES-002
-tdd_id: TDD-SALES-002
-satisfies: BRD-SALES-002@1.1.0
-semantics_signed: true
+version: 1.2.0
 status: draft
 owner: sales-operations
+steward: data-analytics
 domain: sales
 classification: INTERNAL-COMMERCIAL
+registry_overlay: examples/registry
+specs:
+  brd: products/sales/sales-performance/brd
+  tdd: products/sales/sales-performance/tdd
+brd_id: BRD-SALES-002
+tdd_id: TDD-SALES-002
+satisfies: BRD-SALES-002@1.2.0
+adrs: [ADR-SALES-002-01, ADR-SALES-002-02, ADR-015]
+acceptance: acceptance.yaml
 
 deployment:
   gcp_project: data-product-framework
   region: us-central1
+  datasets:
+    raw: raw_ora_local
+    staging: stg_sales
+    silver: slv_sales
+    gold: gold_sales
+    share: share_sales_partner
+    assertions: dpf_assertions
+    control: dpf_control
 
 sources:
   - system_id: ora_local
     engine: oracle
-    capture_mode: watermark        # constrained by source reachability - see TDD D-10
+    capture_mode: watermark          # constrained by source reachability (D-10, ADR-SALES-002-02)
     watermark_column: last_modified_ts
+    lookback_minutes: 15
     schedule: "0 * * * *"
-    entities: [orders, order_lines, customers, products, sales_reps]
+    entities: [orders, order_lines, customers, products]
     inspection_mcp_server: mcp-toolbox-databases
-    tool_tier: 2
     brd_requirement_id: [R-10]
 
 layers:
   raw:
+    storage: bigquery_native
+
+  staging:
     engine: dataform
     storage: bigquery_native
+    models:
+      - name: stg_customers
+        role: staging
+        grain_statement: one row per customer at its latest source state
+        grain_columns: [customer_id]
+        natural_key: [customer_id]
+        dedupe_order: [source_modified_ts DESC, _ingest_ts DESC]
+        history_semantics: current_only
+        materialisation: view
+        body: sql/stg_customers.sql
+        implements: conform-staging
+        brd_requirement_id: [R-4]
+      - name: stg_products
+        role: staging
+        grain_statement: one row per product at its latest source state
+        grain_columns: [product_id]
+        natural_key: [product_id]
+        dedupe_order: [source_modified_ts DESC, _ingest_ts DESC]
+        history_semantics: current_only
+        materialisation: view
+        body: sql/stg_products.sql
+        implements: conform-staging
+        brd_requirement_id: [R-6]
+      - name: stg_order_lines
+        role: staging
+        grain_statement: one row per order line at its latest amended values
+        grain_columns: [order_id, order_line_no]
+        natural_key: [order_id, order_line_no]
+        dedupe_order: [source_modified_ts DESC, _ingest_ts DESC]
+        history_semantics: current_only
+        materialisation: view
+        body: sql/stg_order_lines.sql
+        implements: conform-staging
+        brd_requirement_id: [R-3, R-11]
+
   silver:
-    methodology: kimball          # deviation from the 'direct' default - ADR-SALES-002-01
+    methodology: kimball             # departs from the direct default (D-1, ADR-SALES-002-01)
     engine: dataform
     storage: bigquery_native
     models:
@@ -37,67 +92,213 @@ layers:
         role: dimension
         grain_statement: one row per customer per validity period
         grain_columns: [customer_id, valid_from]
+        natural_key: [customer_id]
+        surrogate_key: sk_customer
         history_semantics: point_in_time
+        materialisation: table
         conformed_as: dim_customer
-        attributes: {scd_type: 2}
-        brd_requirement_id: [R-4, R-5]
+        attributes:
+          scd_type: 2
+          source: stg_customers
+          tracked: [customer_segment, region]
+          current: [customer_name, customer_email, customer_phone]
+        brd_requirement_id: [R-4, R-5, R-12]
       - name: dim_product
         role: dimension
         grain_statement: one row per product per validity period
         grain_columns: [product_id, valid_from]
+        natural_key: [product_id]
+        surrogate_key: sk_product
         history_semantics: point_in_time
+        materialisation: table
         conformed_as: dim_product
-        attributes: {scd_type: 2}
+        attributes:
+          scd_type: 2
+          source: stg_products
+          tracked: [product_category]
+          current: [product_name]
         brd_requirement_id: [R-6]
+      - name: dim_date
+        role: calendar
+        grain_statement: one row per calendar day
+        grain_columns: [date_key]
+        natural_key: [date_key]
+        history_semantics: current_only
+        materialisation: table
+        conformed_as: dim_date
+        attributes:
+          start_date: "2020-01-01"
+          end_date: "2030-12-31"
+        brd_requirement_id: [R-1]
       - name: fct_order_line
         role: fact
         grain_statement: one row per order line at its latest amended values
         grain_columns: [order_id, order_line_no]
+        natural_key: [order_id, order_line_no]
         history_semantics: current_only
+        materialisation: incremental_table
+        partition_by: order_date
+        cluster_by: [sk_customer, sk_product]
         attributes:
           fact_type: transaction
-          additivity: additive
-          dim_refs: [dim_customer, dim_product, dim_date]
-        brd_requirement_id: [R-2, R-3, R-7]
+          source: stg_order_lines
+          event_date: order_date
+          restatement_window_days: 90
+          dim_refs:
+            - {dimension: dim_customer, natural_key: customer_id, as_at: order_date}
+            - {dimension: dim_product, natural_key: product_id, as_at: order_date}
+            - {dimension: dim_date, from: order_date}
+          measures:
+            - {name: quantity, additivity: additive}
+            - {name: gross_amount, additivity: additive}
+            - {name: discount_amount, additivity: additive}
+            - {name: net_amount, additivity: additive}
+          degenerate: [order_status, source_modified_ts]
+          flags:
+            - {name: is_cancelled, expression: "order_status = 'CANCELLED'"}
+        brd_requirement_id: [R-2, R-3, R-7, R-8, R-9]
+
   gold:
-    methodology: direct           # presentation only - modelling is done in silver
+    methodology: direct              # presentation only; modelling is done in silver (D-2)
     engine: dataform
     storage: bigquery_native
     models:
       - name: sales_performance_monthly
         role: business_view
-        materialisation: table
         grain_statement: one row per month per customer segment per product category per region
-        grain_columns: [month, customer_segment, product_category, region]
-        history_semantics: current_only
-        brd_requirement_id: [R-1, R-7, R-8]
+        grain_columns: [year_month, customer_segment, product_category, region]
+        history_semantics: point_in_time
+        materialisation: table
+        body: sql/sales_performance_monthly.sql
+        brd_requirement_id: [R-1, R-4, R-7, R-8]
+      - name: sales_order_line_detail
+        role: business_view
+        grain_statement: one row per order line at its latest amended values
+        grain_columns: [order_id, order_line_no]
+        history_semantics: point_in_time
+        materialisation: view
+        body: sql/sales_order_line_detail.sql
+        brd_requirement_id: [R-2, R-8, R-12]
+      - name: sales_performance_partner_extract
+        role: business_view
+        grain_statement: one row per closed month per product category per region
+        grain_columns: [year_month, product_category, region]
+        history_semantics: point_in_time
+        materialisation: table
+        dataset: share
+        schedule: monthly
+        body: sql/sales_performance_partner_extract.sql
+        brd_requirement_id: [R-13]
 
 output_ports:
   - name: sales_performance_monthly
-    type: bigquery_view
+    model: sales_performance_monthly
+    type: bigquery_table
+    access: dataset_grant
     consumers: [sales-leadership, sales-operations, finance]
+    brd_requirement_id: [R-1, R-7]
+  - name: sales_order_line_detail
+    model: sales_order_line_detail
+    type: bigquery_view
+    access: authorized_view
+    consumers: [sales-operations, finance]
+    brd_requirement_id: [R-2]
   - name: sales_performance_partner_extract
+    model: sales_performance_partner_extract
     type: bigquery_sharing_listing
+    access: sharing_listing
     consumers: [external-analytics-partner]
-
-slo:
-  freshness: hourly during the working day
-  quality: blocking rules must pass
+    sharing:
+      exchange_id: sales_partner_exchange
+      listing_id: sales_performance_monthly_extract
+      subscriber_var: partner_subscriber
+    brd_requirement_id: [R-13]
 
 quality:
   gate_behaviour: block
+  rules:
+    - id: QR-1
+      model: stg_order_lines
+      type: not_null
+      column: customer_id
+      severity: block
+      on_fail: quarantine
+      brd_requirement_id: [R-11]
+    - id: QR-2
+      model: stg_order_lines
+      type: range
+      column: quantity
+      min: 0
+      severity: block
+      on_fail: quarantine
+      brd_requirement_id: [R-11]
 
 orchestration:
   engine: dataform
-  schedule: "0 * * * *"
   timezone: Australia/Perth
-  restatement_window_days: 90
+  schedules:
+    - id: hourly
+      cron: "10 * * * *"             # ten past, after the hourly extract
+      brd_requirement_id: [R-10]
+    - id: monthly
+      cron: "0 7 2 * *"              # 07:00 on the 2nd, once the month has closed
+      brd_requirement_id: [R-13]
+
+observability:
+  freshness:
+    - id: OB-1
+      model: sales_performance_monthly
+      max_staleness: PT1H30M
+      calendar: {days: [MON, TUE, WED, THU, FRI], start: "08:00", end: "18:00", timezone: Australia/Perth}
+      check_every: PT15M
+      brd_requirement_id: [R-10]
+    - id: OB-2
+      model: sales_performance_partner_extract
+      max_staleness: P32D
+      check_every: P1D
+      brd_requirement_id: [R-13]
+  volume:
+    - id: OB-3
+      model: fct_order_line
+      window: P1D
+      date_column: order_date
+      expected_rows: 40000
+      tolerance_pct: 60
+      implements: monitor-data-product
+  schema_drift:
+    on_additive: land_and_record
+    on_breaking: quarantine_and_alert
+    implements: monitor-data-product
+  quality_scans:
+    schedule: "30 6 * * *"
+    models: [fct_order_line, sales_performance_monthly]
+    implements: enforce-data-quality
+  alerting:
+    notification_channel_var: alert_channel
+    runbook: examples/sales_performance/RUNBOOK.md
+  slo:
+    objective: 0.99
+    window: P28D
 
 governance:
   register: knowledge_catalog
   registered_via: knowledge-catalog-mcp
+  fallback: dataplex_api
+  access:
+    - role: roles/bigquery.dataViewer
+      principal_var: consumer_group
+      datasets: [gold]
+      description: Sales leadership, Sales Operations and Finance
+    - role: roles/bigquery.dataViewer
+      principal_var: analyst_group
+      datasets: [gold, silver]
+      description: General analysts; customer contact details are masked
   policy_tags:
-    - columns: [customer_email, customer_phone]
-      tag: pii/contact
-      masked_for: [analyst]
+    - id: PT-1
+      model: dim_customer
+      columns: [customer_email, customer_phone]
+      tag: pii_contact
+      masking: always_null
+      masked_readers: [analyst_group]
+      fine_grained_readers: [contact_reader_group]
       brd_requirement_id: [R-12]

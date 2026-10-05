@@ -1,4 +1,4 @@
-# Watermark extract configuration.
+# Watermark extract configuration (skill extract-rdbms-watermark, ADR-015).
 # Capture mode is 'watermark' because the source is unreachable from GCP (TDD D-10).
 
 source:
@@ -13,6 +13,15 @@ target:
   location: us-central1
   raw_dataset: raw_ora_local
   control_dataset: dpf_control
+
+# Re-read window for transactions that commit after a run has already read past them.
+# Predicate: watermark_column > last watermark - lookback_minutes. Re-read rows land
+# again in raw (at-least-once); staging keeps one row per natural key + source change
+# timestamp (exactly-once). Override per entity with `lookback_minutes`.
+lookback_minutes: 15
+
+# Expiry of raw_<entity>__load_<batch> tables that a failed run leaves behind.
+load_table_ttl_hours: 24
 
 entities:
   - name: orders

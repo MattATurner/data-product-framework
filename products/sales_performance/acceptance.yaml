@@ -1,0 +1,196 @@
+# Acceptance mapping for sales_performance (contract acceptance.v1).
+# Maps every business acceptance scenario (AX id in the BRD spec) to a check:
+#   automated    engine-neutral SQL that returns rows only on failure, run against the seeded
+#                build by `dpf test run --live` (tagged `acceptance`, never scheduled)
+#   static       a dpf check that inspects the manifest and the generated artefacts
+#   attestation  a recorded human confirmation (`dpf test attest`)
+product_id: sales_performance
+fixture: >
+  examples/sales_performance/seed: load phase 1, build, load phase 2, build, then run the
+  tests. Phase 3 (a line with no customer) demonstrates the reject gate and is loaded last.
+
+tests:
+  - id: AT-1
+    verifies: [AX-1]
+    method: automated
+    model: sales_performance_monthly
+    description: Quarterly net sales per segment agree between the monthly view and the line detail.
+    sql: |
+      WITH quarters AS (
+        SELECT DISTINCT year_month, year_quarter FROM {{ ref('dim_date') }}
+      ),
+      from_monthly AS (
+        SELECT q.year_quarter AS quarter, m.customer_segment AS segment, SUM(m.net_sales) AS monthly_net_sales
+        FROM {{ ref('sales_performance_monthly') }} AS m
+        JOIN quarters AS q ON q.year_month = m.year_month
+        GROUP BY q.year_quarter, m.customer_segment
+      ),
+      from_detail AS (
+        SELECT q.year_quarter AS quarter, l.customer_segment AS segment, SUM(l.net_amount) AS detail_net_sales
+        FROM {{ ref('sales_order_line_detail') }} AS l
+        JOIN quarters AS q ON q.year_month = l.year_month
+        WHERE NOT l.is_cancelled
+        GROUP BY q.year_quarter, l.customer_segment
+      )
+      SELECT quarter, segment, m.monthly_net_sales, d.detail_net_sales
+      FROM from_monthly AS m
+      FULL OUTER JOIN from_detail AS d USING (quarter, segment)
+      WHERE m.monthly_net_sales IS NULL OR d.detail_net_sales IS NULL
+         OR m.monthly_net_sales != d.detail_net_sales
+
+  - id: AT-2
+    verifies: [AX-2]
+    method: automated
+    model: sales_order_line_detail
+    description: Every monthly figure equals the sum, and the count, of its non-cancelled detail lines.
+    sql: |
+      WITH detail AS (
+        SELECT year_month, customer_segment, product_category, region,
+               SUM(net_amount) AS detail_net_sales, COUNT(*) AS detail_lines
+        FROM {{ ref('sales_order_line_detail') }}
+        WHERE NOT is_cancelled
+        GROUP BY year_month, customer_segment, product_category, region
+      )
+      SELECT year_month, customer_segment, product_category, region,
+             m.net_sales AS monthly_net_sales, d.detail_net_sales,
+             m.order_line_count AS monthly_lines, d.detail_lines
+      FROM {{ ref('sales_performance_monthly') }} AS m
+      FULL OUTER JOIN detail AS d USING (year_month, customer_segment, product_category, region)
+      WHERE m.net_sales IS NULL OR d.detail_net_sales IS NULL
+         OR m.net_sales != d.detail_net_sales OR m.order_line_count != d.detail_lines
+
+  - id: AT-3
+    verifies: [AX-3]
+    method: automated
+    model: fct_order_line
+    description: SO-1001 line 2, landed three times, appears once with quantity 6 and net amount 810.00.
+    sql: |
+      SELECT COUNT(*) AS line_rows, MAX(quantity) AS quantity, MAX(net_amount) AS net_amount
+      FROM {{ ref('fct_order_line') }}
+      WHERE order_id = 'SO-1001' AND order_line_no = 2
+      HAVING COUNT(*) != 1 OR MAX(quantity) != 6 OR MAX(net_amount) != 810
+
+  - id: AT-4
+    verifies: [AX-4]
+    method: automated
+    model: sales_order_line_detail
+    description: C-001's March order reports under SMB and its June order under ENTERPRISE.
+    sql: |
+      WITH expected AS (
+        SELECT 'SO-1001' AS order_id, 'SMB' AS expected_segment UNION ALL
+        SELECT 'SO-1004', 'ENTERPRISE'
+      ),
+      actual AS (
+        SELECT DISTINCT order_id, customer_segment FROM {{ ref('sales_order_line_detail') }}
+      )
+      SELECT e.order_id, e.expected_segment, a.customer_segment AS actual_segment
+      FROM expected AS e
+      LEFT JOIN actual AS a USING (order_id)
+      WHERE a.customer_segment IS NULL OR a.customer_segment != e.expected_segment
+
+  - id: AT-5
+    verifies: [AX-5]
+    method: attestation
+    attested_by_role: finance
+    description: Finance confirms March net sales reconcile with reported revenue, or accepts the explained variance.
+
+  - id: AT-6
+    verifies: [AX-6]
+    method: automated
+    model: sales_order_line_detail
+    description: SO-1003 is visible in April's detail, marked cancelled, and contributes nothing to April net sales.
+    sql: |
+      WITH so1003 AS (
+        SELECT COUNT(*) AS lines, COUNTIF(is_cancelled) AS cancelled_lines
+        FROM {{ ref('sales_order_line_detail') }}
+        WHERE order_id = 'SO-1003' AND year_month = '2026-04'
+      ),
+      april AS (
+        SELECT
+          (SELECT COALESCE(SUM(net_sales), 0) FROM {{ ref('sales_performance_monthly') }}
+            WHERE year_month = '2026-04') AS reported,
+          (SELECT COALESCE(SUM(net_amount), 0) FROM {{ ref('sales_order_line_detail') }}
+            WHERE year_month = '2026-04' AND order_id != 'SO-1003' AND NOT is_cancelled) AS expected
+      )
+      SELECT s.lines, s.cancelled_lines, a.reported, a.expected
+      FROM so1003 AS s CROSS JOIN april AS a
+      WHERE s.lines = 0 OR s.cancelled_lines != s.lines OR a.reported != a.expected
+
+  - id: AT-7
+    verifies: [AX-7]
+    method: automated
+    model: sales_order_line_detail
+    description: P-200 reports under GADGETS for March and WIDGETS for June after its recategorisation.
+    sql: |
+      WITH expected AS (
+        SELECT '2026-03' AS year_month, 'GADGETS' AS expected_category UNION ALL
+        SELECT '2026-06', 'WIDGETS'
+      ),
+      actual AS (
+        SELECT DISTINCT year_month, product_category
+        FROM {{ ref('sales_order_line_detail') }}
+        WHERE product_id = 'P-200'
+      )
+      SELECT e.year_month, e.expected_category, a.product_category AS actual_category
+      FROM expected AS e
+      LEFT JOIN actual AS a USING (year_month)
+      WHERE a.product_category IS NULL OR a.product_category != e.expected_category
+
+  - id: AT-8
+    verifies: [AX-8]
+    method: attestation
+    attested_by_role: merchandising
+    description: Merchandising confirms the product categories used in the figures match their range.
+
+  - id: AT-9
+    verifies: [AX-9]
+    method: automated
+    model: sales_performance_monthly
+    description: Monthly figures summed across every slice equal net sales and line counts taken directly from the lines.
+    sql: |
+      SELECT m.total_net_sales, f.total_net_amount, m.total_lines, f.total_fact_lines
+      FROM (
+        SELECT COALESCE(SUM(net_sales), 0) AS total_net_sales, COALESCE(SUM(order_line_count), 0) AS total_lines
+        FROM {{ ref('sales_performance_monthly') }}
+      ) AS m
+      CROSS JOIN (
+        SELECT COALESCE(SUM(net_amount), 0) AS total_net_amount, COUNT(*) AS total_fact_lines
+        FROM {{ ref('fct_order_line') }}
+        WHERE NOT is_cancelled
+      ) AS f
+      WHERE m.total_net_sales != f.total_net_amount OR m.total_lines != f.total_fact_lines
+
+  - id: AT-10
+    verifies: [AX-10]
+    method: static
+    check: restatement_window
+    element: model:fct_order_line
+    description: Incremental builds rewrite only order dates inside the 90-day correction window.
+
+  - id: AT-11
+    verifies: [AX-11]
+    method: static
+    check: freshness_policy
+    element: observability:OB-1
+    description: A freshness check runs every 15 minutes in Perth working hours and alerts beyond 90 minutes.
+
+  - id: AT-12
+    verifies: [AX-12]
+    method: static
+    check: reject_gate_blocks_publication
+    element: model:sales_performance_monthly
+    description: A rejected line blocks every gold refresh and is visible with its reason.
+
+  - id: AT-13
+    verifies: [AX-13]
+    method: static
+    check: policy_tag_masking
+    element: policy:PT-1
+    description: Email and phone are policy-tagged with a null mask for analysts; no gold view exposes them.
+
+  - id: AT-14
+    verifies: [AX-14]
+    method: static
+    check: sharing_listing_only
+    element: port:sales_performance_partner_extract
+    description: The partner receives a listing subscription only, over closed months without customer columns.
