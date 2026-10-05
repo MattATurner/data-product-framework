@@ -68,6 +68,17 @@ jobs:
             terraform -chdir="$d" init -backend=false -input=false >/dev/null
             terraform -chdir="$d" validate
           done
+      - name: Terraform validate (example wrapper around the freshly generated module)
+        run: |
+          w=examples/sales_performance/terraform
+          [ -d "$w" ] || exit 0
+          python -m venv .dpf-venv
+          .dpf-venv/bin/pip install --require-hashes -r requirements/dev.txt
+          .dpf-venv/bin/pip install --no-deps -e .
+          .dpf-venv/bin/dpf generate sales_performance
+          terraform -chdir="$w" fmt -check -diff
+          terraform -chdir="$w" init -backend=false -input=false >/dev/null
+          terraform -chdir="$w" validate
       - name: Dataform compile
         run: |
           for d in tests/golden/*/dataform; do

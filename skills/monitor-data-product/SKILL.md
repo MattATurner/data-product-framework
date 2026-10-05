@@ -36,5 +36,6 @@ dpf monitor <product> --evidence run.json [--open-change]
 ```
 
 Freshness is only judged inside the policy's business calendar. A breach with
-`--open-change` scaffolds `openspec/changes/<date>-<product>-<kind>/` (proposal and tasks)
-so the fix goes through the same spec-driven loop as any other change.
+`--open-change` scaffolds `openspec/changes/monitor-<product>-<kind>-<YYYYMMDD-HHMM>/`
+(`.openspec.yaml` with `skip_specs: true`, plus proposal, design, verification, operations
+and tasks) so the fix goes through the same spec-driven loop as any other change.

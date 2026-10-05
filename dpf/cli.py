@@ -138,10 +138,11 @@ def cmd_check(ws, args, report):
     from dpf.validate import validate
 
     upto = GATES.index(args.gate)
+    products = _products(ws, args)  # an unknown product is a usage error before any check runs
     if upto >= 3:
         validate(ws, report)
         lint(ws, report)
-    for p in _products(ws, args):
+    for p in products:
         check_brd(p, report, write_gaps=False)
         if upto >= 1:
             check_design(p, report)

@@ -1,8 +1,8 @@
 # The bus matrix: conformed dimensions, their agreed grain, keys and owning domain.
 # Only relevant when a methodology with conformed dimensions is in use.
 #
-# A BRD implying a conformed entity at a different grain or key fails G0 with a
-# conflict report naming the owning domain.
+# A model that declares `conformed_as` with a different grain or natural key fails G1
+# (rule kimball/conformance-respected) with a conflict report naming the owning domain.
 #
 # EMPTY BY DESIGN. For a worked example see examples/registry/.
 

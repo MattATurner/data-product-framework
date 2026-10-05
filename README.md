@@ -87,13 +87,16 @@ build digest binds test evidence to exactly this build.
 
 | | Paths |
 |---|---|
-| **Template** (copied by `dpf init`) | `openspec/` config, schema, project context and `specs/platform/`; `contracts/`, `methodologies/`, `engines/`, `skills/`, `registry/`, `adr/`, `dpf/`, CI, `docs/user-guide.md`, eval and golden READMEs |
+| **Template** (copied by `dpf init`) | `openspec/` config, schema, project context and `specs/platform/`; `contracts/`, `methodologies/`, `engines/`, `skills/`, `registry/`, `adr/`, `dpf/`, `requirements/`, CI, `docs/user-guide.md`, eval and golden READMEs |
 | **Example** (not copied) | `openspec/specs/products/`, `products/`, `examples/`, `tests/golden/*`, `evidence/`, the plan, method diagram and presentation in `docs/` |
 
-**`registry/` ships empty by design**, so a new project never inherits someone else's
-glossary, entities or source systems. The examples declare `registry_overlay:
-examples/registry` in their manifests and read that overlay without changing `registry/`.
-`registry/mcp_servers.yaml` stays populated: the MCP catalogue is platform infrastructure.
+**`registry/` ships without project content by design**: the source-system, glossary,
+entity and conformance catalogues are empty, so a new project never inherits someone
+else's. The examples declare `registry_overlay: examples/registry` in their manifests and
+read that overlay without changing `registry/`. Framework configuration ships populated:
+`platform-defaults.yaml` (set your project, region and business time zone), the BRD rubric
+and vocabulary (`brd-rubric.yaml`, `brd-vocabulary.yaml`) and the MCP catalogue
+(`mcp_servers.yaml`).
 
 ## Worked examples
 
@@ -115,10 +118,11 @@ example signatures ("Sales Operations (example)"), not real approvals.
 
 ## Verified with the real tools
 
-The golden copies are checked in CI (`.github/workflows/ci.yml`) and were verified locally:
-`terraform fmt -check` and `terraform validate` (both products, and the example wrapper),
-Dataform `compile` (both products, 0 errors) and `dbt parse` (the dbt rendering of
-`sales_performance`).
+The golden copies and the example Terraform wrapper are checked in CI
+(`.github/workflows/ci.yml`, pinned tool versions) and were verified locally with the same
+versions: Terraform 1.9.8 `fmt -check` and `validate` (all three golden modules and the
+wrapper), Dataform CLI 3.0.71 `compile` (both products, 0 errors) and dbt 1.12.5 `parse` (the
+dbt rendering of `sales_performance`: 18 models, 36 tests, 4 sources).
 
 ## Documentation
 

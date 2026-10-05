@@ -22,7 +22,7 @@ Apply it **before the first extract**: it creates the control tables the extract
 |---|---|---|
 | `datasets.tf` | raw, staging, silver, gold, share, assertions and control datasets | `select-engine-and-storage` |
 | `access.tf` | dataset access for the consumer and analyst groups; silver authorises the gold views | R-1, R-2, R-7, R-12 |
-| `governance.tf` | taxonomy, `pii/contact` policy tag, null-mask data policy for analysts | R-12 |
+| `governance.tf` | taxonomy, `pii_contact` policy tag, null-mask data policy for analysts | R-12 |
 | `sharing.tf` | BigQuery sharing exchange, listing over the partner extract, optional subscriber | R-13 |
 | `orchestration.tf` | Dataform release configuration plus one workflow configuration per schedule | R-10 (hourly), R-13 (monthly) |
 | `monitoring.tf` | freshness and volume checks (scheduled queries), log-based metrics, alert policies | R-10, R-13, `monitor-data-product` |

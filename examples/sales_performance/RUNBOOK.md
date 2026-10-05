@@ -31,7 +31,7 @@ terraform init && terraform apply
 ```
 
 Seven datasets (raw, staging, silver, gold, share, assertions, control), the control
-tables, the `pii/contact` policy tag with a null mask for analysts (R-12), the partner
+tables, the `pii_contact` policy tag with a null mask for analysts (R-12), the partner
 listing (R-13), orchestration, checks, alerts and Knowledge Catalog quality scans. Apply
 before the first extract: the extractor writes to the control tables.
 
@@ -123,7 +123,13 @@ them: they are the acceptance pack.
 
 ## 5. Publish and register
 
-Status moves from `provisional` to `published` only when G4 passes.
+Publishing is a release build like any other, because the status is part of the manifest
+and therefore of the build digest. Set `status: published` in
+`products/sales_performance/product.yaml`, regenerate (`make golden`) and deploy that build,
+then run the automated tests and attestations against it. Grant access and register only
+when G4 passes for that digest. dpf never changes the status for you; while the BRD still
+carries open assumptions (ADR-009), the generated `data-product.json` reports `provisional`
+whatever the manifest says.
 
 - The partner listing already exists (Terraform `sharing.tf`). Grant `partner_subscriber`.
 - Register in Knowledge Catalog from `generated/sales_performance/catalog-registration.json`
