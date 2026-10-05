@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dpf.dev/contracts/test-evidence.v1.json",
+  "title": "Test evidence",
+  "description": "Outcome of running a product's test specification against a deployed build, or a recorded attestation. Bound to the artefact digest it was produced against so stale evidence is detectable.",
+  "type": "object",
+  "required": [
+    "product_id",
+    "artefact_digest",
+    "run_id",
+    "environment",
+    "recorded_at",
+    "results"
+  ],
+  "properties": {
+    "product_id": {
+      "type": "string"
+    },
+    "artefact_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "environment": {
+      "type": "string",
+      "enum": [
+        "sandbox",
+        "test",
+        "production"
+      ]
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "test_id",
+          "status"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "test_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "passed",
+              "failed",
+              "skipped"
+            ]
+          },
+          "failing_rows": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "attested_by": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "finished_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

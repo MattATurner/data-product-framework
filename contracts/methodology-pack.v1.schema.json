@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dpf.dev/contracts/methodology-pack.v1.json",
+  "title": "Methodology pack",
+  "description": "A pluggable modelling methodology: the roles it offers, which engines can render each role, the TDD declarations it needs, the business-language questions it adds, and the rules it enforces.",
+  "type": "object",
+  "required": [
+    "id",
+    "label",
+    "is_default",
+    "roles",
+    "supported_engines",
+    "rules"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string"
+    },
+    "is_default": {
+      "type": "boolean"
+    },
+    "roles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "description",
+          "skill",
+          "emits",
+          "layers"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "skill": {
+            "type": "string"
+          },
+          "emits": {
+            "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/contract_id"
+          },
+          "layers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "silver",
+                "gold"
+              ]
+            }
+          },
+          "required_attributes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "planned_roles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "description"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "supported_engines": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/engine"
+        }
+      }
+    },
+    "engine_notes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "required_tdd_declarations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "brd_elicitation_questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "text",
+          "derives"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "derives": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "anti_patterns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "flag"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "flag": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

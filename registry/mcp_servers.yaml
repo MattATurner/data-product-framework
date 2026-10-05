@@ -1,12 +1,19 @@
-# Known MCP servers and agent surfaces, in tier order (see AGENTS.md).
-# Skills MUST consult this before writing integration code.
-# Verify availability and IAM against live docs before customer use.
+# Tool catalogue in tier order (see AGENTS.md "Tool selection").
+#   Tier 1  managed remote MCP server
+#   Tier 2  self-hosted MCP server
+#   Tier 3  managed agent or API surface
+#   Tier 4  official CLI, API or infrastructure-as-code
+#   Tier 5  bespoke code - needs an ADR
+#
+# Every skill names its `tool`; `dpf lint` checks that the skill's tool_tier equals the
+# tool's tier here, and fails a tier 4 or 5 skill whose `needs` are covered by a tier 1-3
+# server. Verify availability and IAM against live docs before customer use.
 
 servers:
   - id: bigquery-mcp
     tier: 1
     kind: managed_remote_mcp
-    covers: [bigquery_query, bigquery_metadata, information_schema]
+    covers: [bigquery_query, bigquery_metadata, information_schema, data_profiling]
     iam: [roles/mcp.toolUser, roles/bigquery.jobUser, roles/bigquery.dataViewer]
     docs: https://docs.cloud.google.com/bigquery/docs/use-bigquery-mcp
     notes: Preferred for any BigQuery read, metadata or profiling operation.
@@ -14,29 +21,30 @@ servers:
   - id: knowledge-catalog-mcp
     tier: 1
     kind: managed_remote_mcp
-    covers: [catalog_entries, entry_groups, glossaries, data_products]
+    covers: [catalog_entries, entry_groups, aspects, glossaries, data_products, catalog_search]
     iam: [roles/mcp.toolUser, roles/dataplex.catalogAdmin]
     docs: https://docs.cloud.google.com/dataplex/docs/use-remote-mcp
     notes: >
-      Preferred for catalog registration, glossary binding and discovery.
-      Offered as-is with limited support at time of writing - confirm before relying on
-      it in a production gate.
+      Knowledge Catalog. Preferred for catalog registration, glossary binding and discovery.
+      Offered as-is with limited support at time of writing - confirm before relying on it
+      in a production gate.
 
   - id: mcp-toolbox-databases
     tier: 2
     kind: self_hosted_mcp
-    covers: [oracle, postgres, mysql, sqlserver, alloydb, cloudsql, spanner, bigquery]
+    covers: [source_inspection, oracle_query, postgres_query, mysql_query, sqlserver_query,
+             alloydb_query, cloudsql_query, spanner_query]
     docs: https://github.com/googleapis/genai-toolbox
     notes: >
-      Self-hosted control plane exposing databases as MCP tools via tools.yaml.
-      Preferred for source-system inspection during BRD feasibility checks, where no
-      managed MCP server exists.
+      Self-hosted control plane exposing databases as MCP tools via tools.yaml. Preferred
+      for source-system inspection during the TDD feasibility pass. Interactive queries,
+      not scheduled bulk extraction.
 
   - id: conversational-analytics-api
     tier: 3
     kind: managed_agent
     covers: [natural_language_query, data_qa]
-    notes: Use for NL access to a published product rather than building a bespoke NL2SQL layer.
+    notes: Use for natural-language access to a published product rather than a bespoke NL2SQL layer.
 
   - id: document-ai
     tier: 3
@@ -44,10 +52,50 @@ servers:
     covers: [document_parsing, layout_extraction]
     notes: Reachable from BigQuery via ML.PROCESS_DOCUMENT - prefer that to a custom parser.
 
-# Capabilities with no MCP/agent option today. Skills covering these may sit at tier 4
-# without an ADR. Review this list whenever the platform ships new MCP surfaces.
+tools:
+  - id: dataform-api
+    tier: 4
+    kind: managed_api
+    covers: [dataform_repository_management, dataform_workflow_invocation]
+  - id: dbt-cli
+    tier: 4
+    kind: cli
+    covers: [dbt_build]
+  - id: terraform
+    tier: 4
+    kind: infrastructure_as_code
+    covers: [terraform_provisioning, sharing_listing_management, policy_tag_management, alert_policy_management]
+  - id: gcloud-storage
+    tier: 4
+    kind: cli
+    covers: [object_listing, object_copy]
+  - id: datastream-api
+    tier: 4
+    kind: managed_api
+    covers: [datastream_stream_management]
+  - id: cloud-monitoring-api
+    tier: 4
+    kind: managed_api
+    covers: [alert_policy_management, log_metric_management]
+  - id: dpf-local
+    tier: 4
+    kind: cli
+    covers: [spec_validation, artefact_generation, traceability, test_planning, run_evaluation]
+    notes: The dpf command in this repository.
+  - id: bespoke-code
+    tier: 5
+    kind: custom_code
+    covers: []
+    notes: Hand-written integration code. Every skill using it must cite an ADR.
+
+# Capabilities with no MCP or agent option today. Skills needing only these may sit at
+# tier 4 without an ADR. Review this list whenever the platform ships new MCP surfaces.
 no_mcp_option_yet:
   - datastream_stream_management
   - dataform_repository_management
+  - dataform_workflow_invocation
   - terraform_provisioning
   - composer_dag_deployment
+  - outbound_batch_extract
+  - object_listing
+  - dbt_build

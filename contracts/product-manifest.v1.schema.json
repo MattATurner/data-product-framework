@@ -1,0 +1,876 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dpf.dev/contracts/product-manifest.v1.json",
+  "title": "Product manifest",
+  "description": "The resolved design of one data product, emitted by resolve-tdd from the approved TDD. Every element cites the BRD requirement it satisfies (brd_requirement_id) or the platform capability that mandates it (implements).",
+  "type": "object",
+  "required": [
+    "product_id",
+    "version",
+    "status",
+    "owner",
+    "domain",
+    "classification",
+    "specs",
+    "brd_id",
+    "tdd_id",
+    "satisfies",
+    "deployment",
+    "sources",
+    "layers",
+    "output_ports",
+    "quality",
+    "orchestration",
+    "observability",
+    "governance"
+  ],
+  "properties": {
+    "product_id": {
+      "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/identifier"
+    },
+    "version": {
+      "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/semver"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "provisional",
+        "published",
+        "deprecated"
+      ]
+    },
+    "owner": {
+      "type": "string"
+    },
+    "steward": {
+      "type": "string"
+    },
+    "domain": {
+      "type": "string"
+    },
+    "classification": {
+      "type": "string"
+    },
+    "registry_overlay": {
+      "type": "string",
+      "description": "Example products only: registry overlay directory applied on read."
+    },
+    "specs": {
+      "type": "object",
+      "required": [
+        "brd",
+        "tdd"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "brd": {
+          "type": "string"
+        },
+        "tdd": {
+          "type": "string"
+        }
+      }
+    },
+    "brd_id": {
+      "type": "string"
+    },
+    "tdd_id": {
+      "type": "string"
+    },
+    "satisfies": {
+      "type": "string",
+      "pattern": "^BRD-[A-Z0-9]+-\\d{3}@\\d+\\.\\d+\\.\\d+$"
+    },
+    "adrs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "acceptance": {
+      "type": "string",
+      "description": "Path of the acceptance mapping (acceptance.v1), relative to the product folder."
+    },
+    "deployment": {
+      "type": "object",
+      "required": [
+        "gcp_project",
+        "region",
+        "datasets"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "gcp_project": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "datasets": {
+          "type": "object",
+          "required": [
+            "raw",
+            "staging",
+            "gold",
+            "assertions",
+            "control"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          },
+          "properties": {
+            "raw": {
+              "type": "string"
+            },
+            "staging": {
+              "type": "string"
+            },
+            "silver": {
+              "type": "string"
+            },
+            "gold": {
+              "type": "string"
+            },
+            "share": {
+              "type": "string"
+            },
+            "assertions": {
+              "type": "string"
+            },
+            "control": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "system_id",
+          "engine",
+          "capture_mode",
+          "entities"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "system_id": {
+            "type": "string"
+          },
+          "engine": {
+            "$ref": "https://dpf.dev/contracts/source-binding.v1.json#/$defs/engine"
+          },
+          "capture_mode": {
+            "$ref": "https://dpf.dev/contracts/source-binding.v1.json#/$defs/capture_mode"
+          },
+          "watermark_column": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "schedule": {
+            "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/cron"
+          },
+          "lookback_minutes": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Re-read window behind the watermark, for late-committing transactions."
+          },
+          "entities": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "inspection_mcp_server": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "brd_requirement_id": {
+            "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
+          },
+          "implements": {
+            "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/platform_capability"
+          }
+        }
+      }
+    },
+    "layers": {
+      "type": "object",
+      "required": [
+        "raw",
+        "staging",
+        "gold"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "raw": {
+          "type": "object",
+          "required": [
+            "storage"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "storage": {
+              "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/storage_format"
+            }
+          }
+        },
+        "staging": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "methodology": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "engine": {
+              "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/engine"
+            },
+            "storage": {
+              "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/storage_format"
+            },
+            "models": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "role",
+                  "grain_statement",
+                  "grain_columns",
+                  "history_semantics"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/identifier"
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "grain_statement": {
+                    "type": "string",
+                    "minLength": 10
+                  },
+                  "grain_columns": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "history_semantics": {
+                    "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/history_semantics"
+                  },
+                  "materialisation": {
+                    "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/materialisation"
+                  },
+                  "natural_key": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "surrogate_key": {
+                    "type": "string"
+                  },
+                  "conformed_as": {
+                    "type": "string"
+                  },
+                  "dedupe_order": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Staging only: ORDER BY terms that pick the surviving row per natural key."
+                  },
+                  "partition_by": {
+                    "type": "string"
+                  },
+                  "cluster_by": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "body": {
+                    "type": "string",
+                    "description": "Path (relative to the product folder) of the authored SQL body, for roles whose logic is business-specific."
+                  },
+                  "dataset": {
+                    "type": "string",
+                    "description": "Dataset key from deployment.datasets; defaults to the layer's dataset."
+                  },
+                  "schedule": {
+                    "type": "string",
+                    "description": "Orchestration schedule id; defaults to the first schedule."
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "nesting": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "child",
+                        "as"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "child": {
+                          "type": "string"
+                        },
+                        "as": {
+                          "type": "string"
+                        },
+                        "depth": {
+                          "type": "integer",
+                          "minimum": 1
+                        }
+                      }
+                    }
+                  },
+                  "attributes": {
+                    "type": "object",
+                    "description": "Pack-scoped declarations, validated by the pack's rules."
+                  },
+                  "brd_requirement_id": {
+                    "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
+                  },
+                  "implements": {
+                    "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/platform_capability"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "silver": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "methodology": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "engine": {
+              "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/engine"
+            },
+            "storage": {
+              "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/storage_format"
+            },
+            "models": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "role",
+                  "grain_statement",
+                  "grain_columns",
+                  "history_semantics"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/identifier"
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "grain_statement": {
+                    "type": "string",
+                    "minLength": 10
+                  },
+                  "grain_columns": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "history_semantics": {
+                    "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/history_semantics"
+                  },
+                  "materialisation": {
+                    "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/materialisation"
+                  },
+                  "natural_key": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "surrogate_key": {
+                    "type": "string"
+                  },
+                  "conformed_as": {
+                    "type": "string"
+                  },
+                  "dedupe_order": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Staging only: ORDER BY terms that pick the surviving row per natural key."
+                  },
+                  "partition_by": {
+                    "type": "string"
+                  },
+                  "cluster_by": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "body": {
+                    "type": "string",
+                    "description": "Path (relative to the product folder) of the authored SQL body, for roles whose logic is business-specific."
+                  },
+                  "dataset": {
+                    "type": "string",
+                    "description": "Dataset key from deployment.datasets; defaults to the layer's dataset."
+                  },
+                  "schedule": {
+                    "type": "string",
+                    "description": "Orchestration schedule id; defaults to the first schedule."
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "nesting": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "child",
+                        "as"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "child": {
+                          "type": "string"
+                        },
+                        "as": {
+                          "type": "string"
+                        },
+                        "depth": {
+                          "type": "integer",
+                          "minimum": 1
+                        }
+                      }
+                    }
+                  },
+                  "attributes": {
+                    "type": "object",
+                    "description": "Pack-scoped declarations, validated by the pack's rules."
+                  },
+                  "brd_requirement_id": {
+                    "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
+                  },
+                  "implements": {
+                    "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/platform_capability"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "gold": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "methodology": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "engine": {
+              "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/engine"
+            },
+            "storage": {
+              "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/storage_format"
+            },
+            "models": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "role",
+                  "grain_statement",
+                  "grain_columns",
+                  "history_semantics"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/identifier"
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "grain_statement": {
+                    "type": "string",
+                    "minLength": 10
+                  },
+                  "grain_columns": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "history_semantics": {
+                    "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/history_semantics"
+                  },
+                  "materialisation": {
+                    "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/materialisation"
+                  },
+                  "natural_key": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "surrogate_key": {
+                    "type": "string"
+                  },
+                  "conformed_as": {
+                    "type": "string"
+                  },
+                  "dedupe_order": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Staging only: ORDER BY terms that pick the surviving row per natural key."
+                  },
+                  "partition_by": {
+                    "type": "string"
+                  },
+                  "cluster_by": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "body": {
+                    "type": "string",
+                    "description": "Path (relative to the product folder) of the authored SQL body, for roles whose logic is business-specific."
+                  },
+                  "dataset": {
+                    "type": "string",
+                    "description": "Dataset key from deployment.datasets; defaults to the layer's dataset."
+                  },
+                  "schedule": {
+                    "type": "string",
+                    "description": "Orchestration schedule id; defaults to the first schedule."
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "nesting": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "child",
+                        "as"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "child": {
+                          "type": "string"
+                        },
+                        "as": {
+                          "type": "string"
+                        },
+                        "depth": {
+                          "type": "integer",
+                          "minimum": 1
+                        }
+                      }
+                    }
+                  },
+                  "attributes": {
+                    "type": "object",
+                    "description": "Pack-scoped declarations, validated by the pack's rules."
+                  },
+                  "brd_requirement_id": {
+                    "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
+                  },
+                  "implements": {
+                    "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/platform_capability"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "output_ports": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "model",
+          "type",
+          "access"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "https://dpf.dev/contracts/data-product.v1.json#/$defs/port_type"
+          },
+          "access": {
+            "type": "string",
+            "enum": [
+              "dataset_grant",
+              "authorized_view",
+              "sharing_listing"
+            ]
+          },
+          "consumers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sharing": {
+            "type": "object",
+            "required": [
+              "exchange_id",
+              "listing_id"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "exchange_id": {
+                "type": "string"
+              },
+              "listing_id": {
+                "type": "string"
+              },
+              "subscriber_var": {
+                "type": "string"
+              }
+            }
+          },
+          "brd_requirement_id": {
+            "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
+          },
+          "implements": {
+            "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/platform_capability"
+          }
+        }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "required": [
+        "gate_behaviour",
+        "rules"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "gate_behaviour": {
+          "type": "string",
+          "enum": [
+            "block",
+            "warn"
+          ]
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "https://dpf.dev/contracts/quality-policy.v1.json#/$defs/rule"
+          }
+        }
+      }
+    },
+    "orchestration": {
+      "type": "object",
+      "required": [
+        "engine",
+        "timezone",
+        "schedules"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "engine": {
+          "type": "string",
+          "enum": [
+            "dataform",
+            "composer"
+          ]
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "schedules": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "cron"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/identifier"
+              },
+              "cron": {
+                "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/cron"
+              },
+              "brd_requirement_id": {
+                "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
+              },
+              "implements": {
+                "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/platform_capability"
+              }
+            }
+          }
+        }
+      }
+    },
+    "observability": {
+      "$ref": "https://dpf.dev/contracts/observability-policy.v1.json#/$defs/policy_body"
+    },
+    "governance": {
+      "type": "object",
+      "required": [
+        "register",
+        "registered_via"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "register": {
+          "type": "string",
+          "enum": [
+            "knowledge_catalog"
+          ]
+        },
+        "registered_via": {
+          "type": "string"
+        },
+        "fallback": {
+          "type": "string"
+        },
+        "access": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "role",
+              "principal_var"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "role": {
+                "type": "string"
+              },
+              "principal_var": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "datasets": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Dataset keys from deployment.datasets the grant applies to."
+              }
+            }
+          }
+        },
+        "policy_tags": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "model",
+              "columns",
+              "tag",
+              "masking"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "columns": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "tag": {
+                "type": "string"
+              },
+              "masking": {
+                "type": "string",
+                "enum": [
+                  "always_null",
+                  "sha256",
+                  "default_masking_value"
+                ]
+              },
+              "masked_readers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "fine_grained_readers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "brd_requirement_id": {
+                "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
+              },
+              "implements": {
+                "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/platform_capability"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

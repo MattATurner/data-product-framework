@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dpf.dev/contracts/engine-adapter.v1.json",
+  "title": "Engine adapter",
+  "description": "Declares what an engine adapter can actually render. A pack may only declare an engine as supported for a role the adapter implements.",
+  "type": "object",
+  "required": [
+    "engine_id",
+    "status",
+    "implemented_roles",
+    "tool_tier",
+    "tool"
+  ],
+  "properties": {
+    "engine_id": {
+      "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/engine"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "implemented",
+        "planned"
+      ]
+    },
+    "implemented_roles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "renders": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tool_tier": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "tool": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

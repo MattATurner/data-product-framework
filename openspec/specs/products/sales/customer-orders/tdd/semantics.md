@@ -11,11 +11,14 @@
   in order value totals.
 - Customer details shown are the customer's **current** details. If a customer moves in
   June, their March order will show the new address.
-- Data is refreshed **once daily, before 07:00**. Orders placed today appear tomorrow morning.
-- If an order has **no customer, or a negative quantity**, nothing is published and the
-  team is alerted. You will not see partial data.
+- Data is refreshed **once daily, before 07:00 Perth time**. Orders placed today appear
+  tomorrow morning, and the team is alerted if the refresh is missed.
+- If an order has **no customer, or a negative quantity**, the data is **not refreshed**,
+  the team is alerted, and the unusable order is held aside with the reason. You will not
+  see partial data.
 - Access is limited to **Sales Operations and Data Analytics**.
 
 ---
 
-**Signed off:** Sales Operations, 2026-09-09 · covers acceptance examples AX-1 to AX-5.
+The signature for this page is recorded in `signoff.yaml` beside it, bound to a digest of
+this text and of every model's grain and history declaration.

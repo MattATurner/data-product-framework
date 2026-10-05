@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dpf.dev/contracts/skill.v1.json",
+  "title": "Skill front-matter",
+  "description": "Front-matter of every SKILL.md. 'name' and 'description' follow the open Agent Skills format so any skills loader can discover them; 'metadata.dpf' is the composition contract used by dpf compose and dpf lint.",
+  "type": "object",
+  "required": [
+    "name",
+    "description",
+    "metadata"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "maxLength": 64
+    },
+    "description": {
+      "type": "string",
+      "minLength": 40,
+      "maxLength": 1024
+    },
+    "license": {
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object",
+      "required": [
+        "dpf"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "dpf": {
+          "type": "object",
+          "required": [
+            "skill_id",
+            "stage",
+            "implements",
+            "consumes",
+            "produces",
+            "tool_tier",
+            "tool"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "skill_id": {
+              "type": "string",
+              "pattern": "^([a-z0-9-]+/)?[a-z0-9-]+$"
+            },
+            "stage": {
+              "type": "string",
+              "enum": [
+                "define",
+                "design",
+                "extract",
+                "land",
+                "stage",
+                "integrate",
+                "consume",
+                "govern",
+                "test",
+                "assemble",
+                "render",
+                "orchestrate",
+                "publish",
+                "register",
+                "monitor"
+              ]
+            },
+            "scope": {
+              "type": "string",
+              "enum": [
+                "product",
+                "source",
+                "model"
+              ]
+            },
+            "implements": {
+              "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/platform_capability"
+            },
+            "methodology": {
+              "type": "string"
+            },
+            "role": {
+              "type": "string"
+            },
+            "consumes": {
+              "type": "array",
+              "items": {
+                "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/contract_id"
+              }
+            },
+            "produces": {
+              "type": "array",
+              "items": {
+                "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/contract_id"
+              }
+            },
+            "selects_when": {
+              "type": "object",
+              "description": "All keys must match the instance (dotted paths into the source, model, layer or product). Values are allowed lists."
+            },
+            "tool_tier": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            },
+            "tool": {
+              "type": "string"
+            },
+            "inspection_tool": {
+              "type": "string"
+            },
+            "adr": {
+              "type": "string"
+            },
+            "gate": {
+              "type": "string",
+              "enum": [
+                "G0",
+                "G1",
+                "G2",
+                "G3",
+                "G4"
+              ]
+            },
+            "owner": {
+              "type": "string"
+            },
+            "gcp": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "needs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Capabilities the skill needs from its tool. A tier 4 or 5 skill fails lint if a tier 1-3 server covers any of them."
+            }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

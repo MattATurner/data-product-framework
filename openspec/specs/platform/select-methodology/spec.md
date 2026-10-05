@@ -4,38 +4,41 @@
 
 Choose a modelling methodology per layer, or none at all, and record why.
 
-### Requirement: Methodology is optional
+## Requirements
 
-The framework SHALL support products with no formal modelling methodology.
+### Requirement: Methodology is optional
+The framework SHALL support products with no formal modelling methodology, and `direct` SHALL be
+the default.
 
 #### Scenario: Simple single-source product
-- WHEN a product has one source, one consumer group, needs only current state and has
-  no cross-domain reconciliation requirement
-- THEN `direct` SHALL be recommended
-- AND a heavyweight methodology SHALL NOT be imposed.
+- **WHEN** a product has no cross-team agreement and no point-in-time history need
+- **THEN** `direct` SHALL be recommended
+- **AND** a heavyweight methodology SHALL NOT be imposed
+
+### Requirement: Heavyweight methodology must be justified
+A methodology other than the default SHALL be selected only when the BRD carries a signal that
+justifies it, and the deviation SHALL be recorded in an ADR.
 
 #### Scenario: Unjustified heavyweight methodology
-- WHEN a methodology is selected without a BRD signal justifying it
-- THEN design review SHALL flag it as a defect
-- BECAUSE a methodology is a cost paid for a benefit.
+- **WHEN** a heavyweight methodology is selected without a justifying BRD signal
+- **THEN** G1 SHALL fail
+- **BECAUSE** a methodology is a cost paid for a benefit
+
+#### Scenario: Deviation without an ADR
+- **WHEN** the selected methodology differs from the platform default and no ADR is listed
+- **THEN** G1 SHALL fail
 
 ### Requirement: Methodology is a TDD decision
+A BRD SHALL NOT name a modelling methodology.
 
 #### Scenario: BRD names a methodology
-- WHEN a BRD names a modelling methodology
-- THEN validation SHALL fail
-- BECAUSE methodology is meaningless to the business author.
+- **WHEN** a BRD names a modelling methodology
+- **THEN** validation SHALL fail
 
 ### Requirement: Selection is per layer
+Each modelled layer SHALL declare its own methodology, and the handoff between layers SHALL be a
+semantic model.
 
 #### Scenario: Mixed methodologies
-- WHEN silver and gold require different shapes
-- THEN each layer SHALL declare its own methodology
-- AND the handoff SHALL remain a `semantic-model.v1` contract.
-
-### Requirement: Deviation is recorded
-
-#### Scenario: Departing from the domain default
-- WHEN the selected methodology differs from `registry/platform-defaults.yaml`
-- THEN an ADR SHALL be recorded
-- AND the engineering lead SHALL approve at G1.
+- **WHEN** silver and gold require different shapes
+- **THEN** each layer SHALL declare its own methodology

@@ -1,0 +1,27 @@
+# Business signature on semantics.md (contract signoff.v1), written by `dpf signoff`.
+# Bound to the semantic digest: editing semantics.md or any model's grain or history
+# declaration invalidates it until it is signed again.
+product_id: sales_performance
+signed_by: Sales Operations (example)
+role: business_owner
+date: '2026-10-05'
+brd: BRD-SALES-002@1.2.0
+tdd: TDD-SALES-002
+covers:
+- AX-1
+- AX-2
+- AX-3
+- AX-4
+- AX-5
+- AX-6
+- AX-7
+- AX-8
+- AX-9
+- AX-10
+- AX-11
+- AX-12
+- AX-13
+- AX-14
+semantic_digest: sha256:aa36075261e649fa985d186f36fbd715f5886d25f47919a25ccfefee5c901a92
+note: Example signature for the reference implementation. A real product is signed
+  by its named business owner after reading semantics.md.

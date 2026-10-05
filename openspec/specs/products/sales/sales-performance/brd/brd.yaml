@@ -1,14 +1,24 @@
+# Structured answers to the BRD completeness rubric (contract brd.v1).
+# Requirement statements and acceptance scenarios live in spec.md beside this file;
+# this file holds only the answers the design is derived from. No modelling vocabulary.
 brd_id: BRD-SALES-002
 product_id: sales_performance
 status: approved
-version: 1.1.0
+version: 1.2.0
 business_owner: sales-operations
 data_steward: data-analytics
 domain: sales
 sensitivity: INTERNAL-COMMERCIAL
-residency: us-central1
+residency: United States
 
 changelog:
+  - version: 1.2.0
+    change: >
+      Acceptance scenarios added for every requirement (AX-7 to AX-14). R-4 extended to
+      region, answering the history question for region (HB-3). R-10 title corrected to
+      match its body. Residency stated as a jurisdiction rather than an infrastructure region.
+    raised_by: framework review (2026-10)
+    accepted_by: sales-operations
   - version: 1.1.0
     change: >
       R-10 freshness relaxed from 15 minutes to hourly following the design feasibility
@@ -40,12 +50,19 @@ required_outputs:
     figures: [net sales, units sold]
     attributes: [customer segment, product category, region, month]
     slices: [customer segment, product category, region, month]
+    satisfies: [R-1, R-7]
   - id: OUT-2
     type: extract
     figures: [net sales, units sold]
     attributes: [product category, region, month]
     recipient: external analytics partner
     frequency: monthly
+    satisfies: [R-13]
+  - id: OUT-3
+    type: report
+    figures: [net sales, units sold]
+    attributes: [order, order line, order date, customer, customer segment, product, product category, region, order status]
+    satisfies: [R-2, R-8]
 
 level_of_detail:
   drill_to: an individual line on a customer order
@@ -63,6 +80,11 @@ history_behaviour:
     question: If a product is recategorised, should past sales move to the new category?
     answer: Stay as they were, so category trends remain comparable over time.
     satisfies: [R-6]
+  - id: HB-3
+    attribute: region
+    question: If a customer moves region, should past sales move with them or stay as they were?
+    answer: Stay as they were. Past sales stay with the region that applied on the sale date.
+    satisfies: [R-4]
 
 agreement_with_other_teams:
   - id: AG-1
@@ -103,6 +125,7 @@ sources_believed:
 protection:
   restricted_attributes: [customer contact details]
   visible_to_analysts: [customer identity, customer segment]
+  who_may_access: [sales-leadership, sales-operations, finance, data-analytics]
   satisfies: [R-12]
 
 external_readers:
@@ -110,26 +133,6 @@ external_readers:
   who: external analytics partner
   access: must not be granted internal system access
   satisfies: [R-13]
-
-acceptance_examples:
-  - id: AX-1
-    text: Net sales per customer segment for Q1 and Q4, comparable.
-    satisfies: [R-1]
-  - id: AX-2
-    text: A March regional total drills to the individual order lines composing it.
-    satisfies: [R-2]
-  - id: AX-3
-    text: A line amended twice contributes once, at the later values.
-    satisfies: [R-3]
-  - id: AX-4
-    text: A customer SMB in March and Enterprise in June shows March sales under SMB.
-    satisfies: [R-4]
-  - id: AX-5
-    text: March net sales reconciles to Finance's March revenue, or the variance is explainable.
-    satisfies: [R-5]
-  - id: AX-6
-    text: A line cancelled in April is visible in April detail but excluded from April net sales.
-    satisfies: [R-8]
 
 non_goals:
   - Forecasting and pipeline reporting

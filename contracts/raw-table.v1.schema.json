@@ -15,14 +15,7 @@
       "type": "string"
     },
     "storage_format": {
-      "type": "string",
-      "enum": [
-        "bigquery_native",
-        "iceberg_managed",
-        "gcs_parquet_external",
-        "object_table",
-        "cross_cloud"
-      ]
+      "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/storage_format"
     },
     "partition_spec": {
       "type": [
@@ -65,11 +58,7 @@
       "const": true
     },
     "brd_requirement_id": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "BRD requirement IDs this artefact satisfies. Empty = orphan design, fails G1."
+      "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
     }
   },
   "additionalProperties": false

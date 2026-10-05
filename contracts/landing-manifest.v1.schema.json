@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://dpf.dev/contracts/landing-manifest.v1.json",
   "title": "Landing manifest",
-  "description": "One immutable batch landed in the raw zone.",
+  "description": "One immutable batch landed in the raw zone. A batch without a persisted manifest is not consumable.",
   "type": "object",
   "required": [
     "batch_id",
@@ -65,12 +65,31 @@
         "null"
       ]
     },
+    "drift": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        null,
+        "none",
+        "additive",
+        "breaking"
+      ]
+    },
+    "status": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        null,
+        "landed",
+        "quarantined"
+      ]
+    },
     "brd_requirement_id": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "BRD requirement IDs this artefact satisfies. Empty = orphan design, fails G1."
+      "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
     }
   },
   "additionalProperties": false

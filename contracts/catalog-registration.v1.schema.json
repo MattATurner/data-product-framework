@@ -6,20 +6,64 @@
   "type": "object",
   "required": [
     "entry_ref",
-    "aspect_types",
+    "aspects",
     "steward",
-    "brd_link"
+    "brd_link",
+    "tdd_link",
+    "semantics_link",
+    "registered_via"
   ],
   "properties": {
     "entry_ref": {
       "type": "string"
     },
-    "aspect_types": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "minItems": 1
+    "aspects": {
+      "type": "object",
+      "description": "Required aspect values keyed by aspect name.",
+      "required": [
+        "owner",
+        "domain",
+        "classification",
+        "service_levels",
+        "grain",
+        "refresh_cadence",
+        "status",
+        "assumptions"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "domain": {
+          "type": "string",
+          "minLength": 1
+        },
+        "classification": {
+          "type": "string",
+          "minLength": 1
+        },
+        "service_levels": {
+          "type": "object"
+        },
+        "grain": {
+          "type": "object"
+        },
+        "refresh_cadence": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "type": "string"
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
     },
     "glossary_terms": {
       "type": "array",
@@ -46,16 +90,10 @@
       "type": "string"
     },
     "tdd_link": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": "string"
     },
     "semantics_link": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": "string"
     },
     "registered_via": {
       "type": "string",
@@ -64,14 +102,10 @@
         "dataplex_api",
         "terraform"
       ],
-      "description": "Tier 1 MCP preferred - see registry/mcp_servers.yaml."
+      "description": "Tier 1 MCP preferred - see registry/mcp_servers.yaml. CLI/API identifiers keep legacy strings."
     },
     "brd_requirement_id": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "BRD requirement IDs this artefact satisfies. Empty = orphan design, fails G1."
+      "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
     }
   },
   "additionalProperties": false

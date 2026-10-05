@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dpf.dev/contracts/signoff.v1.json",
+  "title": "Semantics sign-off",
+  "description": "The business signature on semantics.md, bound to a digest of the semantic content (semantics.md plus every model's grain and history declaration). Any change to that content invalidates the signature; TDD-only changes such as partitioning do not.",
+  "type": "object",
+  "required": [
+    "product_id",
+    "signed_by",
+    "role",
+    "date",
+    "brd",
+    "covers",
+    "semantic_digest"
+  ],
+  "properties": {
+    "product_id": {
+      "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/identifier"
+    },
+    "signed_by": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "business_owner",
+        "data_steward"
+      ]
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "brd": {
+      "type": "string",
+      "pattern": "^BRD-[A-Z0-9]+-\\d{3}@\\d+\\.\\d+\\.\\d+$"
+    },
+    "tdd": {
+      "type": "string"
+    },
+    "covers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^AX-\\d+$"
+      }
+    },
+    "semantic_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "note": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

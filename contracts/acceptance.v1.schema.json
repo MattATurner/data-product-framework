@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dpf.dev/contracts/acceptance.v1.json",
+  "title": "Acceptance mapping",
+  "description": "Engineering mapping from the business acceptance scenarios (AX ids in the BRD spec) to checks: automated SQL against fixture data, static checks evaluated by dpf, or a recorded human attestation.",
+  "type": "object",
+  "required": [
+    "product_id",
+    "tests"
+  ],
+  "properties": {
+    "product_id": {
+      "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/identifier"
+    },
+    "fixture": {
+      "type": "string",
+      "description": "Fixture set the automated tests assume (for example the two-phase seed)."
+    },
+    "tests": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "verifies",
+          "method",
+          "description"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^AT-\\d+[a-z]?$"
+          },
+          "verifies": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^AX-\\d+$"
+            }
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "automated",
+              "static",
+              "attestation"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "sql": {
+            "type": "string",
+            "description": "Engine-neutral SQL returning rows only on failure. Use {{ ref('model') }}."
+          },
+          "check": {
+            "type": "string",
+            "description": "Static check id (dpf library)."
+          },
+          "element": {
+            "type": "string",
+            "description": "Manifest element the static check inspects."
+          },
+          "attested_by_role": {
+            "type": "string"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "method": {
+                  "const": "automated"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "sql",
+                "model"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "method": {
+                  "const": "static"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "check"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "method": {
+                  "const": "attestation"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "attested_by_role"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}

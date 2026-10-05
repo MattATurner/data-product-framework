@@ -1,14 +1,81 @@
-# Agreed business terms. BRDs bind to these; gold column names derive from them.
-# If an enterprise glossary already exists, mirror it here rather than competing with it.
+# Agreed business terms for the worked examples. BRD figures and attributes must match a
+# term label or alias (G0); gold column names derive from term ids; catalog registration
+# binds these terms to columns in Knowledge Catalog.
 
 terms:
-  - id: net_amount
-    label: Net amount
-    definition: Gross amount less discount, excluding tax.
+  # -- figures
+  - id: net_sales
+    label: Net sales
+    aliases: [net amount, net_amount]
+    definition: Gross amount less discount, excluding tax, for order lines that are not cancelled.
     unit: AUD
     owner: finance
+  - id: units_sold
+    label: Units sold
+    aliases: [quantity, units]
+    definition: Number of units on order lines that are not cancelled.
+    owner: sales
+  - id: order_value
+    label: Order value
+    aliases: [counted order value, order total]
+    definition: Sum of line amounts on an order. Cancelled orders count as zero in totals.
+    unit: AUD
+    owner: sales
+  - id: line_amount
+    label: Line amount
+    definition: Amount charged for one line on a customer order.
+    unit: AUD
+    owner: sales
 
+  # -- attributes
+  - id: customer
+    label: Customer
+    aliases: [customer identity, customer name]
+    definition: A party that places orders, identified by its customer number and name.
+    owner: sales
+  - id: customer_segment
+    label: Customer segment
+    definition: Commercial segment a customer belongs to (for example SMB or Enterprise).
+    owner: sales
+  - id: customer_contact_details
+    label: Customer contact details
+    aliases: [contact details, email, phone]
+    definition: Email address and phone number of a customer. Restricted.
+    owner: sales
+    classification: restricted
+  - id: region
+    label: Region
+    definition: Sales region of the customer (Australian state or territory code).
+    owner: sales
+  - id: product
+    label: Product
+    definition: An item or service that can appear on an order line.
+    owner: merchandising
+  - id: product_category
+    label: Product category
+    definition: Category in the Merchandising product range to which a product belongs.
+    owner: merchandising
+  - id: order
+    label: Order
+    aliases: [customer order]
+    definition: A customer order header.
+    owner: sales
+  - id: order_line
+    label: Order line
+    aliases: [line]
+    definition: One line on a customer order, for one product.
+    owner: sales
+  - id: order_date
+    label: Order date
+    definition: Date the order was placed.
+    owner: sales
   - id: order_status
     label: Order status
+    aliases: [status]
     definition: Lifecycle state of an order - placed, fulfilled or cancelled.
     owner: sales
+  - id: month
+    label: Month
+    aliases: [year month, year_month]
+    definition: Calendar month of the order date, written YYYY-MM.
+    owner: finance

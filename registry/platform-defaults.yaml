@@ -1,5 +1,5 @@
-# Platform-wide defaults. Per-product overrides live in products/<id>/product.yaml
-# and must be justified by a BRD signal.
+# Platform-wide defaults. Per-product overrides live in products/<id>/product.yaml and must
+# be justified by a BRD signal (and an ADR when they depart from these defaults).
 
 region: us-central1                   # all deployments
 gcp_project: null                     # set per deployment
@@ -11,25 +11,43 @@ business_timezone: Australia/Perth
 
 defaults:
   methodology:
-    silver: direct                    # 'a methodology is a cost paid for a benefit'
+    silver: direct                    # "a methodology is a cost paid for a benefit"
     gold: direct
   engine:
-    raw: dataform
+    staging: dataform
     silver: dataform
     gold: dataform
   storage:
     raw: bigquery_native
+    staging: bigquery_native
     silver: bigquery_native
     gold: bigquery_native
+
+# Roles every product may use regardless of methodology. Staging is methodology-neutral:
+# typed, deduplicated, fitness rules quarantined with a reason.
+platform_roles:
+  - id: staging
+    description: Typed, deduplicated rows with unusable rows quarantined to a reject relation.
+    skill: transform-raw-to-staging
+    emits: staging-model.v1
+    layers: [staging]
+
+# Which pipeline stage a model-scoped skill runs in, by layer.
+layer_stages:
+  staging: stage
+  silver: integrate
+  gold: consume
 
 naming:
   raw_dataset: "raw_{source_system}"
   staging_dataset: "stg_{domain}"
   silver_dataset: "slv_{domain}"
   gold_dataset: "gold_{domain}"
+  raw_table: "raw_{entity}"
+  reject_suffix: "_rejects"
   lineage_columns: [_ingest_ts, _batch_id, _source_system, _op, _source_pk_hash]
 
 gates:
   g0_approver: business_owner         # data steward consulted, not blocking
-  g1_requires_formal_business_go: true
+  g1_requires_signed_semantics: true
   quality_gate_default: block

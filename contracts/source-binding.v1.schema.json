@@ -15,20 +15,7 @@
       "type": "string"
     },
     "engine": {
-      "type": "string",
-      "enum": [
-        "oracle",
-        "postgres",
-        "mysql",
-        "sqlserver",
-        "gcs_objects",
-        "s3",
-        "azure_blob",
-        "pubsub",
-        "kafka",
-        "rest_api",
-        "salesforce"
-      ]
+      "$ref": "https://dpf.dev/contracts/source-binding.v1.json#/$defs/engine"
     },
     "connectivity": {
       "type": "string"
@@ -40,13 +27,7 @@
       ]
     },
     "capture_mode": {
-      "type": "string",
-      "enum": [
-        "snapshot",
-        "cdc",
-        "watermark",
-        "stream"
-      ]
+      "$ref": "https://dpf.dev/contracts/source-binding.v1.json#/$defs/capture_mode"
     },
     "watermark_column": {
       "type": [
@@ -87,12 +68,35 @@
       "maximum": 5
     },
     "brd_requirement_id": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "BRD requirement IDs this artefact satisfies. Empty = orphan design, fails G1."
+      "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$defs": {
+    "engine": {
+      "type": "string",
+      "enum": [
+        "oracle",
+        "postgres",
+        "mysql",
+        "sqlserver",
+        "gcs_objects",
+        "s3_objects",
+        "azure_blob",
+        "pubsub",
+        "kafka",
+        "rest_api",
+        "salesforce"
+      ]
+    },
+    "capture_mode": {
+      "type": "string",
+      "enum": [
+        "snapshot",
+        "cdc",
+        "watermark",
+        "stream"
+      ]
+    }
+  }
 }

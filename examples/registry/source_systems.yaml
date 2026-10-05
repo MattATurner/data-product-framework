@@ -1,13 +1,17 @@
-# Systems of record. Referenced by BRDs (as 'sources believed to hold it') and
-# resolved into source-binding.v1 contracts by the TDD.
+# Systems of record for the worked examples. Referenced by BRDs ("sources believed to hold
+# it") and resolved into source bindings by the TDD. G1 checks that the capture mode a
+# product chooses is in `capture.supported_now`.
 
 systems:
   - system_id: example_files
     label: Example object-store drop
     engine: gcs_objects
-    connectivity: gcs
-    authority: system of record for the worked example only
+    authority: system of record for the customer orders example only
     entities: [orders, order_lines, customers]
+    connectivity:
+      inbound_from_gcp: true
+    capture:
+      supported_now: [watermark, snapshot]
     inspection:
       mcp_server: null            # object listings need no MCP server
       tier: 4
@@ -18,10 +22,9 @@ systems:
     authority: system of record for the reference implementation
     entities: [orders, order_lines, customers, products, sales_reps]
 
-    # Reachability is the deciding constraint, not preference.
-    # The database sits behind corporate NAT with no inbound route, so a
-    # Google-managed service cannot connect to it. See
-    # docs/local-source-connectivity.md before choosing a capture mode.
+    # Reachability is the deciding constraint, not preference. The database sits behind
+    # corporate NAT with no inbound route, so a Google-managed service cannot connect to
+    # it. See docs/local-source-connectivity.md before choosing a capture mode.
     connectivity:
       inbound_from_gcp: false
       outbound_to_gcp: true
@@ -29,8 +32,8 @@ systems:
       secret_ref: null            # local credentials; never commit them
 
     capture:
-      supported_now: [watermark]         # pull-based, runs where the DB is reachable
-      requires_connectivity: [cdc]       # Datastream needs a route in - see doc
+      supported_now: [watermark]         # pull-based, runs where the database is reachable
+      requires_connectivity: [cdc]       # Datastream needs a route in - see the doc
       cdc_prerequisites:
         - ARCHIVELOG mode enabled
         - supplemental logging enabled on captured tables

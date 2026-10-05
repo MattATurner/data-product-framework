@@ -1,0 +1,49 @@
+# OpenSpec project configuration for the Data Product Framework.
+# The custom workflow schema lives in openspec/schemas/data-product/.
+schema: data-product
+
+context: |
+  This repository is a spec-driven data engineering toolkit. Work moves through
+  define -> design -> build -> test -> monitor, and every stage has a machine-checked gate:
+
+    G0  BRD complete            dpf brd validate <product>
+    G1  TDD resolved and signed dpf check <product> --gate G1
+    G2  composed, AX -> AT      dpf check <product> --gate G2
+    G3  built and traced        dpf check <product> --gate G3
+    G4  accepted with evidence  dpf check <product> --gate G4
+    monitor                     dpf monitor <product> [--evidence run.json] [--open-change]
+
+  Gates are cumulative. G4 needs evidence bound to the current build digest; never fabricate it.
+  A monitor breach opens a change with skip_specs: true; remove it if a spec must change.
+
+  Three spec families live under openspec/specs/:
+    platform/<capability>/spec.md                       behaviour every product inherits
+    products/<domain>/<product>/brd/spec.md (+brd.yaml) business requirements (R-n, AX-n)
+    products/<domain>/<product>/tdd/spec.md             technical decisions (D-n), semantics.md, signoff.yaml
+
+  Identifiers go on a metadata line under the heading, never in the heading:
+    **ID:** R-4                       (BRD requirement)
+    **ID:** AX-4                      (BRD acceptance scenario)
+    **Decision:** D-3 · **Satisfies:** R-2, R-3 · **Model:** fct_order_line · **Grain:** order_id, order_line_no
+
+  The resolved design is products/<product>/product.yaml (contract product-manifest.v1).
+  Generated artefacts go to generated/<product>/ and are never edited by hand.
+  BRDs contain no modelling vocabulary (grain, SCD, fact, dimension, ...).
+  The catalog product is called Knowledge Catalog in prose.
+
+rules:
+  proposal:
+    - Name the products and platform capabilities affected, and the gates that must be re-run.
+    - If a BRD changes, state the new BRD version and whether the TDD becomes stale.
+  specs:
+    - Product BRD deltas use business language only; keep R-n and AX-n ids stable.
+    - Every new requirement carries at least one scenario with an **ID:** AX-n line (BRD) or a verification scenario (TDD).
+  design:
+    - Say whether the semantic digest changes. If it does, semantics.md must be re-signed (dpf signoff).
+    - List manifest elements added or changed, each with the requirement it satisfies.
+  verification:
+    - Map every changed requirement to a test id from `dpf test plan <product>`.
+  operations:
+    - State freshness, volume and drift impacts and any backfill or restatement needed.
+  tasks:
+    - Finish with `dpf check <product> --gate G3` and, after a deployed run, `dpf check <product> --gate G4`.

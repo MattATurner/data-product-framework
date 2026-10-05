@@ -1,0 +1,110 @@
+name: data-product
+version: 1
+description: Data product change workflow - proposal → specs → design → verification → operations → tasks
+artifacts:
+  - id: proposal
+    generates: proposal.md
+    description: Why the change is needed and which products, capabilities and gates it touches
+    template: proposal.md
+    instruction: |
+      Create the proposal that establishes WHY this change is needed.
+
+      Sections:
+      - **Why**: the business or operational trigger. For a change opened by `dpf monitor`,
+        quote the breach (policy id, observed value, threshold).
+      - **What Changes**: bullet list. Mark breaking changes to an output port with **BREAKING**.
+      - **Capabilities**: platform capabilities (openspec/specs/platform/<id>) created or modified.
+      - **Products**: product BRDs or TDDs created or modified, with the new BRD version if the
+        BRD changes. A BRD version bump makes the TDD stale until it is re-resolved.
+      - **Gates**: which of G0, G1, G3, G4 must be re-run.
+
+      Run `openspec list --specs` first and reuse existing capability paths.
+      If nothing at spec level changes (for example an operational fix), set
+      `skip_specs: true` in `.openspec.yaml` instead of inventing a requirement.
+    requires: []
+
+  - id: specs
+    generates: "specs/**/*.md"
+    description: Delta specs for platform capabilities, product BRDs or product TDDs
+    template: spec.md
+    instruction: |
+      Write delta specs with `## ADDED Requirements`, `## MODIFIED Requirements`,
+      `## REMOVED Requirements` or `## RENAMED Requirements`.
+
+      - Use the exact existing path under openspec/specs/ (for example
+        `products/sales/sales-performance/brd`). Every new path segment is kebab-case.
+      - Each requirement: `### Requirement: <name>`, then its metadata line, then a SHALL/MUST
+        statement of at most 500 characters, then at least one `#### Scenario:`.
+      - BRD requirements carry `**ID:** R-n`; BRD scenarios carry `**ID:** AX-n` and are written
+        with GIVEN/WHEN/THEN bullets in business language. No modelling vocabulary.
+      - TDD decisions carry `**Decision:** D-n · **Satisfies:** R-..` and, when they fix a model's
+        grain, `**Model:** <name> · **Grain:** <col>, <col>`.
+      - MODIFIED requirements copy the whole existing block and edit it.
+    requires:
+      - proposal
+
+  - id: design
+    generates: design.md
+    description: How the resolved design (product.yaml) and generated artefacts change
+    template: design.md
+    instruction: |
+      Explain HOW the change is realised:
+      - Manifest elements added, changed or removed, each citing the requirement it satisfies
+        (brd_requirement_id) or the platform capability that mandates it (implements).
+      - Methodology, engine or storage changes, and the ADR that records any deviation.
+      - Whether the semantic digest changes. If it does, semantics.md must be updated and
+        re-signed with `dpf signoff <product> --by <name> --role business_owner`.
+      - Output port compatibility: additive, or breaking with a deprecation plan.
+    requires:
+      - proposal
+
+  - id: verification
+    generates: verification.md
+    description: Tests and evidence that will prove the change
+    template: verification.md
+    instruction: |
+      Map every added or modified requirement to the tests that verify it. Use the ids printed
+      by `dpf test plan <product>` (grain, quality, reject gate, history integrity, acceptance).
+      For each acceptance scenario say whether it is automated, static, or attested and by
+      which role. State the fixture data the automated tests need.
+    requires:
+      - specs
+      - design
+
+  - id: operations
+    generates: operations.md
+    description: Run-time impact - service levels, monitoring, backfill and rollout
+    template: operations.md
+    instruction: |
+      Describe the run-time impact:
+      - Freshness, volume, schema-drift and quality-scan policy changes (observability-policy.v1).
+      - Backfill or restatement needed, and its window.
+      - Rollout order (extract, raw, staging, integration, consumption, ports) and rollback.
+      - Alert routing and runbook updates.
+    requires:
+      - design
+
+  - id: tasks
+    generates: tasks.md
+    description: Implementation checklist ending in the promotion gates
+    template: tasks.md
+    instruction: |
+      Break the work into numbered groups of checkbox tasks (`- [ ] 1.1 ...`). Each task states
+      how completion is verified. Typical order:
+      1. Specs: update BRD/TDD and run `openspec validate --strict`.
+      2. Design: update product.yaml and SQL bodies; run `dpf check <product> --gate G1`.
+      3. Build: `dpf generate <product>` and review the diff of generated/<product>/.
+      4. Test: `dpf test plan <product>`; deploy to a sandbox; record evidence.
+      5. Gates: `dpf check <product> --gate G3`, then `--gate G4` once evidence exists.
+    requires:
+      - specs
+      - design
+      - verification
+      - operations
+
+apply:
+  requires: [tasks]
+  tracks: tasks.md
+  instruction: |
+    Work through tasks.md in order and tick each box only when its verification passes.
+    Never edit generated/ by hand - change the manifest, SQL bodies or packs and regenerate.

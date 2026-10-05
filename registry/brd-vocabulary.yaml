@@ -1,0 +1,40 @@
+# Words that do not belong in a BRD (checked by G0 against brd/spec.md and brd/brd.yaml).
+# A BRD is written in business language. These terms are design decisions that the TDD
+# derives from the business answers, so their presence means the BRD is pre-empting design.
+
+modelling_terms:
+  - grain
+  - scd
+  - slowly changing
+  - surrogate key
+  - natural key
+  - star schema
+  - snowflake schema
+  - fact table
+  - dimension table
+  - conformed dimension
+  - data vault
+  - partitioned by
+  - clustered by
+  - materialized view
+  - materialised view
+  - kimball
+  - dimensional model
+  - data mart
+
+# Technology belongs in the TDD and ADRs, not the BRD.
+technology_terms:
+  - bigquery
+  - dataform
+  - dbt
+  - dataflow
+  - datastream
+  - spark
+  - iceberg
+  - parquet
+  - terraform
+
+patterns:
+  - id: cloud-region
+    regex: '\b(us|europe|asia|australia|northamerica|southamerica|me|africa)-[a-z]+[0-9]+\b'
+    message: names an infrastructure region; state residency as a country or jurisdiction

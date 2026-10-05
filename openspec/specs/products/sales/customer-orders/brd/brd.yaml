@@ -1,12 +1,25 @@
+# Structured answers to the BRD completeness rubric (contract brd.v1).
+# Requirement statements and acceptance scenarios live in spec.md beside this file.
 brd_id: BRD-SALES-001
 product_id: customer_orders
 status: approved
-version: 1.0.0
+version: 1.1.0
 business_owner: sales-operations
 data_steward: data-analytics
 domain: sales
 sensitivity: INTERNAL
-residency: us-central1
+residency: United States
+
+changelog:
+  - version: 1.1.0
+    change: >
+      Acceptance scenarios added for R-6, R-7 and R-8 (AX-6 to AX-8). Residency stated as a
+      jurisdiction rather than an infrastructure region. Totalling answered (order value can
+      be added up across days, months and customers).
+    raised_by: framework review (2026-10)
+    accepted_by: sales-operations
+  - version: 1.0.0
+    change: Initial approved version.
 
 business_questions:
   - id: BQ-1
@@ -20,10 +33,11 @@ business_questions:
 
 required_outputs:
   - id: OUT-1
-    type: table
+    type: dataset
     figures: [order value]
     attributes: [customer, order date, status, product, quantity, line amount]
     slices: [order date, status, customer]
+    satisfies: [R-1, R-2, R-4]
 
 level_of_detail:
   drill_to: a single customer order, with its lines available alongside it
@@ -36,6 +50,10 @@ history_behaviour:
     question: If a customer's details change, should past orders show the old or current details?
     answer: Current details are fine. There is no need to see them as they were.
     satisfies: [R-5]
+
+totalling:
+  can_be_summed_across: [days, months, customers]
+  satisfies: [R-4]
 
 timeliness:
   freshness_need: available the morning after the order is placed
@@ -57,27 +75,14 @@ sources_believed:
     holds: orders, order lines, customers
     authority: system of record for orders
 
-external_readers:
-  required: false
-  note: BI tool only; nothing outside BigQuery needs to read this
+protection:
+  who_may_access: [sales-operations, data-analytics]
   satisfies: [R-8]
 
-acceptance_examples:
-  - id: AX-1
-    text: Order SO-10432 shows customer, date, status and all three of its lines.
-    satisfies: [R-1]
-  - id: AX-2
-    text: Retrieving an order returns its lines together with it.
-    satisfies: [R-2]
-  - id: AX-3
-    text: An order amended twice appears once, with Tuesday's values.
-    satisfies: [R-3]
-  - id: AX-4
-    text: An order cancelled in April is visible in April but excluded from April totals.
-    satisfies: [R-4]
-  - id: AX-5
-    text: A customer who moves in June shows their current address on a March order.
-    satisfies: [R-5]
+external_readers:
+  required: false
+  access: only the internal reporting tool reads it; no external sharing
+  satisfies: [R-8]
 
 non_goals:
   - Forecasting and pipeline reporting

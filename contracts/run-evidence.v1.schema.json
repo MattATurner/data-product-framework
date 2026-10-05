@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dpf.dev/contracts/run-evidence.v1.json",
+  "title": "Run evidence",
+  "description": "Observed state of a product at a point in time: when each model last built, row volumes and check outcomes. Evaluated against the observability policy by dpf monitor.",
+  "type": "object",
+  "required": [
+    "product_id",
+    "observed_at",
+    "models"
+  ],
+  "properties": {
+    "product_id": {
+      "type": "string"
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "models": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "last_built_at"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "last_built_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "rows_in_window": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "status"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "passed",
+              "failed"
+            ]
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "drift_events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "entity",
+          "classification"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "entity": {
+            "type": "string"
+          },
+          "classification": {
+            "type": "string",
+            "enum": [
+              "additive",
+              "breaking"
+            ]
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "batch_id": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

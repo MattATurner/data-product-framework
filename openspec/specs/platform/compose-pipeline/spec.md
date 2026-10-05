@@ -2,31 +2,46 @@
 
 ## Purpose
 
-Resolve a product manifest into an ordered chain of skills, and prove the chain is
-valid before anything executes.
+Resolve a product manifest into a typed graph of skill invocations, chosen by stage and instance
+rather than by a fixed list, and prove the graph is valid before anything executes.
+
+## Requirements
+
+### Requirement: Skills are selected, not hard-coded
+Composition SHALL select, for every stage and every instance (source, model or product), the
+skills whose declared selection conditions match that instance.
+
+#### Scenario: Relational source with watermark capture
+- **WHEN** a source is a relational database captured by watermark
+- **THEN** the relational watermark extract skill SHALL be selected
+- **AND** the object-store extract skill SHALL NOT be selected
+
+#### Scenario: No skill or several skills match
+- **WHEN** no skill, or more than one skill, matches a required stage for an instance
+- **THEN** composition SHALL fail and name the instance and the candidates
 
 ### Requirement: Contract compatibility
+Every edge of the composed graph SHALL type-check: the consuming skill SHALL declare the
+contract its upstream produces.
 
 #### Scenario: Mismatched handoff
-- WHEN a skill's produced contract does not satisfy the next skill's consumed contract
-- THEN composition SHALL fail with both contract ids named
-- AND no artefact SHALL be generated.
+- **WHEN** a skill's produced contract is not consumed by the downstream skill
+- **THEN** composition SHALL fail with both contract ids named
+- **AND** no artefact SHALL be generated
 
-#### Scenario: Valid chain
-- WHEN every handoff type-checks
-- THEN composition SHALL emit the ordered skill DAG
-- AND the DAG SHALL be reproducible from the same manifest.
+#### Scenario: Valid graph
+- **WHEN** every edge type-checks
+- **THEN** composition SHALL emit the graph in a deterministic order
 
-### Requirement: Methodology and engine compatibility
+### Requirement: Methodology, engine and adapter compatibility
+A model SHALL compose only when its pack declares the engine for its role and the engine
+adapter implements that role.
 
 #### Scenario: Unsupported combination
-- WHEN a manifest pairs a methodology role with an engine the pack does not declare support for
-- THEN composition SHALL fail at G1
-- BECAUSE generating code that compiles but misbehaves is worse than failing.
+- **WHEN** a manifest pairs a role with an engine the pack does not declare
+- **THEN** composition SHALL fail at G1
 
-### Requirement: Reproducibility
-
-#### Scenario: Regenerate from scratch
-- WHEN generated artefacts are deleted and the chain is re-run against an unchanged
-  BRD and TDD
-- THEN the output SHALL be byte-for-byte identical.
+#### Scenario: Declared but unimplemented
+- **WHEN** a pack declares an engine whose adapter does not implement the role
+- **THEN** validation SHALL fail
+- **BECAUSE** compatibility is declared, not assumed

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dpf.dev/contracts/rule.v1.json",
+  "title": "Methodology rule",
+  "description": "A design rule enforced mechanically by dpf against the product manifest and generated artefacts.",
+  "type": "object",
+  "required": [
+    "id",
+    "severity",
+    "applies_to",
+    "description",
+    "check"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "block",
+        "warn"
+      ]
+    },
+    "applies_to": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "description": {
+      "type": "string"
+    },
+    "check": {
+      "type": "string",
+      "description": "Check id implemented in dpf.methodology.RULE_CHECKS."
+    },
+    "params": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

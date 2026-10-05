@@ -1,0 +1,237 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dpf.dev/contracts/observability-policy.v1.json",
+  "title": "Observability policy",
+  "description": "Machine-readable service levels and runtime checks for a published product: freshness against a business calendar, volume bounds, schema-drift behaviour, quality-scan cadence and alert routing.",
+  "type": "object",
+  "required": [
+    "product_id",
+    "policy"
+  ],
+  "properties": {
+    "product_id": {
+      "type": "string"
+    },
+    "policy": {
+      "$ref": "https://dpf.dev/contracts/observability-policy.v1.json#/$defs/policy_body"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "policy_body": {
+      "type": "object",
+      "required": [
+        "freshness",
+        "schema_drift",
+        "alerting",
+        "slo"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "freshness": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "model",
+              "max_staleness"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^OB-\\d+$"
+              },
+              "model": {
+                "type": "string"
+              },
+              "max_staleness": {
+                "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/iso_duration"
+              },
+              "calendar": {
+                "type": "object",
+                "required": [
+                  "days",
+                  "start",
+                  "end",
+                  "timezone"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "days": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "MON",
+                        "TUE",
+                        "WED",
+                        "THU",
+                        "FRI",
+                        "SAT",
+                        "SUN"
+                      ]
+                    }
+                  },
+                  "start": {
+                    "type": "string",
+                    "pattern": "^\\d{2}:\\d{2}$"
+                  },
+                  "end": {
+                    "type": "string",
+                    "pattern": "^\\d{2}:\\d{2}$"
+                  },
+                  "timezone": {
+                    "type": "string"
+                  }
+                }
+              },
+              "check_every": {
+                "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/iso_duration"
+              },
+              "brd_requirement_id": {
+                "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
+              },
+              "implements": {
+                "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/platform_capability"
+              }
+            }
+          }
+        },
+        "volume": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "model",
+              "window",
+              "expected_rows",
+              "tolerance_pct"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^OB-\\d+$"
+              },
+              "model": {
+                "type": "string"
+              },
+              "window": {
+                "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/iso_duration"
+              },
+              "date_column": {
+                "type": "string"
+              },
+              "expected_rows": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "tolerance_pct": {
+                "type": "number",
+                "minimum": 0
+              },
+              "brd_requirement_id": {
+                "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
+              },
+              "implements": {
+                "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/platform_capability"
+              }
+            }
+          }
+        },
+        "schema_drift": {
+          "type": "object",
+          "required": [
+            "on_additive",
+            "on_breaking"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "on_additive": {
+              "type": "string",
+              "enum": [
+                "land_and_record"
+              ]
+            },
+            "on_breaking": {
+              "type": "string",
+              "enum": [
+                "quarantine_and_alert"
+              ]
+            },
+            "brd_requirement_id": {
+              "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
+            },
+            "implements": {
+              "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/platform_capability"
+            }
+          }
+        },
+        "quality_scans": {
+          "type": "object",
+          "required": [
+            "schedule",
+            "models"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "schedule": {
+              "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/cron"
+            },
+            "models": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            },
+            "brd_requirement_id": {
+              "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
+            },
+            "implements": {
+              "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/platform_capability"
+            }
+          }
+        },
+        "alerting": {
+          "type": "object",
+          "required": [
+            "notification_channel_var"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "notification_channel_var": {
+              "type": "string"
+            },
+            "runbook": {
+              "type": "string"
+            }
+          }
+        },
+        "slo": {
+          "type": "object",
+          "required": [
+            "objective",
+            "window"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "objective": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 1
+            },
+            "window": {
+              "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/iso_duration"
+            }
+          }
+        }
+      }
+    }
+  }
+}

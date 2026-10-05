@@ -2,28 +2,31 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://dpf.dev/contracts/staging-model.v1.json",
   "title": "Staging model",
-  "description": "Typed, deduplicated, conformed-to-house-standards. Still methodology-neutral.",
+  "description": "Typed, deduplicated, conformed-to-house-standards. Methodology-neutral. Rows failing the BRD fitness definition are quarantined to the reject relation with a reason, never dropped.",
   "type": "object",
   "required": [
     "table_ref",
     "natural_key",
     "dedupe_strategy",
-    "engine"
+    "engine",
+    "reject_table_ref",
+    "grain_columns"
   ],
   "properties": {
     "table_ref": {
       "type": "string"
     },
     "engine": {
-      "type": "string",
-      "enum": [
-        "dataform",
-        "dbt",
-        "dataflow",
-        "spark"
-      ]
+      "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/engine"
     },
     "natural_key": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "grain_columns": {
       "type": "array",
       "items": {
         "type": "string"
@@ -45,6 +48,12 @@
         "null"
       ]
     },
+    "reject_rules": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "quality_gate": {
       "type": "string",
       "enum": [
@@ -53,11 +62,7 @@
       ]
     },
     "brd_requirement_id": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "BRD requirement IDs this artefact satisfies. Empty = orphan design, fails G1."
+      "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
     }
   },
   "additionalProperties": false

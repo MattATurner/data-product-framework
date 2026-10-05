@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dpf.dev/contracts/common.v1.json",
+  "title": "Common definitions",
+  "description": "Shared building blocks referenced by every other contract.",
+  "$defs": {
+    "requirement_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^R-\\d+$"
+      },
+      "uniqueItems": true,
+      "description": "BRD requirement IDs this element satisfies. Empty or absent means orphan design unless a platform capability mandates the element."
+    },
+    "platform_capability": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Platform capability spec id (openspec/specs/platform/<id>) that mandates this element when no business requirement does."
+    },
+    "engine": {
+      "type": "string",
+      "enum": [
+        "dataform",
+        "dbt",
+        "dataflow",
+        "spark"
+      ]
+    },
+    "storage_format": {
+      "type": "string",
+      "enum": [
+        "bigquery_native",
+        "iceberg_managed",
+        "gcs_parquet_external",
+        "object_table",
+        "cross_cloud"
+      ]
+    },
+    "materialisation": {
+      "type": "string",
+      "enum": [
+        "view",
+        "materialized_view",
+        "table",
+        "incremental_table"
+      ]
+    },
+    "history_semantics": {
+      "type": "string",
+      "enum": [
+        "current_only",
+        "point_in_time",
+        "full_history",
+        "append_only"
+      ]
+    },
+    "semver": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "iso_duration": {
+      "type": "string",
+      "pattern": "^P(?!$)(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+S)?)?$"
+    },
+    "cron": {
+      "type": "string",
+      "pattern": "^\\S+ \\S+ \\S+ \\S+ \\S+$"
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "contract_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+\\.v\\d+$"
+    }
+  }
+}

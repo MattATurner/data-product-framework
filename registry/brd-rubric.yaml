@@ -1,0 +1,92 @@
+# The BRD completeness rubric used by G0 (dpf brd validate). Data, not code.
+#
+# Each group names the brd.yaml fields that must be answered (dotted paths, non-empty) and
+# the business-language question to put to the business owner when they are not.
+# Group J is checked against spec.md: every requirement needs at least one AX scenario.
+
+groups:
+  - id: A
+    title: Purpose and consumers
+    fields: [business_questions]
+    question: What questions must this answer, who needs the answers, and what decision do they support?
+  - id: B
+    title: Required outputs
+    fields: [required_outputs]
+    question: What exactly do you want to see - a dashboard, report, extract or dataset - with which figures and slices?
+  - id: C
+    title: Level of detail
+    fields: [level_of_detail.drill_to, level_of_detail.distinct_by]
+    question: What is the finest level of detail you need to drill down to, and what makes each one distinct?
+  - id: D
+    title: History behaviour
+    fields: [history_behaviour]
+    question: If a value such as a segment or category changes, should past figures follow it or stay as they were?
+  - id: E
+    title: Timeliness and volume
+    fields: [timeliness.freshness_need, timeliness.justification]
+    question: How fresh does this need to be, and what decision depends on that freshness?
+  - id: F
+    title: Exceptions and edge cases
+    fields: [exceptions]
+    question: What happens with cancellations, refunds, amendments or late corrections?
+  - id: G
+    title: Fitness and bad data
+    fields: [fitness.unusable_row, fitness.on_bad_data]
+    question: What would make a record unusable to you, and should bad data stop publication?
+  - id: H
+    title: Sources believed
+    fields: [sources_believed]
+    question: Which systems do you believe hold this data, and which is authoritative?
+  - id: I
+    title: Protection and access
+    fields: [sensitivity]
+    question: How sensitive is this, who may see it, and is anything restricted?
+  - id: J
+    title: Acceptance examples
+    fields: []
+    check: scenario_per_requirement
+    question: Can you give a worked example of a correct answer for this requirement?
+  - id: K
+    title: Scope
+    fields: [non_goals]
+    question: What is explicitly out of scope?
+
+# Optional answers: absence is a warning when the BRD text suggests they matter.
+optional:
+  - field: agreement_with_other_teams
+    hint_words: [reconcile, agree, match]
+    question: Must these figures agree with another team's? Which figures, and which team?
+  - field: totalling
+    hint_words: [total, added up, sum]
+    question: Can these figures be added up across time, regions and other slices?
+  - field: protection
+    hint_words: [contact, personal, restricted, must not see]
+    question: Which details must some users not see?
+  - field: external_readers
+    hint_words: [partner, external, outside our organisation]
+    question: Does anyone outside the organisation need this data, and how may they receive it?
+
+# How each answer becomes a design decision (printed by `dpf tdd resolve`).
+derivations:
+  - from: level_of_detail.drill_to
+    derives: grain statement
+  - from: level_of_detail.distinct_by
+    derives: grain columns and the uniqueness check
+  - from: history_behaviour[].answer
+    derives: history semantics (Type 2 tracking where past figures must stay as they were)
+  - from: agreement_with_other_teams
+    derives: conformed definitions and methodology recommendation
+  - from: totalling.can_be_summed_across
+    derives: measure additivity
+  - from: timeliness.freshness_need
+    derives: capture mode, orchestration cadence and the freshness policy
+  - from: timeliness.expected_users
+    derives: materialisation (view, materialised view or table)
+  - from: exceptions
+    derives: retention, exclusion and restatement rules
+  - from: fitness
+    derives: quarantine rules, gate behaviour and alerting
+  - from: external_readers
+    derives: output port type (sharing listing versus dataset grant) and storage format
+  - from: protection
+    derives: policy tags, masking rules and access grants
