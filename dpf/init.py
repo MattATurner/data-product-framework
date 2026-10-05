@@ -12,7 +12,7 @@ from dpf.core import Report, Workspace
 TEMPLATE_PATHS = [
     "openspec/config.yaml", "openspec/schemas", "openspec/project.md", "openspec/AGENTS.md",
     "openspec/changes/README.md", "openspec/specs/platform", "contracts", "methodologies", "engines",
-    "skills", "registry", "adr", "dpf", "tools/dpf", "pyproject.toml", "Makefile", ".gitignore",
+    "skills", "registry", "adr", "dpf", "tools/dpf", "pyproject.toml", "requirements", "Makefile", ".gitignore",
     ".github/workflows/ci.yml", "tests/contracts", "tests/evals/README.md", "tests/golden/README.md",
     "docs/user-guide.md",
 ]

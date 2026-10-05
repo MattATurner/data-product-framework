@@ -106,6 +106,9 @@ def utcnow() -> datetime:
     return datetime.now(UTC)
 
 
+_FRACTION = re.compile(r"(\d{2}:\d{2}:\d{2})\.(\d+)")
+
+
 def parse_ts(value: str | datetime) -> datetime:
     """ISO 8601 string or datetime -> aware UTC datetime. Naive values are UTC."""
     if isinstance(value, datetime):
@@ -114,6 +117,9 @@ def parse_ts(value: str | datetime) -> datetime:
         text = str(value).strip()
         if text[-1:] in ("Z", "z"):
             text = text[:-1] + "+00:00"
+        # Python 3.10 parses only 3- or 6-digit fractions: pad or cut to microseconds,
+        # the precision of a BigQuery TIMESTAMP. Cutting can only move a watermark back.
+        text = _FRACTION.sub(lambda m: f"{m.group(1)}.{(m.group(2) + '000000')[:6]}", text, count=1)
         dt = datetime.fromisoformat(text)
     return dt.replace(tzinfo=UTC) if dt.tzinfo is None else dt.astimezone(UTC)
 

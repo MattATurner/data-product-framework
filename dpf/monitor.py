@@ -34,8 +34,15 @@ class Breach:
     requirements: list[str] = field(default_factory=list)
 
 
+_FRACTION = re.compile(r"(\d{2}:\d{2}:\d{2})\.(\d+)")
+
+
 def parse_ts(value: str) -> datetime:
-    dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    """RFC 3339 -> aware datetime (naive means UTC). Python 3.10 parses only 3- or 6-digit
+    fractions, so pad or cut the fraction to microseconds first."""
+    text = _FRACTION.sub(lambda m: f"{m.group(1)}.{(m.group(2) + '000000')[:6]}",
+                         value.strip().replace("Z", "+00:00"), count=1)
+    dt = datetime.fromisoformat(text)
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 

@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - run: npm install -g @fission-ai/openspec
+      - run: npm install -g @fission-ai/openspec@1.14.0
       - run: openspec validate --all --strict
         env:
           OPENSPEC_TELEMETRY: "0"
@@ -30,7 +30,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -e '.[dev]'
+      - name: Install pinned dependencies (requirements/dev.txt, hash-checked) and dpf
+        run: |
+          pip install --require-hashes -r requirements/dev.txt
+          pip install --no-deps -e .
       - name: Framework validation, lint and gates G0-G3 for every product
         run: dpf check --all --gate G3
       - name: Generated artefacts match the golden copies (all engines with a golden copy)
@@ -55,7 +58,8 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.9.8"
-      - run: pip install -e . dbt-bigquery
+      - name: Install pinned dbt toolchain (requirements/dbt.txt, hash-checked)
+        run: pip install --require-hashes -r requirements/dbt.txt
       - name: Terraform fmt and validate (golden copies)
         run: |
           for d in tests/golden/*/terraform; do
@@ -69,7 +73,7 @@ jobs:
           for d in tests/golden/*/dataform; do
             [ -d "$d" ] || continue
             # workflow_settings.yaml pins dataformCoreVersion, which the CLI installs itself.
-            npx -y @dataform/cli@3 compile "$d"
+            npx -y @dataform/cli@3.0.71 compile "$d"
           done
       - name: dbt parse
         run: |

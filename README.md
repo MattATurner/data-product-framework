@@ -32,6 +32,7 @@ and `--json` gives a machine-readable report, so the same commands run locally a
 ```bash
 python3 -m venv .venv && . .venv/bin/activate
 pip install -e '.[dev]'                     # gives you `dpf`; add [gcp] for live tests and monitoring
+                                            # or `make install`: the hash-locked versions CI uses
 
 dpf check --all --gate G3                   # both worked examples, G0 to G3: all pass
 dpf generate sales_performance              # writes generated/sales_performance/

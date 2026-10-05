@@ -1,0 +1,5 @@
+# Inputs for requirements/dbt.txt: the CI "artefacts" job runs `dbt parse` on the
+# golden dbt rendering. Versions match the ones used to verify the golden copy locally.
+# Regenerate the lock with `make lock`.
+dbt-core==1.12.5
+dbt-bigquery==1.12.1

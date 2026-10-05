@@ -1,15 +1,21 @@
-.PHONY: help install check gates golden evals test openspec ci
+.PHONY: help install lock check gates golden evals test openspec ci
 
 PY      ?= python3
 DPF     ?= $(PY) -m dpf
 OPENSPEC ?= openspec
 PRODUCT ?= --all
+UV_COMPILE ?= uv pip compile --universal --python-version 3.10 --generate-hashes --custom-compile-command "make lock"
 
 help: ## list targets
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | sed 's/:.*## /\t/'
 
-install: ## install dpf (editable) with test dependencies
-	$(PY) -m pip install -e '.[dev]'
+install: ## install dpf (editable) with test dependencies, pinned by requirements/dev.txt (as CI does)
+	$(PY) -m pip install --require-hashes -r requirements/dev.txt
+	$(PY) -m pip install --no-deps -e .
+
+lock: ## re-pin the hash-locked requirements/*.txt (needs uv); add --upgrade to move versions
+	$(UV_COMPILE) pyproject.toml --extra dev -o requirements/dev.txt
+	$(UV_COMPILE) requirements/dbt.in -o requirements/dbt.txt
 
 check: ## framework validation and lint, then every gate up to G3 for every product
 	$(DPF) check $(PRODUCT) --gate G3

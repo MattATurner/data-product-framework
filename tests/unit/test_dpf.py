@@ -125,6 +125,20 @@ def test_in_calendar_uses_the_business_timezone():
     assert in_calendar(parse_ts("2026-10-10T03:00:00Z"), None)                 # no calendar: always
 
 
+@pytest.mark.parametrize("text, micros", [
+    ("2026-10-07T03:00:00.5Z", 500000),
+    ("2026-10-07T03:00:00.123Z", 123000),
+    ("2026-10-07T03:00:00.12345+00:00", 123450),
+    ("2026-10-07T03:00:00.123456789Z", 123456),   # nanoseconds cut to microseconds
+    ("2026-10-07T11:00:00.25+08:00", 250000),
+])
+def test_parse_ts_accepts_any_rfc3339_fraction(text, micros):
+    from datetime import datetime, timezone
+    dt = parse_ts(text)
+    assert dt.microsecond == micros
+    assert dt.astimezone(timezone.utc).replace(microsecond=0) == datetime(2026, 10, 7, 3, tzinfo=timezone.utc)
+
+
 def test_sales_policy_matches_the_calendar_under_test(sales):
     ob1 = next(o for o in sales.manifest["observability"]["freshness"] if o["id"] == "OB-1")
     assert ob1["calendar"] == PERTH_WEEKDAYS and ob1["max_staleness"] == "PT1H30M"
