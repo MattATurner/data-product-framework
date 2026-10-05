@@ -1,0 +1,74 @@
+{
+  "product_id": "customer_orders",
+  "rules": [
+    {
+      "id": "QR-1",
+      "model": "stg_orders",
+      "type": "not_null",
+      "column": "customer_id",
+      "severity": "block",
+      "on_fail": "quarantine",
+      "brd_requirement_id": [
+        "R-7"
+      ]
+    },
+    {
+      "id": "QR-2",
+      "model": "stg_order_lines",
+      "type": "range",
+      "column": "quantity",
+      "min": 0,
+      "severity": "block",
+      "on_fail": "quarantine",
+      "brd_requirement_id": [
+        "R-7"
+      ]
+    },
+    {
+      "id": "GR-stg_orders",
+      "model": "stg_orders",
+      "type": "unique",
+      "columns": [
+        "order_id"
+      ],
+      "severity": "block",
+      "on_fail": "fail",
+      "implements": "test-data-product"
+    },
+    {
+      "id": "GR-stg_order_lines",
+      "model": "stg_order_lines",
+      "type": "unique",
+      "columns": [
+        "order_id",
+        "order_line_no"
+      ],
+      "severity": "block",
+      "on_fail": "fail",
+      "implements": "test-data-product"
+    },
+    {
+      "id": "GR-stg_customers",
+      "model": "stg_customers",
+      "type": "unique",
+      "columns": [
+        "customer_id"
+      ],
+      "severity": "block",
+      "on_fail": "fail",
+      "implements": "test-data-product"
+    },
+    {
+      "id": "GR-customer_orders",
+      "model": "customer_orders",
+      "type": "unique",
+      "columns": [
+        "order_id"
+      ],
+      "severity": "block",
+      "on_fail": "fail",
+      "implements": "test-data-product"
+    }
+  ],
+  "gate_behaviour": "block"
+}

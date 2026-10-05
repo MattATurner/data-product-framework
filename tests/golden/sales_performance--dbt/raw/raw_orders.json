@@ -1,0 +1,20 @@
+{
+  "table_ref": "data-product-framework.raw_ora_local.raw_orders",
+  "is_append_only": true,
+  "storage_format": "bigquery_native",
+  "partition_spec": "DATE(_ingest_ts)",
+  "cluster_spec": [
+    "_source_pk_hash"
+  ],
+  "lineage_columns": [
+    "_ingest_ts",
+    "_batch_id",
+    "_source_system",
+    "_op",
+    "_source_pk_hash"
+  ],
+  "op_semantics": "insert_only",
+  "brd_requirement_id": [
+    "R-10"
+  ]
+}

@@ -1,0 +1,11 @@
+config {
+  type: "view",
+  schema: dataform.projectConfig.vars.staging_dataset,
+  description: "One row per change of stg_products, for the Type 2 dimension(s) dim_product.",
+  tags: ["hourly", "monthly"]
+}
+
+-- dpf: model=stg_products layer=staging role=staging skill=transform-raw-to-staging satisfies=R-6 implements=conform-staging part=history
+SELECT * EXCEPT (_dpf_row_rank, _dpf_version_rank, _reject_reason)
+FROM ${ref("stg_products__candidates")}
+WHERE _dpf_version_rank = 1 AND _reject_reason IS NULL

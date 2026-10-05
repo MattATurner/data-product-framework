@@ -1,0 +1,28 @@
+{
+  "model_ref": "data-product-framework.gold_orders.customer_orders",
+  "layer": "gold",
+  "methodology": "direct",
+  "role": "nested_view",
+  "grain_statement": "one row per customer order, with its lines nested",
+  "grain_columns": [
+    "order_id"
+  ],
+  "grain_checksum": "sha256:6993c00814b54c7226b6ebf6fba14c67405801f962055b810c2c2d3c03639f0e",
+  "engine": "dataform",
+  "storage_format": "bigquery_native",
+  "materialisation": "table",
+  "history_semantics": "current_only",
+  "dataset": "gold",
+  "inputs": [
+    "stg_order_lines",
+    "stg_orders",
+    "stg_customers"
+  ],
+  "brd_requirement_id": [
+    "R-1",
+    "R-2",
+    "R-3",
+    "R-4",
+    "R-5"
+  ]
+}

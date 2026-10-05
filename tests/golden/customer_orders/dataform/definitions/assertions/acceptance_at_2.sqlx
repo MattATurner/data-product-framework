@@ -1,0 +1,16 @@
+config {
+  type: "assertion",
+  description: "Each order carries all of its lines, nested on the order row.",
+  tags: ["acceptance"]
+}
+
+-- dpf: test=acceptance:AT-2 model=customer_orders satisfies=R-2 verifies=AX-2
+WITH staged AS (
+  SELECT order_id, COUNT(*) AS staged_lines
+  FROM ${ref("stg_order_lines")}
+  GROUP BY order_id
+)
+SELECT o.order_id, ARRAY_LENGTH(o.order_lines) AS nested_lines, s.staged_lines
+FROM ${ref("customer_orders")} AS o
+LEFT JOIN staged AS s ON s.order_id = o.order_id
+WHERE COALESCE(ARRAY_LENGTH(o.order_lines), 0) != COALESCE(s.staged_lines, 0)

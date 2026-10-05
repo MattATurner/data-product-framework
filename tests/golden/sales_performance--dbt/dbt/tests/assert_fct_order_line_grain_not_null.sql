@@ -1,0 +1,5 @@
+{{ config(tags=['hourly', 'monthly']) }}
+-- dpf: test=grain_not_null:fct_order_line model=fct_order_line satisfies=R-2,R-3,R-7,R-8,R-9
+SELECT *
+FROM {{ ref('fct_order_line') }}
+WHERE order_id IS NULL OR order_line_no IS NULL

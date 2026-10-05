@@ -1,0 +1,21 @@
+{
+  "product_id": "sales_performance",
+  "observed_at": "2026-10-07T03:00:00Z",
+  "run_id": "observe-20261007T030000Z",
+  "models": [
+    {
+      "name": "sales_performance_monthly",
+      "last_built_at": "2026-10-07T00:30:00Z"
+    },
+    {
+      "name": "sales_performance_partner_extract",
+      "last_built_at": "2026-10-01T19:00:00Z"
+    },
+    {
+      "name": "fct_order_line",
+      "last_built_at": "2026-10-07T00:30:00Z",
+      "rows_in_window": 41250
+    }
+  ],
+  "checks": []
+}

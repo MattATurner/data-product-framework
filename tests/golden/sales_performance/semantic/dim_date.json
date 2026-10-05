@@ -1,0 +1,27 @@
+{
+  "model_ref": "data-product-framework.slv_sales.dim_date",
+  "layer": "silver",
+  "methodology": "kimball",
+  "role": "calendar",
+  "grain_statement": "one row per calendar day",
+  "grain_columns": [
+    "date_key"
+  ],
+  "grain_checksum": "sha256:89da429cd3fd871e6cdc4364f47f330960ddb09d0290c5e95dd777b4127b57c2",
+  "engine": "dataform",
+  "storage_format": "bigquery_native",
+  "materialisation": "table",
+  "history_semantics": "current_only",
+  "dataset": "silver",
+  "inputs": [],
+  "natural_key": [
+    "date_key"
+  ],
+  "attributes": {
+    "start_date": "2020-01-01",
+    "end_date": "2030-12-31"
+  },
+  "brd_requirement_id": [
+    "R-1"
+  ]
+}

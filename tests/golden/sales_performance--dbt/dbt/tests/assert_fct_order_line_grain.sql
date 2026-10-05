@@ -1,0 +1,6 @@
+{{ config(tags=['hourly', 'monthly']) }}
+-- dpf: test=grain:fct_order_line model=fct_order_line satisfies=R-2,R-3,R-7,R-8,R-9
+SELECT order_id, order_line_no, COUNT(*) AS rows_per_grain
+FROM {{ ref('fct_order_line') }}
+GROUP BY order_id, order_line_no
+HAVING COUNT(*) > 1

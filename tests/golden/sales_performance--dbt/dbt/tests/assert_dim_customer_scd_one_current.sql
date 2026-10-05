@@ -1,0 +1,6 @@
+{{ config(tags=['hourly', 'monthly']) }}
+-- dpf: test=scd_current:dim_customer model=dim_customer satisfies=R-4,R-5,R-12
+SELECT customer_id, COUNTIF(is_current) AS current_versions
+FROM {{ ref('dim_customer') }}
+GROUP BY customer_id
+HAVING COUNTIF(is_current) != 1

@@ -1,0 +1,23 @@
+{
+  "table_ref": "data-product-framework.stg_sales.stg_order_lines",
+  "engine": "dbt",
+  "natural_key": [
+    "order_id",
+    "order_line_no"
+  ],
+  "grain_columns": [
+    "order_id",
+    "order_line_no"
+  ],
+  "dedupe_strategy": "latest version per natural key by source_modified_ts DESC, _ingest_ts DESC",
+  "reject_table_ref": "data-product-framework.stg_sales.stg_order_lines_rejects",
+  "reject_rules": [
+    "QR-1",
+    "QR-2"
+  ],
+  "quality_gate": "block",
+  "brd_requirement_id": [
+    "R-3",
+    "R-11"
+  ]
+}

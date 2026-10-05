@@ -1,21 +1,14 @@
 id: unsupported-engine
-asserts: >
-  Pairing a history-bearing methodology role with a streaming engine must fail at
-  compose time, not generate code that compiles and misbehaves.
-
-given:
-  methodology: kimball
-  role: dimension
-  engine: dataflow
-
+asserts: Kimball dimensions on a streaming engine fail compose instead of generating code that misbehaves.
+mutate:
+- set:
+    file: products/sales_performance/product.yaml
+    path: layers.silver.engine
+    value: dataflow
+run:
+  command: compose
+  product: sales_performance
 expect:
-  verdict: fail
-  gate: G1
-  message_contains:
-    - "engine 'dataflow' not supported for role 'dimension'"
-    - "no streaming variant"
-
-rationale: >
-  SCD2 under a streaming engine needs stateful processing, late-arrival handling and a
-  durable current-state store. The Kimball pack ships no streaming variant, so it does
-  not declare dataflow support for the dimension role.
+  outcome: fail
+  messages:
+  - does not support engine 'dataflow' for role 'dimension'

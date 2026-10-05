@@ -1,0 +1,28 @@
+config {
+  type: "view",
+  schema: dataform.projectConfig.vars.staging_dataset,
+  description: "Every typed version of stg_order_lines, ranked for deduplication, with the reject reason.",
+  tags: ["daily"]
+}
+
+-- dpf: model=stg_order_lines layer=staging role=staging skill=transform-raw-to-staging satisfies=R-2,R-7 part=candidates
+WITH typed AS (
+  SELECT
+    CAST(order_id AS STRING)            AS order_id,
+    CAST(line_no AS INT64)              AS order_line_no,
+    CAST(product_id AS STRING)          AS product_id,
+    CAST(quantity AS NUMERIC)           AS quantity,
+    CAST(line_amount AS NUMERIC)        AS line_amount,
+    CAST(last_modified_ts AS TIMESTAMP) AS source_modified_ts,
+    _ingest_ts,
+    _batch_id
+  FROM ${ref("raw_order_lines")}
+)
+SELECT
+  typed.*,
+  ROW_NUMBER() OVER (PARTITION BY order_id, order_line_no ORDER BY source_modified_ts DESC, _ingest_ts DESC) AS _dpf_row_rank,
+  ROW_NUMBER() OVER (PARTITION BY order_id, order_line_no, source_modified_ts ORDER BY _ingest_ts DESC) AS _dpf_version_rank,
+  CASE
+    WHEN quantity < 0 THEN 'QR-2'
+  END AS _reject_reason
+FROM typed

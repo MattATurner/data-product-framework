@@ -1,0 +1,14 @@
+id: unimplemented-adapter
+asserts: A model whose engine adapter is only planned fails compose.
+mutate:
+- set:
+    file: engines/dataform/adapter.yaml
+    path: status
+    value: planned
+run:
+  command: compose
+  product: customer_orders
+expect:
+  outcome: fail
+  messages:
+  - the dataform adapter does not implement role

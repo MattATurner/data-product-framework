@@ -1,0 +1,706 @@
+{
+  "product_id": "sales_performance",
+  "artefact_digest": "sha256:0f8650494eaf4252226cb1496564b91edb215f669b7c42fb166effc7a05f9a5e",
+  "cases": [
+    {
+      "id": "grain:stg_customers",
+      "kind": "grain",
+      "method": "automated",
+      "severity": "block",
+      "model": "stg_customers",
+      "description": "stg_customers: one row per customer at its latest source state — no duplicates on (customer_id)",
+      "sql": "SELECT customer_id, COUNT(*) AS rows_per_grain\nFROM {{ ref('stg_customers') }}\nGROUP BY customer_id\nHAVING COUNT(*) > 1",
+      "satisfies": [
+        "R-4"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "grain_not_null:stg_customers",
+      "kind": "grain",
+      "method": "automated",
+      "severity": "block",
+      "model": "stg_customers",
+      "description": "stg_customers: grain columns are never null",
+      "sql": "SELECT *\nFROM {{ ref('stg_customers') }}\nWHERE customer_id IS NULL",
+      "satisfies": [
+        "R-4"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "grain:stg_order_lines",
+      "kind": "grain",
+      "method": "automated",
+      "severity": "block",
+      "model": "stg_order_lines",
+      "description": "stg_order_lines: one row per order line at its latest amended values — no duplicates on (order_id, order_line_no)",
+      "sql": "SELECT order_id, order_line_no, COUNT(*) AS rows_per_grain\nFROM {{ ref('stg_order_lines') }}\nGROUP BY order_id, order_line_no\nHAVING COUNT(*) > 1",
+      "satisfies": [
+        "R-3",
+        "R-11"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "grain_not_null:stg_order_lines",
+      "kind": "grain",
+      "method": "automated",
+      "severity": "block",
+      "model": "stg_order_lines",
+      "description": "stg_order_lines: grain columns are never null",
+      "sql": "SELECT *\nFROM {{ ref('stg_order_lines') }}\nWHERE order_id IS NULL OR order_line_no IS NULL",
+      "satisfies": [
+        "R-3",
+        "R-11"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "reject_gate:stg_order_lines",
+      "kind": "reject_gate",
+      "method": "automated",
+      "severity": "block",
+      "model": "stg_order_lines",
+      "description": "stg_order_lines: no row is quarantined (QR-1, QR-2); any rejected row blocks every downstream refresh",
+      "sql": "SELECT *\nFROM {{ ref('stg_order_lines_rejects') }}",
+      "satisfies": [
+        "R-11"
+      ],
+      "implements": "enforce-data-quality",
+      "tags": []
+    },
+    {
+      "id": "grain:stg_products",
+      "kind": "grain",
+      "method": "automated",
+      "severity": "block",
+      "model": "stg_products",
+      "description": "stg_products: one row per product at its latest source state — no duplicates on (product_id)",
+      "sql": "SELECT product_id, COUNT(*) AS rows_per_grain\nFROM {{ ref('stg_products') }}\nGROUP BY product_id\nHAVING COUNT(*) > 1",
+      "satisfies": [
+        "R-6"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "grain_not_null:stg_products",
+      "kind": "grain",
+      "method": "automated",
+      "severity": "block",
+      "model": "stg_products",
+      "description": "stg_products: grain columns are never null",
+      "sql": "SELECT *\nFROM {{ ref('stg_products') }}\nWHERE product_id IS NULL",
+      "satisfies": [
+        "R-6"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "grain:dim_customer",
+      "kind": "grain",
+      "method": "automated",
+      "severity": "block",
+      "model": "dim_customer",
+      "description": "dim_customer: one row per customer per validity period — no duplicates on (customer_id, valid_from)",
+      "sql": "SELECT customer_id, valid_from, COUNT(*) AS rows_per_grain\nFROM {{ ref('dim_customer') }}\nGROUP BY customer_id, valid_from\nHAVING COUNT(*) > 1",
+      "satisfies": [
+        "R-4",
+        "R-5",
+        "R-12"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "grain_not_null:dim_customer",
+      "kind": "grain",
+      "method": "automated",
+      "severity": "block",
+      "model": "dim_customer",
+      "description": "dim_customer: grain columns are never null",
+      "sql": "SELECT *\nFROM {{ ref('dim_customer') }}\nWHERE customer_id IS NULL OR valid_from IS NULL",
+      "satisfies": [
+        "R-4",
+        "R-5",
+        "R-12"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "scd_overlap:dim_customer",
+      "kind": "scd_integrity",
+      "method": "automated",
+      "severity": "block",
+      "model": "dim_customer",
+      "description": "dim_customer: validity windows of one member never overlap",
+      "sql": "SELECT a.customer_id, a.valid_from, a.valid_to, b.valid_from AS overlapping_from\nFROM {{ ref('dim_customer') }} AS a\nJOIN {{ ref('dim_customer') }} AS b\n  ON a.customer_id = b.customer_id AND a.version_no < b.version_no\n AND a.valid_from < b.valid_to AND b.valid_from < a.valid_to",
+      "satisfies": [
+        "R-4",
+        "R-5",
+        "R-12"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "scd_current:dim_customer",
+      "kind": "scd_integrity",
+      "method": "automated",
+      "severity": "block",
+      "model": "dim_customer",
+      "description": "dim_customer: exactly one current version per member",
+      "sql": "SELECT customer_id, COUNTIF(is_current) AS current_versions\nFROM {{ ref('dim_customer') }}\nGROUP BY customer_id\nHAVING COUNTIF(is_current) != 1",
+      "satisfies": [
+        "R-4",
+        "R-5",
+        "R-12"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "grain:dim_date",
+      "kind": "grain",
+      "method": "automated",
+      "severity": "block",
+      "model": "dim_date",
+      "description": "dim_date: one row per calendar day — no duplicates on (date_key)",
+      "sql": "SELECT date_key, COUNT(*) AS rows_per_grain\nFROM {{ ref('dim_date') }}\nGROUP BY date_key\nHAVING COUNT(*) > 1",
+      "satisfies": [
+        "R-1"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "grain_not_null:dim_date",
+      "kind": "grain",
+      "method": "automated",
+      "severity": "block",
+      "model": "dim_date",
+      "description": "dim_date: grain columns are never null",
+      "sql": "SELECT *\nFROM {{ ref('dim_date') }}\nWHERE date_key IS NULL",
+      "satisfies": [
+        "R-1"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "grain:dim_product",
+      "kind": "grain",
+      "method": "automated",
+      "severity": "block",
+      "model": "dim_product",
+      "description": "dim_product: one row per product per validity period — no duplicates on (product_id, valid_from)",
+      "sql": "SELECT product_id, valid_from, COUNT(*) AS rows_per_grain\nFROM {{ ref('dim_product') }}\nGROUP BY product_id, valid_from\nHAVING COUNT(*) > 1",
+      "satisfies": [
+        "R-6"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "grain_not_null:dim_product",
+      "kind": "grain",
+      "method": "automated",
+      "severity": "block",
+      "model": "dim_product",
+      "description": "dim_product: grain columns are never null",
+      "sql": "SELECT *\nFROM {{ ref('dim_product') }}\nWHERE product_id IS NULL OR valid_from IS NULL",
+      "satisfies": [
+        "R-6"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "scd_overlap:dim_product",
+      "kind": "scd_integrity",
+      "method": "automated",
+      "severity": "block",
+      "model": "dim_product",
+      "description": "dim_product: validity windows of one member never overlap",
+      "sql": "SELECT a.product_id, a.valid_from, a.valid_to, b.valid_from AS overlapping_from\nFROM {{ ref('dim_product') }} AS a\nJOIN {{ ref('dim_product') }} AS b\n  ON a.product_id = b.product_id AND a.version_no < b.version_no\n AND a.valid_from < b.valid_to AND b.valid_from < a.valid_to",
+      "satisfies": [
+        "R-6"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "scd_current:dim_product",
+      "kind": "scd_integrity",
+      "method": "automated",
+      "severity": "block",
+      "model": "dim_product",
+      "description": "dim_product: exactly one current version per member",
+      "sql": "SELECT product_id, COUNTIF(is_current) AS current_versions\nFROM {{ ref('dim_product') }}\nGROUP BY product_id\nHAVING COUNTIF(is_current) != 1",
+      "satisfies": [
+        "R-6"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "grain:fct_order_line",
+      "kind": "grain",
+      "method": "automated",
+      "severity": "block",
+      "model": "fct_order_line",
+      "description": "fct_order_line: one row per order line at its latest amended values — no duplicates on (order_id, order_line_no)",
+      "sql": "SELECT order_id, order_line_no, COUNT(*) AS rows_per_grain\nFROM {{ ref('fct_order_line') }}\nGROUP BY order_id, order_line_no\nHAVING COUNT(*) > 1",
+      "satisfies": [
+        "R-2",
+        "R-3",
+        "R-7",
+        "R-8",
+        "R-9"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "grain_not_null:fct_order_line",
+      "kind": "grain",
+      "method": "automated",
+      "severity": "block",
+      "model": "fct_order_line",
+      "description": "fct_order_line: grain columns are never null",
+      "sql": "SELECT *\nFROM {{ ref('fct_order_line') }}\nWHERE order_id IS NULL OR order_line_no IS NULL",
+      "satisfies": [
+        "R-2",
+        "R-3",
+        "R-7",
+        "R-8",
+        "R-9"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "integrity:fct_order_line:customer_id:not_null",
+      "kind": "integrity",
+      "method": "automated",
+      "severity": "block",
+      "model": "fct_order_line",
+      "description": "fct_order_line: every line names a customer_id (reference to dim_customer)",
+      "sql": "SELECT order_id, order_line_no\nFROM {{ ref('fct_order_line') }}\nWHERE customer_id IS NULL",
+      "satisfies": [
+        "R-2",
+        "R-3",
+        "R-7",
+        "R-8",
+        "R-9"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "integrity:fct_order_line:dim_customer:late_arrival",
+      "kind": "integrity",
+      "method": "automated",
+      "severity": "warn",
+      "model": "fct_order_line",
+      "description": "fct_order_line: lines whose customer_id has not yet arrived in dim_customer (kept with the unknown member)",
+      "sql": "SELECT order_id, order_line_no, customer_id\nFROM {{ ref('fct_order_line') }}\nWHERE sk_customer = -1",
+      "satisfies": [
+        "R-2",
+        "R-3",
+        "R-7",
+        "R-8",
+        "R-9"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "integrity:fct_order_line:product_id:not_null",
+      "kind": "integrity",
+      "method": "automated",
+      "severity": "block",
+      "model": "fct_order_line",
+      "description": "fct_order_line: every line names a product_id (reference to dim_product)",
+      "sql": "SELECT order_id, order_line_no\nFROM {{ ref('fct_order_line') }}\nWHERE product_id IS NULL",
+      "satisfies": [
+        "R-2",
+        "R-3",
+        "R-7",
+        "R-8",
+        "R-9"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "integrity:fct_order_line:dim_product:late_arrival",
+      "kind": "integrity",
+      "method": "automated",
+      "severity": "warn",
+      "model": "fct_order_line",
+      "description": "fct_order_line: lines whose product_id has not yet arrived in dim_product (kept with the unknown member)",
+      "sql": "SELECT order_id, order_line_no, product_id\nFROM {{ ref('fct_order_line') }}\nWHERE sk_product = -1",
+      "satisfies": [
+        "R-2",
+        "R-3",
+        "R-7",
+        "R-8",
+        "R-9"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "grain:sales_order_line_detail",
+      "kind": "grain",
+      "method": "automated",
+      "severity": "block",
+      "model": "sales_order_line_detail",
+      "description": "sales_order_line_detail: one row per order line at its latest amended values — no duplicates on (order_id, order_line_no)",
+      "sql": "SELECT order_id, order_line_no, COUNT(*) AS rows_per_grain\nFROM {{ ref('sales_order_line_detail') }}\nGROUP BY order_id, order_line_no\nHAVING COUNT(*) > 1",
+      "satisfies": [
+        "R-2",
+        "R-8",
+        "R-12"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "grain_not_null:sales_order_line_detail",
+      "kind": "grain",
+      "method": "automated",
+      "severity": "block",
+      "model": "sales_order_line_detail",
+      "description": "sales_order_line_detail: grain columns are never null",
+      "sql": "SELECT *\nFROM {{ ref('sales_order_line_detail') }}\nWHERE order_id IS NULL OR order_line_no IS NULL",
+      "satisfies": [
+        "R-2",
+        "R-8",
+        "R-12"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "grain:sales_performance_monthly",
+      "kind": "grain",
+      "method": "automated",
+      "severity": "block",
+      "model": "sales_performance_monthly",
+      "description": "sales_performance_monthly: one row per month per customer segment per product category per region — no duplicates on (year_month, customer_segment, product_category, region)",
+      "sql": "SELECT year_month, customer_segment, product_category, region, COUNT(*) AS rows_per_grain\nFROM {{ ref('sales_performance_monthly') }}\nGROUP BY year_month, customer_segment, product_category, region\nHAVING COUNT(*) > 1",
+      "satisfies": [
+        "R-1",
+        "R-4",
+        "R-7",
+        "R-8"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "grain_not_null:sales_performance_monthly",
+      "kind": "grain",
+      "method": "automated",
+      "severity": "block",
+      "model": "sales_performance_monthly",
+      "description": "sales_performance_monthly: grain columns are never null",
+      "sql": "SELECT *\nFROM {{ ref('sales_performance_monthly') }}\nWHERE year_month IS NULL OR customer_segment IS NULL OR product_category IS NULL OR region IS NULL",
+      "satisfies": [
+        "R-1",
+        "R-4",
+        "R-7",
+        "R-8"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "grain:sales_performance_partner_extract",
+      "kind": "grain",
+      "method": "automated",
+      "severity": "block",
+      "model": "sales_performance_partner_extract",
+      "description": "sales_performance_partner_extract: one row per closed month per product category per region — no duplicates on (year_month, product_category, region)",
+      "sql": "SELECT year_month, product_category, region, COUNT(*) AS rows_per_grain\nFROM {{ ref('sales_performance_partner_extract') }}\nGROUP BY year_month, product_category, region\nHAVING COUNT(*) > 1",
+      "satisfies": [
+        "R-13"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "grain_not_null:sales_performance_partner_extract",
+      "kind": "grain",
+      "method": "automated",
+      "severity": "block",
+      "model": "sales_performance_partner_extract",
+      "description": "sales_performance_partner_extract: grain columns are never null",
+      "sql": "SELECT *\nFROM {{ ref('sales_performance_partner_extract') }}\nWHERE year_month IS NULL OR product_category IS NULL OR region IS NULL",
+      "satisfies": [
+        "R-13"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "kind": "acceptance",
+      "severity": "block",
+      "model": "sales_performance_monthly",
+      "sql": "WITH quarters AS (\n  SELECT DISTINCT year_month, year_quarter FROM {{ ref('dim_date') }}\n),\nfrom_monthly AS (\n  SELECT q.year_quarter AS quarter, m.customer_segment AS segment, SUM(m.net_sales) AS monthly_net_sales\n  FROM {{ ref('sales_performance_monthly') }} AS m\n  JOIN quarters AS q ON q.year_month = m.year_month\n  GROUP BY q.year_quarter, m.customer_segment\n),\nfrom_detail AS (\n  SELECT q.year_quarter AS quarter, l.customer_segment AS segment, SUM(l.net_amount) AS detail_net_sales\n  FROM {{ ref('sales_order_line_detail') }} AS l\n  JOIN quarters AS q ON q.year_month = l.year_month\n  WHERE NOT l.is_cancelled\n  GROUP BY q.year_quarter, l.customer_segment\n)\nSELECT quarter, segment, m.monthly_net_sales, d.detail_net_sales\nFROM from_monthly AS m\nFULL OUTER JOIN from_detail AS d USING (quarter, segment)\nWHERE m.monthly_net_sales IS NULL OR d.detail_net_sales IS NULL\n   OR m.monthly_net_sales != d.detail_net_sales",
+      "id": "acceptance:AT-1",
+      "method": "automated",
+      "description": "Quarterly net sales per segment agree between the monthly view and the line detail.",
+      "verifies": [
+        "AX-1"
+      ],
+      "satisfies": [
+        "R-1"
+      ],
+      "tags": [
+        "acceptance"
+      ]
+    },
+    {
+      "kind": "acceptance",
+      "severity": "block",
+      "model": "sales_order_line_detail",
+      "sql": "WITH detail AS (\n  SELECT year_month, customer_segment, product_category, region,\n         SUM(net_amount) AS detail_net_sales, COUNT(*) AS detail_lines\n  FROM {{ ref('sales_order_line_detail') }}\n  WHERE NOT is_cancelled\n  GROUP BY year_month, customer_segment, product_category, region\n)\nSELECT year_month, customer_segment, product_category, region,\n       m.net_sales AS monthly_net_sales, d.detail_net_sales,\n       m.order_line_count AS monthly_lines, d.detail_lines\nFROM {{ ref('sales_performance_monthly') }} AS m\nFULL OUTER JOIN detail AS d USING (year_month, customer_segment, product_category, region)\nWHERE m.net_sales IS NULL OR d.detail_net_sales IS NULL\n   OR m.net_sales != d.detail_net_sales OR m.order_line_count != d.detail_lines",
+      "id": "acceptance:AT-2",
+      "method": "automated",
+      "description": "Every monthly figure equals the sum, and the count, of its non-cancelled detail lines.",
+      "verifies": [
+        "AX-2"
+      ],
+      "satisfies": [
+        "R-2"
+      ],
+      "tags": [
+        "acceptance"
+      ]
+    },
+    {
+      "kind": "acceptance",
+      "severity": "block",
+      "model": "fct_order_line",
+      "sql": "SELECT COUNT(*) AS line_rows, MAX(quantity) AS quantity, MAX(net_amount) AS net_amount\nFROM {{ ref('fct_order_line') }}\nWHERE order_id = 'SO-1001' AND order_line_no = 2\nHAVING COUNT(*) != 1 OR MAX(quantity) != 6 OR MAX(net_amount) != 810",
+      "id": "acceptance:AT-3",
+      "method": "automated",
+      "description": "SO-1001 line 2, landed three times, appears once with quantity 6 and net amount 810.00.",
+      "verifies": [
+        "AX-3"
+      ],
+      "satisfies": [
+        "R-3"
+      ],
+      "tags": [
+        "acceptance"
+      ]
+    },
+    {
+      "kind": "acceptance",
+      "severity": "block",
+      "model": "sales_order_line_detail",
+      "sql": "WITH expected AS (\n  SELECT 'SO-1001' AS order_id, 'SMB' AS expected_segment UNION ALL\n  SELECT 'SO-1004', 'ENTERPRISE'\n),\nactual AS (\n  SELECT DISTINCT order_id, customer_segment FROM {{ ref('sales_order_line_detail') }}\n)\nSELECT e.order_id, e.expected_segment, a.customer_segment AS actual_segment\nFROM expected AS e\nLEFT JOIN actual AS a USING (order_id)\nWHERE a.customer_segment IS NULL OR a.customer_segment != e.expected_segment",
+      "id": "acceptance:AT-4",
+      "method": "automated",
+      "description": "C-001's March order reports under SMB and its June order under ENTERPRISE.",
+      "verifies": [
+        "AX-4"
+      ],
+      "satisfies": [
+        "R-4"
+      ],
+      "tags": [
+        "acceptance"
+      ]
+    },
+    {
+      "kind": "acceptance",
+      "severity": "block",
+      "attested_by_role": "finance",
+      "id": "acceptance:AT-5",
+      "method": "attestation",
+      "description": "Finance confirms March net sales reconcile with reported revenue, or accepts the explained variance.",
+      "verifies": [
+        "AX-5"
+      ],
+      "satisfies": [
+        "R-5"
+      ],
+      "tags": [
+        "acceptance"
+      ]
+    },
+    {
+      "kind": "acceptance",
+      "severity": "block",
+      "model": "sales_order_line_detail",
+      "sql": "WITH so1003 AS (\n  SELECT COUNT(*) AS lines, COUNTIF(is_cancelled) AS cancelled_lines\n  FROM {{ ref('sales_order_line_detail') }}\n  WHERE order_id = 'SO-1003' AND year_month = '2026-04'\n),\napril AS (\n  SELECT\n    (SELECT COALESCE(SUM(net_sales), 0) FROM {{ ref('sales_performance_monthly') }}\n      WHERE year_month = '2026-04') AS reported,\n    (SELECT COALESCE(SUM(net_amount), 0) FROM {{ ref('sales_order_line_detail') }}\n      WHERE year_month = '2026-04' AND order_id != 'SO-1003' AND NOT is_cancelled) AS expected\n)\nSELECT s.lines, s.cancelled_lines, a.reported, a.expected\nFROM so1003 AS s CROSS JOIN april AS a\nWHERE s.lines = 0 OR s.cancelled_lines != s.lines OR a.reported != a.expected",
+      "id": "acceptance:AT-6",
+      "method": "automated",
+      "description": "SO-1003 is visible in April's detail, marked cancelled, and contributes nothing to April net sales.",
+      "verifies": [
+        "AX-6"
+      ],
+      "satisfies": [
+        "R-8"
+      ],
+      "tags": [
+        "acceptance"
+      ]
+    },
+    {
+      "kind": "acceptance",
+      "severity": "block",
+      "model": "sales_order_line_detail",
+      "sql": "WITH expected AS (\n  SELECT '2026-03' AS year_month, 'GADGETS' AS expected_category UNION ALL\n  SELECT '2026-06', 'WIDGETS'\n),\nactual AS (\n  SELECT DISTINCT year_month, product_category\n  FROM {{ ref('sales_order_line_detail') }}\n  WHERE product_id = 'P-200'\n)\nSELECT e.year_month, e.expected_category, a.product_category AS actual_category\nFROM expected AS e\nLEFT JOIN actual AS a USING (year_month)\nWHERE a.product_category IS NULL OR a.product_category != e.expected_category",
+      "id": "acceptance:AT-7",
+      "method": "automated",
+      "description": "P-200 reports under GADGETS for March and WIDGETS for June after its recategorisation.",
+      "verifies": [
+        "AX-7"
+      ],
+      "satisfies": [
+        "R-6"
+      ],
+      "tags": [
+        "acceptance"
+      ]
+    },
+    {
+      "kind": "acceptance",
+      "severity": "block",
+      "attested_by_role": "merchandising",
+      "id": "acceptance:AT-8",
+      "method": "attestation",
+      "description": "Merchandising confirms the product categories used in the figures match their range.",
+      "verifies": [
+        "AX-8"
+      ],
+      "satisfies": [
+        "R-6"
+      ],
+      "tags": [
+        "acceptance"
+      ]
+    },
+    {
+      "kind": "acceptance",
+      "severity": "block",
+      "model": "sales_performance_monthly",
+      "sql": "SELECT m.total_net_sales, f.total_net_amount, m.total_lines, f.total_fact_lines\nFROM (\n  SELECT COALESCE(SUM(net_sales), 0) AS total_net_sales, COALESCE(SUM(order_line_count), 0) AS total_lines\n  FROM {{ ref('sales_performance_monthly') }}\n) AS m\nCROSS JOIN (\n  SELECT COALESCE(SUM(net_amount), 0) AS total_net_amount, COUNT(*) AS total_fact_lines\n  FROM {{ ref('fct_order_line') }}\n  WHERE NOT is_cancelled\n) AS f\nWHERE m.total_net_sales != f.total_net_amount OR m.total_lines != f.total_fact_lines",
+      "id": "acceptance:AT-9",
+      "method": "automated",
+      "description": "Monthly figures summed across every slice equal net sales and line counts taken directly from the lines.",
+      "verifies": [
+        "AX-9"
+      ],
+      "satisfies": [
+        "R-7"
+      ],
+      "tags": [
+        "acceptance"
+      ]
+    },
+    {
+      "kind": "static",
+      "severity": "block",
+      "check": "restatement_window",
+      "element": "model:fct_order_line",
+      "id": "acceptance:AT-10",
+      "method": "static",
+      "description": "Incremental builds rewrite only order dates inside the 90-day correction window.",
+      "verifies": [
+        "AX-10"
+      ],
+      "satisfies": [
+        "R-9"
+      ],
+      "tags": [
+        "acceptance"
+      ]
+    },
+    {
+      "kind": "static",
+      "severity": "block",
+      "check": "freshness_policy",
+      "element": "observability:OB-1",
+      "id": "acceptance:AT-11",
+      "method": "static",
+      "description": "A freshness check runs every 15 minutes in Perth working hours and alerts beyond 90 minutes.",
+      "verifies": [
+        "AX-11"
+      ],
+      "satisfies": [
+        "R-10"
+      ],
+      "tags": [
+        "acceptance"
+      ]
+    },
+    {
+      "kind": "static",
+      "severity": "block",
+      "check": "reject_gate_blocks_publication",
+      "element": "model:sales_performance_monthly",
+      "id": "acceptance:AT-12",
+      "method": "static",
+      "description": "A rejected line blocks every gold refresh and is visible with its reason.",
+      "verifies": [
+        "AX-12"
+      ],
+      "satisfies": [
+        "R-11"
+      ],
+      "tags": [
+        "acceptance"
+      ]
+    },
+    {
+      "kind": "static",
+      "severity": "block",
+      "check": "policy_tag_masking",
+      "element": "policy:PT-1",
+      "id": "acceptance:AT-13",
+      "method": "static",
+      "description": "Email and phone are policy-tagged with a null mask for analysts; no gold view exposes them.",
+      "verifies": [
+        "AX-13"
+      ],
+      "satisfies": [
+        "R-12"
+      ],
+      "tags": [
+        "acceptance"
+      ]
+    },
+    {
+      "kind": "static",
+      "severity": "block",
+      "check": "sharing_listing_only",
+      "element": "port:sales_performance_partner_extract",
+      "id": "acceptance:AT-14",
+      "method": "static",
+      "description": "The partner receives a listing subscription only, over closed months without customer columns.",
+      "verifies": [
+        "AX-14"
+      ],
+      "satisfies": [
+        "R-13"
+      ],
+      "tags": [
+        "acceptance"
+      ]
+    }
+  ]
+}

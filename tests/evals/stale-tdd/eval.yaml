@@ -1,0 +1,21 @@
+id: stale-tdd
+asserts: Bumping the BRD version makes the TDD, the manifest and the sign-off stale, which blocks G1.
+mutate:
+- set:
+    file: openspec/specs/products/sales/customer-orders/brd/brd.yaml
+    path: version
+    value: 1.2.0
+- replace:
+    file: openspec/specs/products/sales/customer-orders/brd/spec.md
+    old: '**Version:** 1.1.0'
+    new: '**Version:** 1.2.0'
+run:
+  command: check
+  product: customer_orders
+  gate: G1
+expect:
+  outcome: fail
+  messages:
+  - TDD is stale
+  - manifest is stale
+  - signed against BRD-SALES-001@1.1.0

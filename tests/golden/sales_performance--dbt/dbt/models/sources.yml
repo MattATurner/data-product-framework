@@ -1,0 +1,15 @@
+# dpf: product=sales_performance implements=land-immutable-raw
+version: 2
+sources:
+- name: ora_local
+  description: Raw, append-only landing of source system ora_local.
+  schema: '{{ var(''raw_dataset'') }}'
+  tables:
+  - name: raw_orders
+    description: Raw, append-only landing of raw_orders from ora_local.
+  - name: raw_order_lines
+    description: Raw, append-only landing of raw_order_lines from ora_local.
+  - name: raw_customers
+    description: Raw, append-only landing of raw_customers from ora_local.
+  - name: raw_products
+    description: Raw, append-only landing of raw_products from ora_local.

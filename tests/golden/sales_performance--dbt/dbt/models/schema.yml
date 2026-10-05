@@ -1,0 +1,48 @@
+# dpf: product=sales_performance implements=generate-artefacts
+version: 2
+models:
+- name: stg_customers__candidates
+  description: Every typed version of stg_customers, ranked for deduplication, with the reject reason.
+- name: stg_customers
+  description: One row per customer at its latest source state. Rows failing a quarantine rule are excluded.
+- name: stg_customers_rejects
+  description: Latest stg_customers rows that failed a quarantine rule, with _reject_reason.
+- name: stg_customers_history
+  description: One row per change of stg_customers, for the Type 2 dimension(s) dim_customer.
+- name: stg_order_lines__candidates
+  description: Every typed version of stg_order_lines, ranked for deduplication, with the reject reason.
+- name: stg_order_lines
+  description: One row per order line at its latest amended values. Rows failing a quarantine rule are excluded.
+- name: stg_order_lines_rejects
+  description: Latest stg_order_lines rows that failed a quarantine rule, with _reject_reason.
+- name: stg_products__candidates
+  description: Every typed version of stg_products, ranked for deduplication, with the reject reason.
+- name: stg_products
+  description: One row per product at its latest source state. Rows failing a quarantine rule are excluded.
+- name: stg_products_rejects
+  description: Latest stg_products rows that failed a quarantine rule, with _reject_reason.
+- name: stg_products_history
+  description: One row per change of stg_products, for the Type 2 dimension(s) dim_product.
+- name: dim_customer
+  description: One row per customer per validity period.
+  columns:
+  - name: customer_email
+    description: Policy tag pii_contact (PT-1).
+    policy_tags:
+    - '{{ var(''policy_tag_pii_contact'') }}'
+  - name: customer_phone
+    description: Policy tag pii_contact (PT-1).
+    policy_tags:
+    - '{{ var(''policy_tag_pii_contact'') }}'
+- name: dim_date
+  description: One row per calendar day.
+- name: dim_product
+  description: One row per product per validity period.
+- name: fct_order_line
+  description: One row per order line at its latest amended values.
+- name: sales_order_line_detail
+  description: One row per order line at its latest amended values.
+- name: sales_performance_monthly
+  description: One row per month per customer segment per product category per region.
+- name: sales_performance_partner_extract
+  description: One row per closed month per product category per region.

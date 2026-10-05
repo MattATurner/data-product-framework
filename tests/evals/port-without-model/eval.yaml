@@ -1,0 +1,15 @@
+id: port-without-model
+asserts: An output port that exposes an undeclared model fails G1.
+mutate:
+- set:
+    file: products/customer_orders/product.yaml
+    path: output_ports[name=customer_orders].model
+    value: customer_orders_v2
+run:
+  command: check
+  product: customer_orders
+  gate: G1
+expect:
+  outcome: fail
+  messages:
+  - model 'customer_orders_v2' is not declared

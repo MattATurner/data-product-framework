@@ -1,0 +1,24 @@
+config {
+  type: "view",
+  schema: dataform.projectConfig.vars.staging_dataset,
+  description: "Every typed version of stg_customers, ranked for deduplication, with the reject reason.",
+  tags: ["daily"]
+}
+
+-- dpf: model=stg_customers layer=staging role=staging skill=transform-raw-to-staging satisfies=R-1,R-5 part=candidates
+WITH typed AS (
+  SELECT
+    CAST(customer_id AS STRING)         AS customer_id,
+    CAST(customer_name AS STRING)       AS customer_name,
+    CAST(address AS STRING)             AS customer_address,
+    CAST(last_modified_ts AS TIMESTAMP) AS source_modified_ts,
+    _ingest_ts,
+    _batch_id
+  FROM ${ref("raw_customers")}
+)
+SELECT
+  typed.*,
+  ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY source_modified_ts DESC, _ingest_ts DESC) AS _dpf_row_rank,
+  ROW_NUMBER() OVER (PARTITION BY customer_id, source_modified_ts ORDER BY _ingest_ts DESC) AS _dpf_version_rank,
+  CAST(NULL AS STRING) AS _reject_reason
+FROM typed

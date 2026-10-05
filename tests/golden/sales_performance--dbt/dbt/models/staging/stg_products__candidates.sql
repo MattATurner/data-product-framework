@@ -1,0 +1,22 @@
+{{ config(
+    materialized='view',
+    schema=var('staging_dataset'),
+    tags=['hourly', 'monthly']
+) }}
+-- dpf: model=stg_products layer=staging role=staging skill=transform-raw-to-staging satisfies=R-6 implements=conform-staging part=candidates
+WITH typed AS (
+  SELECT
+    CAST(PROD_ID AS STRING)              AS product_id,
+    CAST(PROD_NAME AS STRING)            AS product_name,
+    UPPER(CAST(CATEGORY_CD AS STRING))   AS product_category,
+    CAST(LAST_MODIFIED_TS AS TIMESTAMP)  AS source_modified_ts,
+    _ingest_ts,
+    _batch_id
+  FROM {{ source('ora_local', 'raw_products') }}
+)
+SELECT
+  typed.*,
+  ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY source_modified_ts DESC, _ingest_ts DESC) AS _dpf_row_rank,
+  ROW_NUMBER() OVER (PARTITION BY product_id, source_modified_ts ORDER BY _ingest_ts DESC) AS _dpf_version_rank,
+  CAST(NULL AS STRING) AS _reject_reason
+FROM typed

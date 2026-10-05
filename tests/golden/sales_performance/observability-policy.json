@@ -1,0 +1,69 @@
+{
+  "product_id": "sales_performance",
+  "policy": {
+    "freshness": [
+      {
+        "id": "OB-1",
+        "model": "sales_performance_monthly",
+        "max_staleness": "PT1H30M",
+        "calendar": {
+          "days": [
+            "MON",
+            "TUE",
+            "WED",
+            "THU",
+            "FRI"
+          ],
+          "start": "08:00",
+          "end": "18:00",
+          "timezone": "Australia/Perth"
+        },
+        "check_every": "PT15M",
+        "brd_requirement_id": [
+          "R-10"
+        ]
+      },
+      {
+        "id": "OB-2",
+        "model": "sales_performance_partner_extract",
+        "max_staleness": "P32D",
+        "check_every": "P1D",
+        "brd_requirement_id": [
+          "R-13"
+        ]
+      }
+    ],
+    "volume": [
+      {
+        "id": "OB-3",
+        "model": "fct_order_line",
+        "window": "P1D",
+        "date_column": "order_date",
+        "expected_rows": 40000,
+        "tolerance_pct": 60,
+        "implements": "monitor-data-product"
+      }
+    ],
+    "schema_drift": {
+      "on_additive": "land_and_record",
+      "on_breaking": "quarantine_and_alert",
+      "implements": "monitor-data-product"
+    },
+    "quality_scans": {
+      "schedule": "30 6 * * *",
+      "models": [
+        "fct_order_line",
+        "sales_performance_monthly"
+      ],
+      "implements": "enforce-data-quality"
+    },
+    "alerting": {
+      "notification_channel_var": "alert_channel",
+      "runbook": "examples/sales_performance/RUNBOOK.md"
+    },
+    "slo": {
+      "objective": 0.99,
+      "window": "P28D"
+    }
+  }
+}

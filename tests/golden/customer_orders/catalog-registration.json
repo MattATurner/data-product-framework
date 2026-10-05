@@ -1,0 +1,94 @@
+{
+  "entry_ref": "bigquery.googleapis.com/projects/data-product-framework/datasets/gold_orders",
+  "aspects": {
+    "owner": "sales-operations",
+    "domain": "sales",
+    "classification": "INTERNAL",
+    "service_levels": {
+      "freshness": [
+        {
+          "id": "OB-1",
+          "model": "customer_orders",
+          "max_staleness": "PT13H",
+          "calendar": {
+            "days": [
+              "MON",
+              "TUE",
+              "WED",
+              "THU",
+              "FRI",
+              "SAT",
+              "SUN"
+            ],
+            "start": "07:00",
+            "end": "18:00",
+            "timezone": "Australia/Perth"
+          },
+          "check_every": "PT1H",
+          "brd_requirement_id": [
+            "R-6"
+          ]
+        }
+      ],
+      "slo": {
+        "objective": 0.99,
+        "window": "P28D"
+      }
+    },
+    "grain": {
+      "customer_orders": {
+        "statement": "one row per customer order, with its lines nested",
+        "columns": [
+          "order_id"
+        ]
+      }
+    },
+    "refresh_cadence": "daily: 0 6 * * * (Australia/Perth)",
+    "status": "draft",
+    "assumptions": [],
+    "glossary_bindings": {
+      "customer_orders": {
+        "customer_name": "customer",
+        "order_date": "order_date",
+        "order_status": "order_status",
+        "order_value": "order_value",
+        "counted_order_value": "order_value"
+      }
+    },
+    "data_product": {
+      "product_id": "customer_orders",
+      "version": "1.1.0",
+      "brd": "BRD-SALES-001@1.1.0"
+    }
+  },
+  "glossary_terms": [
+    "customer",
+    "order_date",
+    "order_status",
+    "order_value"
+  ],
+  "steward": "data-analytics",
+  "lineage_edges": [
+    "raw_customers -> stg_customers",
+    "raw_order_lines -> stg_order_lines",
+    "raw_orders -> stg_orders",
+    "stg_customers -> customer_orders",
+    "stg_order_lines -> customer_orders",
+    "stg_orders -> customer_orders"
+  ],
+  "quality_scan_ref": null,
+  "brd_link": "openspec/specs/products/sales/customer-orders/brd/spec.md",
+  "tdd_link": "openspec/specs/products/sales/customer-orders/tdd/spec.md",
+  "semantics_link": "openspec/specs/products/sales/customer-orders/tdd/semantics.md",
+  "registered_via": "knowledge-catalog-mcp",
+  "brd_requirement_id": [
+    "R-1",
+    "R-2",
+    "R-3",
+    "R-4",
+    "R-5",
+    "R-6",
+    "R-7",
+    "R-8"
+  ]
+}

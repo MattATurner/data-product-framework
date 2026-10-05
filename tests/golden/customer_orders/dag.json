@@ -1,0 +1,441 @@
+{
+  "product_id": "customer_orders",
+  "stages": [
+    "extract",
+    "land",
+    "stage",
+    "integrate",
+    "consume",
+    "govern",
+    "test",
+    "assemble",
+    "render",
+    "orchestrate",
+    "publish",
+    "register",
+    "monitor"
+  ],
+  "design_skills": [
+    {
+      "stage": "define",
+      "skill": "author-brd",
+      "gate": null,
+      "tool": "dpf-local",
+      "tier": 4
+    },
+    {
+      "stage": "define",
+      "skill": "validate-brd",
+      "gate": "G0",
+      "tool": "dpf-local",
+      "tier": 4
+    },
+    {
+      "stage": "design",
+      "skill": "compose-pipeline",
+      "gate": null,
+      "tool": "dpf-local",
+      "tier": 4
+    },
+    {
+      "stage": "design",
+      "skill": "resolve-tdd",
+      "gate": "G1",
+      "tool": "dpf-local",
+      "tier": 4
+    }
+  ],
+  "nodes": [
+    {
+      "id": "extract:example_files",
+      "stage": "extract",
+      "scope": "source",
+      "instance": "example_files",
+      "skill": "extract-files-object-store",
+      "tool": "gcloud-storage",
+      "tier": 4,
+      "consumes": [
+        "source-binding.v1"
+      ],
+      "produces": [
+        "landing-manifest.v1"
+      ],
+      "implements": "extract-incremental-capture",
+      "detail": {
+        "entities": [
+          "orders",
+          "order_lines",
+          "customers"
+        ],
+        "capture_mode": "watermark"
+      }
+    },
+    {
+      "id": "land:example_files",
+      "stage": "land",
+      "scope": "source",
+      "instance": "example_files",
+      "skill": "load-bq-raw-table",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "landing-manifest.v1"
+      ],
+      "produces": [
+        "raw-table.v1"
+      ],
+      "implements": "land-immutable-raw",
+      "detail": {
+        "entities": [
+          "orders",
+          "order_lines",
+          "customers"
+        ],
+        "capture_mode": "watermark"
+      }
+    },
+    {
+      "id": "stage:stg_orders",
+      "stage": "stage",
+      "scope": "model",
+      "instance": "stg_orders",
+      "skill": "transform-raw-to-staging",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "raw-table.v1"
+      ],
+      "produces": [
+        "staging-model.v1"
+      ],
+      "implements": "conform-staging",
+      "detail": {
+        "layer": "staging",
+        "role": "staging",
+        "pack": "platform",
+        "engine": "dataform"
+      }
+    },
+    {
+      "id": "stage:stg_order_lines",
+      "stage": "stage",
+      "scope": "model",
+      "instance": "stg_order_lines",
+      "skill": "transform-raw-to-staging",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "raw-table.v1"
+      ],
+      "produces": [
+        "staging-model.v1"
+      ],
+      "implements": "conform-staging",
+      "detail": {
+        "layer": "staging",
+        "role": "staging",
+        "pack": "platform",
+        "engine": "dataform"
+      }
+    },
+    {
+      "id": "stage:stg_customers",
+      "stage": "stage",
+      "scope": "model",
+      "instance": "stg_customers",
+      "skill": "transform-raw-to-staging",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "raw-table.v1"
+      ],
+      "produces": [
+        "staging-model.v1"
+      ],
+      "implements": "conform-staging",
+      "detail": {
+        "layer": "staging",
+        "role": "staging",
+        "pack": "platform",
+        "engine": "dataform"
+      }
+    },
+    {
+      "id": "consume:customer_orders",
+      "stage": "consume",
+      "scope": "model",
+      "instance": "customer_orders",
+      "skill": "direct/model-struct-shaping",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "staging-model.v1",
+        "semantic-model.v1"
+      ],
+      "produces": [
+        "semantic-model.v1"
+      ],
+      "implements": "model-consumption-layer",
+      "detail": {
+        "layer": "gold",
+        "role": "nested_view",
+        "pack": "direct",
+        "engine": "dataform"
+      }
+    },
+    {
+      "id": "govern:govern-data-quality",
+      "stage": "govern",
+      "scope": "product",
+      "instance": "customer_orders",
+      "skill": "govern-data-quality",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "product-manifest.v1"
+      ],
+      "produces": [
+        "quality-policy.v1"
+      ],
+      "implements": "enforce-data-quality",
+      "detail": {}
+    },
+    {
+      "id": "test:test-data-product",
+      "stage": "test",
+      "scope": "product",
+      "instance": "customer_orders",
+      "skill": "test-data-product",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "semantic-model.v1",
+        "quality-policy.v1",
+        "acceptance.v1"
+      ],
+      "produces": [
+        "test-spec.v1",
+        "test-evidence.v1"
+      ],
+      "implements": "test-data-product",
+      "detail": {}
+    },
+    {
+      "id": "test:trace-coverage",
+      "stage": "test",
+      "scope": "product",
+      "instance": "customer_orders",
+      "skill": "trace-coverage",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "product-manifest.v1",
+        "test-spec.v1",
+        "test-evidence.v1"
+      ],
+      "produces": [
+        "trace-matrix.v1"
+      ],
+      "implements": "traceability",
+      "detail": {}
+    },
+    {
+      "id": "assemble:assemble-data-product",
+      "stage": "assemble",
+      "scope": "product",
+      "instance": "customer_orders",
+      "skill": "assemble-data-product",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "product-manifest.v1",
+        "signoff.v1"
+      ],
+      "produces": [
+        "data-product.v1"
+      ],
+      "implements": "generate-artefacts",
+      "detail": {}
+    },
+    {
+      "id": "render:render-engine-artefacts",
+      "stage": "render",
+      "scope": "product",
+      "instance": "customer_orders",
+      "skill": "render-engine-artefacts",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "semantic-model.v1",
+        "staging-model.v1",
+        "quality-policy.v1",
+        "test-spec.v1"
+      ],
+      "produces": [],
+      "implements": "generate-artefacts",
+      "detail": {}
+    },
+    {
+      "id": "orchestrate:orchestrate-pipeline",
+      "stage": "orchestrate",
+      "scope": "product",
+      "instance": "customer_orders",
+      "skill": "orchestrate-pipeline",
+      "tool": "terraform",
+      "tier": 4,
+      "consumes": [
+        "product-manifest.v1"
+      ],
+      "produces": [],
+      "implements": "compose-pipeline",
+      "detail": {}
+    },
+    {
+      "id": "publish:publish-data-product",
+      "stage": "publish",
+      "scope": "product",
+      "instance": "customer_orders",
+      "skill": "publish-data-product",
+      "tool": "terraform",
+      "tier": 4,
+      "consumes": [
+        "data-product.v1",
+        "test-evidence.v1"
+      ],
+      "produces": [],
+      "implements": "model-consumption-layer",
+      "detail": {}
+    },
+    {
+      "id": "register:register-knowledge-catalog",
+      "stage": "register",
+      "scope": "product",
+      "instance": "customer_orders",
+      "skill": "register-knowledge-catalog",
+      "tool": "knowledge-catalog-mcp",
+      "tier": 1,
+      "consumes": [
+        "data-product.v1"
+      ],
+      "produces": [
+        "catalog-registration.v1"
+      ],
+      "implements": "register-catalog-metadata",
+      "detail": {}
+    },
+    {
+      "id": "monitor:monitor-data-product",
+      "stage": "monitor",
+      "scope": "product",
+      "instance": "customer_orders",
+      "skill": "monitor-data-product",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "observability-policy.v1",
+        "run-evidence.v1"
+      ],
+      "produces": [],
+      "implements": "monitor-data-product",
+      "detail": {}
+    }
+  ],
+  "edges": [
+    {
+      "from": "assemble:assemble-data-product",
+      "to": "publish:publish-data-product",
+      "contract": "data-product.v1"
+    },
+    {
+      "from": "assemble:assemble-data-product",
+      "to": "register:register-knowledge-catalog",
+      "contract": "data-product.v1"
+    },
+    {
+      "from": "consume:customer_orders",
+      "to": "render:render-engine-artefacts",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "consume:customer_orders",
+      "to": "test:test-data-product",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "extract:example_files",
+      "to": "land:example_files",
+      "contract": "landing-manifest.v1"
+    },
+    {
+      "from": "govern:govern-data-quality",
+      "to": "render:render-engine-artefacts",
+      "contract": "quality-policy.v1"
+    },
+    {
+      "from": "govern:govern-data-quality",
+      "to": "test:test-data-product",
+      "contract": "quality-policy.v1"
+    },
+    {
+      "from": "land:example_files",
+      "to": "stage:stg_customers",
+      "contract": "raw-table.v1"
+    },
+    {
+      "from": "land:example_files",
+      "to": "stage:stg_order_lines",
+      "contract": "raw-table.v1"
+    },
+    {
+      "from": "land:example_files",
+      "to": "stage:stg_orders",
+      "contract": "raw-table.v1"
+    },
+    {
+      "from": "stage:stg_customers",
+      "to": "consume:customer_orders",
+      "contract": "staging-model.v1"
+    },
+    {
+      "from": "stage:stg_customers",
+      "to": "render:render-engine-artefacts",
+      "contract": "staging-model.v1"
+    },
+    {
+      "from": "stage:stg_order_lines",
+      "to": "consume:customer_orders",
+      "contract": "staging-model.v1"
+    },
+    {
+      "from": "stage:stg_order_lines",
+      "to": "render:render-engine-artefacts",
+      "contract": "staging-model.v1"
+    },
+    {
+      "from": "stage:stg_orders",
+      "to": "consume:customer_orders",
+      "contract": "staging-model.v1"
+    },
+    {
+      "from": "stage:stg_orders",
+      "to": "render:render-engine-artefacts",
+      "contract": "staging-model.v1"
+    },
+    {
+      "from": "test:test-data-product",
+      "to": "render:render-engine-artefacts",
+      "contract": "test-spec.v1"
+    },
+    {
+      "from": "test:test-data-product",
+      "to": "test:trace-coverage",
+      "contract": "test-spec.v1"
+    }
+  ],
+  "model_order": [
+    "stg_customers",
+    "stg_order_lines",
+    "stg_orders",
+    "customer_orders"
+  ]
+}

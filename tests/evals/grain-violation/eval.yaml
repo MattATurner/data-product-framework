@@ -1,0 +1,16 @@
+id: grain-violation
+asserts: When the manifest's grain drifts from the grain decided in the TDD, G1 fails; it never warns.
+mutate:
+- set:
+    file: products/sales_performance/product.yaml
+    path: layers.silver.models[name=fct_order_line].grain_columns
+    value:
+    - order_id
+run:
+  command: check
+  product: sales_performance
+  gate: G1
+expect:
+  outcome: fail
+  messages:
+  - TDD grain (order_id, order_line_no) differs from manifest grain (order_id)

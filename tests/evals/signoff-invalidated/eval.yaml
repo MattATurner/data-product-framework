@@ -1,0 +1,18 @@
+id: signoff-invalidated
+asserts: Editing semantics.md after sign-off invalidates the business signature until it is signed again.
+mutate:
+- append:
+    file: openspec/specs/products/sales/sales-performance/tdd/semantics.md
+    text: '
+
+      - Returns are netted off the month in which they are processed.
+
+      '
+run:
+  command: check
+  product: sales_performance
+  gate: G1
+expect:
+  outcome: fail
+  messages:
+  - signature is invalid

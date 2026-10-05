@@ -1,0 +1,32 @@
+config {
+  type: "view",
+  schema: dataform.projectConfig.vars.gold_dataset,
+  description: "One row per order line at its latest amended values.",
+  tags: ["hourly"],
+  dependencies: ["assert_dim_customer_grain", "assert_dim_customer_grain_not_null", "assert_dim_customer_scd_no_overlap", "assert_dim_customer_scd_one_current", "assert_dim_date_grain", "assert_dim_date_grain_not_null", "assert_dim_product_grain", "assert_dim_product_grain_not_null", "assert_dim_product_scd_no_overlap", "assert_dim_product_scd_one_current", "assert_fct_order_line_customer_id_not_null", "assert_fct_order_line_grain", "assert_fct_order_line_grain_not_null", "assert_fct_order_line_product_id_not_null", "assert_stg_customers_grain", "assert_stg_customers_grain_not_null", "assert_stg_order_lines_grain", "assert_stg_order_lines_grain_not_null", "assert_stg_order_lines_no_rejects", "assert_stg_products_grain", "assert_stg_products_grain_not_null"]
+}
+
+-- dpf: model=sales_order_line_detail layer=gold role=business_view skill=direct/model-business-view satisfies=R-2,R-8,R-12
+SELECT
+  f.order_id,
+  f.order_line_no,
+  f.order_date,
+  d.year_month,
+  f.customer_id,
+  c.customer_name,
+  c.customer_segment,
+  c.region,
+  f.product_id,
+  p.product_name,
+  p.product_category,
+  f.order_status,
+  f.is_cancelled,
+  f.quantity,
+  f.gross_amount,
+  f.discount_amount,
+  f.net_amount,
+  IF(f.is_cancelled, 0, f.net_amount) AS counted_net_amount
+FROM ${ref("fct_order_line")} AS f
+JOIN ${ref("dim_date")}     AS d ON d.date_key = f.date_key
+JOIN ${ref("dim_customer")} AS c ON c.sk_customer = f.sk_customer
+JOIN ${ref("dim_product")}  AS p ON p.sk_product = f.sk_product

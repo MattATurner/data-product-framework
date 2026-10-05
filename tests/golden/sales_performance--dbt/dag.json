@@ -1,0 +1,725 @@
+{
+  "product_id": "sales_performance",
+  "stages": [
+    "extract",
+    "land",
+    "stage",
+    "integrate",
+    "consume",
+    "govern",
+    "test",
+    "assemble",
+    "render",
+    "orchestrate",
+    "publish",
+    "register",
+    "monitor"
+  ],
+  "design_skills": [
+    {
+      "stage": "define",
+      "skill": "author-brd",
+      "gate": null,
+      "tool": "dpf-local",
+      "tier": 4
+    },
+    {
+      "stage": "define",
+      "skill": "validate-brd",
+      "gate": "G0",
+      "tool": "dpf-local",
+      "tier": 4
+    },
+    {
+      "stage": "design",
+      "skill": "compose-pipeline",
+      "gate": null,
+      "tool": "dpf-local",
+      "tier": 4
+    },
+    {
+      "stage": "design",
+      "skill": "kimball/design-bus-matrix",
+      "gate": null,
+      "tool": "dpf-local",
+      "tier": 4
+    },
+    {
+      "stage": "design",
+      "skill": "resolve-tdd",
+      "gate": "G1",
+      "tool": "dpf-local",
+      "tier": 4
+    }
+  ],
+  "nodes": [
+    {
+      "id": "extract:ora_local",
+      "stage": "extract",
+      "scope": "source",
+      "instance": "ora_local",
+      "skill": "extract-rdbms-watermark",
+      "tool": "bespoke-code",
+      "tier": 5,
+      "consumes": [
+        "source-binding.v1"
+      ],
+      "produces": [
+        "landing-manifest.v1",
+        "raw-table.v1"
+      ],
+      "implements": "extract-incremental-capture",
+      "detail": {
+        "entities": [
+          "orders",
+          "order_lines",
+          "customers",
+          "products"
+        ],
+        "capture_mode": "watermark"
+      }
+    },
+    {
+      "id": "land:ora_local",
+      "stage": "land",
+      "scope": "source",
+      "instance": "ora_local",
+      "skill": "load-bq-raw-table",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "landing-manifest.v1"
+      ],
+      "produces": [
+        "raw-table.v1"
+      ],
+      "implements": "land-immutable-raw",
+      "detail": {
+        "entities": [
+          "orders",
+          "order_lines",
+          "customers",
+          "products"
+        ],
+        "capture_mode": "watermark"
+      }
+    },
+    {
+      "id": "stage:stg_customers",
+      "stage": "stage",
+      "scope": "model",
+      "instance": "stg_customers",
+      "skill": "transform-raw-to-staging",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "raw-table.v1"
+      ],
+      "produces": [
+        "staging-model.v1"
+      ],
+      "implements": "conform-staging",
+      "detail": {
+        "layer": "staging",
+        "role": "staging",
+        "pack": "platform",
+        "engine": "dbt"
+      }
+    },
+    {
+      "id": "stage:stg_products",
+      "stage": "stage",
+      "scope": "model",
+      "instance": "stg_products",
+      "skill": "transform-raw-to-staging",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "raw-table.v1"
+      ],
+      "produces": [
+        "staging-model.v1"
+      ],
+      "implements": "conform-staging",
+      "detail": {
+        "layer": "staging",
+        "role": "staging",
+        "pack": "platform",
+        "engine": "dbt"
+      }
+    },
+    {
+      "id": "stage:stg_order_lines",
+      "stage": "stage",
+      "scope": "model",
+      "instance": "stg_order_lines",
+      "skill": "transform-raw-to-staging",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "raw-table.v1"
+      ],
+      "produces": [
+        "staging-model.v1"
+      ],
+      "implements": "conform-staging",
+      "detail": {
+        "layer": "staging",
+        "role": "staging",
+        "pack": "platform",
+        "engine": "dbt"
+      }
+    },
+    {
+      "id": "integrate:dim_customer",
+      "stage": "integrate",
+      "scope": "model",
+      "instance": "dim_customer",
+      "skill": "kimball/model-scd",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "staging-model.v1"
+      ],
+      "produces": [
+        "semantic-model.v1"
+      ],
+      "implements": "model-integration-layer",
+      "detail": {
+        "layer": "silver",
+        "role": "dimension",
+        "pack": "kimball",
+        "engine": "dbt"
+      }
+    },
+    {
+      "id": "integrate:dim_product",
+      "stage": "integrate",
+      "scope": "model",
+      "instance": "dim_product",
+      "skill": "kimball/model-scd",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "staging-model.v1"
+      ],
+      "produces": [
+        "semantic-model.v1"
+      ],
+      "implements": "model-integration-layer",
+      "detail": {
+        "layer": "silver",
+        "role": "dimension",
+        "pack": "kimball",
+        "engine": "dbt"
+      }
+    },
+    {
+      "id": "integrate:dim_date",
+      "stage": "integrate",
+      "scope": "model",
+      "instance": "dim_date",
+      "skill": "kimball/model-date-dimension",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [],
+      "produces": [
+        "semantic-model.v1"
+      ],
+      "implements": "model-integration-layer",
+      "detail": {
+        "layer": "silver",
+        "role": "calendar",
+        "pack": "kimball",
+        "engine": "dbt"
+      }
+    },
+    {
+      "id": "integrate:fct_order_line",
+      "stage": "integrate",
+      "scope": "model",
+      "instance": "fct_order_line",
+      "skill": "kimball/model-transaction-fact",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "staging-model.v1",
+        "semantic-model.v1"
+      ],
+      "produces": [
+        "semantic-model.v1"
+      ],
+      "implements": "model-integration-layer",
+      "detail": {
+        "layer": "silver",
+        "role": "fact",
+        "pack": "kimball",
+        "engine": "dbt"
+      }
+    },
+    {
+      "id": "consume:sales_performance_monthly",
+      "stage": "consume",
+      "scope": "model",
+      "instance": "sales_performance_monthly",
+      "skill": "direct/model-business-view",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "staging-model.v1",
+        "semantic-model.v1"
+      ],
+      "produces": [
+        "semantic-model.v1"
+      ],
+      "implements": "model-consumption-layer",
+      "detail": {
+        "layer": "gold",
+        "role": "business_view",
+        "pack": "direct",
+        "engine": "dbt"
+      }
+    },
+    {
+      "id": "consume:sales_order_line_detail",
+      "stage": "consume",
+      "scope": "model",
+      "instance": "sales_order_line_detail",
+      "skill": "direct/model-business-view",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "staging-model.v1",
+        "semantic-model.v1"
+      ],
+      "produces": [
+        "semantic-model.v1"
+      ],
+      "implements": "model-consumption-layer",
+      "detail": {
+        "layer": "gold",
+        "role": "business_view",
+        "pack": "direct",
+        "engine": "dbt"
+      }
+    },
+    {
+      "id": "consume:sales_performance_partner_extract",
+      "stage": "consume",
+      "scope": "model",
+      "instance": "sales_performance_partner_extract",
+      "skill": "direct/model-business-view",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "staging-model.v1",
+        "semantic-model.v1"
+      ],
+      "produces": [
+        "semantic-model.v1"
+      ],
+      "implements": "model-consumption-layer",
+      "detail": {
+        "layer": "gold",
+        "role": "business_view",
+        "pack": "direct",
+        "engine": "dbt"
+      }
+    },
+    {
+      "id": "govern:govern-data-quality",
+      "stage": "govern",
+      "scope": "product",
+      "instance": "sales_performance",
+      "skill": "govern-data-quality",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "product-manifest.v1"
+      ],
+      "produces": [
+        "quality-policy.v1"
+      ],
+      "implements": "enforce-data-quality",
+      "detail": {}
+    },
+    {
+      "id": "test:test-data-product",
+      "stage": "test",
+      "scope": "product",
+      "instance": "sales_performance",
+      "skill": "test-data-product",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "semantic-model.v1",
+        "quality-policy.v1",
+        "acceptance.v1"
+      ],
+      "produces": [
+        "test-spec.v1",
+        "test-evidence.v1"
+      ],
+      "implements": "test-data-product",
+      "detail": {}
+    },
+    {
+      "id": "test:trace-coverage",
+      "stage": "test",
+      "scope": "product",
+      "instance": "sales_performance",
+      "skill": "trace-coverage",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "product-manifest.v1",
+        "test-spec.v1",
+        "test-evidence.v1"
+      ],
+      "produces": [
+        "trace-matrix.v1"
+      ],
+      "implements": "traceability",
+      "detail": {}
+    },
+    {
+      "id": "assemble:assemble-data-product",
+      "stage": "assemble",
+      "scope": "product",
+      "instance": "sales_performance",
+      "skill": "assemble-data-product",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "product-manifest.v1",
+        "signoff.v1"
+      ],
+      "produces": [
+        "data-product.v1"
+      ],
+      "implements": "generate-artefacts",
+      "detail": {}
+    },
+    {
+      "id": "render:render-engine-artefacts",
+      "stage": "render",
+      "scope": "product",
+      "instance": "sales_performance",
+      "skill": "render-engine-artefacts",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "semantic-model.v1",
+        "staging-model.v1",
+        "quality-policy.v1",
+        "test-spec.v1"
+      ],
+      "produces": [],
+      "implements": "generate-artefacts",
+      "detail": {}
+    },
+    {
+      "id": "orchestrate:orchestrate-pipeline",
+      "stage": "orchestrate",
+      "scope": "product",
+      "instance": "sales_performance",
+      "skill": "orchestrate-pipeline",
+      "tool": "terraform",
+      "tier": 4,
+      "consumes": [
+        "product-manifest.v1"
+      ],
+      "produces": [],
+      "implements": "compose-pipeline",
+      "detail": {}
+    },
+    {
+      "id": "publish:publish-data-product",
+      "stage": "publish",
+      "scope": "product",
+      "instance": "sales_performance",
+      "skill": "publish-data-product",
+      "tool": "terraform",
+      "tier": 4,
+      "consumes": [
+        "data-product.v1",
+        "test-evidence.v1"
+      ],
+      "produces": [],
+      "implements": "model-consumption-layer",
+      "detail": {}
+    },
+    {
+      "id": "register:register-knowledge-catalog",
+      "stage": "register",
+      "scope": "product",
+      "instance": "sales_performance",
+      "skill": "register-knowledge-catalog",
+      "tool": "knowledge-catalog-mcp",
+      "tier": 1,
+      "consumes": [
+        "data-product.v1"
+      ],
+      "produces": [
+        "catalog-registration.v1"
+      ],
+      "implements": "register-catalog-metadata",
+      "detail": {}
+    },
+    {
+      "id": "monitor:monitor-data-product",
+      "stage": "monitor",
+      "scope": "product",
+      "instance": "sales_performance",
+      "skill": "monitor-data-product",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "observability-policy.v1",
+        "run-evidence.v1"
+      ],
+      "produces": [],
+      "implements": "monitor-data-product",
+      "detail": {}
+    }
+  ],
+  "edges": [
+    {
+      "from": "assemble:assemble-data-product",
+      "to": "publish:publish-data-product",
+      "contract": "data-product.v1"
+    },
+    {
+      "from": "assemble:assemble-data-product",
+      "to": "register:register-knowledge-catalog",
+      "contract": "data-product.v1"
+    },
+    {
+      "from": "consume:sales_order_line_detail",
+      "to": "render:render-engine-artefacts",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "consume:sales_order_line_detail",
+      "to": "test:test-data-product",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "consume:sales_performance_monthly",
+      "to": "render:render-engine-artefacts",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "consume:sales_performance_monthly",
+      "to": "test:test-data-product",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "consume:sales_performance_partner_extract",
+      "to": "render:render-engine-artefacts",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "consume:sales_performance_partner_extract",
+      "to": "test:test-data-product",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "extract:ora_local",
+      "to": "land:ora_local",
+      "contract": "landing-manifest.v1"
+    },
+    {
+      "from": "govern:govern-data-quality",
+      "to": "render:render-engine-artefacts",
+      "contract": "quality-policy.v1"
+    },
+    {
+      "from": "govern:govern-data-quality",
+      "to": "test:test-data-product",
+      "contract": "quality-policy.v1"
+    },
+    {
+      "from": "integrate:dim_customer",
+      "to": "consume:sales_order_line_detail",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:dim_customer",
+      "to": "consume:sales_performance_monthly",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:dim_customer",
+      "to": "consume:sales_performance_partner_extract",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:dim_customer",
+      "to": "integrate:fct_order_line",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:dim_customer",
+      "to": "render:render-engine-artefacts",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:dim_customer",
+      "to": "test:test-data-product",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:dim_date",
+      "to": "consume:sales_order_line_detail",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:dim_date",
+      "to": "consume:sales_performance_monthly",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:dim_date",
+      "to": "consume:sales_performance_partner_extract",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:dim_date",
+      "to": "integrate:fct_order_line",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:dim_date",
+      "to": "render:render-engine-artefacts",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:dim_date",
+      "to": "test:test-data-product",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:dim_product",
+      "to": "consume:sales_order_line_detail",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:dim_product",
+      "to": "consume:sales_performance_monthly",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:dim_product",
+      "to": "consume:sales_performance_partner_extract",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:dim_product",
+      "to": "integrate:fct_order_line",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:dim_product",
+      "to": "render:render-engine-artefacts",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:dim_product",
+      "to": "test:test-data-product",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:fct_order_line",
+      "to": "consume:sales_order_line_detail",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:fct_order_line",
+      "to": "consume:sales_performance_monthly",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:fct_order_line",
+      "to": "consume:sales_performance_partner_extract",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:fct_order_line",
+      "to": "render:render-engine-artefacts",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:fct_order_line",
+      "to": "test:test-data-product",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "land:ora_local",
+      "to": "stage:stg_customers",
+      "contract": "raw-table.v1"
+    },
+    {
+      "from": "land:ora_local",
+      "to": "stage:stg_order_lines",
+      "contract": "raw-table.v1"
+    },
+    {
+      "from": "land:ora_local",
+      "to": "stage:stg_products",
+      "contract": "raw-table.v1"
+    },
+    {
+      "from": "stage:stg_customers",
+      "to": "integrate:dim_customer",
+      "contract": "staging-model.v1"
+    },
+    {
+      "from": "stage:stg_customers",
+      "to": "render:render-engine-artefacts",
+      "contract": "staging-model.v1"
+    },
+    {
+      "from": "stage:stg_order_lines",
+      "to": "integrate:fct_order_line",
+      "contract": "staging-model.v1"
+    },
+    {
+      "from": "stage:stg_order_lines",
+      "to": "render:render-engine-artefacts",
+      "contract": "staging-model.v1"
+    },
+    {
+      "from": "stage:stg_products",
+      "to": "integrate:dim_product",
+      "contract": "staging-model.v1"
+    },
+    {
+      "from": "stage:stg_products",
+      "to": "render:render-engine-artefacts",
+      "contract": "staging-model.v1"
+    },
+    {
+      "from": "test:test-data-product",
+      "to": "render:render-engine-artefacts",
+      "contract": "test-spec.v1"
+    },
+    {
+      "from": "test:test-data-product",
+      "to": "test:trace-coverage",
+      "contract": "test-spec.v1"
+    }
+  ],
+  "model_order": [
+    "stg_customers",
+    "stg_order_lines",
+    "stg_products",
+    "dim_customer",
+    "dim_date",
+    "dim_product",
+    "fct_order_line",
+    "sales_order_line_detail",
+    "sales_performance_monthly",
+    "sales_performance_partner_extract"
+  ]
+}

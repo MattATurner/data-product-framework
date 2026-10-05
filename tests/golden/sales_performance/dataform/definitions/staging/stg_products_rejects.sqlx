@@ -1,0 +1,11 @@
+config {
+  type: "view",
+  schema: dataform.projectConfig.vars.staging_dataset,
+  description: "Latest stg_products rows that failed a quarantine rule, with _reject_reason.",
+  tags: ["hourly", "monthly"]
+}
+
+-- dpf: model=stg_products layer=staging role=staging skill=transform-raw-to-staging satisfies=R-6 implements=conform-staging part=rejects
+SELECT * EXCEPT (_dpf_row_rank, _dpf_version_rank)
+FROM ${ref("stg_products__candidates")}
+WHERE _dpf_row_rank = 1 AND _reject_reason IS NOT NULL

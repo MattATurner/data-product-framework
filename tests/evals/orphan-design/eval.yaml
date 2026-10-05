@@ -1,0 +1,19 @@
+id: orphan-design
+asserts: A design element or TDD decision that cites no requirement (and no platform capability) fails G1.
+mutate:
+- delete:
+    file: products/customer_orders/product.yaml
+    path: quality.rules[0].brd_requirement_id
+- replace:
+    file: openspec/specs/products/sales/customer-orders/tdd/spec.md
+    old: '**Decision:** D-1 · **Satisfies:** R-1, R-5 · '
+    new: '**Decision:** D-1 · '
+run:
+  command: check
+  product: customer_orders
+  gate: G1
+expect:
+  outcome: fail
+  messages:
+  - orphan design element(s)
+  - cites no BRD requirement

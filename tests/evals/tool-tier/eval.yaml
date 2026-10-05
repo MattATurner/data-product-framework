@@ -1,0 +1,20 @@
+id: tool-tier
+asserts: Bespoke code without an ADR, or a tier 4/5 skill doing what an MCP server covers, fails lint.
+mutate:
+- replace:
+    file: skills/extract-rdbms-watermark/SKILL.md
+    old: '    adr: ADR-015
+
+      '
+    new: ''
+- replace:
+    file: skills/extract-rdbms-watermark/SKILL.md
+    old: "    needs:\n    - outbound_batch_extract\n"
+    new: "    needs:\n    - outbound_batch_extract\n    - bigquery_query\n"
+run:
+  command: lint
+expect:
+  outcome: fail
+  messages:
+  - tier 5 (bespoke code) needs an ADR
+  - needs 'bigquery_query', which bigquery-mcp

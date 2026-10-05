@@ -1,0 +1,28 @@
+{
+  "model_ref": "data-product-framework.gold_sales.sales_order_line_detail",
+  "layer": "gold",
+  "methodology": "direct",
+  "role": "business_view",
+  "grain_statement": "one row per order line at its latest amended values",
+  "grain_columns": [
+    "order_id",
+    "order_line_no"
+  ],
+  "grain_checksum": "sha256:8ed4675063c0a7ffefb4fe9f3dcdbcae1139b98b37c2838acc30fdd470804385",
+  "engine": "dataform",
+  "storage_format": "bigquery_native",
+  "materialisation": "view",
+  "history_semantics": "point_in_time",
+  "dataset": "gold",
+  "inputs": [
+    "fct_order_line",
+    "dim_date",
+    "dim_customer",
+    "dim_product"
+  ],
+  "brd_requirement_id": [
+    "R-2",
+    "R-8",
+    "R-12"
+  ]
+}

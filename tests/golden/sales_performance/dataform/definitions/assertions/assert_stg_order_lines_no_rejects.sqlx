@@ -1,0 +1,9 @@
+config {
+  type: "assertion",
+  description: "stg_order_lines: no row is quarantined (QR-1, QR-2); any rejected row blocks every downstream refresh",
+  tags: ["hourly", "monthly"]
+}
+
+-- dpf: test=reject_gate:stg_order_lines model=stg_order_lines satisfies=R-11
+SELECT *
+FROM ${ref("stg_order_lines_rejects")}

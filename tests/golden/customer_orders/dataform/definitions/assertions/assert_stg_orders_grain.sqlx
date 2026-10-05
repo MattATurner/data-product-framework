@@ -1,0 +1,11 @@
+config {
+  type: "assertion",
+  description: "stg_orders: one row per customer order at its latest state — no duplicates on (order_id)",
+  tags: ["daily"]
+}
+
+-- dpf: test=grain:stg_orders model=stg_orders satisfies=R-3,R-7
+SELECT order_id, COUNT(*) AS rows_per_grain
+FROM ${ref("stg_orders")}
+GROUP BY order_id
+HAVING COUNT(*) > 1

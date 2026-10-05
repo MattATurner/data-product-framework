@@ -1,0 +1,17 @@
+{
+  "table_ref": "data-product-framework.stg_sales.stg_customers",
+  "engine": "dbt",
+  "natural_key": [
+    "customer_id"
+  ],
+  "grain_columns": [
+    "customer_id"
+  ],
+  "dedupe_strategy": "latest version per natural key by source_modified_ts DESC, _ingest_ts DESC",
+  "reject_table_ref": null,
+  "reject_rules": [],
+  "quality_gate": "block",
+  "brd_requirement_id": [
+    "R-4"
+  ]
+}

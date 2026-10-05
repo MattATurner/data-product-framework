@@ -1,0 +1,19 @@
+config {
+  type: "assertion",
+  description: "Every staged order is present with customer, date, status and complete lines.",
+  tags: ["acceptance"]
+}
+
+-- dpf: test=acceptance:AT-1 model=customer_orders satisfies=R-1 verifies=AX-1
+SELECT o.order_id, 'incomplete order or line' AS problem
+FROM ${ref("customer_orders")} AS o
+WHERE o.customer_id IS NULL OR o.order_date IS NULL OR o.order_status IS NULL
+   OR EXISTS (
+     SELECT 1 FROM UNNEST(o.order_lines) AS l
+     WHERE l.product_id IS NULL OR l.quantity IS NULL OR l.line_amount IS NULL
+   )
+UNION ALL
+SELECT s.order_id, 'staged order missing' AS problem
+FROM ${ref("stg_orders")} AS s
+LEFT JOIN ${ref("customer_orders")} AS o ON o.order_id = s.order_id
+WHERE o.order_id IS NULL

@@ -1,16 +1,18 @@
 id: no-methodology-envy
-asserts: >
-  A methodology is a cost paid for a benefit. A simple product must not be steered into
-  a star schema it does not need.
+asserts: 'A direct-pack product that hand-rolls dimensional structures fails G1: adopt the Kimball pack instead.'
+mutate:
+- append:
+    file: products/customer_orders/sql/customer_orders.sql
+    text: '
 
-given:
-  brd_signals:
-    sources: 1
-    consumer_groups: 1
-    history_required: false
-    cross_domain_reconciliation: false
+      -- valid_from / valid_to tracked by hand here
 
+      '
+run:
+  command: check
+  product: customer_orders
+  gate: G1
 expect:
-  recommended_methodology: direct
-  reject: [kimball, data-vault-2]
-  rationale_contains: ["no cross-domain reconciliation", "current state"]
+  outcome: fail
+  messages:
+  - 'methodology-envy: customer_orders hand-roll dimensional structures'

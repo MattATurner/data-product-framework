@@ -1,0 +1,11 @@
+config {
+  type: "assertion",
+  description: "stg_products: one row per product at its latest source state — no duplicates on (product_id)",
+  tags: ["hourly", "monthly"]
+}
+
+-- dpf: test=grain:stg_products model=stg_products satisfies=R-6
+SELECT product_id, COUNT(*) AS rows_per_grain
+FROM ${ref("stg_products")}
+GROUP BY product_id
+HAVING COUNT(*) > 1

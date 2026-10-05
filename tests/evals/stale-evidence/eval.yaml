@@ -1,0 +1,17 @@
+id: stale-evidence
+asserts: Evidence recorded against an older build digest does not count at G4.
+mutate:
+- write:
+    file: evidence/customer_orders/run-20260901T000000Z.json
+    text: "{\n  \"product_id\": \"customer_orders\",\n  \"artefact_digest\": \"sha256:0000000000000000000000000000000000000000000000000000000000000000\"\
+      ,\n  \"run_id\": \"run-20260901T000000Z\",\n  \"environment\": \"test\",\n  \"recorded_at\": \"2026-09-01T00:00:00Z\"\
+      ,\n  \"results\": [\n    {\n      \"test_id\": \"grain:stg_customers\",\n      \"status\": \"passed\",\n \
+      \     \"failing_rows\": 0,\n      \"finished_at\": \"2026-09-01T00:00:00Z\"\n    }\n  ]\n}"
+run:
+  command: check
+  product: customer_orders
+  gate: G4
+expect:
+  outcome: fail
+  messages:
+  - 'grain:stg_customers (automated): evidence is for an older build digest'

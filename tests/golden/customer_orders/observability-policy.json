@@ -1,0 +1,42 @@
+{
+  "product_id": "customer_orders",
+  "policy": {
+    "freshness": [
+      {
+        "id": "OB-1",
+        "model": "customer_orders",
+        "max_staleness": "PT13H",
+        "calendar": {
+          "days": [
+            "MON",
+            "TUE",
+            "WED",
+            "THU",
+            "FRI",
+            "SAT",
+            "SUN"
+          ],
+          "start": "07:00",
+          "end": "18:00",
+          "timezone": "Australia/Perth"
+        },
+        "check_every": "PT1H",
+        "brd_requirement_id": [
+          "R-6"
+        ]
+      }
+    ],
+    "schema_drift": {
+      "on_additive": "land_and_record",
+      "on_breaking": "quarantine_and_alert",
+      "implements": "monitor-data-product"
+    },
+    "alerting": {
+      "notification_channel_var": "alert_channel"
+    },
+    "slo": {
+      "objective": 0.99,
+      "window": "P28D"
+    }
+  }
+}

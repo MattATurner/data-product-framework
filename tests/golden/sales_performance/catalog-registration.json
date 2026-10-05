@@ -1,0 +1,182 @@
+{
+  "entry_ref": "bigquery.googleapis.com/projects/data-product-framework/datasets/gold_sales",
+  "aspects": {
+    "owner": "sales-operations",
+    "domain": "sales",
+    "classification": "INTERNAL-COMMERCIAL",
+    "service_levels": {
+      "freshness": [
+        {
+          "id": "OB-1",
+          "model": "sales_performance_monthly",
+          "max_staleness": "PT1H30M",
+          "calendar": {
+            "days": [
+              "MON",
+              "TUE",
+              "WED",
+              "THU",
+              "FRI"
+            ],
+            "start": "08:00",
+            "end": "18:00",
+            "timezone": "Australia/Perth"
+          },
+          "check_every": "PT15M",
+          "brd_requirement_id": [
+            "R-10"
+          ]
+        },
+        {
+          "id": "OB-2",
+          "model": "sales_performance_partner_extract",
+          "max_staleness": "P32D",
+          "check_every": "P1D",
+          "brd_requirement_id": [
+            "R-13"
+          ]
+        }
+      ],
+      "slo": {
+        "objective": 0.99,
+        "window": "P28D"
+      }
+    },
+    "grain": {
+      "sales_performance_monthly": {
+        "statement": "one row per month per customer segment per product category per region",
+        "columns": [
+          "year_month",
+          "customer_segment",
+          "product_category",
+          "region"
+        ]
+      },
+      "sales_order_line_detail": {
+        "statement": "one row per order line at its latest amended values",
+        "columns": [
+          "order_id",
+          "order_line_no"
+        ]
+      },
+      "sales_performance_partner_extract": {
+        "statement": "one row per closed month per product category per region",
+        "columns": [
+          "year_month",
+          "product_category",
+          "region"
+        ]
+      }
+    },
+    "refresh_cadence": "hourly: 10 * * * * (Australia/Perth); monthly: 0 7 2 * * (Australia/Perth)",
+    "status": "draft",
+    "assumptions": [],
+    "glossary_bindings": {
+      "dim_customer": {
+        "customer_segment": "customer_segment",
+        "region": "region",
+        "customer_name": "customer"
+      },
+      "dim_product": {
+        "product_category": "product_category"
+      },
+      "dim_date": {
+        "month": "month",
+        "year_month": "month"
+      },
+      "fct_order_line": {
+        "order_date": "order_date",
+        "quantity": "units_sold",
+        "net_amount": "net_sales",
+        "order_status": "order_status"
+      },
+      "sales_performance_monthly": {
+        "year_month": "month",
+        "customer_segment": "customer_segment",
+        "product_category": "product_category",
+        "region": "region",
+        "net_sales": "net_sales",
+        "units_sold": "units_sold"
+      },
+      "sales_order_line_detail": {
+        "order_date": "order_date",
+        "year_month": "month",
+        "customer_name": "customer",
+        "customer_segment": "customer_segment",
+        "region": "region",
+        "product_category": "product_category",
+        "order_status": "order_status",
+        "quantity": "units_sold",
+        "net_amount": "net_sales"
+      },
+      "sales_performance_partner_extract": {
+        "year_month": "month",
+        "product_category": "product_category",
+        "region": "region",
+        "net_sales": "net_sales",
+        "units_sold": "units_sold"
+      }
+    },
+    "data_product": {
+      "product_id": "sales_performance",
+      "version": "1.2.0",
+      "brd": "BRD-SALES-002@1.2.0"
+    }
+  },
+  "glossary_terms": [
+    "customer",
+    "customer_segment",
+    "month",
+    "net_sales",
+    "order_date",
+    "order_status",
+    "product_category",
+    "region",
+    "units_sold"
+  ],
+  "steward": "data-analytics",
+  "lineage_edges": [
+    "dim_customer -> fct_order_line",
+    "dim_customer -> sales_order_line_detail",
+    "dim_customer -> sales_performance_monthly",
+    "dim_customer -> sales_performance_partner_extract",
+    "dim_date -> fct_order_line",
+    "dim_date -> sales_order_line_detail",
+    "dim_date -> sales_performance_monthly",
+    "dim_date -> sales_performance_partner_extract",
+    "dim_product -> fct_order_line",
+    "dim_product -> sales_order_line_detail",
+    "dim_product -> sales_performance_monthly",
+    "dim_product -> sales_performance_partner_extract",
+    "fct_order_line -> sales_order_line_detail",
+    "fct_order_line -> sales_performance_monthly",
+    "fct_order_line -> sales_performance_partner_extract",
+    "raw_customers -> stg_customers",
+    "raw_order_lines -> stg_order_lines",
+    "raw_orders -> stg_order_lines",
+    "raw_products -> stg_products",
+    "stg_customers -> dim_customer",
+    "stg_order_lines -> fct_order_line",
+    "stg_products -> dim_product"
+  ],
+  "quality_scan_ref": "projects/data-product-framework/locations/us-central1/dataScans/dpf-sales-performance-fct-order-line, projects/data-product-framework/locations/us-central1/dataScans/dpf-sales-performance-sales-performance-monthly",
+  "brd_link": "openspec/specs/products/sales/sales-performance/brd/spec.md",
+  "tdd_link": "openspec/specs/products/sales/sales-performance/tdd/spec.md",
+  "semantics_link": "openspec/specs/products/sales/sales-performance/tdd/semantics.md",
+  "registered_via": "knowledge-catalog-mcp",
+  "brd_requirement_id": [
+    "R-1",
+    "R-2",
+    "R-3",
+    "R-4",
+    "R-5",
+    "R-6",
+    "R-7",
+    "R-8",
+    "R-9",
+    "R-10",
+    "R-11",
+    "R-12",
+    "R-13"
+  ]
+}

@@ -1,0 +1,20 @@
+id: incomplete-brd
+asserts: A BRD missing its level-of-detail and history answers fails G0, and the gap register names the question
+  to ask.
+mutate:
+- delete:
+    file: openspec/specs/products/sales/customer-orders/brd/brd.yaml
+    path: level_of_detail
+- delete:
+    file: openspec/specs/products/sales/customer-orders/brd/brd.yaml
+    path: history_behaviour
+run:
+  command: brd
+  product: customer_orders
+expect:
+  outcome: fail
+  messages:
+  - group C (Level of detail) unanswered
+  - group D (History behaviour) unanswered
+  files:
+  - generated/customer_orders/gaps.md

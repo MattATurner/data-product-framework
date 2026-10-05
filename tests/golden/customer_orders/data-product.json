@@ -1,0 +1,48 @@
+{
+  "product_id": "customer_orders",
+  "version": "1.1.0",
+  "brd_id": "BRD-SALES-001",
+  "tdd_id": "TDD-SALES-001",
+  "semantics_signed": true,
+  "status": "draft",
+  "owner": "sales-operations",
+  "domain": "sales",
+  "output_ports": [
+    {
+      "name": "customer_orders",
+      "type": "bigquery_table",
+      "model": "customer_orders",
+      "access": "dataset_grant",
+      "grain_statement": "one row per customer order, with its lines nested",
+      "consumers": [
+        "sales-operations",
+        "data-analytics"
+      ],
+      "brd_requirement_id": [
+        "R-1",
+        "R-8"
+      ]
+    }
+  ],
+  "slo": {
+    "freshness": "OB-1 customer_orders within PT13H (MON,TUE,WED,THU,FRI,SAT,SUN 07:00-18:00 Australia/Perth)",
+    "availability": "0.99 over P28D",
+    "quality": "gate block: blocking checks stop publication"
+  },
+  "classification": "INTERNAL",
+  "consumers": [
+    "data-analytics",
+    "sales-operations"
+  ],
+  "assumptions": [],
+  "brd_requirement_id": [
+    "R-1",
+    "R-2",
+    "R-3",
+    "R-4",
+    "R-5",
+    "R-6",
+    "R-7",
+    "R-8"
+  ]
+}

@@ -1,0 +1,10 @@
+config {
+  type: "assertion",
+  description: "sales_performance_monthly: grain columns are never null",
+  tags: ["hourly"]
+}
+
+-- dpf: test=grain_not_null:sales_performance_monthly model=sales_performance_monthly satisfies=R-1,R-4,R-7,R-8
+SELECT *
+FROM ${ref("sales_performance_monthly")}
+WHERE year_month IS NULL OR customer_segment IS NULL OR product_category IS NULL OR region IS NULL

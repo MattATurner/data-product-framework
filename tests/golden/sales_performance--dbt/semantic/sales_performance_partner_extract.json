@@ -1,0 +1,27 @@
+{
+  "model_ref": "data-product-framework.share_sales_partner.sales_performance_partner_extract",
+  "layer": "gold",
+  "methodology": "direct",
+  "role": "business_view",
+  "grain_statement": "one row per closed month per product category per region",
+  "grain_columns": [
+    "year_month",
+    "product_category",
+    "region"
+  ],
+  "grain_checksum": "sha256:bc07c0a3ef63fc10c030f616eea8d4d7a13e7ca89eeb4f351a15c64c881a06e6",
+  "engine": "dbt",
+  "storage_format": "bigquery_native",
+  "materialisation": "table",
+  "history_semantics": "point_in_time",
+  "dataset": "share",
+  "inputs": [
+    "fct_order_line",
+    "dim_date",
+    "dim_customer",
+    "dim_product"
+  ],
+  "brd_requirement_id": [
+    "R-13"
+  ]
+}

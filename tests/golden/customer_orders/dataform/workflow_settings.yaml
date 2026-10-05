@@ -1,0 +1,15 @@
+# dpf: product=customer_orders engine=dataform implements=generate-artefacts
+# Compilation variables are strings. policy_tag_* are injected by the release configuration
+# (Terraform output); left empty, a developer workspace compiles without column policy tags.
+defaultProject: data-product-framework
+defaultLocation: us-central1
+defaultDataset: stg_orders
+defaultAssertionDataset: dpf_assertions
+dataformCoreVersion: 3.0.0
+vars:
+  raw_dataset: "raw_example_files"
+  staging_dataset: "stg_orders"
+  gold_dataset: "gold_orders"
+  assertions_dataset: "dpf_assertions"
+  control_dataset: "dpf_control"
+  business_timezone: "Australia/Perth"

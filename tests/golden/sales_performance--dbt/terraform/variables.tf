@@ -1,0 +1,52 @@
+# dpf: implements=generate-artefacts
+
+variable "project_id" {
+  description = "Project hosting the product's datasets."
+  type        = string
+  default     = "data-product-framework"
+}
+
+variable "region" {
+  description = "BigQuery location and region for every regional resource."
+  type        = string
+  default     = "us-central1"
+}
+
+variable "consumer_group" {
+  description = "Google group email: Sales leadership, Sales Operations and Finance."
+  type        = string
+}
+
+variable "analyst_group" {
+  description = "Google group email: General analysts; customer contact details are masked."
+  type        = string
+}
+
+variable "contact_reader_group" {
+  description = "Google group email allowed to read the unmasked values of tagged columns."
+  type        = string
+}
+
+variable "partner_subscriber" {
+  description = "IAM member granted subscriber on the listing, e.g. group:analytics@partner.example. Empty: no subscriber yet."
+  type        = string
+  default     = ""
+}
+
+variable "alert_channel" {
+  description = "Cloud Monitoring notification channel (projects/<p>/notificationChannels/<id>). Empty: alert policies are created without a channel."
+  type        = string
+  default     = ""
+}
+
+variable "monitor_service_account" {
+  description = "Service account the scheduled checks run as. Empty: the caller's credentials."
+  type        = string
+  default     = ""
+}
+
+variable "extractor_log_resource_type" {
+  description = "Monitored resource type the extractor's logs arrive under (generic_node for an agent beside the database, cloud_run_job, ...)."
+  type        = string
+  default     = "generic_node"
+}

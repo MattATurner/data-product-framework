@@ -1,0 +1,10 @@
+config {
+  type: "assertion",
+  description: "stg_order_lines: grain columns are never null",
+  tags: ["daily"]
+}
+
+-- dpf: test=grain_not_null:stg_order_lines model=stg_order_lines satisfies=R-2,R-7
+SELECT *
+FROM ${ref("stg_order_lines")}
+WHERE order_id IS NULL OR order_line_no IS NULL

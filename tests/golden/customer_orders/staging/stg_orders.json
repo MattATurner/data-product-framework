@@ -1,0 +1,20 @@
+{
+  "table_ref": "data-product-framework.stg_orders.stg_orders",
+  "engine": "dataform",
+  "natural_key": [
+    "order_id"
+  ],
+  "grain_columns": [
+    "order_id"
+  ],
+  "dedupe_strategy": "latest version per natural key by source_modified_ts DESC, _ingest_ts DESC",
+  "reject_table_ref": "data-product-framework.stg_orders.stg_orders_rejects",
+  "reject_rules": [
+    "QR-1"
+  ],
+  "quality_gate": "block",
+  "brd_requirement_id": [
+    "R-3",
+    "R-7"
+  ]
+}

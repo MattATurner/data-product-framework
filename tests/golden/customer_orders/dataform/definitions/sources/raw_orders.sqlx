@@ -1,0 +1,7 @@
+config {
+  // dpf: relation=raw_orders source=example_files skill=load-bq-raw-table
+  type: "declaration",
+  schema: dataform.projectConfig.vars.raw_dataset,
+  name: "raw_orders",
+  description: "Raw, append-only landing of raw_orders from example_files."
+}

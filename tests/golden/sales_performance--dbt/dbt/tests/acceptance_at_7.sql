@@ -1,0 +1,15 @@
+{{ config(tags=['acceptance']) }}
+-- dpf: test=acceptance:AT-7 model=sales_order_line_detail satisfies=R-6 verifies=AX-7
+WITH expected AS (
+  SELECT '2026-03' AS year_month, 'GADGETS' AS expected_category UNION ALL
+  SELECT '2026-06', 'WIDGETS'
+),
+actual AS (
+  SELECT DISTINCT year_month, product_category
+  FROM {{ ref('sales_order_line_detail') }}
+  WHERE product_id = 'P-200'
+)
+SELECT e.year_month, e.expected_category, a.product_category AS actual_category
+FROM expected AS e
+LEFT JOIN actual AS a USING (year_month)
+WHERE a.product_category IS NULL OR a.product_category != e.expected_category

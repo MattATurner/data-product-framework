@@ -1,0 +1,47 @@
+config {
+  type: "table",
+  schema: dataform.projectConfig.vars.silver_dataset,
+  description: "One row per product per validity period.",
+  tags: ["hourly", "monthly"],
+  dependencies: ["assert_stg_products_grain", "assert_stg_products_grain_not_null"]
+}
+
+-- dpf: model=dim_product layer=silver role=dimension skill=kimball/model-scd satisfies=R-6
+WITH history AS (
+  SELECT product_id, product_category, source_modified_ts
+  FROM ${ref("stg_products_history")}
+),
+changes AS (
+  SELECT
+    *,
+    TO_JSON_STRING(STRUCT(product_category)) AS _dpf_tracked,
+    LAG(TO_JSON_STRING(STRUCT(product_category))) OVER (PARTITION BY product_id ORDER BY source_modified_ts) AS _dpf_previous
+  FROM history
+),
+versions AS (
+  SELECT
+    product_id, product_category,
+    source_modified_ts AS changed_at,
+    ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY source_modified_ts) AS version_no,
+    LEAD(source_modified_ts) OVER (PARTITION BY product_id ORDER BY source_modified_ts) AS next_changed_at
+  FROM changes
+  WHERE _dpf_previous IS NULL OR _dpf_previous != _dpf_tracked
+),
+current_values AS (
+  SELECT product_id, product_name
+  FROM ${ref("stg_products")}
+)
+SELECT
+  FARM_FINGERPRINT(CONCAT(CAST(v.product_id AS STRING), '|', CAST(v.version_no AS STRING))) AS sk_product,
+  v.product_id,
+  v.product_category,
+  c.product_name,
+  IF(v.version_no = 1, TIMESTAMP '1900-01-01 00:00:00+00', v.changed_at) AS valid_from,
+  COALESCE(v.next_changed_at, TIMESTAMP '9999-12-31 00:00:00+00') AS valid_to,
+  v.next_changed_at IS NULL AS is_current,
+  v.version_no
+FROM versions AS v
+LEFT JOIN current_values AS c ON c.product_id = v.product_id
+UNION ALL
+-- unknown member: facts whose reference has not arrived resolve here instead of being dropped
+SELECT -1, 'UNKNOWN', 'UNKNOWN', NULL, TIMESTAMP '1900-01-01 00:00:00+00', TIMESTAMP '9999-12-31 00:00:00+00', TRUE, 0

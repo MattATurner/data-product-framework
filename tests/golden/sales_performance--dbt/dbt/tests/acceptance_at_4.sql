@@ -1,0 +1,13 @@
+{{ config(tags=['acceptance']) }}
+-- dpf: test=acceptance:AT-4 model=sales_order_line_detail satisfies=R-4 verifies=AX-4
+WITH expected AS (
+  SELECT 'SO-1001' AS order_id, 'SMB' AS expected_segment UNION ALL
+  SELECT 'SO-1004', 'ENTERPRISE'
+),
+actual AS (
+  SELECT DISTINCT order_id, customer_segment FROM {{ ref('sales_order_line_detail') }}
+)
+SELECT e.order_id, e.expected_segment, a.customer_segment AS actual_segment
+FROM expected AS e
+LEFT JOIN actual AS a USING (order_id)
+WHERE a.customer_segment IS NULL OR a.customer_segment != e.expected_segment

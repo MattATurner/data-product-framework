@@ -1,0 +1,16 @@
+{{ config(tags=['acceptance']) }}
+-- dpf: test=acceptance:AT-2 model=sales_order_line_detail satisfies=R-2 verifies=AX-2
+WITH detail AS (
+  SELECT year_month, customer_segment, product_category, region,
+         SUM(net_amount) AS detail_net_sales, COUNT(*) AS detail_lines
+  FROM {{ ref('sales_order_line_detail') }}
+  WHERE NOT is_cancelled
+  GROUP BY year_month, customer_segment, product_category, region
+)
+SELECT year_month, customer_segment, product_category, region,
+       m.net_sales AS monthly_net_sales, d.detail_net_sales,
+       m.order_line_count AS monthly_lines, d.detail_lines
+FROM {{ ref('sales_performance_monthly') }} AS m
+FULL OUTER JOIN detail AS d USING (year_month, customer_segment, product_category, region)
+WHERE m.net_sales IS NULL OR d.detail_net_sales IS NULL
+   OR m.net_sales != d.detail_net_sales OR m.order_line_count != d.detail_lines

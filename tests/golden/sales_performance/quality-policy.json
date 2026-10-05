@@ -1,0 +1,150 @@
+{
+  "product_id": "sales_performance",
+  "rules": [
+    {
+      "id": "QR-1",
+      "model": "stg_order_lines",
+      "type": "not_null",
+      "column": "customer_id",
+      "severity": "block",
+      "on_fail": "quarantine",
+      "brd_requirement_id": [
+        "R-11"
+      ]
+    },
+    {
+      "id": "QR-2",
+      "model": "stg_order_lines",
+      "type": "range",
+      "column": "quantity",
+      "min": 0,
+      "severity": "block",
+      "on_fail": "quarantine",
+      "brd_requirement_id": [
+        "R-11"
+      ]
+    },
+    {
+      "id": "GR-stg_customers",
+      "model": "stg_customers",
+      "type": "unique",
+      "columns": [
+        "customer_id"
+      ],
+      "severity": "block",
+      "on_fail": "fail",
+      "implements": "test-data-product"
+    },
+    {
+      "id": "GR-stg_products",
+      "model": "stg_products",
+      "type": "unique",
+      "columns": [
+        "product_id"
+      ],
+      "severity": "block",
+      "on_fail": "fail",
+      "implements": "test-data-product"
+    },
+    {
+      "id": "GR-stg_order_lines",
+      "model": "stg_order_lines",
+      "type": "unique",
+      "columns": [
+        "order_id",
+        "order_line_no"
+      ],
+      "severity": "block",
+      "on_fail": "fail",
+      "implements": "test-data-product"
+    },
+    {
+      "id": "GR-dim_customer",
+      "model": "dim_customer",
+      "type": "unique",
+      "columns": [
+        "customer_id",
+        "valid_from"
+      ],
+      "severity": "block",
+      "on_fail": "fail",
+      "implements": "test-data-product"
+    },
+    {
+      "id": "GR-dim_product",
+      "model": "dim_product",
+      "type": "unique",
+      "columns": [
+        "product_id",
+        "valid_from"
+      ],
+      "severity": "block",
+      "on_fail": "fail",
+      "implements": "test-data-product"
+    },
+    {
+      "id": "GR-dim_date",
+      "model": "dim_date",
+      "type": "unique",
+      "columns": [
+        "date_key"
+      ],
+      "severity": "block",
+      "on_fail": "fail",
+      "implements": "test-data-product"
+    },
+    {
+      "id": "GR-fct_order_line",
+      "model": "fct_order_line",
+      "type": "unique",
+      "columns": [
+        "order_id",
+        "order_line_no"
+      ],
+      "severity": "block",
+      "on_fail": "fail",
+      "implements": "test-data-product"
+    },
+    {
+      "id": "GR-sales_performance_monthly",
+      "model": "sales_performance_monthly",
+      "type": "unique",
+      "columns": [
+        "year_month",
+        "customer_segment",
+        "product_category",
+        "region"
+      ],
+      "severity": "block",
+      "on_fail": "fail",
+      "implements": "test-data-product"
+    },
+    {
+      "id": "GR-sales_order_line_detail",
+      "model": "sales_order_line_detail",
+      "type": "unique",
+      "columns": [
+        "order_id",
+        "order_line_no"
+      ],
+      "severity": "block",
+      "on_fail": "fail",
+      "implements": "test-data-product"
+    },
+    {
+      "id": "GR-sales_performance_partner_extract",
+      "model": "sales_performance_partner_extract",
+      "type": "unique",
+      "columns": [
+        "year_month",
+        "product_category",
+        "region"
+      ],
+      "severity": "block",
+      "on_fail": "fail",
+      "implements": "test-data-product"
+    }
+  ],
+  "gate_behaviour": "block",
+  "scan_schedule": "30 6 * * *"
+}

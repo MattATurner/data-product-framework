@@ -1,0 +1,11 @@
+config {
+  type: "assertion",
+  description: "stg_customers: one row per customer with current details — no duplicates on (customer_id)",
+  tags: ["daily"]
+}
+
+-- dpf: test=grain:stg_customers model=stg_customers satisfies=R-1,R-5
+SELECT customer_id, COUNT(*) AS rows_per_grain
+FROM ${ref("stg_customers")}
+GROUP BY customer_id
+HAVING COUNT(*) > 1

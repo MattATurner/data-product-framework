@@ -1,0 +1,42 @@
+{
+  "model_ref": "data-product-framework.slv_sales.dim_customer",
+  "layer": "silver",
+  "methodology": "kimball",
+  "role": "dimension",
+  "grain_statement": "one row per customer per validity period",
+  "grain_columns": [
+    "customer_id",
+    "valid_from"
+  ],
+  "grain_checksum": "sha256:44924801c66b0a0af3136a94c29a85c582f58727e4a9c5c76e168f6cffeb90e7",
+  "engine": "dbt",
+  "storage_format": "bigquery_native",
+  "materialisation": "table",
+  "history_semantics": "point_in_time",
+  "dataset": "silver",
+  "inputs": [
+    "stg_customers"
+  ],
+  "natural_key": [
+    "customer_id"
+  ],
+  "surrogate_key": "sk_customer",
+  "attributes": {
+    "scd_type": 2,
+    "source": "stg_customers",
+    "tracked": [
+      "customer_segment",
+      "region"
+    ],
+    "current": [
+      "customer_name",
+      "customer_email",
+      "customer_phone"
+    ]
+  },
+  "brd_requirement_id": [
+    "R-4",
+    "R-5",
+    "R-12"
+  ]
+}

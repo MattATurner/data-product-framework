@@ -1,0 +1,7 @@
+config {
+  // dpf: relation=raw_customers source=ora_local skill=load-bq-raw-table
+  type: "declaration",
+  schema: dataform.projectConfig.vars.raw_dataset,
+  name: "raw_customers",
+  description: "Raw, append-only landing of raw_customers from ora_local."
+}

@@ -1,0 +1,14 @@
+id: governance-gate
+asserts: If the BRD restricts attributes, the design must protect them with policy tags or G1 fails.
+mutate:
+- delete:
+    file: products/sales_performance/product.yaml
+    path: governance.policy_tags
+run:
+  command: check
+  product: sales_performance
+  gate: G1
+expect:
+  outcome: fail
+  messages:
+  - but no policy tag is declared

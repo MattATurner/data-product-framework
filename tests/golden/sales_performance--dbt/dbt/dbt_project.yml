@@ -1,0 +1,29 @@
+# dpf: product=sales_performance engine=dbt implements=generate-artefacts
+# policy_tag_* vars are REQUIRED before building tables with tagged columns: pass them with
+# --vars from `terraform output policy_tags`. An empty tag fails the build rather than
+# publishing unprotected columns.
+name: sales_performance
+version: 1.2.0
+config-version: 2
+require-dbt-version: '>=1.8.0'
+profile: dpf_sales_performance
+model-paths:
+- models
+test-paths:
+- tests
+macro-paths:
+- macros
+vars:
+  raw_dataset: raw_ora_local
+  staging_dataset: stg_sales
+  silver_dataset: slv_sales
+  gold_dataset: gold_sales
+  share_dataset: share_sales_partner
+  assertions_dataset: dpf_assertions
+  control_dataset: dpf_control
+  business_timezone: Australia/Perth
+  policy_tag_pii_contact: ''
+data_tests:
+  sales_performance:
+    +store_failures: true
+    +schema: dpf_assertions

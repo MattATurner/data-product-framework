@@ -1,0 +1,17 @@
+{{ config(tags=['acceptance']) }}
+-- dpf: test=acceptance:AT-6 model=sales_order_line_detail satisfies=R-8 verifies=AX-6
+WITH so1003 AS (
+  SELECT COUNT(*) AS lines, COUNTIF(is_cancelled) AS cancelled_lines
+  FROM {{ ref('sales_order_line_detail') }}
+  WHERE order_id = 'SO-1003' AND year_month = '2026-04'
+),
+april AS (
+  SELECT
+    (SELECT COALESCE(SUM(net_sales), 0) FROM {{ ref('sales_performance_monthly') }}
+      WHERE year_month = '2026-04') AS reported,
+    (SELECT COALESCE(SUM(net_amount), 0) FROM {{ ref('sales_order_line_detail') }}
+      WHERE year_month = '2026-04' AND order_id != 'SO-1003' AND NOT is_cancelled) AS expected
+)
+SELECT s.lines, s.cancelled_lines, a.reported, a.expected
+FROM so1003 AS s CROSS JOIN april AS a
+WHERE s.lines = 0 OR s.cancelled_lines != s.lines OR a.reported != a.expected

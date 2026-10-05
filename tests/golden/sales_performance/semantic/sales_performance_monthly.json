@@ -1,0 +1,31 @@
+{
+  "model_ref": "data-product-framework.gold_sales.sales_performance_monthly",
+  "layer": "gold",
+  "methodology": "direct",
+  "role": "business_view",
+  "grain_statement": "one row per month per customer segment per product category per region",
+  "grain_columns": [
+    "year_month",
+    "customer_segment",
+    "product_category",
+    "region"
+  ],
+  "grain_checksum": "sha256:f9ee7ce342ebc53e454b6f6d449fc1f3c715b22daf9d4db375897989c64764e1",
+  "engine": "dataform",
+  "storage_format": "bigquery_native",
+  "materialisation": "table",
+  "history_semantics": "point_in_time",
+  "dataset": "gold",
+  "inputs": [
+    "fct_order_line",
+    "dim_date",
+    "dim_customer",
+    "dim_product"
+  ],
+  "brd_requirement_id": [
+    "R-1",
+    "R-4",
+    "R-7",
+    "R-8"
+  ]
+}

@@ -1,0 +1,11 @@
+config {
+  type: "assertion",
+  description: "SO-1001 line 2, landed three times, appears once with quantity 6 and net amount 810.00.",
+  tags: ["acceptance"]
+}
+
+-- dpf: test=acceptance:AT-3 model=fct_order_line satisfies=R-3 verifies=AX-3
+SELECT COUNT(*) AS line_rows, MAX(quantity) AS quantity, MAX(net_amount) AS net_amount
+FROM ${ref("fct_order_line")}
+WHERE order_id = 'SO-1001' AND order_line_no = 2
+HAVING COUNT(*) != 1 OR MAX(quantity) != 6 OR MAX(net_amount) != 810

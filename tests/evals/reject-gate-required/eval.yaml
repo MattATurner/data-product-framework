@@ -1,0 +1,19 @@
+id: reject-gate-required
+asserts: Without row quarantine there is no reject gate, and the static check for AX-12 fails.
+mutate:
+- set:
+    file: products/sales_performance/product.yaml
+    path: quality.rules[id=QR-1].on_fail
+    value: fail
+- set:
+    file: products/sales_performance/product.yaml
+    path: quality.rules[id=QR-2].on_fail
+    value: fail
+run:
+  command: check
+  product: sales_performance
+  gate: G4
+expect:
+  outcome: fail
+  messages:
+  - 'acceptance:AT-12 (static) failed: no staging model quarantines rows'

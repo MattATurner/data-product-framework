@@ -1,0 +1,89 @@
+{
+  "model_ref": "data-product-framework.slv_sales.fct_order_line",
+  "layer": "silver",
+  "methodology": "kimball",
+  "role": "fact",
+  "grain_statement": "one row per order line at its latest amended values",
+  "grain_columns": [
+    "order_id",
+    "order_line_no"
+  ],
+  "grain_checksum": "sha256:116710af0c5c09027867003635bd3c12df91cdcc3de6f464492d4ba849faa94b",
+  "engine": "dataform",
+  "storage_format": "bigquery_native",
+  "materialisation": "incremental_table",
+  "history_semantics": "current_only",
+  "dataset": "silver",
+  "inputs": [
+    "stg_order_lines",
+    "dim_customer",
+    "dim_product",
+    "dim_date"
+  ],
+  "natural_key": [
+    "order_id",
+    "order_line_no"
+  ],
+  "partition_by": "order_date",
+  "cluster_by": [
+    "sk_customer",
+    "sk_product"
+  ],
+  "attributes": {
+    "fact_type": "transaction",
+    "source": "stg_order_lines",
+    "event_date": "order_date",
+    "restatement_window_days": 90,
+    "dim_refs": [
+      {
+        "dimension": "dim_customer",
+        "natural_key": "customer_id",
+        "as_at": "order_date"
+      },
+      {
+        "dimension": "dim_product",
+        "natural_key": "product_id",
+        "as_at": "order_date"
+      },
+      {
+        "dimension": "dim_date",
+        "from": "order_date"
+      }
+    ],
+    "measures": [
+      {
+        "name": "quantity",
+        "additivity": "additive"
+      },
+      {
+        "name": "gross_amount",
+        "additivity": "additive"
+      },
+      {
+        "name": "discount_amount",
+        "additivity": "additive"
+      },
+      {
+        "name": "net_amount",
+        "additivity": "additive"
+      }
+    ],
+    "degenerate": [
+      "order_status",
+      "source_modified_ts"
+    ],
+    "flags": [
+      {
+        "name": "is_cancelled",
+        "expression": "order_status = 'CANCELLED'"
+      }
+    ]
+  },
+  "brd_requirement_id": [
+    "R-2",
+    "R-3",
+    "R-7",
+    "R-8",
+    "R-9"
+  ]
+}

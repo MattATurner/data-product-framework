@@ -1,0 +1,37 @@
+{
+  "model_ref": "data-product-framework.slv_sales.dim_product",
+  "layer": "silver",
+  "methodology": "kimball",
+  "role": "dimension",
+  "grain_statement": "one row per product per validity period",
+  "grain_columns": [
+    "product_id",
+    "valid_from"
+  ],
+  "grain_checksum": "sha256:43bb4ee49cd307570ada09934928bfe086e736012b061cfeaff5dc957f4bf86d",
+  "engine": "dataform",
+  "storage_format": "bigquery_native",
+  "materialisation": "table",
+  "history_semantics": "point_in_time",
+  "dataset": "silver",
+  "inputs": [
+    "stg_products"
+  ],
+  "natural_key": [
+    "product_id"
+  ],
+  "surrogate_key": "sk_product",
+  "attributes": {
+    "scd_type": 2,
+    "source": "stg_products",
+    "tracked": [
+      "product_category"
+    ],
+    "current": [
+      "product_name"
+    ]
+  },
+  "brd_requirement_id": [
+    "R-6"
+  ]
+}

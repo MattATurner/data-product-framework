@@ -1,0 +1,12 @@
+id: idempotency
+asserts: Generating twice gives byte-identical artefacts that match the golden copy.
+run:
+  command: generate
+  product: customer_orders
+  check: true
+expect:
+  outcome: pass
+  level: ok
+  messages:
+  - generation is deterministic
+  - matches golden copy

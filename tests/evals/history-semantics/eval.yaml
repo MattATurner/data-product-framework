@@ -1,0 +1,15 @@
+id: history-semantics
+asserts: A BRD asking for values as they were at the time cannot be resolved with current-only history.
+mutate:
+- set:
+    file: products/sales_performance/product.yaml
+    path: layers.silver.models[name=dim_customer].history_semantics
+    value: current_only
+run:
+  command: check
+  product: sales_performance
+  gate: G1
+expect:
+  outcome: fail
+  messages:
+  - dim_customer declare current_only history

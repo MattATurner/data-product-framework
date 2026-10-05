@@ -1,0 +1,23 @@
+id: fitness-warn
+asserts: When the business says bad data must stop publication, a warn-only quality gate fails G1.
+mutate:
+- set:
+    file: products/sales_performance/product.yaml
+    path: quality.gate_behaviour
+    value: warn
+- set:
+    file: products/sales_performance/product.yaml
+    path: quality.rules[id=QR-1].severity
+    value: warn
+- set:
+    file: products/sales_performance/product.yaml
+    path: quality.rules[id=QR-2].severity
+    value: warn
+run:
+  command: check
+  product: sales_performance
+  gate: G1
+expect:
+  outcome: fail
+  messages:
+  - bad data must stop publication but the quality gate does not block

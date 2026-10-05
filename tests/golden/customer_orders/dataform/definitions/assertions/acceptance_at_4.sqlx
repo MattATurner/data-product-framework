@@ -1,0 +1,16 @@
+config {
+  type: "assertion",
+  description: "Cancelled orders are present, flagged, and contribute zero to counted order value.",
+  tags: ["acceptance"]
+}
+
+-- dpf: test=acceptance:AT-4 model=customer_orders satisfies=R-4 verifies=AX-4
+SELECT order_id, order_status, is_cancelled, counted_order_value
+FROM ${ref("customer_orders")}
+WHERE (order_status = 'CANCELLED') != is_cancelled
+   OR (is_cancelled AND counted_order_value != 0)
+UNION ALL
+SELECT s.order_id, s.order_status, NULL, NULL
+FROM ${ref("stg_orders")} AS s
+LEFT JOIN ${ref("customer_orders")} AS o ON o.order_id = s.order_id
+WHERE s.order_status = 'CANCELLED' AND o.order_id IS NULL
