@@ -1,0 +1,103 @@
+# UC-SALES-001: the use case behind sales_performance, written after the fact to show the whole
+# chain from use case to BRD-SALES-002 to TDD-SALES-002. Rendered into use-case.pdf by
+# templates/src/render.py.
+#
+# Answers come from BRD-SALES-002 (brd.yaml and spec.md) where the BRD says something. Fields
+# listed under `illustrative` are invented for the example and are marked in the PDF.
+
+note: >
+  UC-SALES-001 is the use case behind the sales_performance example product. Answers come from
+  BRD-SALES-002 where it has them; fields marked Illustrative are invented for the example.
+
+illustrative: [proposed_by, date, more_data, availability, culture, structure, finance_band, finance_notes,
+               time_band, benefits]
+
+values:
+  uc_id: UC-SALES-001
+  title: Sales performance insight
+  domain: Sales
+  proposed_by: Head of Sales Operations
+  date: "2026-08-03"
+  version: "1.0"
+  status: Approved
+
+  description: >
+    Give sales leadership one consistent view of which customer segments, products and regions
+    are growing. The figures must match how Finance reports revenue and how Merchandising defines
+    the product range, and must be fresh enough to reallocate leads during the working day.
+
+  swot:
+    - type: W
+      item: Sales, Finance and Merchandising report different figures for the same period
+      how: One measure of net sales that reconciles with Finance's revenue and uses Merchandising's product range
+    - type: W
+      item: Sales Operations work from a stale picture, which causes duplicate customer outreach
+      how: Figures refreshed through the working day
+    - type: S
+      item: One system of record already holds every order, customer and product
+      how: Builds on that system instead of collecting new data
+    - type: O
+      item: An external analytics partner can add insight if it receives regular figures
+      how: A monthly extract with no customer detail
+
+  classification: [intelligence, operations]
+
+  questions:
+    - question: Which customer segments drove net sales growth this period?
+      who: Sales leadership, Sales Operations
+      decision: Quarterly segment investment allocation
+    - question: Which products and regions are growing or declining?
+      who: Sales leadership, Merchandising
+      decision: Range and territory planning
+    - question: What makes up a given period's net sales figure?
+      who: Sales Operations, Finance
+      decision: Variance investigation and month-end reconciliation
+
+  existing_data: The sales system of record holds orders, order lines, customers, products and sales reps.
+  more_data: None expected.
+  better_data: None needed. The data is already held as structured records.
+  improved_data: >
+    Net sales must agree with Finance's revenue, and product categories with Merchandising's
+    range. The figures must be correct, not just good enough, because they are used for
+    month-end reconciliation.
+  availability: The system of record is expected to stay in service.
+  velocity: Roughly 40,000 order lines a day. Leads are reallocated through the day, so the figures must be fresh during the working day.
+
+  infrastructure: Read access to the sales system of record, and a new place to publish the figures.
+  governance: Shared definitions of customer and product, agreed with Finance and Merchandising.
+  access: >
+    General analysts must not see customer contact details. The external partner receives a
+    monthly extract and no access to internal systems.
+  culture: About 120 people will use the figures several times a day. They need a short briefing on the shared definitions.
+  structure: No change.
+
+  customer_impact: Indirect. Customers receive fewer duplicate contacts from the sales team.
+  partner_impact: >
+    The external analytics partner receives a monthly extract of net sales by month, product
+    category and region, without customer detail.
+
+  finance_band: 10k to 100k
+  finance_notes: Order-of-magnitude estimate
+  time_band: 3 to 6 months
+  time_notes: ""
+
+  benefits:
+    - benefit: Better segment investment decisions each quarter
+      type: revenue
+      measure: Share of growth from the segments chosen for investment
+      size: To be estimated
+    - benefit: Less time reconciling sales and finance figures
+      type: cost
+      measure: Hours spent on month-end reconciliation
+      size: To be estimated
+    - benefit: Fewer duplicate customer contacts
+      type: indirect
+      measure: Duplicate outreach incidents per month
+      size: To be estimated
+
+  risks: >
+    Finance and Merchandising must agree the shared definitions. We do not yet know how often
+    the sales system can be read, or whether it keeps a history of segment changes.
+
+  signoff:
+    Proposed by: {name: Head of Sales Operations}

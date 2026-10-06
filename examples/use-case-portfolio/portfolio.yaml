@@ -1,0 +1,55 @@
+# The three use cases from the seed use-case template, scored with templates/scoring.yaml.
+# Rendered into scorecard.pdf and prioritisation.pdf by templates/src/render.py.
+
+title: Seed use-case portfolio
+assessed_on: Not recorded in the seed
+panel: Not recorded in the seed
+note: >
+  The three use cases from the seed template. The first nine scores are the seed's own. The seed
+  did not score data readiness or delivery risk, so those scores, and the decisions, are
+  illustrative.
+illustrative_criteria: [data_readiness, delivery_risk]
+illustrative_note: >
+  the seed template did not score data readiness or delivery risk. These values only show how
+  the two added criteria work.
+footnotes:
+  - >
+    With the seed's nine criteria alone, the totals are UC-1 101, UC-2 63 and UC-3 74. The seed
+    printed 98 for UC-1; its rows add up to 101.
+
+use_cases:
+  - id: UC-1
+    title: Develop new data product
+    scores: {strategy: 5, strength: 5, weakness: 1, threat: 4, profit: 3, revenue: 5, customers: 5,
+             finance: 2, time: 1, data_readiness: 3, delivery_risk: 2}
+    decision:
+      decision: Approve for discovery
+      reason: >
+        High value, hard to deliver. Agree funding and a delivery plan, and improve data readiness
+        before committing to a build.
+      next: PRD
+      owner: Sponsor to be named
+
+  - id: UC-2
+    title: Gather customer contact data
+    scores: {strategy: 3, strength: 2, weakness: 4, threat: 1, profit: 4, revenue: 3, customers: 2,
+             finance: 2, time: 1, data_readiness: 1, delivery_risk: 3}
+    decision:
+      decision: Defer
+      reason: >
+        Low value and hard to deliver today. Revisit if customer contact data becomes a strategic
+        need. UC-3 depends on it.
+      next: "-"
+      owner: "-"
+
+  - id: UC-3
+    title: Share customer contact data with supplier
+    scores: {strategy: 4, strength: 2, weakness: 4, threat: 2, profit: 1, revenue: 2, customers: 3,
+             finance: 4, time: 2, data_readiness: 2, delivery_risk: 2}
+    decision:
+      decision: Defer
+      reason: >
+        Needs the data that UC-2 would gather. Sharing personal data with a supplier needs a legal
+        and privacy review first.
+      next: "-"
+      owner: "-"

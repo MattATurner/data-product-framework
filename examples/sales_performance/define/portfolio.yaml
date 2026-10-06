@@ -1,0 +1,23 @@
+# UC-SALES-001 scored with templates/scoring.yaml, to show the step from use case to BRD for the
+# sales_performance example. Rendered into scorecard.pdf and prioritisation.pdf by
+# templates/src/render.py. All scores and the decision are illustrative.
+
+title: Sales use-case round
+assessed_on: "2026-08-10"
+panel: Sales leadership, Finance, Merchandising, data team
+note: >
+  UC-SALES-001 scored on its own to show the step from use case to BRD. All scores and the
+  decision are illustrative.
+
+use_cases:
+  - id: UC-SALES-001
+    title: Sales performance insight
+    scores: {strategy: 4, strength: 4, weakness: 5, threat: 2, profit: 2, revenue: 3, customers: 2,
+             finance: 3, time: 3, data_readiness: 4, delivery_risk: 3}
+    decision:
+      decision: Approve
+      reason: >
+        Quick win. Write the BRD. Confirm early how often the sales system can be read and
+        whether it keeps a history of segment changes.
+      next: BRD
+      owner: Head of Sales Operations
