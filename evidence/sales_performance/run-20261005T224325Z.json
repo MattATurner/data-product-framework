@@ -1,0 +1,255 @@
+{
+  "product_id": "sales_performance",
+  "artefact_digest": "sha256:fd95e365e03eed9594a297522851eb28d9cf553f8e12d2a566277ca023b17cbe",
+  "run_id": "run-20261005T224325Z",
+  "environment": "test",
+  "recorded_at": "2026-10-05T22:43:25Z",
+  "results": [
+    {
+      "test_id": "acceptance:AT-10",
+      "status": "passed",
+      "note": "static check passed",
+      "finished_at": "2026-10-05T22:42:37Z"
+    },
+    {
+      "test_id": "acceptance:AT-11",
+      "status": "passed",
+      "note": "static check passed",
+      "finished_at": "2026-10-05T22:42:37Z"
+    },
+    {
+      "test_id": "acceptance:AT-12",
+      "status": "passed",
+      "note": "static check passed",
+      "finished_at": "2026-10-05T22:42:37Z"
+    },
+    {
+      "test_id": "acceptance:AT-13",
+      "status": "passed",
+      "note": "static check passed",
+      "finished_at": "2026-10-05T22:42:37Z"
+    },
+    {
+      "test_id": "acceptance:AT-14",
+      "status": "passed",
+      "note": "static check passed",
+      "finished_at": "2026-10-05T22:42:37Z"
+    },
+    {
+      "test_id": "grain:stg_customers",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:42:40Z"
+    },
+    {
+      "test_id": "grain_not_null:stg_customers",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:42:42Z"
+    },
+    {
+      "test_id": "grain:stg_order_lines",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:42:43Z"
+    },
+    {
+      "test_id": "grain_not_null:stg_order_lines",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:42:45Z"
+    },
+    {
+      "test_id": "reject_gate:stg_order_lines",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:42:46Z"
+    },
+    {
+      "test_id": "grain:stg_products",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:42:48Z"
+    },
+    {
+      "test_id": "grain_not_null:stg_products",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:42:49Z"
+    },
+    {
+      "test_id": "grain:dim_customer",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:42:51Z"
+    },
+    {
+      "test_id": "grain_not_null:dim_customer",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:42:52Z"
+    },
+    {
+      "test_id": "scd_overlap:dim_customer",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:42:53Z"
+    },
+    {
+      "test_id": "scd_current:dim_customer",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:42:55Z"
+    },
+    {
+      "test_id": "grain:dim_date",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:42:56Z"
+    },
+    {
+      "test_id": "grain_not_null:dim_date",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:42:57Z"
+    },
+    {
+      "test_id": "grain:dim_product",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:42:58Z"
+    },
+    {
+      "test_id": "grain_not_null:dim_product",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:42:59Z"
+    },
+    {
+      "test_id": "scd_overlap:dim_product",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:43:01Z"
+    },
+    {
+      "test_id": "scd_current:dim_product",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:43:02Z"
+    },
+    {
+      "test_id": "grain:fct_order_line",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:43:03Z"
+    },
+    {
+      "test_id": "grain_not_null:fct_order_line",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:43:04Z"
+    },
+    {
+      "test_id": "integrity:fct_order_line:customer_id:not_null",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:43:05Z"
+    },
+    {
+      "test_id": "integrity:fct_order_line:dim_customer:late_arrival",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:43:07Z"
+    },
+    {
+      "test_id": "integrity:fct_order_line:product_id:not_null",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:43:08Z"
+    },
+    {
+      "test_id": "integrity:fct_order_line:dim_product:late_arrival",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:43:09Z"
+    },
+    {
+      "test_id": "grain:sales_order_line_detail",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:43:10Z"
+    },
+    {
+      "test_id": "grain_not_null:sales_order_line_detail",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:43:11Z"
+    },
+    {
+      "test_id": "grain:sales_performance_monthly",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:43:13Z"
+    },
+    {
+      "test_id": "grain_not_null:sales_performance_monthly",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:43:14Z"
+    },
+    {
+      "test_id": "grain:sales_performance_partner_extract",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:43:15Z"
+    },
+    {
+      "test_id": "grain_not_null:sales_performance_partner_extract",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:43:16Z"
+    },
+    {
+      "test_id": "acceptance:AT-1",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:43:17Z"
+    },
+    {
+      "test_id": "acceptance:AT-2",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:43:18Z"
+    },
+    {
+      "test_id": "acceptance:AT-3",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:43:20Z"
+    },
+    {
+      "test_id": "acceptance:AT-4",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:43:21Z"
+    },
+    {
+      "test_id": "acceptance:AT-6",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:43:22Z"
+    },
+    {
+      "test_id": "acceptance:AT-7",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:43:23Z"
+    },
+    {
+      "test_id": "acceptance:AT-9",
+      "status": "passed",
+      "failing_rows": 0,
+      "finished_at": "2026-10-05T22:43:25Z"
+    }
+  ]
+}
