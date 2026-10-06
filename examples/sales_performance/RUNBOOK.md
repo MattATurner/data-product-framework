@@ -23,10 +23,26 @@ stop.
 
 ## 1. Generate and deploy the infrastructure
 
+This is how the example was deployed to the sandbox project `data-product-framework` on
+5 October 2026 to collect G4 evidence.
+
+**Once per project, before the first apply.** The module creates none of these; the table in
+`terraform/README.md` says what needs each one.
+
+- Enable the APIs: BigQuery, BigQuery Data Transfer, BigQuery Data Policy, BigQuery sharing,
+  Data Catalog, Dataform, Knowledge Catalog, Logging and Monitoring. Granting project roles
+  with `gcloud` also needs Cloud Resource Manager.
+- Create the service agents: `gcloud beta services identity create --service=<api>` for
+  `dataplex.googleapis.com`, `dataform.googleapis.com` and
+  `bigquerydatatransfer.googleapis.com`.
+- Create the three groups and the two service accounts named in `terraform.tfvars`, with the
+  roles listed in `terraform/README.md`.
+- Create the Dataform repository named in `dataform_repository`.
+
 ```bash
 dpf generate sales_performance                 # generated/sales_performance/{dataform,terraform,...}
 cd examples/sales_performance/terraform
-cp terraform.tfvars.example terraform.tfvars   # groups, Dataform repository, alert channel
+cp terraform.tfvars.example terraform.tfvars   # groups, repository, service accounts, alert channel
 terraform init && terraform apply
 ```
 
@@ -35,8 +51,37 @@ tables, the `pii_contact` policy tag with a null mask for analysts (R-12), the p
 listing (R-13), orchestration, checks, alerts and Knowledge Catalog quality scans. Apply
 before the first extract: the extractor writes to the control tables.
 
-Push `generated/sales_performance/dataform/` to the default branch of the Dataform
-repository named in `dataform_repository`.
+**Apply twice on a new project.** The two quality scans need their tables, so the first
+apply fails on them and creates everything else. Run `terraform apply` again after the first
+build (step 3).
+
+**Push and release the Dataform code.** Push `generated/sales_performance/dataform/` to the
+default branch of the repository. The workflow configurations run only the **current
+release**, so a push alone changes nothing that runs.
+
+- **Git-connected repository:** keep the default `dataform_release_schedule`. The release
+  configuration compiles the default branch every hour.
+- **Dataform-hosted repository** (no Git remote, as in the sandbox): strict act-as checks
+  reject automatic release, so set `dataform_release_schedule = ""` and release after every
+  push:
+
+```bash
+API=https://dataform.googleapis.com/v1beta1
+REPO=projects/<project>/locations/us-central1/repositories/<repository>
+TOKEN=$(gcloud auth print-access-token)
+# 1. Compile the default branch with the release configuration's settings; stop on any error.
+COMPILATION=$(curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d "{\"releaseConfig\": \"$REPO/releaseConfigs/sales-performance\"}" "$API/$REPO/compilationResults" \
+  | python3 -c 'import json,sys; r=json.load(sys.stdin); e=r.get("error") or r.get("compilationErrors"); sys.exit(json.dumps(e)) if e else print(r["name"])') &&
+# 2. Make that compilation the current release. The API requires gitCommitish in the body.
+curl -s -X PATCH -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d "{\"gitCommitish\": \"main\", \"releaseCompilationResult\": \"$COMPILATION\"}" \
+  "$API/$REPO/releaseConfigs/sales-performance?updateMask=releaseCompilationResult"
+```
+
+The PATCH prints the release configuration. Without `gitCommitish` it fails with
+`git_commitish is not specified`, even though the update mask names only
+`releaseCompilationResult`.
 
 ## 2. Data in — pick one
 
@@ -44,31 +89,42 @@ repository named in `dataform_repository`.
 
 Start here. It proves the whole chain and exercises the automated acceptance tests.
 
-**Load in phases and build between them.** A Type 2 dimension records history as changes
-*arrive*. Loading both states at once lets staging collapse them, and the earlier version
-is never recorded. The phased seed exists to prevent exactly that mistake.
+**Build with a full refresh.** The fixture dates are fixed (March to June 2026), and an
+incremental run restates only the last 90 days of `fct_order_line` (D-9). An incremental
+build skips older lines: in the sandbox, SO-1004 (12 June) never reached the fact and AT-4
+and AT-7 failed. Dataform: tick "Run with full refresh" (API:
+`fullyRefreshIncrementalTablesEnabled`). dbt: `dbt build --full-refresh`.
+
+**Load in phases.** Each phase is one landing, as the extractor would deliver it. Raw is
+append-only and staging keeps every landed version (`stg_<entity>_history`), so the Type 2
+dimensions get the same history whether you build between phases or once after both.
+Building between phases mirrors production. No build can recover a change that the source
+overwrote before an extract saw it: the source keeps no history.
 
 ```bash
 cd examples/sales_performance/seed
 python3 generate_seed.py --phase 1 --load   # the world as at end of May
-#   build (step 3)
+#   build with a full refresh (step 3)
 python3 generate_seed.py --phase 2 --load   # 1 June: C-001 re-segmented, P-200 recategorised
-#   build again: history now exists
+#   build again with a full refresh: history now exists
 ```
 
-After phase 2, `dim_customer` holds two rows for `C-001`:
+After phase 2, `dim_customer` holds two rows for `C-001` (sandbox output):
 
 | customer_segment | valid_from | valid_to |
 |---|---|---|
-| SMB | 1900-01-01 | 2026-06-01 |
-| ENTERPRISE | 2026-06-01 | 9999-12-31 |
+| SMB | 1900-01-01 00:00:00 | 2026-06-01 09:00:00 |
+| ENTERPRISE | 2026-06-01 09:00:00 | 9999-12-31 00:00:00 |
 
 The first version opens at a floor date, so historical facts resolve to it rather than to
 the unknown member. Later versions open at the **source change timestamp**, not the load
 time. That is what makes AX-4 and AX-7 correct.
 
 Phase 3 (`--phase 3`) adds order SO-1005 with no customer. Load it **after** recording
-evidence (step 4): it shows the reject gate stopping publication (AX-12).
+evidence (step 4): the next run quarantines the line and the reject gate stops publication
+(AX-12). Phase 4 (`--phase 4`) lands the corrected order, and the next run succeeds again.
+With the fixed seed dates, the order reaches gold only on a full refresh, as above.
+Section 6, "Pipeline failed", shows what both did in the sandbox.
 
 ### Option B: the real Oracle
 
@@ -87,13 +143,21 @@ BigQuery transaction, so a failed run commits nothing and is safe to repeat. See
 ## 3. Build the models
 
 Scheduled runs come from the workflow configurations Terraform created (`hourly` at
-:10 past each hour, `monthly` at 07:00 on the 2nd, Perth time). To build by hand:
+:10 past each hour, `monthly` at 07:00 on the 2nd, Perth time). They run the current
+release (step 1), incrementally, as `dataform_service_account`. To build by hand, start a
+workflow invocation in the console from the release configuration, with the same service
+account (strict act-as checks require it) and, for seeded data, "Run with full refresh". Or
+use the CLI:
 
 ```bash
 cd generated/sales_performance/dataform
 npx @dataform/cli@3 compile             # must be clean
-npx @dataform/cli@3 run                 # or start a workflow invocation in the console
+npx @dataform/cli@3 run --full-refresh --vars=policy_tag_pii_contact=<terraform output policy_tags>
 ```
+
+The CLI needs `.df-credentials.json` (`npx @dataform/cli@3 init-creds`). Always pass the
+policy tag: with the variable empty, the CLI rebuilds `dim_customer` with no tag on the
+contact columns (R-12).
 
 Order: staging (candidates, rejects, history, current), then `dim_customer` / `dim_product`
 (Type 2) and `dim_date`, then `fct_order_line`, then the gold views. Every downstream action
@@ -120,6 +184,19 @@ dpf trace sales_performance --print                   # requirement -> ... -> ev
 
 Results go to `evidence/sales_performance/<run>.json` (contract `test-evidence.v1`). Commit
 them: they are the acceptance pack.
+
+In the sandbox, `dpf test run --live` passed all 36 SQL cases and the 5 static cases for
+build `sha256:fd95e365e03e…` (`evidence/sales_performance/run-20261005T224325Z.json`). G4
+then fails only on the two attestations:
+
+```text
+FAIL | acceptance:AT-5 (attestation): no evidence for build sha256:fd95e365e03e… (`dpf test attest sales_performance AT-5 --by <name> --role finance`)
+FAIL | acceptance:AT-8 (attestation): no evidence for build sha256:fd95e365e03e… (`dpf test attest sales_performance AT-8 --by <name> --role merchandising`)
+     | evidence: 2 missing, 41 passed
+```
+
+AT-5 and AT-8 need a person from Finance and from Merchandising to check the figures. Do not
+record them for someone else.
 
 ## 5. Publish and register
 
@@ -183,6 +260,13 @@ Either an action errored or a **blocking** assertion failed and stopped publicat
   with `_reject_reason`. Gold keeps its last good state. Fix the data at the source (the
   next extract lands the correction and staging takes the latest version), then re-run.
   Never delete the assertion to get a refresh through.
+
+  Seen in the sandbox: after seed phase 3, an `hourly` invocation ended `FAILED 1, SKIPPED 13,
+  SUCCEEDED 30`. The reject gate failed with `Assertion failed, expected zero rows`;
+  `fct_order_line`, both gold views and their 10 assertions were skipped, and
+  `fct_order_line` kept its earlier rows. The rejects view held SO-1005 line 1 with reason
+  `QR-1`. After phase 4 landed the corrected order, the next `hourly` run succeeded (44
+  actions), and a full refresh published SO-1005 under C-002.
 - **Grain or history assertion**: a duplicate or overlapping version. Treat as a defect:
   open a change, fix the body or the manifest, and pass G3 before redeploying.
 - **Warn-level assertion**: blocks nothing downstream, but Dataform still marks the
@@ -200,6 +284,17 @@ lines per day outside 16,000–64,000).
    A healthy hourly build over a stalled extract looks fresh; the volume check and the
    `extract_failed` alert cover that case.
 3. After the fix, `dpf monitor sales_performance` reports no breach.
+
+Seed data always breaches OB-3. In the sandbox, `dpf monitor sales_performance` reported:
+
+```text
+  ok | OB-1: 2026-10-05T22:45:13+00:00 is outside the business calendar (MON TUE WED THU FRI 08:00-18:00 Australia/Perth); not evaluated
+  ok | OB-2: sales_performance_partner_extract is 4 minutes old (limit 46080)
+FAIL | volume OB-3: fct_order_line holds 0 rows per P1D (expected 16000–64000)
+```
+
+No fixture line is dated yesterday, so the scheduled volume check fails every day and raises
+this alert. That is expected for a seeded environment, not an incident.
 
 ## Known limitations, already agreed with the business
 

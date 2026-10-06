@@ -38,7 +38,7 @@ dpf check --all --gate G3                   # both worked examples, G0 to G3: al
 dpf generate sales_performance              # writes generated/sales_performance/
 dpf trace sales_performance --print         # requirement -> decision -> element -> artefact -> test -> evidence
 dpf test plan sales_performance             # every test case and what it satisfies
-dpf check sales_performance --gate G4       # fails: no deployed-run evidence exists (by design)
+dpf check sales_performance --gate G4       # 41 of 43 pass (sandbox evidence); AT-5 and AT-8 await attestation
 dpf monitor sales_performance --evidence tests/evals/monitor-breach/run-evidence.json
 dpf eval                                    # 19 behavioural evals
 make ci                                     # what CI runs
@@ -112,9 +112,12 @@ be reached inbound from Google Cloud, so the 15-minute freshness requirement was
 back to the business** rather than quietly downgraded. They accepted hourly, and the BRD
 moved to 1.1.0 with the reason recorded. See `examples/sales_performance/RUNBOOK.md`.
 
-**Status of the examples:** G0–G3 pass. G4 fails because nobody has deployed them and
-recorded evidence, which is the honest state. The sign-offs in `tdd/signoff.yaml` are
-example signatures ("Sales Operations (example)"), not real approvals.
+**Status of the examples:** G0–G3 pass for both. `sales_performance` was deployed to a
+sandbox project on 5 October 2026: 41 of its 43 test cases pass for build
+`sha256:fd95e365e03e…` (evidence in `evidence/sales_performance/`). G4 still fails on AT-5
+and AT-8, which need a person from Finance and from Merchandising to attest. `customer_orders`
+has not been deployed, so G4 fails with 14 missing results. The sign-offs in
+`tdd/signoff.yaml` are example signatures ("Sales Operations (example)"), not real approvals.
 
 ## Verified with the real tools
 
@@ -123,6 +126,10 @@ The golden copies and the example Terraform wrapper are checked in CI
 versions: Terraform 1.9.8 `fmt -check` and `validate` (all three golden modules and the
 wrapper), Dataform CLI 3.0.71 `compile` (both products, 0 errors) and dbt 1.12.5 `parse` (the
 dbt rendering of `sales_performance`: 18 models, 36 tests, 4 sources).
+
+The sandbox deployment of `sales_performance` applied all 37 Terraform resources, built all
+54 Dataform actions, and passed every SQL acceptance case. It also found four problems that
+offline checks cannot see, now fixed; see section 15 of the [user guide](docs/user-guide.md).
 
 ## Documentation
 

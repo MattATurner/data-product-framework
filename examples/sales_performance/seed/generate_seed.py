@@ -3,22 +3,30 @@
 
 # dpf: role=fixture requirements=R-3,R-4,R-6,R-8,R-11
 
-Each phase is one landing, as the extractor would deliver it. Load a phase, run the pipeline,
-then load the next: a Type 2 dimension builds history as changes ARRIVE, so loading every
-state at once would let staging collapse them and the earlier state would never be seen.
+Each phase is one landing, as the extractor would deliver it. Raw tables are append-only and
+staging keeps every landed version (`stg_<entity>_history`), so a Type 2 dimension records
+every version that was landed, whether you build between phases or once after both. What it
+can never record is a change the source overwrote before an extract saw it: the source keeps
+no history. Building between phases mirrors production and exercises the incremental path.
+
+The fixture dates are fixed (March to June 2026) and an incremental run restates only the last
+90 days of `fct_order_line` (D-9). Build a seeded environment with a FULL REFRESH, or older
+lines never reach the fact.
 
     python3 generate_seed.py --phase 1 --load   # the world as at end of May
-    #   ... run the pipeline (Dataform workflow or `dbt build`) ...
+    #   ... run the pipeline with a full refresh (Dataform invocation or `dbt build --full-refresh`) ...
     python3 generate_seed.py --phase 2 --load   # 1 June: re-segmented customer, recategorised product
-    #   ... run the pipeline again ...
+    #   ... run it again with a full refresh, then record evidence (`dpf test run --live`) ...
     python3 generate_seed.py --phase 3 --load   # a sale with no customer: the reject gate must block
     #   ... run the pipeline: staging quarantines the line and gold does not refresh ...
+    python3 generate_seed.py --phase 4 --load   # the source corrects the order's customer
+    #   ... run it with a full refresh: the reject view is empty and gold refreshes again ...
 
     AX-3   a line amended twice counts once, at the later values      (phase 1)
     AX-6   a line cancelled in April is visible but not counted       (phase 1)
     AX-4   customer C-001 is SMB in March, Enterprise from 1 June     (phases 1 + 2)
     AX-7   product P-200 is GADGETS in March, WIDGETS from 1 June     (phases 1 + 2)
-    AX-12  order SO-1005 has no customer: quarantined with a reason   (phase 3)
+    AX-12  order SO-1005 has no customer: quarantined with a reason   (phase 3; corrected in phase 4)
 
 Tables are created with explicit schemas that match what extract_oracle.py derives from
 the Oracle cursor (NUMBER(p,0) -> INT64, NUMBER -> NUMERIC, DATE -> DATETIME,
@@ -106,6 +114,17 @@ PHASES = {
             ("SO-1005", 1, "P-100", 2, "200.00", "0.00", "2026-06-20 10:00:00"),
         ],
     },
+    # Phase 4 - the source corrects SO-1005 (AX-12 recovery): the order header now names its
+    # customer. The line is unchanged; staging joins the latest header version, so the line
+    # leaves the reject view and the next run publishes again.
+    4: {
+        "customers": [],
+        "products": [],
+        "orders": [
+            ("SO-1005", "C-002", "2026-06-20 00:00:00", "FULFILLED", "2026-06-20 12:00:00"),
+        ],
+        "order_lines": [],
+    },
 }
 
 EXPECT = {
@@ -118,6 +137,8 @@ EXPECT = {
     3: ["AX-12 stg_order_lines_rejects holds SO-1005 line 1 with reason QR-1 (customer_id is null);",
         "      assert_stg_order_lines_no_rejects fails, so the integration and consumption tables",
         "      keep their previous contents until the order is corrected at source and re-landed"],
+    4: ["AX-12 stg_order_lines_rejects is empty and the reject gate passes; after a full refresh",
+        "      SO-1005 line 1 is in fct_order_line under C-002 (ENTERPRISE)"],
 }
 
 

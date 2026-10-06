@@ -445,6 +445,8 @@ body.show-chrome #chrome { opacity: 1; transform: none; pointer-events: auto; }
 .side-label { font: 700 13px/1 var(--font-display); letter-spacing: .08em; text-transform: uppercase; }
 .side-label.red { color: var(--danger); }
 .side-label.green { color: var(--secondary); }
+.side-label.yellow { color: var(--amber-text); }
+.ev-num.ok { color: var(--secondary); }
 .code-block {
   margin: 16px 0; padding: 16px 20px; border-radius: 10px;
   background: var(--code-bg); color: var(--code-fg);
@@ -497,6 +499,7 @@ body.show-chrome #chrome { opacity: 1; transform: none; pointer-events: auto; }
 .ticks { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .ticks li { display: flex; align-items: center; gap: 10px; font-size: 16.5px; line-height: 1.3; color: var(--text); }
 .ticks .ico { color: var(--secondary); }
+.ticks.warn .ico { color: var(--amber-text); }
 
 /* ---------- Slide 15: verified ---------- */
 .ver-row { display: grid; grid-template-columns: 112px minmax(0, 1fr); align-items: center; gap: 18px; }
@@ -538,8 +541,8 @@ body.show-chrome #chrome { opacity: 1; transform: none; pointer-events: auto; }
   <meta name="tags" content="Data Products, OpenSpec, BigQuery, Dataform, Knowledge Catalog, Spec-driven">
   <meta name="deck-role" content="master">
   <meta name="catalog-visibility" content="visible">
-  <meta name="git-commit" content="bc00dd8">
-  <meta name="published-at" content="2026-10-05T22:22:11Z">
+  <meta name="git-commit" content="eb1cb75">
+  <meta name="published-at" content="2026-10-06T00:27:47Z">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -578,7 +581,7 @@ body.show-chrome #chrome { opacity: 1; transform: none; pointer-events: auto; }
 
 <!-- ================= 0 · HERO ================= -->
 <div class="s hero" data-idx="0"
-  data-notes="<strong>Opening.</strong> DPF, the Data Product Framework, is a toolkit for building <em>data products</em> on Google Cloud. The specification stays in control from the first business conversation to production monitoring. It is built on OpenSpec, and one small CLI, <code>dpf</code>, checks a machine gate at every stage and generates everything that can be generated.<br><br><strong>In about 20 minutes:</strong> the problem; the method (five stages, five gates); a worked example, <code>sales_performance</code>; what a review found and what we fixed; what the real tools confirm; honest limits; and three decisions we need from you.">
+  data-notes="<strong>Opening.</strong> DPF, the Data Product Framework, is a toolkit for building <em>data products</em> on Google Cloud. The specification stays in control from the first business conversation to production monitoring. It is built on OpenSpec, and one small CLI, <code>dpf</code>, checks a machine gate at every stage and generates everything that can be generated.<br><br><strong>In about 20 minutes:</strong> the problem; the method (five stages, five gates); a worked example, <code>sales_performance</code>; what a review found and what we fixed; what the real tools confirm; what a sandbox deployment proved and found; honest limits; and three decisions we need from you.">
   <div class="hero-grid">
     <div class="hero-left">
       <span class="badge">Data Product Framework</span>
@@ -870,7 +873,7 @@ body.show-chrome #chrome { opacity: 1; transform: none; pointer-events: auto; }
 <!-- ================= 9 · TRACE MATRIX ================= -->
 <div class="s" data-idx="9" data-steps="1"
   data-notes="<strong>The trace matrix.</strong> <code>dpf trace</code> joins the specs, the manifest, the markers in the generated files, the test spec and the evidence folder. G3 fails unless every requirement has a TDD decision, reaches a generated artefact and is verified by at least one test. All 13 <code>sales_performance</code> requirements do. Before the rework, trace stopped at the TDD: R-12 masking and R-13 partner sharing were traced but never built."
-  data-notes-1="<strong>R-11 end to end.</strong> R-11 now traces to decisions D-12 and D-18, three generated staging files and four tests, including <code>reject_gate:stg_order_lines</code> and the static acceptance test AT-12. The evidence column is judged at G4. The only test for R-10 is a static check, so it already passes; the other twelve still wait for live or attested evidence, so they show missing. That is the honest state.">
+  data-notes-1="<strong>R-11 end to end.</strong> R-11 now traces to decisions D-12 and D-18, three generated staging files and four tests, including <code>reject_gate:stg_order_lines</code> and the static acceptance test AT-12. The evidence column is judged at G4. After the sandbox run, 11 of the 13 requirements have passing evidence, including R-11 and R-12. R-5 and R-6 still show missing, because each rests on a human check: Finance must record AT-5 and Merchandising must record AT-8. That is the honest state.">
   <div class="slide-header">
     <span class="badge">Traceability</span>
     <h2>Each requirement traces to a decision, artefact and test</h2>
@@ -879,19 +882,19 @@ body.show-chrome #chrome { opacity: 1; transform: none; pointer-events: auto; }
     <div class="trace">
       <div class="trace-head"><span>Requirement</span><span>Decisions</span><span>Artefacts</span><span>Tests</span><span>Evidence</span></div>
       <div class="trace-rows scaffold-group">
-        <div class="trow"><span class="req"><span class="rid">R-10</span>Hourly</span><span class="n">3</span><span class="n">3</span><span class="n">1</span><span><span class="status pass">passed</span></span></div>
-        <div class="trow" data-active-step="1"><span class="req"><span class="rid">R-11</span>Incomplete sales</span><span class="n">2</span><span class="n">3</span><span class="n">4</span><span><span class="status miss">missing</span></span></div>
-        <div class="trow"><span class="req"><span class="rid">R-12</span>Contacts masked</span><span class="n">1</span><span class="n">4</span><span class="n">7</span><span><span class="status miss">missing</span></span></div>
+        <div class="trow"><span class="req"><span class="rid">R-5</span>Finance agrees</span><span class="n">2</span><span class="n">1</span><span class="n">5</span><span><span class="status miss">missing</span></span></div>
+        <div class="trow" data-active-step="1"><span class="req"><span class="rid">R-11</span>Incomplete sales</span><span class="n">2</span><span class="n">3</span><span class="n">4</span><span><span class="status pass">passed</span></span></div>
+        <div class="trow"><span class="req"><span class="rid">R-12</span>Contacts masked</span><span class="n">1</span><span class="n">4</span><span class="n">7</span><span><span class="status pass">passed</span></span></div>
       </div>
     </div>
-    <div class="callout" data-build="1"><strong>13 of 13 traced.</strong> Evidence waits for G4.</div>
+    <div class="callout" data-build="1"><strong>13 of 13 traced.</strong> 11 have passing evidence.</div>
   </div>
 </div>
 
 <!-- ================= 10 · EVIDENCE (G4) ================= -->
 <div class="s" data-idx="10" data-steps="1"
   data-notes="<strong>Evidence is tied to one build.</strong> G4 asks one question: does every test have passing evidence for the current build digest? Evidence comes only from <code>dpf test run --live</code> against a deployed build, or from <code>dpf test attest</code> for the two human checks (Finance for AT-5, Merchandising for AT-8). Change any input and the digest changes, so old evidence goes stale. The <code>stale-evidence</code> eval proves it."
-  data-notes-1="<strong>G4 fails today, on purpose.</strong> 38 missing results for <code>sales_performance</code> (its 5 static checks pass) and 14 for <code>customer_orders</code>, because nobody has deployed either example. We never write evidence by hand, never copy it to a new digest, and never weaken a check to make G4 pass. A failing G4 is the correct state for a product that has not run.">
+  data-notes-1="<strong>G4 today: 41 of 43.</strong> We deployed <code>sales_performance</code> to a sandbox project with the seed data and ran <code>dpf test run --live</code>. All 36 SQL tests and 5 static checks passed for build <code>sha256:fd95e365e03e&hellip;</code>. G4 still fails, and that is correct: AT-5 and AT-8 are human checks, and nobody in Finance or Merchandising has recorded them yet. <code>customer_orders</code> is not deployed, so its 14 tests are missing. We never write evidence by hand, never copy it to a new digest, and never weaken a check to make G4 pass.">
   <div class="slide-header">
     <span class="badge">G4 &middot; Test</span>
     <h2>Evidence counts only for the exact build that was tested</h2>
@@ -901,17 +904,17 @@ body.show-chrome #chrome { opacity: 1; transform: none; pointer-events: auto; }
       <div class="card acc-blue">
         <div class="icon blue"><svg class="ico"><use href="#i-hash"/></svg></div>
         <h3 class="big">Tied to one build</h3>
-        <div class="digest-pill">sha256:36ae98b93fb1&hellip;</div>
+        <div class="digest-pill">sha256:fd95e365e03e&hellip;</div>
         <p class="p-lg">New input, new digest: old evidence is stale.</p>
       </div>
       <div class="card acc-red" data-build="1">
         <div class="icon red"><svg class="ico"><use href="#i-x"/></svg></div>
         <h3 class="big">G4 today</h3>
         <div class="ev-stats">
-          <div><span class="ev-num">38</span><span class="ev-label">missing &middot; <code>sales_performance</code></span></div>
+          <div><span class="ev-num ok">41/43</span><span class="ev-label">pass &middot; <code>sales_performance</code></span></div>
           <div><span class="ev-num">14</span><span class="ev-label">missing &middot; <code>customer_orders</code></span></div>
         </div>
-        <p class="p-lg">Nobody has deployed them, so G4 fails.</p>
+        <p class="p-lg">Two human checks wait for sign-off, so G4 fails.</p>
       </div>
     </div>
   </div>
@@ -1059,11 +1062,11 @@ body.show-chrome #chrome { opacity: 1; transform: none; pointer-events: auto; }
 
 <!-- ================= 15 · VERIFIED ================= -->
 <div class="s" data-idx="15" data-steps="1"
-  data-notes="<strong>What we verified.</strong> <code>dpf check --all --gate G3</code> passes for both examples. All 19 behavioural evals pass. pytest: 170 unit and contract tests pass on Python 3.10 and 3.13. <code>openspec validate --all --strict</code> passes, so the specs work with the official OpenSpec CLI."
+  data-notes="<strong>What we verified.</strong> <code>dpf check --all --gate G3</code> passes for both examples. All 19 behavioural evals pass. pytest: 171 unit and contract tests pass on Python 3.10 and 3.13. <code>openspec validate --all --strict</code> passes, so the specs work with the official OpenSpec CLI."
   data-notes-1="<strong>Real tools, real output.</strong> On the golden copies, <code>terraform fmt -check</code> and <code>terraform validate</code> pass; Dataform compile reports 0 errors; and <code>dbt parse</code> on the dbt version of the same product finds 18 models, 36 tests and 4 sources. CI runs three jobs: OpenSpec strict; gates, golden copies, evals and tests; and a real-tool compile of the golden copies. Tools are pinned: hash-locked Python requirements, OpenSpec CLI 1.14.0, Dataform CLI 3.0.71, dbt-core 1.12.5 with dbt-bigquery 1.12.1, and Terraform 1.9.8.">
   <div class="slide-header">
     <span class="badge">Verified</span>
-    <h2>Our checks and real tools pass; only live evidence is missing</h2>
+    <h2>Our checks and real tools pass before anything is deployed</h2>
   </div>
   <div class="body">
     <div class="ver-row">
@@ -1071,7 +1074,7 @@ body.show-chrome #chrome { opacity: 1; transform: none; pointer-events: auto; }
       <div class="grid-4">
         <div class="metric-card"><div class="m-num">G0&ndash;G3</div><div class="m-label">both examples</div></div>
         <div class="metric-card"><div class="m-num">19/19</div><div class="m-label">evals pass</div></div>
-        <div class="metric-card"><div class="m-num">170</div><div class="m-label">tests pass (pytest)</div></div>
+        <div class="metric-card"><div class="m-num">171</div><div class="m-label">tests pass (pytest)</div></div>
         <div class="metric-card"><div class="m-num">OpenSpec</div><div class="m-label">strict mode passes</div></div>
       </div>
     </div>
@@ -1086,8 +1089,39 @@ body.show-chrome #chrome { opacity: 1; transform: none; pointer-events: auto; }
   </div>
 </div>
 
-<!-- ================= 16 · DEVIATIONS ================= -->
-<div class="s" data-idx="16"
+<!-- ================= 16 · SANDBOX ================= -->
+<div class="s" data-idx="16" data-steps="1"
+  data-notes="<strong>We deployed it.</strong> <code>sales_performance</code> now runs in a sandbox project, <code>data-product-framework</code> in <code>us-central1</code>: 37 Terraform resources, a Dataform repository and the seed data, which needs no Oracle. A full refresh ran 54 of 54 actions. <code>dpf test run --live</code> passed all 36 SQL tests and 5 static checks: 41 of 43. The other two are the Finance and Merchandising sign-offs. Then we tested R-11 for real. We landed an order line with no customer. The reject gate stopped the hourly run, 13 downstream actions were skipped, and gold kept its last good state. When the corrected line landed, the next hourly run succeeded, and a full refresh, which seeded data needs, published the order."
+  data-notes-1="<strong>What it found.</strong> Four problems that the offline gates could not see. <strong>One:</strong> BigQuery rejected the AT-3 query. Its aliases reused column names, which made an aggregate of an aggregate, and compile and parse do not run SQL. <strong>Two:</strong> a repository hosted by Dataform, with strict act-as checks, refuses a schedule on the release configuration. A new variable, <code>dataform_release_schedule</code>, turns the schedule off, and each deploy then compiles and releases. <strong>Three:</strong> the BigQuery sharing listing failed with user credentials that had no billing project; the example wrapper now sets one. <strong>Four:</strong> the Knowledge Catalog quality scans need their tables, so you apply Terraform again after the first build. The fixes are in the generator, the golden copies, the wrapper and the runbook. The run also corrected one runbook claim: loading both seed phases before the first build does not lose history.">
+  <div class="slide-header">
+    <span class="badge">Sandbox</span>
+    <h2>A sandbox deployment proved the loop and found four problems</h2>
+  </div>
+  <div class="body">
+    <div class="split">
+      <div class="card acc-green prio-col">
+        <div class="side-label green">Proved live</div>
+        <ul class="ticks">
+          <li><svg class="ico"><use href="#i-check"/></svg>41 of 43 tests pass</li>
+          <li><svg class="ico"><use href="#i-check"/></svg>Bad row stopped publication</li>
+          <li><svg class="ico"><use href="#i-check"/></svg>Corrected order then published</li>
+        </ul>
+      </div>
+      <div class="card acc-yellow prio-col" data-build="1">
+        <div class="side-label yellow">Found and fixed</div>
+        <ul class="ticks warn">
+          <li><svg class="ico"><use href="#i-alert"/></svg>Test query rejected by BigQuery</li>
+          <li><svg class="ico"><use href="#i-alert"/></svg>Release schedule blocked by permissions</li>
+          <li><svg class="ico"><use href="#i-alert"/></svg>Sharing needed a billing project</li>
+          <li><svg class="ico"><use href="#i-alert"/></svg>Quality scans need tables first</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 17 · DEVIATIONS ================= -->
+<div class="s" data-idx="17"
   data-notes="<strong>Where we differed from the review, and why.</strong> <strong>One:</strong> the review suggested making <code>brd.yaml</code> the only source and rendering the markdown from it. We kept the markdown specs as the source of truth for requirement text, and <code>brd.yaml</code> holds rubric answers only, so OpenSpec deltas and archive keep working. <strong>Two:</strong> the review suggested flattening the nested spec folders, in case OpenSpec could not see them. We tested with OpenSpec 1.14: it discovers nested folders, so we kept the structure. <strong>Three:</strong> the review suggested compiling at G3. G3 compiles nothing against BigQuery, so it needs no credentials; the real-tool compile of the golden copies runs in CI instead.">
   <div class="slide-header">
     <span class="badge">Where we differed</span>
@@ -1114,9 +1148,9 @@ body.show-chrome #chrome { opacity: 1; transform: none; pointer-events: auto; }
   </div>
 </div>
 
-<!-- ================= 17 · KNOWN LIMITS ================= -->
-<div class="s" data-idx="17"
-  data-notes="<strong>Known limits.</strong> <strong>Freshness</strong> measures when a table was last rebuilt, not when the source last changed, so a healthy hourly build over a stalled extract looks fresh. The volume check and the <code>extract_failed</code> alert cover that case. <strong>Engines:</strong> the Dataform and dbt adapters are implemented; Dataflow and Spark are planned only, and compose refuses a model whose adapter is only planned. <strong>Sign-offs:</strong> the example signatures say &quot;Sales Operations (example)&quot;; they are not real approvals. <strong>Evidence:</strong> there is none yet, so G4 fails until someone deploys an example and records real runs.">
+<!-- ================= 18 · KNOWN LIMITS ================= -->
+<div class="s" data-idx="18"
+  data-notes="<strong>Known limits.</strong> <strong>Freshness</strong> measures when a table was last rebuilt, not when the source last changed, so a healthy hourly build over a stalled extract looks fresh. The volume check and the <code>extract_failed</code> alert cover that case. <strong>Engines:</strong> the Dataform and dbt adapters are implemented; Dataflow and Spark are planned only, and compose refuses a model whose adapter is only planned. <strong>Sign-offs:</strong> the example signatures say &quot;Sales Operations (example)&quot;; they are not real approvals. <strong>Evidence:</strong> the sandbox run recorded real evidence for 41 of the 43 <code>sales_performance</code> tests. AT-5 and AT-8 are human checks: someone in Finance and someone in Merchandising must record them with <code>dpf test attest</code>, and G4 fails until they do. <code>customer_orders</code> is not deployed. <strong>Seed data:</strong> the seed holds a few rows, so in the sandbox the daily volume check (OB-3) breaches. That is expected.">
   <div class="slide-header">
     <span class="badge">Limits</span>
     <h2>Known limits are written down, not hidden</h2>
@@ -1137,14 +1171,14 @@ body.show-chrome #chrome { opacity: 1; transform: none; pointer-events: auto; }
       </div>
       <div class="card limit">
         <div class="icon green"><svg class="ico"><use href="#i-flag"/></svg></div>
-        <div><h3>No evidence yet</h3><p class="p-lg" style="margin-top:6px">G4 fails until someone deploys</p></div>
+        <div><h3>Two human checks wait</h3><p class="p-lg" style="margin-top:6px">Finance and Merchandising must record them</p></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ================= 18 · GET STARTED ================= -->
-<div class="s" data-idx="18"
+<!-- ================= 19 · GET STARTED ================= -->
+<div class="s" data-idx="19"
   data-notes="<strong>Getting started.</strong> Everything up to G3 runs locally, with no Google Cloud credentials. <code>pip install -e '.[dev]'</code> gives you <code>dpf</code>; <code>make install</code> installs the hash-locked versions that CI uses. <code>dpf check --all --gate G3</code> runs both examples through G0 to G3. <code>dpf generate sales_performance</code> writes <code>generated/sales_performance/</code>. <code>dpf trace sales_performance --print</code> prints the matrix. <code>dpf init ../my-workspace</code> copies the framework with an empty registry and no example material. The user guide is <code>docs/user-guide.md</code>.">
   <div class="slide-header">
     <span class="badge">Get started</span>
@@ -1164,29 +1198,29 @@ body.show-chrome #chrome { opacity: 1; transform: none; pointer-events: auto; }
   </div>
 </div>
 
-<!-- ================= 19 · DECISIONS ================= -->
-<div class="s" data-idx="19"
-  data-notes="<strong>Decisions we need.</strong> <strong>One:</strong> deploy one example, ideally <code>sales_performance</code> with the seed fixtures, which need no Oracle, and record real evidence. That is the only way G4 can pass, and it proves the deployed loop, including the reject gate and monitoring. <strong>Two:</strong> approve publishing this deck to the presentation server. <strong>Three:</strong> approve pushing the reworked framework to GitHub, so reviewers can see it and CI runs there. Questions?">
+<!-- ================= 20 · DECISIONS ================= -->
+<div class="s" data-idx="20"
+  data-notes="<strong>Decisions we need.</strong> <strong>One:</strong> name the two people who record the human checks. AT-5: Finance confirms that March net sales reconcile with reported revenue, or accepts the explained variance. AT-8: Merchandising confirms that the product categories match their range. Each person records the result with <code>dpf test attest</code>, and then G4 can pass. <strong>Two:</strong> keep the sandbox or remove it. It runs every hour, and with seed data the volume check fails every day. <code>terraform destroy</code> in the example wrapper removes it. <strong>Three:</strong> choose who receives alerts. The alert policies exist, but <code>alert_channel</code> is empty, so they notify nobody. Questions?">
   <div class="slide-header">
     <span class="badge">Decisions needed</span>
-    <h2>Three decisions take DPF from checked design to running product</h2>
+    <h2>Three decisions turn the sandbox run into a working product</h2>
   </div>
   <div class="body">
     <div class="grid-3">
       <div class="card acc-blue">
         <div class="num-badge blue">1</div>
-        <h3>Deploy one example</h3>
-        <p class="p-lg">Record real evidence so G4 can pass</p>
+        <h3>Name two attesters</h3>
+        <p class="p-lg">Finance signs AT-5; Merchandising signs AT-8</p>
       </div>
       <div class="card acc-yellow">
         <div class="num-badge yellow">2</div>
-        <h3>Publish this deck</h3>
-        <p class="p-lg">Share it on the presentation server</p>
+        <h3>Keep or remove the sandbox</h3>
+        <p class="p-lg">It runs hourly; seed data fails the volume check</p>
       </div>
       <div class="card acc-green">
         <div class="num-badge green">3</div>
-        <h3>Push to GitHub</h3>
-        <p class="p-lg">Reviewers and CI see the reworked framework</p>
+        <h3>Choose who gets alerts</h3>
+        <p class="p-lg">Alerts fire, but nobody is notified</p>
       </div>
     </div>
   </div>

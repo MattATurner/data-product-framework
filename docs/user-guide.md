@@ -165,23 +165,24 @@ prints one line per check, about 200 lines.
 [Section 5](#5-take-one-product-from-brd-to-monitoring) runs every other command on one
 example.
 
-### Expect G4 to fail on the examples
+### Expect G4 to fail until the business attests
 
 ```text
 $ dpf check sales_performance --gate G4 --quiet
 
 G4 · evidence — sales_performance
-FAIL | grain:stg_customers (automated): no evidence for build sha256:36ae98b93fb1… (`dpf test run sales_performance --live`)
-…
-FAIL | acceptance:AT-8 (attestation): no evidence for build sha256:36ae98b93fb1… (`dpf test attest sales_performance AT-8 --by <name> --role merchandising`)
-FAIL | acceptance:AT-9 (automated): no evidence for build sha256:36ae98b93fb1… (`dpf test run sales_performance --live`)
+FAIL | acceptance:AT-5 (attestation): no evidence for build sha256:fd95e365e03e… (`dpf test attest sales_performance AT-5 --by <name> --role finance`)
+FAIL | acceptance:AT-8 (attestation): no evidence for build sha256:fd95e365e03e… (`dpf test attest sales_performance AT-8 --by <name> --role merchandising`)
 
-38 failure(s), 0 warning(s)
+2 failure(s), 0 warning(s)
 ```
 
-This is the honest state. Nobody has deployed the examples, so no evidence exists.
-`customer_orders` fails G4 with 14 failures for the same reason. Each failure names the
-command that would produce the missing evidence.
+`sales_performance` was deployed to a sandbox project on 5 October 2026
+([section 5.6](#56-deploy-the-product)). 41 of its 43 test cases pass: 36 SQL cases with
+committed evidence and 5 static checks. The two left are attestations: a person from Finance
+and one from Merchandising must check the figures. `customer_orders` has not been deployed,
+so it fails G4 with 14 missing results. Each failure names the command that would produce
+the missing evidence.
 
 ### Read a report
 
@@ -459,7 +460,7 @@ graph whose nodes are skills and whose edges name the contract they carry.
 $ dpf generate sales_performance
 
 G3 · generate artefacts — sales_performance
-  ok | rendered 93 files (36 assertions, 43 test cases); build digest sha256:36ae98b93fb1…
+  ok | rendered 93 files (36 assertions, 43 test cases); build digest sha256:fd95e365e03e…
      | wrote generated/sales_performance/
 
 all checks passed (0 warning(s))
@@ -480,28 +481,33 @@ G3 · traceability — sales_performance
   ok | every requirement has a TDD decision (13)
   ok | every requirement reaches a generated artefact (13)
   ok | every requirement is verified by at least one test (13)
-     | evidence by requirement: 12 missing, 1 passed (evaluated at G4)
+     | evidence by requirement: 2 missing, 11 passed (evaluated at G4)
      | wrote generated/sales_performance/trace.md and trace.json
 …
 | Requirement | Scenarios | Decisions | Elements | Artefacts | Tests | Evidence |
 |---|---|---|---|---|---|---|
-| R-1 Segment performance | AX-1 | D-2, D-7, D-15 | 3 | 4 | 5 | missing |
+| R-1 Segment performance | AX-1 | D-2, D-7, D-15 | 3 | 4 | 5 | passed |
+…
+| R-5 Agreement with Finance | AX-5 | D-1, D-6 | 1 | 1 | 5 | missing |
+| R-6 Agreement with the product range | AX-7, AX-8 | D-1, D-5, D-6 | 2 | 5 | 8 | missing |
 …
 | R-10 Hourly availability during the working day | AX-11 | D-10, D-11, D-18 | 3 | 3 | 1 | passed |
 …
 ```
 
 After the table, `trace.md` has one section per requirement that lists its decisions, design
-elements, artefacts, tests and evidence. R-10 already shows "passed". Its only test is the
-static check AT-11, which `dpf` can evaluate without a deployment.
+elements, artefacts, tests and evidence. With the sandbox evidence, 11 requirements show
+"passed". R-5 and R-6 show "missing" until AT-5 and AT-8 are attested. R-10's only test is
+the static check AT-11, which `dpf` evaluates without a deployment.
 
 **Failure: the build no longer matches the golden copy.** In a scratch copy, one comment line
-was added to `sql/sales_performance_monthly.sql`. G4 includes G3, so it shows the problem:
+was added to the end of `sql/sales_performance_monthly.sql`. G4 includes G3, so it shows the
+problem:
 
 ```text
 $ dpf check sales_performance --gate G4
 …
-  ok | rendered 93 files (36 assertions, 43 test cases); build digest sha256:511226590c5a…
+  ok | rendered 93 files (36 assertions, 43 test cases); build digest sha256:9de2bf2abc6b…
   ok | generation is deterministic (two runs are byte-identical)
 FAIL | differs from golden copy: differs README.md; differs dataform/definitions/gold/sales_performance_monthly.sqlx; differs test-spec.json; differs MANIFEST.json
 …
@@ -513,34 +519,62 @@ the diff. If it is what you intended, accept it with
 
 ### 5.6 Deploy the product
 
-`dpf` does not deploy. These steps come from the
-[runbook](../examples/sales_performance/RUNBOOK.md). They need a Google Cloud project and were
-not run for this guide.
+`dpf` does not deploy. The [runbook](../examples/sales_performance/RUNBOOK.md) has the full
+procedure. It was run end to end on 5 October 2026 in a sandbox project
+(`data-product-framework`, `us-central1`) with Terraform 1.9.8 and the `google` and
+`google-beta` providers 8.5.0.
+
+**Prerequisites, once per project.** The module creates none of these. The
+[wrapper README](../examples/sales_performance/terraform/README.md) lists the APIs and roles.
+
+- the APIs, and the service agents for Knowledge Catalog, Dataform and BigQuery Data Transfer
+- the three groups named in `terraform.tfvars`
+- a Dataform service account and a monitor service account
+- the Dataform repository
 
 ```bash
 dpf generate sales_performance                     # the module and the Dataform project
 cd examples/sales_performance/terraform            # the wrapper root module
-cp terraform.tfvars.example terraform.tfvars       # groups, Dataform repository, alert channel
+cp terraform.tfvars.example terraform.tfvars       # groups, repository, service accounts
 terraform init && terraform apply                  # before the first extract
 ```
 
-1. Push `generated/sales_performance/dataform/` to the default branch of the Dataform
-   repository named in the Terraform variable `dataform_repository`.
-2. Load data: the seed fixtures in phases, or the extractor against the real Oracle source.
-3. Build. The workflow configurations run the `hourly` and `monthly` tags. By hand, run
-   `npx @dataform/cli@3 run` in `generated/sales_performance/dataform`.
+1. Push `generated/sales_performance/dataform/` to the default branch of the repository.
+2. Release it. The workflow configurations run only the current release. A Git-connected
+   repository compiles the default branch every hour. A Dataform-hosted repository rejects
+   automatic release under strict act-as checks: set `dataform_release_schedule = ""` and
+   run the two API calls in runbook step 1 after every push.
+3. Load data: the seed fixtures, or the extractor against the real Oracle source.
+4. Build with a full refresh. The seed dates are fixed (March to June 2026), and an
+   incremental run restates only the last 90 days of `fct_order_line`.
+5. Run `terraform apply` again. The two quality scans need their tables, so the first apply
+   cannot create them.
 
-Load the seed in phases with a build between them (`generate_seed.py --phase 1 --load`, build,
-`--phase 2 --load`, build). A Type 2 dimension records history as changes arrive. If you load
-both states at once, staging keeps only the latest one and the earlier version is lost. Load
-phase 3 (a line with no customer) after you record evidence: it proves that the reject gate
-stops publication.
+What the sandbox run produced:
+
+| Step | Result |
+|---|---|
+| `terraform apply`, twice | 37 resources |
+| seed phases 1 and 2, full-refresh build | 54 of 54 actions succeeded (18 tables, 36 assertions) |
+| `dpf test run --live` | 41 of 41 cases passed ([section 5.7](#57-g4-record-evidence-for-the-current-build)) |
+| seed phase 3, `hourly` run | the reject gate failed; `fct_order_line`, the gold views and their assertions were skipped |
+| seed phase 4, `hourly` run | 44 of 44 actions succeeded |
+| seed phase 4, full refresh | 54 of 54 actions succeeded; SO-1005 in gold under C-002, no rejects |
+
+Each seed phase is one landing, as the extractor would deliver it. Raw keeps every landed
+version and the dimensions rebuild from `stg_<entity>_history`, so the history is the same
+whether you build between phases or once after both: the full refresh kept both versions of
+C-001. Load phase 3 (a line with no customer) only after you record evidence, then phase 4
+(the corrected order) to recover.
+
+The deployment also found four problems that the offline gates cannot see.
+[Section 15](#15-limitations-and-roadmap) lists them with their fixes.
 
 ### 5.7 G4: record evidence for the current build
 
 ```text
 $ dpf test plan sales_performance
-Test specification — sales_performance (43 cases, build sha256:36ae98b93fb1…)
+Test specification — sales_performance (43 cases, build sha256:fd95e365e03e…)
 
 case                                                       method      sev   satisfies / verifies
 grain:stg_customers                                        automated   block R-4
@@ -565,8 +599,26 @@ dpf test attest sales_performance AT-8 --by "<name>" --role merchandising
 dpf check sales_performance --gate G4
 ```
 
-Today, with no deployment, G4 passes only the five static cases and ends with
-`evidence: 38 missing, 5 passed` and `38 failure(s), 0 warning(s)`.
+The live run against the sandbox, after seed phases 1 and 2 and a full-refresh build:
+
+```text
+$ dpf test run sales_performance --live --env test
+
+test run — sales_performance
+  ok | acceptance:AT-10 passed
+…
+  ok | grain:stg_customers: 0 failing row(s)
+…
+  ok | reject_gate:stg_order_lines: 0 failing row(s)
+…
+  ok | acceptance:AT-9: 0 failing row(s)
+     | recorded evidence/sales_performance/run-20261005T224325Z.json
+
+all checks passed (0 warning(s))
+```
+
+G4 then ends with `evidence: 2 missing, 41 passed` and `2 failure(s), 0 warning(s)`: only
+the attestations are missing ([section 3](#expect-g4-to-fail-until-the-business-attests)).
 
 **Attestation, step by step (scratch copy).** The role must match `attested_by_role`:
 
@@ -578,21 +630,21 @@ FAIL | AT-5 must be attested by role 'finance', not 'sales'
 $ dpf test attest sales_performance AT-5 --by "Jane Doe" --role finance --note "Reconciled March net sales to the GL"
 
 attest — sales_performance AT-5
-  ok | recorded attestation of AT-5 by Jane Doe (finance) for build sha256:36ae98b93fb1…
+  ok | recorded attestation of AT-5 by Jane Doe (finance) for build sha256:fd95e365e03e…
 
 all checks passed (0 warning(s))
 ```
 
-This wrote `evidence/sales_performance/attest-AT-5-20261005T034423Z.json` (contract
+This wrote `evidence/sales_performance/attest-AT-5-20261005T230940Z.json` (contract
 `test-evidence.v1`), shown here with the result on one line:
 
 ```json
 {
   "product_id": "sales_performance",
-  "artefact_digest": "sha256:36ae98b93fb145497a614c67a8e4864cf08a3688f1c683d88cde0f5b6a444371",
-  "run_id": "attest-AT-5-20261005T034423Z",
+  "artefact_digest": "sha256:fd95e365e03eed9594a297522851eb28d9cf553f8e12d2a566277ca023b17cbe",
+  "run_id": "attest-AT-5-20261005T230940Z",
   "environment": "test",
-  "recorded_at": "2026-10-05T03:44:23Z",
+  "recorded_at": "2026-10-05T23:09:40Z",
   "results": [
     {"test_id": "acceptance:AT-5", "status": "passed", "attested_by": "Jane Doe (finance)", …}
   ]
@@ -600,24 +652,27 @@ This wrote `evidence/sales_performance/attest-AT-5-20261005T034423Z.json` (contr
 ```
 
 G4 then reports `ok | acceptance:AT-5 (attestation) passed` and
-`evidence: 37 missing, 6 passed`.
+`evidence: 1 missing, 42 passed`. Jane Doe is a made-up name, and this attestation exists
+only in the scratch copy.
 
 **Failure: evidence for an older build.** After the attestation, the comment line from
 [section 5.5](#55-g3-generate-the-files-and-trace-every-requirement) was added to the SQL body
-in the same scratch copy. The build digest changed, so the attestation no longer counts:
+in the same scratch copy. The build digest changed, so neither the sandbox run nor the
+attestation counts any more:
 
 ```text
 $ dpf check sales_performance --gate G4
 …
 FAIL | acceptance:AT-5 (attestation): evidence is for an older build digest; re-run against the current build
 …
-     | evidence: 37 missing, 5 passed, 1 stale
+     | evidence: 1 missing, 5 passed, 37 stale
 
 39 failure(s), 0 warning(s)
 ```
 
-This is deliberate. Evidence proves that one exact build works. A change to any input makes a
-new build that needs new evidence.
+The 39 failures are the 37 stale results, the missing AT-8 and the golden-copy difference.
+Stale results fail even for the two warn-level cases. This is deliberate. Evidence proves that
+one exact build works. A change to any input makes a new build that needs new evidence.
 
 ### 5.8 Monitor the deployed product
 
@@ -650,6 +705,23 @@ The folder holds `.openspec.yaml`, `proposal.md`, `design.md`, `verification.md`
 90 min limit, R-10) and links the runbook section `#freshness-or-volume-breach`. The
 `.openspec.yaml` sets `skip_specs: true`. An operational fix has no spec delta until the
 investigation shows that a requirement or decision must change.
+
+Without `--evidence`, `dpf monitor` reads the deployed tables. Against the sandbox, at 06:45
+on a Tuesday in Perth:
+
+```text
+$ dpf monitor sales_performance
+
+monitor — sales_performance
+  ok | OB-1: 2026-10-05T22:45:13+00:00 is outside the business calendar (MON TUE WED THU FRI 08:00-18:00 Australia/Perth); not evaluated
+  ok | OB-2: sales_performance_partner_extract is 4 minutes old (limit 46080)
+FAIL | volume OB-3: fct_order_line holds 0 rows per P1D (expected 16000–64000)
+
+1 failure(s), 0 warning(s)
+```
+
+The OB-3 breach is expected: `fct_order_line` held five seed lines, all dated March to June
+2026, so none was dated yesterday.
 
 ## 6. Write the product documents
 
@@ -1015,7 +1087,7 @@ The generated module has no provider blocks. Files appear only when the manifest
 | `access.tf` | dataset access grants and authorised views (`google_bigquery_dataset_access`) |
 | `governance.tf` | taxonomy, policy tag, data masking policy, masked-reader and fine-grained-reader grants |
 | `sharing.tf` | BigQuery sharing exchange and listing with restricted query results (`google_bigquery_analytics_hub_*`), and an optional subscriber |
-| `orchestration.tf` | Dataform only: a release configuration that compiles hourly, and one workflow configuration per schedule |
+| `orchestration.tf` | Dataform only: a release configuration that compiles hourly (`dataform_release_schedule`; set it to `""` for a Dataform-hosted repository and release on each deploy), and one workflow configuration per schedule |
 | `monitoring.tf` | scheduled freshness and volume queries that raise `ERROR()` on breach; log-based metrics and alert policies that link the runbook |
 | `quality.tf` | Knowledge Catalog data quality scans (`google_dataplex_datascan`) for `observability.quality_scans` |
 | `control.tf` | control tables `extract_watermark`, `landing_manifest`, `schema_registry` |
@@ -1033,7 +1105,7 @@ The build digest covers the dpf version, the generator code (`dpf/generate/*.py`
 choice, the manifest, the acceptance mapping, the sign-off, the BRD version, the SQL bodies,
 the registry with any overlay, and the packs, rules and adapters. It does not cover skills or
 the text of the spec files. The dbt rendering of the same product has its own digest
-(`sha256:0f8650494eaf…` today), because the engine is an input.
+(`sha256:9ba387ecb6b4…` today), because the engine is an input.
 
 ### Golden copies and determinism
 
@@ -1077,8 +1149,8 @@ A new product has no golden copy, so G3 fails until you create one with
 - A result counts only when its `artefact_digest` equals the current build digest. Results for
   any other digest are stale. For each test id, the latest result wins.
 - Static cases need no evidence file. `dpf` evaluates them again at every G4 run.
-- A missing result always fails, even for a warn-level case. A warn-level case that ran and
-  failed is only a warning.
+- A missing or stale result always fails, even for a warn-level case. A warn-level case that
+  ran on this build and failed is only a warning.
 - Commit the evidence files. They are the acceptance pack for that build.
 
 ### How a live run works
@@ -1394,7 +1466,7 @@ go **after** the subcommand, for example `dpf check --all --gate G3 --json`.
 | Exit code | Meaning | Example |
 |---|---|---|
 | 0 | every check passed (warnings allowed) | `all checks passed (0 warning(s))` |
-| 1 | at least one failure | `38 failure(s), 0 warning(s)` |
+| 1 | at least one failure | `2 failure(s), 0 warning(s)` |
 | 2 | usage error | `unknown product 'nope' (known: customer_orders, sales_performance)` |
 
 With `--json`, the report is one JSON object with `failures`, `warnings` and `entries`. In
@@ -1423,6 +1495,10 @@ All messages below are real output from this guide's runs.
 | `../my-workspace exists and is not empty` | `dpf init` into a used folder | choose an empty folder |
 | `unknown product 'nope' (known: customer_orders, sales_performance)` | a wrong product id (exit code 2) | use a known id |
 | `name a product or pass --all` | no product given (exit code 2) | add the product id or `--all` |
+| `Aggregations of aggregations are not allowed at [20:29]` (Dataform assertion `acceptance_at_3`) | a select alias had the same name as a column used in `HAVING`, so BigQuery read `MAX(quantity)` as `MAX(MAX(quantity))` | give each aggregate its own alias. G3 cannot catch SQL meaning; only a deployed run does |
+| `Automatic release is not supported in first-party repositories that enabled strictActAsChecks.` | a cron schedule on the release configuration of a Dataform-hosted repository | set `dataform_release_schedule = ""` and release on each deploy (runbook step 1) |
+| `git_commitish is not specified` | the release PATCH body had only `releaseCompilationResult` | send `gitCommitish` in the body too |
+| `Error creating Datascan: … The source BigQuery table of the data scan is not found` | the first `terraform apply` on a new project runs before the tables exist | build once, then apply again |
 
 If a check fails in CI but not locally, compare `dpf --version` and the build digest. A
 different generator version gives a different digest.
@@ -1431,11 +1507,19 @@ different generator version gives a different digest.
 
 ### Known limitations
 
-- **G4 needs a real deployment.** The examples have no evidence, so G4 fails for both:
-  `sales_performance` with 38 failures and `customer_orders` with 14. Their sign-offs are
-  example signatures by "Sales Operations (example)".
-- **No BigQuery dry run in G3.** G0 to G3 run offline. SQL errors show up only when the real
-  tools compile the code (the CI `artefacts` job) or at deployment.
+- **G4 needs a real deployment and real people.** `sales_performance` was deployed to a
+  sandbox: 41 of its 43 cases pass, and AT-5 and AT-8 wait for Finance and Merchandising.
+  `customer_orders` has not been deployed and fails G4 with 14 missing results. The
+  sign-offs are example signatures by "Sales Operations (example)".
+- **No BigQuery dry run in G3.** G0 to G3 run offline. Dataform `compile` and dbt `parse`
+  check syntax and references, not what the SQL means. The sandbox found an AT-3 query that
+  compiled cleanly and failed in BigQuery. Only a deployed run catches this.
+- **Seeded environments need a full refresh.** The seed dates are fixed (March to June 2026)
+  and an incremental run restates only the last 90 days, so older seed lines never reach the
+  fact without a full refresh.
+- **The module assumes a prepared project.** APIs, service agents, groups, service accounts
+  and the Dataform repository must exist first, and the first apply fails on the quality
+  scans until the tables exist ([section 5.6](#56-deploy-the-product)).
 - **Freshness measures rebuild time.** The checks read `__TABLES__.last_modified_time`. A
   healthy hourly build over a stalled extract looks fresh. The volume check and the
   `extract_failed` alert cover that case.
@@ -1443,7 +1527,8 @@ different generator version gives a different digest.
   but Dataform marks the invocation failed, so the `pipeline_failed` alert fires. Check which
   assertion failed before you act.
 - **dbt needs the policy tag variables.** Pass `policy_tag_*` with `--vars` from
-  `terraform output policy_tags`. An empty tag fails the build.
+  `terraform output policy_tags`. An empty tag fails the build. The Dataform CLI does not
+  fail: with an empty variable it builds the table without the tag, so always pass it.
 - **As-at joins use the start of the day.** Facts use the dimension version that was valid at
   the start of the event date in the business timezone. A change made during a day applies to
   that day's facts only from the next day.
@@ -1455,10 +1540,25 @@ different generator version gives a different digest.
   `status: published`, regenerate and deploy, then record evidence for that build (see the
   runbook, section 5).
 
+### Found by the sandbox deployment
+
+| Problem | Why the offline gates missed it | Fix |
+|---|---|---|
+| AT-3 used `quantity` and `net_amount` as aliases, so `HAVING MAX(quantity)` became an aggregate of an aggregate | compile and parse do not run SQL | aliases `max_quantity` and `max_net_amount`. In BigQuery the corrected query passes on the seed and fails when the expected quantity is changed to 7 |
+| A Dataform-hosted repository rejects a cron on the release configuration (strict act-as checks) | `terraform validate` cannot know the repository type | new variable `dataform_release_schedule`. Set it to `""` and release on each deploy |
+| The BigQuery sharing listing failed with user credentials that had no quota project | the provider decides this at apply time | the wrapper sets `billing_project` and `user_project_override` |
+| The quality scans need their tables | the order spans two tools: Terraform, then Dataform | apply again after the first build |
+
+The deployment also corrected a documentation claim. The runbook said that loading both seed
+phases before building loses the first version of a Type 2 row. It does not: raw keeps every
+landed version, the dimensions rebuild from `stg_<entity>_history`, and the sandbox full
+refresh kept both versions of C-001.
+
 ### Verified with the real tools
 
 The maintainers ran these tools on the current golden copies. CI repeats the tool checks on
-every push (the `artefacts` job).
+every push (the `artefacts` job). The sandbox rows come from the deployment on 5 October
+2026; CI does not repeat them.
 
 | Tool and version | Result |
 |---|---|
@@ -1466,7 +1566,11 @@ every push (the `artefacts` job).
 | `dbt-core` 1.12.5 with `dbt-bigquery` 1.12.1, `parse` | the dbt rendering of `sales_performance`: 18 models, 36 tests, 4 sources |
 | Terraform 1.9.8, `fmt -check` and `validate` | pass for all three golden modules (one per product, plus the dbt rendering) and for the example wrapper around the generated module |
 | OpenSpec 1.14.0, `validate --all --strict` | 21 of 21 items pass |
-| `pytest` | 170 tests pass on Python 3.10 and 3.13 |
+| `pytest` | 171 tests pass on Python 3.10 and 3.13 |
+| Sandbox: Terraform 1.9.8, `google` and `google-beta` 8.5.0, `apply` | 37 resources in `data-product-framework` (`us-central1`) |
+| Sandbox: Dataform service, core 3.0.0 | full refresh 54 of 54 actions; `hourly` run 44 of 44; with a rejected line the reject gate stopped the run |
+| Sandbox: `dpf test run --live` | 36 SQL cases and 5 static checks pass for build `sha256:fd95e365e03e…` |
+| Sandbox: `dpf monitor` | OB-2 within its limit; OB-3 breached, as expected with seed data; OB-1 not evaluated outside Perth working hours |
 
 ### Planned
 
