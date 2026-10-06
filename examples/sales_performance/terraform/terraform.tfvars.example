@@ -1,12 +1,16 @@
-# Copy to terraform.tfvars and fill in. Groups are Google group emails.
+# Copy to terraform.tfvars and fill in. Groups are Google group emails and must already exist.
 project_id           = "data-product-framework"
 region               = "us-central1"
 consumer_group       = "sales-consumers@example.com"
 analyst_group        = "analysts@example.com"
 contact_reader_group = "customer-contact-readers@example.com"
 dataform_repository  = "sales-performance"
+# Strict act-as checks (enforced for Dataform repositories) need a custom service account:
+# dataform_service_account   = "dataform-runner@data-product-framework.iam.gserviceaccount.com"
+# A Dataform-hosted repository (no Git remote) rejects automatic release: set "" and release on
+# each deploy (RUNBOOK step 1). A Git-connected repository can keep the hourly default.
+# dataform_release_schedule  = ""
+# monitor_service_account    = "dpf-monitor@data-product-framework.iam.gserviceaccount.com"
 # partner_subscriber         = "group:analytics@partner.example"
 # alert_channel              = "projects/data-product-framework/notificationChannels/1234567890"
-# dataform_service_account   = "dataform-runner@data-product-framework.iam.gserviceaccount.com"
-# monitor_service_account    = "dpf-monitor@data-product-framework.iam.gserviceaccount.com"
 # extractor_log_resource_type = "generic_node"

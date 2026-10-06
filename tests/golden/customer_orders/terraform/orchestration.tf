@@ -6,7 +6,7 @@ resource "google_dataform_repository_release_config" "product" {
   repository    = var.dataform_repository
   name          = "customer-orders"
   git_commitish = var.dataform_git_commitish
-  cron_schedule = "0 * * * *"
+  cron_schedule = var.dataform_release_schedule == "" ? null : var.dataform_release_schedule
   time_zone     = "Australia/Perth"
   code_compilation_config {
     default_database = var.project_id

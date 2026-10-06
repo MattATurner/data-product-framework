@@ -65,7 +65,7 @@ tests:
     model: fct_order_line
     description: SO-1001 line 2, landed three times, appears once with quantity 6 and net amount 810.00.
     sql: |
-      SELECT COUNT(*) AS line_rows, MAX(quantity) AS quantity, MAX(net_amount) AS net_amount
+      SELECT COUNT(*) AS line_rows, MAX(quantity) AS max_quantity, MAX(net_amount) AS max_net_amount
       FROM {{ ref('fct_order_line') }}
       WHERE order_id = 'SO-1001' AND order_line_no = 2
       HAVING COUNT(*) != 1 OR MAX(quantity) != 6 OR MAX(net_amount) != 810

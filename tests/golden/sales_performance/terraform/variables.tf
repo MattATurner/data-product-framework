@@ -44,8 +44,14 @@ variable "dataform_git_commitish" {
   default     = "main"
 }
 
+variable "dataform_release_schedule" {
+  description = "Cron for automatic release compilation. Empty: no automatic release, so each deploy compiles and releases (required for a Dataform-hosted repository with strict act-as checks)."
+  type        = string
+  default     = "0 * * * *"
+}
+
 variable "dataform_service_account" {
-  description = "Service account workflow invocations run as. Empty: the Dataform service agent."
+  description = "Service account workflow invocations run as (needed under strict act-as checks). Empty: the repository's default service account."
   type        = string
   default     = ""
 }

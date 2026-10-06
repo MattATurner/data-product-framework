@@ -12,6 +12,9 @@ examples/*/seed/out/
 *.tfstate
 *.tfstate.*
 terraform.tfvars
+# Provider locks: a lock made from a local plugin directory holds one platform's hash and
+# breaks `terraform init` elsewhere. Commit one only after `terraform providers lock`.
+.terraform.lock.hcl
 # Tool caches created when compiling generated or golden projects
 node_modules/
 .ci-profiles/

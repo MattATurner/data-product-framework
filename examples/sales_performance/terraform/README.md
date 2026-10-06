@@ -16,6 +16,29 @@ terraform apply
 
 Apply it **before the first extract**: it creates the control tables the extractor writes to.
 
+## Before you apply
+
+The example was deployed to a sandbox project to collect real G4 evidence. These are the
+prerequisites that deployment needed. The module creates none of them.
+
+| Prerequisite | Needed by |
+|---|---|
+| APIs: BigQuery, BigQuery Data Transfer, BigQuery Data Policy, BigQuery sharing (`analyticshub.googleapis.com`), Data Catalog, Dataform, Knowledge Catalog (`dataplex.googleapis.com`), Logging, Monitoring | every resource type in the module |
+| Service agents: `gcloud beta services identity create --service=<api>` for `dataplex`, `dataform` and `bigquerydatatransfer` | quality scans, workflow invocations, scheduled checks |
+| The three groups in `terraform.tfvars` must exist | dataset access, masked reader, fine-grained reader |
+| `dataform_service_account`: BigQuery Data Owner and Job User, Data Catalog Viewer, and membership of `contact_reader_group`. The Dataform service agent needs Service Account Token Creator on it | strict act-as checks need a custom service account; setting policy tags needs Data Owner plus Data Catalog Viewer; rebuilding `dim_customer` reads the tagged columns |
+| `monitor_service_account`: BigQuery Job User and Data Viewer. The Data Transfer service agent needs Service Account Token Creator on it | the scheduled freshness and volume checks |
+
+The wrapper bills API calls to the product project (`billing_project` with
+`user_project_override`). Without that, BigQuery sharing rejects user credentials that have
+no quota project.
+
+## Apply twice
+
+The quality scans check that their tables exist, so on a new project the first apply fails on
+the two `google_dataplex_datascan` resources. Everything else is created. Apply again after the
+first build.
+
 ## What the generated module creates
 
 | File | Resources | Traces to |
@@ -32,7 +55,12 @@ Apply it **before the first extract**: it creates the control tables the extract
 ## Not covered
 
 - **The Dataform repository itself.** `dataform_repository` names an existing repository
-  whose default branch holds the generated `dataform/` tree. Create it and connect Git in
-  the console or with `gcloud`; there is no MCP option yet (`registry/mcp_servers.yaml`).
+  whose default branch holds the generated `dataform/` tree. There is no MCP option yet
+  (`registry/mcp_servers.yaml`). Two set-ups work:
+  - **Git-connected.** Keep the default `dataform_release_schedule`: the release
+    configuration compiles the default branch every hour.
+  - **Dataform-hosted** (no Git remote). Strict act-as checks reject automatic release
+    there, so set `dataform_release_schedule = ""` and release on every deploy
+    (RUNBOOK step 1). The workflow configurations run only the current release.
 - **The extractor host.** `extract_oracle.py` runs beside the database (ADR-015); see
   `../extract/README.md`.

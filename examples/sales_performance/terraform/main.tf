@@ -19,14 +19,20 @@ terraform {
   }
 }
 
+# billing_project + user_project_override: with user Application Default Credentials there is
+# no quota project, and some APIs (BigQuery sharing) reject the call. Bill the product project.
 provider "google" {
-  project = var.project_id
-  region  = var.region
+  project               = var.project_id
+  region                = var.region
+  billing_project       = var.project_id
+  user_project_override = true
 }
 
 provider "google-beta" {
-  project = var.project_id
-  region  = var.region
+  project               = var.project_id
+  region                = var.region
+  billing_project       = var.project_id
+  user_project_override = true
 }
 
 module "sales_performance" {
@@ -40,6 +46,7 @@ module "sales_performance" {
   partner_subscriber          = var.partner_subscriber
   dataform_repository         = var.dataform_repository
   dataform_git_commitish      = var.dataform_git_commitish
+  dataform_release_schedule   = var.dataform_release_schedule
   dataform_service_account    = var.dataform_service_account
   alert_channel               = var.alert_channel
   monitor_service_account     = var.monitor_service_account

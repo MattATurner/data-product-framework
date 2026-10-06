@@ -2,9 +2,9 @@
   "product_id": "customer_orders",
   "engine": "dataform",
   "dpf_version": "0.3.0",
-  "build_digest": "sha256:9148bb493ec22de60c8ab167a29706c51e5ab17372d3f8f7d28b6a32bc63b2e3",
+  "build_digest": "sha256:9c35390343ff1a0290df2468a4a5cee84b4e7c7d11e06b2f5cdb56655d962058",
   "files": {
-    "README.md": "sha256:d0446b00cb98d6a395cc4d11ed48162941e7799bf7c5c1a945b5d52cd40d6bdb",
+    "README.md": "sha256:0dbf69090bb6162f50f78ace534bfd350b4d809c9f9969ad4542e388a36f1a72",
     "catalog-registration.json": "sha256:b627fa534b47635439a48fcb255a504480fd4ac5c38870caed2409535dc8155f",
     "dag.json": "sha256:cba1fb8061594c22b5ad6bbb083a359ef136b571e314363387c3f26cece74b7a",
     "dag.md": "sha256:891358ecc18a30513e76268f83d1b538f4696303738acdb4897969d35d5dc593",
@@ -50,10 +50,10 @@
     "terraform/control.tf": "sha256:320f0ce220c3f2507c39e05502462aa96adf6244f93df639d75f55c5af9793d9",
     "terraform/datasets.tf": "sha256:3a12912298422c5aed65aaf6c5286d70ba31992df5800316b4318d8e4d3c631a",
     "terraform/monitoring.tf": "sha256:adfd3bada85dfc3936e24d0209697d3fbe347ad3a2eb5734ae7696f3cb5b71cb",
-    "terraform/orchestration.tf": "sha256:d361c5c4c5501122888fefc48bdc3a61b0f9c7398fa0a3cf5bee15720edea671",
+    "terraform/orchestration.tf": "sha256:51bab09b59d9cd9ca8d61e9356966104b8f77a29b17c3367f3c0210b3ca51c23",
     "terraform/outputs.tf": "sha256:f9264136c0cb89d8484dcca55a72635b44ad240e61689111de97ba4f78da8983",
-    "terraform/variables.tf": "sha256:6d8aebc3e2c3b0261df1679581f7c87ea2d71c925fc951eb7edc01a94f641319",
+    "terraform/variables.tf": "sha256:bd7fe60df6d81d31e31e4a43b587234a9198b3263ed019977b07fae86a297f0f",
     "terraform/versions.tf": "sha256:9f235306521de3fd81e20671419ebfbed11f9303b26f5229c0cd31edcd898357",
-    "test-spec.json": "sha256:1266ea8613220344f3fd6c7dfca98746f69f6597d9877e265657f0218878f75e"
+    "test-spec.json": "sha256:eea6b422fe21d71bbd5b82578b92ceb184e6d887495a44de3b13fa8f621d9e98"
   }
 }

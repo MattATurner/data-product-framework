@@ -1,6 +1,6 @@
 {
   "product_id": "sales_performance",
-  "artefact_digest": "sha256:0f8650494eaf4252226cb1496564b91edb215f669b7c42fb166effc7a05f9a5e",
+  "artefact_digest": "sha256:9ba387ecb6b42d5a4b57a39a5d993f9eb22fa6bf01043ca308e7a9bc384917d8",
   "cases": [
     {
       "id": "grain:stg_customers",
@@ -492,7 +492,7 @@
       "kind": "acceptance",
       "severity": "block",
       "model": "fct_order_line",
-      "sql": "SELECT COUNT(*) AS line_rows, MAX(quantity) AS quantity, MAX(net_amount) AS net_amount\nFROM {{ ref('fct_order_line') }}\nWHERE order_id = 'SO-1001' AND order_line_no = 2\nHAVING COUNT(*) != 1 OR MAX(quantity) != 6 OR MAX(net_amount) != 810",
+      "sql": "SELECT COUNT(*) AS line_rows, MAX(quantity) AS max_quantity, MAX(net_amount) AS max_net_amount\nFROM {{ ref('fct_order_line') }}\nWHERE order_id = 'SO-1001' AND order_line_no = 2\nHAVING COUNT(*) != 1 OR MAX(quantity) != 6 OR MAX(net_amount) != 810",
       "id": "acceptance:AT-3",
       "method": "automated",
       "description": "SO-1001 line 2, landed three times, appears once with quantity 6 and net amount 810.00.",

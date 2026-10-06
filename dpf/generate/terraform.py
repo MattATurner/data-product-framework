@@ -311,8 +311,11 @@ resource "google_bigquery_analytics_hub_listing_iam_member" "{li}_subscriber" {{
         self.var("dataform_repository", "Existing Dataform repository (name) whose default branch holds the generated "
                                         "dataform/ tree.")
         self.var("dataform_git_commitish", "Branch, tag or commit the release configuration compiles.", "main", True)
-        self.var("dataform_service_account", "Service account workflow invocations run as. Empty: the Dataform "
-                                             "service agent.", "", True)
+        self.var("dataform_release_schedule", "Cron for automatic release compilation. Empty: no automatic release, so "
+                                              "each deploy compiles and releases (required for a Dataform-hosted "
+                                              "repository with strict act-as checks).", "0 * * * *", True)
+        self.var("dataform_service_account", "Service account workflow invocations run as (needed under strict act-as "
+                                             "checks). Empty: the repository's default service account.", "", True)
         tags = (self.man.get("governance") or {}).get("policy_tags", []) or []
         vars_ = dict(project_vars(self.p))
         width = max(len(k) for k in vars_)
@@ -333,7 +336,7 @@ resource "google_dataform_repository_release_config" "product" {{
   repository    = var.dataform_repository
   name          = {q(name)}
   git_commitish = var.dataform_git_commitish
-  cron_schedule = "0 * * * *"
+  cron_schedule = var.dataform_release_schedule == "" ? null : var.dataform_release_schedule
   time_zone     = {q(self.tz)}
   code_compilation_config {{
     default_database = var.project_id
