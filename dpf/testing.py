@@ -317,8 +317,8 @@ def check_evidence(p: Product, report: Report, b: Build | None = None) -> None:
         label = f"{case['id']} ({case['method']})"
         if st == "passed":
             report.ok(f"{label} passed")
-        elif case["severity"] == "warn" and st != "missing":
-            report.warn(f"{label} {st} (warn-level)")
+        elif case["severity"] == "warn" and st not in ("missing", "stale"):
+            report.warn(f"{label} {st} (warn-level)")  # it ran on this build and failed
         elif case["method"] == "static":
             report.fail(f"{label} failed: {'; '.join(static[case['id']])}")
         elif st == "stale":

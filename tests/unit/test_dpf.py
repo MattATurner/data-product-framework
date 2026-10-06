@@ -1,7 +1,8 @@
 """Unit tests for the dpf package: spec parsing, render helpers, monitor, trace, lint and CLI exit codes.
 
-The example products are the fixtures: they must pass every gate up to G3 and fail G4 honestly,
-because no deployed-run evidence exists for them.
+The example products are the fixtures: they must pass every gate up to G3 and fail G4 honestly.
+customer_orders has no deployed-run evidence; sales_performance has sandbox evidence but no
+business attestations yet.
 """
 
 from __future__ import annotations
@@ -285,9 +286,28 @@ def test_lint_terms_flags_retired_names_in_prose_only(tmp_path):
 def test_cli_gate_exit_codes(capsys):
     assert main(["check", "--all", "--gate", "G3", "--quiet", "--root", str(ROOT)]) == 0
     capsys.readouterr()
-    # The examples have no deployed-run evidence, so G4 must fail rather than pass on nothing.
-    assert main(["check", "sales_performance", "--gate", "G4", "--quiet", "--root", str(ROOT)]) == 1
+    # customer_orders has no deployed-run evidence, so G4 must fail rather than pass on nothing.
+    assert main(["check", "customer_orders", "--gate", "G4", "--quiet", "--root", str(ROOT)]) == 1
     assert "no evidence for build sha256:" in capsys.readouterr().out
+
+
+def test_g4_stale_evidence_fails_even_for_a_warn_level_case(sales, monkeypatch):
+    # A result for another build does not count. A warn-level case that has not run against
+    # this build is missing evidence, not a warning; only a run that failed on it is a warning.
+    import dpf.testing as testing
+
+    b = build(sales)
+    case = next(c for c in b.spec["cases"] if c["severity"] == "warn" and c["method"] == "automated")
+    old = {"product_id": sales.id, "artefact_digest": "sha256:" + "0" * 64, "run_id": "run-20260901T000000Z",
+           "environment": "test", "recorded_at": "2026-09-01T00:00:00Z", "_file": "run-20260901T000000Z.json",
+           "results": [{"test_id": case["id"], "status": "passed", "failing_rows": 0,
+                        "finished_at": "2026-09-01T00:00:00Z"}]}
+    monkeypatch.setattr(testing, "load_evidence", lambda p: [old])
+    r = quiet()
+    testing.check_evidence(sales, r, b)
+    assert (f"{case['id']} (automated): evidence is for an older build digest; re-run against the current build"
+            in r.messages("fail"))
+    assert not r.messages("warn")
 
 
 def test_cli_usage_errors_exit_2(capsys):
