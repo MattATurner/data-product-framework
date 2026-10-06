@@ -1,0 +1,19 @@
+# Text of the prioritisation template (Define, step 3). Axes, threshold and quadrants come from
+# templates/scoring.yaml. Rendered by render.py.
+
+name: prioritisation
+file: 3-prioritisation
+title: Use-case prioritisation and selection
+stage: Define
+step: 3
+rows: 8           # rows in the decision record
+intro: >
+  Place each scored use case on the matrix by its value and ease scores, then decide what
+  happens to it. The matrix suggests an action; the decision belongs to the people who sign
+  this record.
+how_to:
+  - Take the value score and the ease score for each use case from the scorecard.
+  - Mark each use case on the matrix. Value runs up the side, ease along the bottom.
+  - Record a decision for every use case, with the reason and any conditions.
+  - For each approved use case, choose whether the business will write a BRD or a PRD.
+next: For each approved use case, write a BRD (4a) or a PRD (4b).

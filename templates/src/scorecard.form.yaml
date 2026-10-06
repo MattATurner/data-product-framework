@@ -1,0 +1,18 @@
+# Text of the scorecard template (Define, step 2). The criteria, weights and scoring guide
+# come from templates/scoring.yaml. Rendered by render.py.
+
+name: scorecard
+file: 2-scorecard
+title: Use-case scorecard
+stage: Define
+step: 2
+slots: 5          # use cases per sheet
+intro: >
+  Score up to five candidate use cases against the same criteria, so they can be compared
+  fairly. Each criterion has a weight that says how much it matters to the organisation.
+how_to:
+  - Score as a panel, not alone. Use the scoring guide below so that a 3 means the same thing for everyone.
+  - Score each criterion from 1 to 5. Higher is always better, so "Small financial investment" scores 5 when the investment is small.
+  - "Weighted = weight x score. Add the weighted scores for each axis, then divide by the sum of that axis's weights to get the axis score."
+  - Agree the weights before you score. Change a weight on this sheet if your organisation needs to, and record why.
+next: Place each use case on the prioritisation matrix (step 3) using its value and ease scores.

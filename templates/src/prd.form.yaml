@@ -1,0 +1,258 @@
+# Content of the PRD template (Define, step 4 - the alternative is the BRD). Rendered by render.py.
+#
+# A PRD describes the data product from the consumer's side. It answers the same BRD
+# completeness rubric (registry/brd-rubric.yaml, groups A to K) as the BRD, so it feeds the
+# design in the same way, and adds product sections: summary, success measures, releases,
+# dependencies and risks. `maps_to` says where each answer is recorded in the repository.
+
+name: prd
+file: 4b-prd
+title: Product requirements document (PRD)
+stage: Define
+step: 4
+alternative: Use the PRD or the BRD (4a), not both. They feed the design in the same way.
+intro: >
+  Describe the data product from the point of view of the people who will use it: who they are,
+  what they get, how good and how fresh it must be, and how we will know it is working. The data
+  team turns your answers into a design, then explains that design back to you in plain words
+  for your signature before anything is built.
+how_to:
+  - Use business terms. Do not name technologies or modelling techniques; the data team chooses those in the design.
+  - Give every requirement at least one worked example of a correct answer.
+  - If something is not decided yet, add it to Open questions with an owner and a due date. Do not guess.
+
+control:
+  - {id: doc_id, label: PRD ID, hint: "For example PRD-SALES-002"}
+  - {id: product, label: Data product}
+  - {id: owner, label: Product owner}
+  - {id: steward, label: Data steward}
+  - {id: domain, label: Business domain}
+  - {id: use_case, label: Use case, hint: "The approved use case, for example UC-SALES-001"}
+  - {id: version, label: Version, default: "0.1.0"}
+  - {id: date, label: Date}
+  - {id: status, label: Status, kind: choice, options: [Draft, In review, Approved], wide: true}
+
+sections:
+  - id: changelog
+    title: Change history
+    numbered: false
+    maps_to: "brd.yaml: changelog"
+    fields:
+      - id: changelog
+        kind: grid
+        rows: 3
+        columns:
+          - {id: version, label: Version, width: 11}
+          - {id: change, label: What changed, width: 53}
+          - {id: raised_by, label: Raised by, width: 18}
+          - {id: accepted_by, label: Accepted by, width: 18}
+
+  - id: summary
+    title: Product summary
+    maps_to: "spec.md: Purpose"
+    fields:
+      - {id: statement, label: Product statement, hint: "For [consumers] who need to [job], [product] provides [what], so that [outcome].", kind: area, lines: 2}
+      - {id: problem, label: Problem it solves, hint: "What is hard or impossible today?", kind: area, lines: 3}
+      - {id: why_now, label: Why now, hint: "Which benefits from the approved use case does it deliver?", kind: area, lines: 2}
+
+  - id: consumers
+    title: Consumers and their questions
+    rubric: A
+    hint: Who will use the product, which questions must it answer for them, and which decisions do the answers support?
+    maps_to: "brd.yaml: business_questions"
+    fields:
+      - id: questions
+        kind: grid
+        rows: 4
+        columns:
+          - {id: id, label: ID, width: 9, default: "BQ-{n}"}
+          - {id: consumers, label: Consumer group, width: 20}
+          - {id: text, label: Question they need answered, width: 35}
+          - {id: decision, label: Decision it supports, width: 24}
+          - {id: how_often, label: How often, width: 12}
+
+  - id: outputs
+    title: What the product provides
+    rubric: B
+    hint: "What do consumers receive: a dashboard, report, extract, API or dataset? Which figures, broken down by what, and which details?"
+    maps_to: "brd.yaml: required_outputs"
+    fields:
+      - id: outputs
+        kind: grid
+        rows: 4
+        columns:
+          - {id: id, label: ID, width: 9, default: "OUT-{n}"}
+          - {id: type, label: Type, width: 11}
+          - {id: figures, label: Figures, width: 17}
+          - {id: slices, label: Broken down by, width: 19}
+          - {id: attributes, label: Details shown, width: 20}
+          - {id: recipient, label: "For whom, how often", width: 14}
+          - {id: satisfies, label: Req. IDs, width: 10}
+
+  - id: rules
+    title: Data definitions and rules
+    rubric: C, D, F
+    hint: How detailed the data is, how it behaves when values change, and how exceptions are handled.
+    maps_to: "brd.yaml: level_of_detail, history_behaviour, exceptions, agreement_with_other_teams, totalling"
+    fields:
+      - {id: drill_to, label: Finest level of detail, hint: "What is the finest level consumers need to drill down to? For example \"an individual line on a customer order\".", kind: area, lines: 2}
+      - {id: distinct_by, label: What makes each one distinct, hint: "Could two records ever describe the same thing? If so, which one counts?", kind: area, lines: 2}
+      - id: history
+        label: When values change
+        hint: If a value such as a customer's segment changes, should past figures follow the change or stay as they were?
+        kind: grid
+        rows: 3
+        columns:
+          - {id: id, label: ID, width: 9, default: "HB-{n}"}
+          - {id: attribute, label: What can change, width: 22}
+          - {id: answer, label: "Should past figures follow the change or stay as they were? Why?", width: 69}
+      - {id: exceptions, label: Exceptions, hint: "What should happen with cancellations, refunds, amendments and late corrections? One per line.", kind: area, lines: 3}
+      - id: agreement
+        label: Agreement with other teams
+        hint: Must these figures agree with another team's figures?
+        kind: grid
+        rows: 2
+        columns:
+          - {id: id, label: ID, width: 9, default: "AG-{n}"}
+          - {id: team, label: Team, width: 24}
+          - {id: must_agree_on, label: Must agree on, width: 67}
+      - {id: totalling, label: Can be added up across, hint: "For example days, months, regions and categories.", kind: line}
+
+  - id: service
+    title: Service levels
+    rubric: E
+    maps_to: "brd.yaml: timeliness"
+    fields:
+      - {id: freshness_need, label: Freshness, hint: "How up to date must the product be? For example \"hourly during the working day\".", kind: line}
+      - {id: justification, label: Why, hint: "Which decision depends on that freshness? What goes wrong if the product is late?", kind: area, lines: 2}
+      - {id: availability, label: Availability, hint: "When must the product be available? For example \"08:00 to 18:00, Monday to Friday\".", kind: line}
+      - {id: expected_users, label: Users, hint: "Roughly how many people will use it, and how often?", kind: line}
+      - {id: peak_volume, label: Volume, hint: "Roughly how many records arrive on a busy day?", kind: line}
+      - {id: support, label: Support, hint: "Who do consumers contact when something looks wrong, and how fast must they get an answer?", kind: line}
+
+  - id: quality
+    title: Quality expectations
+    rubric: G
+    maps_to: "brd.yaml: fitness"
+    fields:
+      - {id: unusable_row, label: Unusable record, hint: "What would make a record unusable to consumers?", kind: area, lines: 2}
+      - id: on_bad_data
+        label: When bad data arrives
+        kind: choice
+        options:
+          - Stop and alert - do not publish
+          - Publish the good records and report the bad ones
+          - Publish everything and flag the bad records
+
+  - id: sources
+    title: Sources
+    rubric: H
+    hint: Which systems do you believe hold this data, and which one is the authority?
+    maps_to: "brd.yaml: sources_believed"
+    fields:
+      - id: sources
+        kind: grid
+        rows: 3
+        columns:
+          - {id: system, label: System, width: 22}
+          - {id: holds, label: What it holds, width: 50}
+          - {id: authority, label: "Is it the authority?", width: 28}
+
+  - id: access
+    title: Access, protection and sharing
+    rubric: I
+    maps_to: "brd.yaml: sensitivity, residency, protection, external_readers"
+    fields:
+      - {id: sensitivity, label: Sensitivity, hint: "Your organisation's classification, for example Internal or Confidential.", kind: line}
+      - {id: residency, label: Where the data must stay, hint: "A country or jurisdiction, for example \"United States\".", kind: line}
+      - {id: restricted, label: Details some consumers must not see, hint: "For example customer contact details.", kind: area, lines: 2}
+      - {id: visible, label: What those consumers may still see, kind: area, lines: 2}
+      - {id: who_may_access, label: Who may use the product, kind: area, lines: 2}
+      - {id: external, label: Consumers outside the organisation, hint: "Does anyone outside the organisation need the product? Who, and how may they receive it?", kind: area, lines: 2}
+
+  - id: requirements
+    title: Requirements and acceptance examples
+    rubric: J
+    hint: >
+      One requirement for each behaviour consumers need, written as "Users SHALL ..." or
+      "The product SHALL ...". Give at least one worked example of a correct answer: GIVEN a
+      situation, WHEN someone does something, THEN what they should see.
+    maps_to: "spec.md: one Requirement per R-n, one Scenario per AX-n"
+    fields:
+      - {id: requirements, kind: requirements, count: 8}
+
+  - id: success
+    title: Success measures
+    hint: How will we know the product works? Link each measure to a benefit in the use case.
+    maps_to: "Kept with the PRD; monitored after go-live"
+    fields:
+      - id: success
+        kind: grid
+        rows: 4
+        columns:
+          - {id: measure, label: Measure, width: 30}
+          - {id: baseline, label: Today, width: 14}
+          - {id: target, label: Target, width: 14}
+          - {id: by_when, label: By when, width: 12}
+          - {id: benefit, label: Use-case benefit it proves, width: 30}
+
+  - id: releases
+    title: Releases
+    hint: What comes in the first release, and what can wait? Refer to requirement IDs.
+    maps_to: "Kept with the PRD; later releases become OpenSpec changes"
+    fields:
+      - id: releases
+        kind: grid
+        rows: 3
+        columns:
+          - {id: release, label: Release, width: 14}
+          - {id: scope, label: What it includes (requirement IDs), width: 66}
+          - {id: target, label: Target date, width: 20}
+
+  - id: risks
+    title: Dependencies and risks
+    hint: What does the product depend on, and what could stop or delay it?
+    maps_to: "Kept with the PRD; feasibility findings return here"
+    fields:
+      - id: risks
+        kind: grid
+        rows: 3
+        columns:
+          - {id: item, label: Dependency or risk, width: 34}
+          - {id: impact, label: Impact if it happens, width: 26}
+          - {id: response, label: What we will do, width: 26}
+          - {id: owner, label: Owner, width: 14}
+
+  - id: scope
+    title: Out of scope
+    rubric: K
+    hint: What is explicitly out of scope? Saying so now avoids surprises later.
+    maps_to: "brd.yaml: non_goals; spec.md: Scope"
+    fields:
+      - {id: non_goals, kind: area, lines: 3}
+
+  - id: open
+    title: Open questions
+    hint: Anything not yet decided. Give each question an owner and a due date, and say what we assume if work starts before it is answered.
+    maps_to: "brd.yaml: open_questions; spec.md: Open questions"
+    fields:
+      - id: open_questions
+        kind: grid
+        rows: 3
+        columns:
+          - {id: id, label: ID, width: 8, default: "OQ-{n}"}
+          - {id: question, label: Question, width: 32}
+          - {id: owner, label: Owner, width: 14}
+          - {id: due, label: Due, width: 10}
+          - {id: assumption, label: What we assume meanwhile, width: 22}
+          - {id: blast_radius, label: What it affects, width: 14}
+
+signoff:
+  title: Approval
+  hint: The product owner approves the PRD. Teams whose figures must agree with these (see Data definitions and rules) should sign too.
+  rows: [Product owner, Data steward, "", ""]
+
+next: >
+  The data team records the approved PRD in the repository and checks it is complete (gate G0).
+  They then write the technical design (TDD) and explain it back to you in plain words. You sign
+  that explanation before anything is built (gate G1).

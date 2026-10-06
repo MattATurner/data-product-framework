@@ -1,0 +1,161 @@
+# Use-case scoring model, used by the scorecard (step 2) and the prioritisation matrix (step 3).
+#
+# Change the weights to suit your organisation, then run `make templates` to re-render the
+# PDFs. The weights are also editable in the scorecard PDF itself.
+#
+# Every criterion is worded so that a HIGHER score is BETTER (for example, "Small financial
+# investment": 5 means the investment is small). Scores run from 1 to 5. The guide describes
+# 1, 3 and 5; a 2 or a 4 sits between the two descriptions either side of it.
+#
+# The first nine criteria and their weights come from the seed use-case template. "Data
+# readiness" and "Low delivery risk" were added for data products.
+
+version: 1.0.0
+scale: {min: 1, max: 5}
+
+# An axis score at or above the threshold counts as high.
+threshold: 3.0
+
+axes:
+  value:
+    label: Value
+    question: How much does this use case matter to the business?
+  ease:
+    label: Ease
+    question: How easily can we deliver it with the money, time and data we have?
+
+criteria:
+  - id: strategy
+    label: Supports corporate strategy
+    axis: value
+    weight: 5
+    asks: How directly does it serve the corporate strategy?
+    guide:
+      1: Not linked to any strategic objective
+      3: Supports a strategic objective indirectly
+      5: Directly delivers a named strategic objective
+
+  - id: strength
+    label: Builds on a strength            # seed: "Leverages a strength"
+    axis: value
+    weight: 2
+    asks: Does it use a strength named in the SWOT analysis?
+    guide:
+      1: Uses none of our recognised strengths
+      3: Uses one strength in part
+      5: Builds directly on a key strength
+
+  - id: weakness
+    label: Reduces a weakness              # seed: "Fortify a weakness"
+    axis: value
+    weight: 2
+    asks: Does it fix a weakness named in the SWOT analysis?
+    guide:
+      1: Leaves our weaknesses as they are
+      3: Reduces one weakness in part
+      5: Removes a significant weakness
+
+  - id: threat
+    label: Defends against a threat
+    axis: value
+    weight: 4
+    asks: Does it protect us from a threat named in the SWOT analysis?
+    guide:
+      1: Does not address any threat
+      3: Reduces our exposure to one threat
+      5: Removes a major threat
+
+  - id: profit
+    label: Increases profit
+    axis: value
+    weight: 2
+    asks: Will profit rise, for example through lower costs?
+    guide:
+      1: No measurable effect on profit
+      3: A measurable gain in one area of the business
+      5: A large gain across the business
+
+  - id: revenue
+    label: Increases revenue
+    axis: value
+    weight: 3
+    asks: Will revenue rise?
+    guide:
+      1: No measurable effect on revenue
+      3: A measurable gain in one line of business
+      5: A large gain, or a new source of revenue
+
+  - id: customers
+    label: Increases the number of customers
+    axis: value
+    weight: 4
+    asks: Will it win new customers or keep existing ones?
+    guide:
+      1: No effect on customer numbers
+      3: Wins or keeps customers in one segment
+      5: Wins or keeps customers across segments
+
+  - id: finance
+    label: Small financial investment
+    axis: ease
+    weight: 2
+    asks: How much money does it need?
+    guide:
+      1: Needs a major investment approved at board level
+      3: Needs a departmental budget
+      5: Fits within an existing team budget
+
+  - id: time
+    label: Small time investment
+    axis: ease
+    weight: 3
+    asks: How long will it take to implement?
+    guide:
+      1: More than 12 months
+      3: 3 to 6 months
+      5: Less than 1 month
+
+  - id: data_readiness
+    label: Data readiness
+    axis: ease
+    weight: 4
+    added: true
+    asks: Does the data exist, can we trust it, and can we reach it?
+    guide:
+      1: The data does not exist yet, or we cannot reach it
+      3: The data exists but needs cleaning, joining or agreed definitions
+      5: The data exists, is trusted, and we can reach it today
+
+  - id: delivery_risk
+    label: Low delivery risk
+    axis: ease
+    weight: 3
+    added: true
+    asks: How likely is it to be late, fail, or cause legal or privacy problems?
+    guide:
+      1: High risk - new technology, many dependencies, or legal or privacy exposure
+      3: Some risk, with known ways to reduce it
+      5: Low risk - a proven approach, few dependencies, no legal or privacy concerns
+
+# Where a use case lands, and what to do next. Value is the vertical axis, ease the horizontal.
+quadrants:
+  - id: quick_win
+    label: Quick win
+    value: high
+    ease: high
+    action: Approve and start. Write the BRD or PRD.
+  - id: strategic_bet
+    label: Strategic bet
+    value: high
+    ease: low
+    action: Approve for discovery. Plan the funding and reduce the risk first, for example by fixing data readiness.
+  - id: fill_in
+    label: Fill-in
+    value: low
+    ease: high
+    action: Do it when there is capacity, or bundle it with related work.
+  - id: deprioritise
+    label: Deprioritise
+    value: low
+    ease: low
+    action: Park it. Look again if circumstances change.

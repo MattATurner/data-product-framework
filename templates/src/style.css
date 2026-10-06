@@ -1,0 +1,215 @@
+/* Style for the Define-stage templates and worked examples. Rendered by WeasyPrint. */
+
+@page {
+  size: A4;
+  margin: 17mm 14mm 15mm 14mm;
+  @top-left { content: string(doc-title); font: 500 7.5pt Roboto, sans-serif; color: #5f6368; vertical-align: bottom; padding-bottom: 3mm; }
+  @top-right { content: "Data Product Framework \00B7  " string(doc-stage); font: 7.5pt Roboto, sans-serif; color: #5f6368; vertical-align: bottom; padding-bottom: 3mm; }
+  @bottom-left { content: string(doc-ref); font: 7.5pt Roboto, sans-serif; color: #5f6368; vertical-align: top; padding-top: 3mm; }
+  @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 7.5pt Roboto, sans-serif; color: #5f6368; vertical-align: top; padding-top: 3mm; }
+}
+@page :first {
+  @top-left { content: none; }
+  @top-right { content: none; }
+}
+@page wide { size: A4 landscape; margin: 14mm 12mm 13mm 12mm; }
+body.wide { page: wide; }
+
+html { font-family: Roboto, "Liberation Sans", Arial, sans-serif; font-size: 9pt; color: #202124; line-height: 1.35; }
+body { margin: 0; }
+p { margin: 0 0 2mm; }
+strong { font-weight: 500; }
+
+/* ---- cover ------------------------------------------------------------------------------ */
+.cover { margin-bottom: 5mm; }
+.kicker { font-size: 7.5pt; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #1a73e8; }
+.kicker .stage { string-set: doc-stage content(text); }
+.cover h1 { string-set: doc-title content(text); font-size: 21pt; font-weight: 500; margin: 1mm 0 2mm; color: #202124; letter-spacing: -0.01em; }
+.cover .intro { font-size: 10pt; color: #3c4043; max-width: 168mm; margin-bottom: 3mm; }
+.cover .ref { string-set: doc-ref content(text); visibility: hidden; height: 0; margin: 0; font-size: 1pt; }
+.example-banner { background: #fef7e0; border: 0.6pt solid #f9ab00; border-radius: 1.5mm; padding: 2mm 3mm; margin: 0 0 3mm; font-size: 8.5pt; color: #3c4043; }
+.example-banner strong { color: #b06000; }
+
+.flow { display: flex; gap: 1.5mm; margin: 3mm 0 3.5mm; }
+.flow .chip { flex: 1; border: 0.6pt solid #dadce0; border-radius: 1.5mm; padding: 1.4mm 2mm; font-size: 7.5pt; color: #5f6368; background: #fff; }
+.flow .chip b { display: block; font-weight: 500; font-size: 8pt; color: #3c4043; }
+.flow .chip.on { background: #1a73e8; border-color: #1a73e8; color: #e8f0fe; }
+.flow .chip.on b { color: #fff; }
+.flow .chip.design { border-style: dashed; }
+
+.howto { background: #f1f3f4; border-radius: 1.5mm; padding: 2.4mm 3.5mm 1.6mm; margin-bottom: 4mm; font-size: 8.5pt; }
+.howto h3 { margin: 0 0 1mm; font-size: 8.5pt; font-weight: 500; }
+.howto ul { margin: 0; padding-left: 4mm; }
+.howto li { margin-bottom: 0.8mm; }
+.alt { font-size: 8.5pt; color: #1967d2; margin: -1mm 0 3mm; }
+/* Landscape sheets (scorecard, prioritisation) need the room for their tables and matrix. */
+body.wide .cover { margin-bottom: 2mm; }
+body.wide .howto { margin-bottom: 2.5mm; padding: 2mm 3.5mm 1.2mm; }
+body.wide .howto li { margin-bottom: 0.4mm; }
+body.wide h2 { margin-top: 3.5mm; }
+
+/* ---- sections and fields --------------------------------------------------------------- */
+h2 { font-size: 12pt; font-weight: 500; color: #202124; margin: 5mm 0 1.2mm; break-after: avoid; display: flex; align-items: center; gap: 2mm; }
+h2 .num { display: inline-block; width: 5.4mm; height: 5.4mm; line-height: 5.4mm; border-radius: 50%; background: #1a73e8; color: #fff; font-size: 8pt; text-align: center; }
+h2 .illus, .label .illus { font-size: 6.5pt; font-weight: 500; color: #b06000; background: #fef7e0; border-radius: 1mm; padding: 0.3mm 1.2mm; letter-spacing: 0.04em; text-transform: uppercase; }
+.sec-head { break-after: avoid; break-inside: avoid; }
+.sec-head .hint { margin: 0 0 2mm; }
+.hint { font-size: 7.6pt; color: #5f6368; line-height: 1.3; }
+.sec { break-inside: auto; }
+
+.row { display: flex; gap: 4mm; margin-bottom: 2.4mm; break-inside: avoid; }
+.row .lhs { width: 33%; flex: none; }
+.row .lhs .label { font-weight: 500; font-size: 8.6pt; }
+.row .rhs { flex: 1; }
+.stack { margin-bottom: 2.4mm; break-inside: avoid; }
+.stack.breakable { break-inside: auto; }
+.stack > .label { font-weight: 500; font-size: 8.6pt; margin-bottom: 0.6mm; }
+.stack > .hint { margin-bottom: 1mm; }
+
+/* Viewers draw typed text at 75% of the field's CSS font size, so 11pt gives 8.25pt text. */
+input[type=text], textarea {
+  display: block; width: 100%; box-sizing: border-box; margin: 0;
+  border: 0.5pt solid #bdc1c6; border-radius: 1mm; background: #f4f7fc;
+  font-family: Roboto, sans-serif; font-size: 11pt; color: #202124; padding: 1mm 1.5mm;
+}
+/* Every font face used by a field is embedded in full so that any text can be typed.
+   One face for all fields keeps the files small. */
+input, textarea { font-weight: 400; font-style: normal; }
+input[type=text] { height: 6.4mm; }
+.value {
+  border: 0.5pt solid #dadce0; border-radius: 1mm; background: #fff; padding: 1.2mm 1.8mm;
+  font-size: 8.6pt; white-space: pre-wrap; min-height: 6.4mm; box-sizing: border-box;
+}
+.value.empty { color: #9aa0a6; }
+
+/* ---- document control ------------------------------------------------------------------ */
+.control { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2mm 4mm; margin-bottom: 2mm; }
+.control .cell .label { font-size: 7pt; font-weight: 500; color: #5f6368; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.6mm; }
+.control .cell .hint { font-size: 6.8pt; margin-top: 0.4mm; }
+.control .cell.wide { grid-column: span 3; }
+
+/* ---- choices --------------------------------------------------------------------------- */
+.opt { font-size: 8.6pt; }
+.opt input[type=checkbox], .opt input[type=radio] {
+  width: 3.2mm; height: 3.2mm; padding: 0; flex: none;
+  border: 0.7pt solid #5f6368; border-radius: 0.6mm; background: #fff;
+}
+.opt input[type=radio] { border-radius: 50%; }
+.opt .box { width: 3.2mm; height: 3.2mm; border: 0.6pt solid #5f6368; border-radius: 0.6mm; flex: none; text-align: center; line-height: 3.2mm; font-size: 7pt; font-weight: 700; color: #1a73e8; }
+.opt .box.round { border-radius: 50%; }
+.opt .box.on { border-color: #1a73e8; background: #e8f0fe; }
+.opt.off { color: #80868b; }
+.opt .ohint { color: #5f6368; font-size: 7.6pt; }
+/* Inline: options flow across the line and wrap between options, never inside one. */
+.choices { padding-top: 0.6mm; }
+.choices .opt { display: inline-block; white-space: nowrap; margin: 0 5mm 1.6mm 0; }
+.choices .opt input[type], .choices .opt .box { display: inline-block; vertical-align: -0.7mm; margin: 0 1.6mm 0 0; }
+/* List: one option per line; long labels wrap beside the box. */
+.choices.list .opt { display: flex; align-items: flex-start; gap: 1.6mm; margin: 0 0 1.4mm; white-space: normal; }
+.choices.list .opt input[type], .choices.list .opt .box { margin: 0.35mm 0 0; }
+
+/* ---- grids ----------------------------------------------------------------------------- */
+table { border-collapse: collapse; width: 100%; }
+table.grid { table-layout: fixed; margin-bottom: 1mm; }
+table.grid th { font-size: 7.2pt; font-weight: 500; color: #3c4043; text-align: left; background: #e8eef7; border: 0.5pt solid #c4c7c5; padding: 1mm 1.3mm; vertical-align: bottom; }
+table.grid td { border: 0.5pt solid #c4c7c5; padding: 0; vertical-align: top; }
+table.grid.blank td { background: #f4f7fc; height: 9.5mm; }
+table.grid td textarea, table.grid td input[type=text] { border: none; border-radius: 0; background: transparent; height: 9.5mm; padding: 0.8mm 1.2mm; }
+table.grid td .cellv { padding: 1mm 1.4mm; font-size: 8pt; white-space: pre-wrap; min-height: 5mm; }
+table.grid tr { break-inside: avoid; }
+
+/* ---- requirements ---------------------------------------------------------------------- */
+.req { border: 0.6pt solid #c4c7c5; border-radius: 1.5mm; padding: 2mm 2.4mm 1.6mm; margin-bottom: 3mm; break-inside: avoid; }
+.req .head { display: flex; gap: 2mm; align-items: center; margin-bottom: 1.2mm; }
+.req .tag { font-size: 6.8pt; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: #1967d2; width: 22mm; flex: none; }
+.req .head input.id { width: 15mm; flex: none; }
+.req .head input.title { flex: 1; }
+.req .stmt textarea { height: 10.5mm; }
+.req .ax { margin-top: 1.6mm; padding-top: 1.6mm; border-top: 0.5pt dashed #dadce0; }
+.gwt { width: 100%; table-layout: fixed; }
+.gwt th { width: 15mm; text-align: left; font-size: 7pt; font-weight: 700; color: #3c4043; padding: 0.6mm 0; vertical-align: top; }
+.gwt td { padding: 0.4mm 0; }
+.gwt td input[type=text] { height: 5.8mm; }
+.req .rid { font-weight: 700; color: #1967d2; margin-right: 1.5mm; }
+.req .rtitle { font-weight: 500; font-size: 9.4pt; }
+.req .rbody { margin: 0.8mm 0 1mm; }
+.req .axv { margin-top: 1.2mm; padding-top: 1.2mm; border-top: 0.5pt dashed #dadce0; }
+.req .axv .axt { font-size: 8.2pt; font-weight: 500; color: #3c4043; margin-bottom: 0.6mm; }
+.req .axv .step { font-size: 8.2pt; margin-left: 2mm; }
+.req .axv .kw { display: inline-block; width: 12mm; font-size: 7pt; font-weight: 700; color: #5f6368; }
+
+/* ---- sign-off and endings -------------------------------------------------------------- */
+table.sign th { font-size: 7.2pt; font-weight: 500; color: #3c4043; text-align: left; background: #e8eef7; border: 0.5pt solid #c4c7c5; padding: 1mm 1.3mm; }
+table.sign td { border: 0.5pt solid #c4c7c5; padding: 0; height: 11mm; vertical-align: middle; }
+table.sign td.in { background: #f4f7fc; }
+table.sign td.role { padding: 0 1.6mm; font-weight: 500; font-size: 8.4pt; }
+table.sign td input[type=text] { border: none; border-radius: 0; background: transparent; height: 11mm; }
+table.sign td .cellv { padding: 0 1.6mm; }
+table.sign.compact td, table.sign.compact td input[type=text] { height: 8.5mm; }
+.signoff { break-inside: avoid; }
+.next { margin-top: 5mm; border-left: 1.2mm solid #1a73e8; background: #e8f0fe; padding: 2.2mm 3mm; font-size: 8.6pt; break-inside: avoid; }
+.next b { font-weight: 500; color: #1967d2; }
+.appendix { break-before: page; }
+.appendix table th { font-size: 7.4pt; font-weight: 500; text-align: left; background: #e8eef7; border: 0.5pt solid #c4c7c5; padding: 1.2mm 1.5mm; }
+.appendix table td { font-size: 8pt; border: 0.5pt solid #c4c7c5; padding: 1.2mm 1.5mm; vertical-align: top; }
+code { font-family: "DejaVu Sans Mono", monospace; font-size: 7.6pt; background: #f1f3f4; padding: 0 0.6mm; border-radius: 0.6mm; }
+
+/* ---- scorecard ------------------------------------------------------------------------- */
+table.score { table-layout: fixed; break-inside: avoid; line-height: 1.2; }
+table.score th, table.score td { border: 0.5pt solid #c4c7c5; font-size: 7.6pt; padding: 0.6mm 1.2mm; text-align: center; vertical-align: middle; }
+table.score th { background: #e8eef7; font-weight: 500; color: #3c4043; }
+table.score th.rowlbl { text-align: right; }
+table.score td.crit { text-align: left; font-size: 8pt; padding: 0.4mm 1.2mm; line-height: 1.15; }
+table.score td.crit .ask { display: block; color: #5f6368; font-size: 6.6pt; }
+table.score td.num, table.score td.in, table.score th.in { padding: 0; height: 6.6mm; }
+table.score td.in, table.score th.in { background: #f4f7fc; }
+table.score td.in.w { background: #fff8e1; }
+table.score td.in.calc { background: #f1f3f4; }
+table.score td input[type=text], table.score th input[type=text] { border: none; border-radius: 0; background: transparent; height: 6.6mm; text-align: center; font-size: 11.5pt; padding: 0; }
+table.score td.calc { background: #fafafa; }
+table.score tr.group td { background: #f1f3f4; text-align: left; font-size: 7pt; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #3c4043; padding: 0.8mm 1.4mm; }
+table.score tr.sum td { font-weight: 500; background: #f8f9fa; }
+table.score tr.sum td.in { background: #f1f3f4; height: 6mm; }
+table.score tr.sum td input[type=text] { height: 6mm; }
+table.score tr.sum td.lbl { text-align: right; font-size: 7.6pt; padding: 0 1.2mm; }
+table.score tr.total td { font-weight: 700; background: #e8f0fe; }
+table.score .uchead input[type=text] { text-align: left; padding: 0 1.2mm; }
+table.score td.v { font-size: 8.6pt; }
+table.score td.v.illus { color: #b06000; font-style: italic; }
+.axis-chip { display: inline-block; font-size: 6pt; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; border-radius: 0.8mm; padding: 0.1mm 1mm; margin-left: 1.2mm; vertical-align: 0.3mm; line-height: 1.3; }
+.axis-chip.value { background: #e8f0fe; color: #1967d2; }
+.axis-chip.ease { background: #e6f4ea; color: #137333; }
+.axis-chip.new { background: #fef7e0; color: #b06000; }
+.footnote { font-size: 7.4pt; color: #5f6368; margin-top: 1.5mm; }
+
+table.guide th, table.guide td { border: 0.5pt solid #c4c7c5; font-size: 7.3pt; padding: 0.5mm 1.4mm; vertical-align: top; text-align: left; line-height: 1.2; }
+table.guide th { background: #e8eef7; font-weight: 500; }
+table.guide td.w { text-align: center; }
+table.guide td.c { font-weight: 500; }
+
+/* ---- prioritisation -------------------------------------------------------------------- */
+.matrix-wrap { display: flex; gap: 6mm; align-items: flex-start; }
+.matrix-wrap .plot { width: 128mm; flex: none; }
+.matrix-wrap .legend { flex: 1; }
+.quad { border-radius: 1.5mm; padding: 2mm 2.6mm; margin-bottom: 2.2mm; font-size: 8pt; break-inside: avoid; }
+.quad .qt { font-weight: 700; font-size: 9pt; }
+.quad .qr { font-size: 7.2pt; color: #5f6368; margin-bottom: 0.6mm; }
+.quad.quick_win { background: #e6f4ea; } .quad.quick_win .qt { color: #137333; }
+.quad.strategic_bet { background: #e8f0fe; } .quad.strategic_bet .qt { color: #1967d2; }
+.quad.fill_in { background: #fef7e0; } .quad.fill_in .qt { color: #b06000; }
+.quad.deprioritise { background: #fce8e6; } .quad.deprioritise .qt { color: #c5221f; }
+table.decide th, table.decide td { border: 0.5pt solid #c4c7c5; font-size: 7.8pt; padding: 0; vertical-align: middle; }
+table.decide th { background: #e8eef7; font-weight: 500; text-align: left; padding: 1mm 1.3mm; }
+table.decide td { height: 11mm; }
+table.decide td.in { background: #f4f7fc; }
+table.decide td textarea, table.decide td input[type=text] { border: none; border-radius: 0; background: transparent; height: 11mm; }
+table.decide td .cellv { padding: 1mm 1.4mm; font-size: 8pt; }
+table.decide td .choices { padding: 0.4mm 1.4mm 0; }
+table.decide td .choices .opt { display: block; margin: 0 0 0.15mm; font-size: 7.6pt; line-height: 1.15; }
+table.decide td.ctr { text-align: center; }
+body.wide .next { margin-top: 3mm; }
+.qpill { display: inline-block; font-size: 7.2pt; font-weight: 700; border-radius: 1mm; padding: 0.4mm 1.4mm; }
+.qpill.quick_win { background: #e6f4ea; color: #137333; }
+.qpill.strategic_bet { background: #e8f0fe; color: #1967d2; }
+.qpill.fill_in { background: #fef7e0; color: #b06000; }
+.qpill.deprioritise { background: #fce8e6; color: #c5221f; }

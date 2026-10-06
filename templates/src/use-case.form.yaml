@@ -1,0 +1,142 @@
+# Content of the use-case definition template (Define, step 1). Rendered by render.py.
+# Based on the seed "Use Case Definition Template". Edit the wording here, then run
+# `make templates`.
+#
+# Field kinds: line (one line), area (several lines), choice (pick one), checks (tick any),
+# grid (a table to fill in), requirements, signoff. `default` pre-fills a field; in a grid,
+# "{n}" becomes the row number.
+
+name: use-case
+file: 1-use-case
+title: Use-case definition
+stage: Define
+step: 1
+intro: >
+  Describe one candidate use case: what it is, why it matters, which data it needs and what it
+  will change. Fill in one form for each candidate. The answers feed the scorecard (step 2).
+how_to:
+  - Write for a busy executive. Use short sentences and business terms. Do not choose technologies here.
+  - Estimates only need to be right to an order of magnitude.
+  - If you do not know an answer, write "Unknown" and say who can answer it.
+
+control:
+  - {id: uc_id, label: Use-case ID, hint: "For example UC-SALES-001"}
+  - {id: title, label: Title}
+  - {id: domain, label: Business domain, hint: "The domain the data product is created for"}
+  - {id: proposed_by, label: Proposed by, hint: "Name and role"}
+  - {id: date, label: Date}
+  - {id: version, label: Version, default: "0.1"}
+  - {id: status, label: Status, kind: choice, options: [Candidate, Scored, Approved, Deferred, Rejected], wide: true}
+
+sections:
+  - id: description
+    title: Description
+    hint: What is it about? Two or three sentences that tell a reader quickly what it is.
+    fields:
+      - {id: description, kind: area, lines: 4}
+
+  - id: justification
+    title: Justification
+    hint: >
+      Why do it? Refer to the SWOT analysis and list the items this use case addresses:
+      internal strengths (S) and weaknesses (W), external opportunities (O) and threats (T).
+    fields:
+      - id: swot
+        kind: grid
+        rows: 5
+        columns:
+          - {id: type, label: "S, W, O or T", width: 12}
+          - {id: item, label: Item in the SWOT analysis, width: 40}
+          - {id: how, label: How this use case addresses it, width: 48}
+
+  - id: classification
+    title: Classification
+    hint: What is its purpose? Tick all that apply.
+    fields:
+      - id: classification
+        kind: checks
+        options:
+          - {id: new_product, label: New product or service}
+          - {id: operations, label: Improve operations, hint: "for example design, development or production"}
+          - {id: intelligence, label: Improve intelligence, hint: "know more about the market, customers, partners, competitors or ourselves"}
+          - {id: productise, label: Productise data, hint: "for example aggregated customer data or demographics"}
+          - {id: valuation, label: Enhance company valuation, hint: "for example data security or brand reputation"}
+
+  - id: questions
+    title: Business questions
+    hint: >
+      Which questions will it answer, who asks them, and which decisions will the answers
+      support? If the use case is approved, these become the first section of the BRD or PRD.
+    fields:
+      - id: questions
+        kind: grid
+        rows: 4
+        columns:
+          - {id: question, label: Question, width: 44}
+          - {id: who, label: Who asks it, width: 20}
+          - {id: decision, label: Decision it supports, width: 36}
+
+  - id: data
+    title: Data landscape
+    hint: Which data does it need, and what state is that data in? This section drives the data readiness score.
+    fields:
+      - {id: existing_data, label: Existing data, hint: "Which data do we already hold? Use the data asset register.", kind: area, lines: 2}
+      - {id: more_data, label: More data, hint: "What more data of the same type do we need?", kind: area, lines: 2}
+      - {id: better_data, label: Better data, hint: "What data of a different type would suit it better? For example structured records in place of documents.", kind: area, lines: 2}
+      - {id: improved_data, label: Improved data, hint: "Is the existing data consistent, with one source of truth? Must it be correct, or is good enough acceptable? Which source is reliable or preferred?", kind: area, lines: 2}
+      - {id: availability, label: Availability, hint: "Can we count on the data staying available?", kind: area, lines: 2}
+      - {id: velocity, label: Velocity, hint: "How fast does the data arrive and change?", kind: area, lines: 2}
+
+  - id: organisation
+    title: Organisational changes
+    hint: What will it change? Say what it affects, not how to do it.
+    fields:
+      - {id: infrastructure, label: Infrastructure, hint: "Which company systems does it affect, and how much change do they need?", kind: area, lines: 2}
+      - {id: governance, label: Data governance, hint: "Which data governance rules are new, changed or removed?", kind: area, lines: 2}
+      - {id: access, label: Access, hint: "Who gains or loses access to which data?", kind: area, lines: 2}
+      - {id: culture, label: Data culture and skills, hint: "Do people need new skills or training?", kind: area, lines: 2}
+      - {id: structure, label: Organisation structure, hint: "Do any teams or roles change?", kind: area, lines: 2}
+
+  - id: impact
+    title: Customer and partner impact
+    fields:
+      - {id: customer_impact, label: Customer impact, hint: "How will customers be affected: products, services, the way they buy? Will it inconvenience or delight them? Will it bring new customers, or new types of customer?", kind: area, lines: 3}
+      - {id: partner_impact, label: Partner impact, hint: "Suppliers, resellers, call centres and other partners. Do data agreements with other businesses change? Are there new opportunities?", kind: area, lines: 3}
+
+  - id: investment
+    title: Investment
+    hint: Estimate to an order of magnitude; the implementation plan holds the detail. These answers drive the two investment scores.
+    fields:
+      - {id: finance_band, label: Financial investment, kind: choice, options: [Under 10k, 10k to 100k, 100k to 1M, Over 1M]}
+      - {id: finance_notes, label: Currency and notes, kind: line}
+      - {id: time_band, label: Time to implement, kind: choice, options: [Under 1 month, 1 to 3 months, 3 to 6 months, 6 to 12 months, Over 12 months]}
+      - {id: time_notes, label: Notes, kind: line}
+
+  - id: benefits
+    title: Benefits
+    hint: >
+      What will we gain? This complements the justification. Use business terms: profit, cost
+      savings, revenue, company valuation, or indirect gains such as customer satisfaction.
+    fields:
+      - id: benefits
+        kind: grid
+        rows: 4
+        columns:
+          - {id: benefit, label: Benefit, width: 36}
+          - {id: type, label: "Type: profit, cost, revenue, valuation or indirect", width: 22}
+          - {id: measure, label: How we will measure it, width: 28}
+          - {id: size, label: Rough size, width: 14}
+
+  - id: risks
+    title: Risks and dependencies
+    hint: >
+      What could stop or delay it? Does it depend on another use case, team or supplier?
+      Include legal and privacy concerns. This section drives the delivery risk score.
+    fields:
+      - {id: risks, kind: area, lines: 4}
+
+signoff:
+  title: Submission
+  rows: [Proposed by, Reviewed by]
+
+next: Score the use case with the other candidates in the scorecard (step 2).

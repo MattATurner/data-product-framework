@@ -1,4 +1,4 @@
-.PHONY: help install lock check gates golden evals test openspec ci
+.PHONY: help install lock check gates golden evals test openspec ci templates
 
 PY      ?= python3
 DPF     ?= $(PY) -m dpf
@@ -16,6 +16,7 @@ install: ## install dpf (editable) with test dependencies, pinned by requirement
 lock: ## re-pin the hash-locked requirements/*.txt (needs uv); add --upgrade to move versions
 	$(UV_COMPILE) pyproject.toml --extra dev -o requirements/dev.txt
 	$(UV_COMPILE) requirements/dbt.in -o requirements/dbt.txt
+	$(UV_COMPILE) requirements/templates.in -o requirements/templates.txt
 
 check: ## framework validation and lint, then every gate up to G3 for every product
 	$(DPF) check $(PRODUCT) --gate G3
@@ -37,3 +38,6 @@ openspec: ## OpenSpec structure, strict
 
 ci: openspec check evals test ## everything CI runs
 	$(DPF) generate --all --check
+
+templates: ## render the Define-stage PDFs and worked examples (needs requirements/templates.txt)
+	$(PY) templates/src/render.py

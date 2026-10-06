@@ -1,0 +1,7 @@
+# Inputs for requirements/templates.txt: what `make templates` needs to render the Define-stage
+# PDFs in templates/define/ and the worked examples. Versions match the ones used to render the
+# committed PDFs; the output is deterministic for these versions. Regenerate the lock with
+# `make lock`.
+weasyprint==70.0
+pypdf==6.19.0
+pyyaml==6.0.3
