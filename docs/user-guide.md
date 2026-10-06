@@ -203,8 +203,9 @@ skills/         platform skills (Agent Skills format plus dpf metadata)
 registry/       platform defaults, MCP servers, BRD rubric and vocabulary, empty catalogues
 adr/            platform decision records ADR-001 to ADR-015
 products/       example manifests, SQL bodies, acceptance mappings, product ADRs
-examples/       example registry overlay, extractor, seed fixtures, Terraform wrapper, runbook
-requirements/   hash-locked dependency pins (dev, dbt)
+examples/       example registry overlay, extractor, seed fixtures, Terraform wrapper, runbook, Define examples
+templates/      Define-stage forms (fillable PDFs) and Design-stage templates (Markdown and YAML)
+requirements/   hash-locked dependency pins (dev, dbt, templates)
 generated/      build output (gitignored, regenerate at will)
 evidence/       test evidence per product (written by dpf test)
 tests/          unit and contract tests, golden copies, behavioural evals
@@ -218,7 +219,7 @@ docs/           this guide, the design plan, the method diagram, connectivity no
 | `openspec/` config, schema, project context, `specs/platform/`, `changes/README.md` | `openspec/specs/products/*` |
 | `contracts/`, `methodologies/`, `engines/`, `skills/`, `registry/`, `adr/` | `products/*`, `examples/` |
 | `dpf/`, `tools/dpf`, `pyproject.toml`, `requirements/`, `Makefile`, `.gitignore`, CI | `generated/`, `evidence/`, `tests/golden/*` |
-| `tests/contracts`, the eval and golden READMEs, `docs/user-guide.md` | `docs/presentation/`, `docs/index.html`, `docs/data-product-framework-plan.md` |
+| `tests/contracts`, the eval and golden READMEs, `docs/user-guide.md`, `templates/` | `docs/presentation/`, `docs/index.html`, `docs/data-product-framework-plan.md` |
 
 ### The registry
 
@@ -254,6 +255,7 @@ init — ../my-workspace
   ok | Makefile
 …
   ok | docs/user-guide.md
+  ok | templates
      | not copied (example material): openspec/specs/products/*, products/*, examples/, generated/, evidence/, tests/golden/*, docs/presentation/, docs/index.html, docs/data-product-framework-plan.md
 
 all checks passed (0 warning(s))
@@ -725,17 +727,20 @@ The OB-3 breach is expected: `fct_order_line` held five seed lines, all dated Ma
 
 ## 6. Write the product documents
 
-| File | Written by | Checked at |
-|---|---|---|
-| `openspec/specs/products/<domain>/<product>/brd/spec.md` and `brd.yaml` | business analyst | G0 |
-| `.../tdd/spec.md` | data engineer | G1 |
-| `.../tdd/semantics.md` and `signoff.yaml` | data engineer; signed by the business owner | G1 |
-| `products/<id>/product.yaml` | data engineer | validate, G1, G2 |
-| `products/<id>/sql/*.sql` | data engineer | G1 rules, G3 |
-| `products/<id>/acceptance.yaml` | data engineer with the business | G2, G4 |
+| File | Written by | Checked at | Start from |
+|---|---|---|---|
+| Use case, scorecard, prioritisation, and a BRD or PRD (fillable PDFs) | the business | not checked | `templates/define/` |
+| `openspec/specs/products/<domain>/<product>/brd/spec.md` and `brd.yaml` | business analyst | G0 | the approved BRD or PRD |
+| `.../tdd/spec.md` | data engineer | G1 | `templates/design/tdd-spec.md` |
+| `.../tdd/semantics.md` and `signoff.yaml` | data engineer; signed by the business owner | G1 | `templates/design/semantics.md` |
+| `products/<id>/product.yaml` | data engineer | validate, G1, G2 | `templates/design/product.yaml` |
+| `products/<id>/adr/ADR-*.md` | data engineer | validate, G1 | `templates/design/adr.md` |
+| `products/<id>/sql/*.sql` | data engineer | G1 rules, G3 | |
+| `products/<id>/acceptance.yaml` | data engineer with the business | G2, G4 | |
 
 The manifest links the two specs with `specs.brd` and `specs.tdd`, relative to
-`openspec/specs/`.
+`openspec/specs/`. [Section 6.7](#67-templates-for-the-define-and-design-stages) describes
+the templates.
 
 ### 6.1 The BRD
 
@@ -999,6 +1004,37 @@ Every business scenario (`AX-n`) maps to one acceptance test (`AT-n`):
 | `access_limited` | `port:<port>` | only the declared groups can read the data, and there is no sharing |
 
 The `fixture:` key says how to seed the build before the live run.
+
+### 6.7 Templates for the Define and Design stages
+
+`templates/` holds a template for every document from a candidate use case to G1. Read
+[`templates/README.md`](../templates/README.md) for the detail.
+
+| Stage | Template | Use it to |
+|---|---|---|
+| Define 1 | `define/1-use-case.pdf` | describe one candidate use case |
+| Define 2 | `define/2-scorecard.pdf` | score up to five use cases for value and ease |
+| Define 3 | `define/3-prioritisation.pdf` | place them on the matrix and record a signed decision |
+| Define 4 | `define/4a-brd.pdf` or `define/4b-prd.pdf` | write the business or product requirements |
+| Design | `design/tdd-spec.md`, `semantics.md`, `product.yaml`, `adr.md` | write the documents that G1 checks |
+
+The Define templates are fillable PDFs written in business language. `dpf` does not read
+them and no gate checks them. The scorecard uses 11 weighted criteria scored from 1 to 5:
+seven for value and four for ease, including data readiness and delivery risk. The
+prioritisation matrix splits each axis at 3.0 into four quadrants: quick win, strategic bet,
+fill-in and deprioritise. Change the default weights in `templates/scoring.yaml`, then run
+`make templates`.
+
+The business writes either a BRD or a PRD. Both answer the same rubric, and the
+`author-brd` skill records either one as the BRD in the repository. A PRD keeps its number
+(`PRD-SALES-003` is recorded as `BRD-SALES-003`) and the Purpose line names it with
+`**Source:**`. Name the approved use case on the same line with `**Use case:**`.
+
+Two worked examples show the templates filled in:
+[`examples/use-case-portfolio/`](../examples/use-case-portfolio/README.md) scores the three
+use cases of the seed template, and
+[`examples/sales_performance/define/`](../examples/sales_performance/define/README.md) traces
+UC-SALES-001 through BRD-SALES-002 to the decisions of TDD-SALES-002.
 
 ## 7. Understand what the generators produce
 

@@ -14,7 +14,7 @@ TEMPLATE_PATHS = [
     "openspec/changes/README.md", "openspec/specs/platform", "contracts", "methodologies", "engines",
     "skills", "registry", "adr", "dpf", "tools/dpf", "pyproject.toml", "requirements", "Makefile", ".gitignore",
     ".github/workflows/ci.yml", "tests/contracts", "tests/evals/README.md", "tests/golden/README.md",
-    "docs/user-guide.md",
+    "docs/user-guide.md", "templates",
 ]
 EMPTY_DIRS = ["openspec/specs/products", "openspec/changes", "products", "generated", "evidence", "tests/golden"]
 EXCLUDED = ["openspec/specs/products/*", "products/*", "examples/", "generated/", "evidence/", "tests/golden/*",
@@ -51,13 +51,16 @@ def init(ws: Workspace, target: Path, report: Report) -> int:
         "## First product\n\n"
         "1. Set `gcp_project`, `region` and `business_timezone` in `registry/platform-defaults.yaml`.\n"
         "2. Add source systems to `registry/source_systems.yaml` and agreed terms to `registry/glossary.yaml`.\n"
-        "3. Write the BRD in business language (`skills/author-brd`):\n"
+        "3. With the business, describe, score and choose the use case, then write a BRD or a PRD\n"
+        "   (`templates/define/`, see `templates/README.md`).\n"
+        "4. Record the BRD in business language (`skills/author-brd`):\n"
         "   `openspec/specs/products/<domain>/<product>/brd/spec.md` and `brd.yaml`.\n"
-        "4. `dpf brd validate <product>` until G0 passes.\n"
-        "5. `dpf tdd resolve <product>`; write the TDD spec, `semantics.md` and `products/<product>/product.yaml`.\n"
-        "6. The business owner reads `semantics.md`; record it with `dpf signoff <product> --by <name> --role business_owner`.\n"
-        "7. `dpf check <product> --gate G2`, then `dpf generate <product>` and `dpf check <product> --gate G3`.\n"
-        "8. Deploy, `dpf test run <product> --live`, attest, and `dpf check <product> --gate G4`.\n\n"
+        "5. `dpf brd validate <product>` until G0 passes.\n"
+        "6. `dpf tdd resolve <product>`; write the TDD spec, `semantics.md` and `products/<product>/product.yaml`\n"
+        "   from `templates/design/`.\n"
+        "7. The business owner reads `semantics.md`; record it with `dpf signoff <product> --by <name> --role business_owner`.\n"
+        "8. `dpf check <product> --gate G2`, then `dpf generate <product>` and `dpf check <product> --gate G3`.\n"
+        "9. Deploy, `dpf test run <product> --live`, attest, and `dpf check <product> --gate G4`.\n\n"
         "See `docs/user-guide.md`.\n", encoding="utf-8")
     report.info("not copied (example material): " + ", ".join(EXCLUDED))
     return 0

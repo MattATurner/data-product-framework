@@ -1,0 +1,223 @@
+# product.yaml template · Design stage · Data Product Framework
+#
+# The resolved design (contract product-manifest.v1), written from the TDD. Save it as
+# products/<product_id>/product.yaml. Worked examples: products/customer_orders/product.yaml
+# (simple, direct only) and products/sales_performance/product.yaml (silver layer, history,
+# masking and a sharing listing).
+#
+# Rules that G1 checks:
+# - Every source, model, port, quality rule, schedule, observability policy and policy tag
+#   cites the BRD requirements it satisfies (brd_requirement_id) or the platform capability
+#   it implements (implements). An element with neither fails.
+# - Every BRD requirement is cited by at least one element.
+# - tdd_id and satisfies match the decision line of tdd/spec.md and the current BRD version.
+# - A methodology other than the `direct` default needs an ADR with `decides: methodology`.
+#
+# Replace every <placeholder>. (The Markdown templates use {placeholder}; YAML cannot, because
+# a value that starts with a brace is read as a mapping.) Blocks marked OPTIONAL are commented
+# out: uncomment them only when the TDD needs them. Then run `dpf validate` and
+# `dpf check <product_id> --gate G1`.
+
+product_id: <product_id>                  # lower case and underscores, for example sales_performance
+version: 1.0.0
+status: draft                             # draft | provisional | published | deprecated
+owner: <business-owner-team>
+steward: <data-steward-team>
+domain: <domain>
+classification: <INTERNAL>                # your organisation's classification label
+specs:                                    # folders under openspec/specs/
+  brd: products/<domain>/<product-name>/brd
+  tdd: products/<domain>/<product-name>/tdd
+brd_id: BRD-<DOMAIN>-<nnn>
+tdd_id: TDD-<DOMAIN>-<nnn>                # equals **TDD:** in tdd/spec.md
+satisfies: BRD-<DOMAIN>-<nnn>@<x.y.z>     # equals **Satisfies:** in tdd/spec.md and the BRD version
+adrs: []                                  # every ADR that a TDD decision cites
+acceptance: acceptance.yaml               # maps each acceptance example (AX-n) to a test (AT-n)
+
+deployment:
+  gcp_project: <gcp-project-id>
+  region: us-central1                     # platform default
+  datasets:
+    raw: raw_<source_system>
+    staging: stg_<domain>
+    # silver: slv_<domain>                # OPTIONAL: needed when there is a silver layer
+    gold: gold_<domain>
+    # share: share_<domain>_<reader>      # OPTIONAL: own dataset for a sharing listing
+    assertions: dpf_assertions
+    control: dpf_control
+
+sources:
+  - system_id: <system_id>                # must exist in registry/source_systems.yaml
+    engine: <engine>                      # as in the registry: oracle, postgres, gcs_objects, ...
+    capture_mode: watermark               # snapshot | cdc | watermark | stream; the source must support it now
+    watermark_column: <change_timestamp_column>
+    # lookback_minutes: 15                # OPTIONAL: re-read window for rows that commit late
+    schedule: "0 5 * * *"
+    entities: [<entity>, <entity>]        # must be entities that the registry lists for the system
+    inspection_mcp_server: <mcp-server-id>  # the server used for the feasibility pass, or null
+    brd_requirement_id: [R-<n>]
+
+layers:
+  raw:
+    storage: bigquery_native
+
+  staging:
+    engine: dataform
+    storage: bigquery_native
+    models:
+      - name: stg_<entity>
+        role: staging                     # staging models always use the platform role
+        grain_statement: one row per <thing> at its latest source state
+        grain_columns: [<key>]
+        natural_key: [<key>]
+        dedupe_order: [source_modified_ts DESC, _ingest_ts DESC]
+        history_semantics: current_only
+        materialisation: view
+        body: sql/stg_<entity>.sql        # selects the natural key, the dedupe columns and source_modified_ts
+        brd_requirement_id: [R-<n>]
+
+  # OPTIONAL silver layer, when the TDD leaves the `direct` default (ADR with decides:
+  # methodology), for example for definitions shared with other teams or for values that
+  # keep what applied at the time. Kimball roles: dimension, fact, calendar.
+  # silver:
+  #   methodology: kimball
+  #   engine: dataform
+  #   storage: bigquery_native
+  #   models:
+  #     - name: dim_<entity>
+  #       role: dimension
+  #       grain_statement: one row per <thing> per validity period
+  #       grain_columns: [<key>, valid_from]
+  #       natural_key: [<key>]
+  #       surrogate_key: sk_<entity>
+  #       history_semantics: point_in_time
+  #       materialisation: table
+  #       conformed_as: dim_<entity>
+  #       attributes:
+  #         scd_type: 2
+  #         source: stg_<entity>
+  #         tracked: [<attribute that keeps the value that applied at the time>]
+  #         current: [<attribute that shows its current value>]
+  #       brd_requirement_id: [R-<n>]
+  #     - name: fct_<event>
+  #       role: fact
+  #       grain_statement: one row per <event>
+  #       grain_columns: [<key>, <key>]
+  #       natural_key: [<key>, <key>]
+  #       history_semantics: current_only
+  #       materialisation: incremental_table
+  #       partition_by: <event_date>
+  #       cluster_by: [sk_<entity>]
+  #       attributes:
+  #         fact_type: transaction
+  #         source: stg_<event>
+  #         event_date: <event_date>
+  #         restatement_window_days: 90     # the correction window in the BRD exceptions
+  #         dim_refs:
+  #           - {dimension: dim_<entity>, natural_key: <key>, as_at: <event_date>}
+  #         measures:
+  #           - {name: <measure>, additivity: additive}
+  #       brd_requirement_id: [R-<n>]
+
+  gold:
+    methodology: direct                   # platform default. Roles: business_view, nested_view, materialised_view
+    engine: dataform
+    storage: bigquery_native
+    models:
+      - name: <business_view_name>
+        role: business_view
+        grain_statement: one row per <thing> per <thing>
+        grain_columns: [<column>, <column>]   # equals **Grain:** of this model's TDD decision
+        history_semantics: current_only   # point_in_time where the BRD asks for values that applied at the time
+        materialisation: table            # required for consumption models
+        body: sql/<business_view_name>.sql
+        brd_requirement_id: [R-<n>]
+
+output_ports:
+  - name: <business_view_name>
+    model: <business_view_name>           # a gold model
+    type: bigquery_table                  # bigquery_table | bigquery_view | materialized_view | bigquery_sharing_listing
+    access: dataset_grant                 # dataset_grant | authorized_view (needs a view) | sharing_listing
+    consumers: [<team>]
+    brd_requirement_id: [R-<n>]
+  # OPTIONAL: external readers in the BRD need a sharing listing. The listed model needs its
+  # own dataset: set `dataset: share` on the gold model and add `share` to the datasets.
+  # - name: <extract_name>
+  #   model: <extract_model>
+  #   type: bigquery_sharing_listing
+  #   access: sharing_listing
+  #   consumers: [<external-reader>]
+  #   sharing:
+  #     exchange_id: <exchange_id>
+  #     listing_id: <listing_id>
+  #     subscriber_var: <variable that names the subscriber>
+  #   brd_requirement_id: [R-<n>]
+
+quality:
+  gate_behaviour: block                   # block when the BRD says bad data must stop publication
+  rules:
+    - id: QR-1
+      model: stg_<entity>                 # quarantine happens in staging
+      type: not_null                      # not_null | unique | range | set_membership | referential | freshness | row_count | custom_sql
+      column: <column>
+      severity: block
+      on_fail: quarantine                 # quarantine needs a row-level rule: not_null, range, set_membership, custom_sql
+      brd_requirement_id: [R-<n>]
+
+orchestration:
+  engine: dataform
+  timezone: Australia/Perth               # the business time zone; platform default
+  schedules:
+    - id: daily
+      cron: "0 6 * * *"
+      brd_requirement_id: [R-<n>]
+
+observability:
+  freshness:
+    - id: OB-1
+      model: <business_view_name>         # a table, incremental table or materialized view, not a view
+      max_staleness: PT13H
+      calendar: {days: [MON, TUE, WED, THU, FRI], start: "08:00", end: "18:00", timezone: Australia/Perth}
+      check_every: PT1H
+      brd_requirement_id: [R-<n>]
+  # volume:                               # OPTIONAL: alert when daily row counts move too far
+  #   - id: OB-2
+  #     model: <model>
+  #     window: P1D
+  #     date_column: <date_column>
+  #     expected_rows: <n>
+  #     tolerance_pct: 50
+  #     implements: monitor-data-product
+  schema_drift:
+    on_additive: land_and_record
+    on_breaking: quarantine_and_alert
+    implements: monitor-data-product
+  # quality_scans:                        # OPTIONAL: scheduled profile and quality scans
+  #   schedule: "30 6 * * *"
+  #   models: [<model>]
+  #   implements: enforce-data-quality
+  alerting:
+    notification_channel_var: alert_channel
+    # runbook: <path to the runbook>
+  slo:
+    objective: 0.99
+    window: P28D
+
+governance:
+  register: knowledge_catalog
+  registered_via: knowledge-catalog-mcp
+  access:                                 # needed when the BRD names who may access the data
+    - role: roles/bigquery.dataViewer
+      principal_var: <group_variable>
+      datasets: [gold]
+      description: <who this group is>
+  # OPTIONAL: restricted attributes in the BRD need policy tags.
+  # policy_tags:
+  #   - id: PT-1
+  #     model: <model>
+  #     columns: [<column>, <column>]
+  #     tag: <tag>
+  #     masking: always_null              # always_null | sha256 | default_masking_value
+  #     masked_readers: [<group_variable>]
+  #     fine_grained_readers: [<group_variable>]
+  #     brd_requirement_id: [R-<n>]

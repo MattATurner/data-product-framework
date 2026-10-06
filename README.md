@@ -87,7 +87,7 @@ build digest binds test evidence to exactly this build.
 
 | | Paths |
 |---|---|
-| **Template** (copied by `dpf init`) | `openspec/` config, schema, project context and `specs/platform/`; `contracts/`, `methodologies/`, `engines/`, `skills/`, `registry/`, `adr/`, `dpf/`, `requirements/`, CI, `docs/user-guide.md`, eval and golden READMEs |
+| **Template** (copied by `dpf init`) | `openspec/` config, schema, project context and `specs/platform/`; `contracts/`, `methodologies/`, `engines/`, `skills/`, `registry/`, `adr/`, `dpf/`, `requirements/`, CI, `docs/user-guide.md`, `templates/`, eval and golden READMEs |
 | **Example** (not copied) | `openspec/specs/products/`, `products/`, `examples/`, `tests/golden/*`, `evidence/`, the plan, method diagram and presentation in `docs/` |
 
 **`registry/` ships without project content by design**: the source-system, glossary,
@@ -136,6 +136,7 @@ offline checks cannot see, now fixed; see section 15 of the [user guide](docs/us
 | | |
 |---|---|
 | **User guide** | [`docs/user-guide.md`](docs/user-guide.md) |
+| **Define and Design templates** | [`templates/README.md`](templates/README.md): use case, scorecard, prioritisation, BRD or PRD (fillable PDFs); TDD, semantics, manifest and ADR (Markdown and YAML) |
 | **Presentation** | [`docs/presentation/index.html`](docs/presentation/index.html) (open from disk) |
 | Method diagram (interactive, offline) | [`docs/index.html`](docs/index.html), generated from the plan by `cd docs && python3 build_method_diagram.py` |
 | Design narrative | [`docs/data-product-framework-plan.md`](docs/data-product-framework-plan.md) |
@@ -154,8 +155,9 @@ engines/         engine adapters (dataform, dbt implemented; dataflow, spark pla
 skills/          platform skills (Agent Skills format with dpf metadata)
 registry/        platform defaults, MCP servers, BRD rubric and vocabulary (no example data)
 adr/             architecture decision records
+templates/       Define-stage forms (fillable PDFs) and Design-stage templates (Markdown, YAML)
 products/        resolved manifests, SQL bodies, acceptance mappings
-examples/        registry overlay, extractor, seed fixtures, Terraform wrapper, runbook
+examples/        registry overlay, extractor, seed fixtures, Terraform wrapper, runbook, Define examples
 generated/       build output (gitignored; regenerate at will)
 evidence/        test evidence per product and build digest (created by dpf test)
 tests/           unit, contract, golden copies, behavioural evals

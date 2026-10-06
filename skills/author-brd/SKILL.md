@@ -40,6 +40,22 @@ so the questions quietly determine design without ever naming it.
 The full rubric (groups A to K) is `registry/brd-rubric.yaml`; methodology packs add
 questions in `brd_elicitation_questions`.
 
+## Start from a filled template
+
+If the business has filled in `templates/define/4a-brd.pdf` (BRD) or `4b-prd.pdf` (PRD),
+start from it and interview only for the gaps. Keep the business's words. Read the answers:
+
+```python
+from pypdf import PdfReader
+answers = {k: v.get("/V") for k, v in PdfReader("filled-brd.pdf").get_fields().items()}
+```
+
+- A PRD is recorded as a BRD with the same number: `PRD-SALES-003` becomes `BRD-SALES-003`,
+  with `**Source:** PRD-SALES-003 v1.0.0` on the Purpose line.
+- Name the approved use case on the Purpose line, for example `**Use case:** UC-SALES-001`.
+- An answer left blank or marked "Unknown" becomes a `[NEEDS-DECISION: id]` or an open
+  question with an owner. Never fill it in yourself.
+
 ## Write
 
 - `openspec/specs/products/<domain>/<product>/brd/spec.md`: `## Purpose` with the

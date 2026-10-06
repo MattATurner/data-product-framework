@@ -1,6 +1,7 @@
 ## Why
 
-<!-- The trigger. For a monitor-opened change, quote the breach: policy id, observed value, threshold. -->
+<!-- The trigger. For a monitor-opened change, quote the breach: policy id, observed value, threshold.
+     For a new product, cite the approved use case (UC-...) and its prioritisation decision. -->
 
 ## What Changes
 
