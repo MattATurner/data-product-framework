@@ -137,6 +137,7 @@ offline checks cannot see, now fixed; see section 15 of the [user guide](docs/us
 |---|---|
 | **User guide** | [`docs/user-guide.md`](docs/user-guide.md) |
 | **Define and Design templates** | [`templates/README.md`](templates/README.md): use case, scorecard, prioritisation, BRD or PRD (fillable PDFs); TDD, semantics, manifest and ADR (Markdown and YAML) |
+| **Define worked examples** (filled PDFs) | UC-SALES-001: [use case](examples/sales_performance/define/use-case.pdf), [scorecard](examples/sales_performance/define/scorecard.pdf), [prioritisation](examples/sales_performance/define/prioritisation.pdf), [BRD](examples/sales_performance/define/brd.pdf). The seed's three use cases: [scorecard](examples/use-case-portfolio/scorecard.pdf), [prioritisation](examples/use-case-portfolio/prioritisation.pdf) |
 | **Presentation** | [`docs/presentation/index.html`](docs/presentation/index.html) (open from disk) |
 | Method diagram (interactive, offline) | [`docs/index.html`](docs/index.html), generated from the plan by `cd docs && python3 build_method_diagram.py` |
 | Design narrative | [`docs/data-product-framework-plan.md`](docs/data-product-framework-plan.md) |

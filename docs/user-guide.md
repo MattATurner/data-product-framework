@@ -1010,13 +1010,13 @@ The `fixture:` key says how to seed the build before the live run.
 `templates/` holds a template for every document from a candidate use case to G1. Read
 [`templates/README.md`](../templates/README.md) for the detail.
 
-| Stage | Template | Use it to |
-|---|---|---|
-| Define 1 | `define/1-use-case.pdf` | describe one candidate use case |
-| Define 2 | `define/2-scorecard.pdf` | score up to five use cases for value and ease |
-| Define 3 | `define/3-prioritisation.pdf` | place them on the matrix and record a signed decision |
-| Define 4 | `define/4a-brd.pdf` or `define/4b-prd.pdf` | write the business or product requirements |
-| Design | `design/tdd-spec.md`, `semantics.md`, `product.yaml`, `adr.md` | write the documents that G1 checks |
+| Stage | Template | Use it to | Worked example |
+|---|---|---|---|
+| Define 1 | [`define/1-use-case.pdf`](../templates/define/1-use-case.pdf) | describe one candidate use case | [UC-SALES-001](../examples/sales_performance/define/use-case.pdf) |
+| Define 2 | [`define/2-scorecard.pdf`](../templates/define/2-scorecard.pdf) | score up to five use cases for value and ease | [UC-SALES-001](../examples/sales_performance/define/scorecard.pdf); [seed portfolio](../examples/use-case-portfolio/scorecard.pdf) |
+| Define 3 | [`define/3-prioritisation.pdf`](../templates/define/3-prioritisation.pdf) | place them on the matrix and record a signed decision | [UC-SALES-001](../examples/sales_performance/define/prioritisation.pdf); [seed portfolio](../examples/use-case-portfolio/prioritisation.pdf) |
+| Define 4 | [`define/4a-brd.pdf`](../templates/define/4a-brd.pdf) or [`define/4b-prd.pdf`](../templates/define/4b-prd.pdf) | write the business or product requirements | [BRD-SALES-002](../examples/sales_performance/define/brd.pdf) (no PRD example yet) |
+| Design | [`design/tdd-spec.md`](../templates/design/tdd-spec.md), [`semantics.md`](../templates/design/semantics.md), [`product.yaml`](../templates/design/product.yaml), [`adr.md`](../templates/design/adr.md) | write the documents that G1 checks | [TDD-SALES-002](../openspec/specs/products/sales/sales-performance/tdd/spec.md), [`semantics.md`](../openspec/specs/products/sales/sales-performance/tdd/semantics.md), [`product.yaml`](../products/sales_performance/product.yaml), [ADRs](../products/sales_performance/adr/) |
 
 The Define templates are fillable PDFs written in business language. `dpf` does not read
 them and no gate checks them. The scorecard uses 11 weighted criteria scored from 1 to 5:

@@ -22,22 +22,28 @@ flowchart LR
 
 ## The templates
 
-| Stage | Step | Template | Filled in by | Result |
-|---|---|---|---|---|
-| Define | 1 | [`define/1-use-case.pdf`](define/1-use-case.pdf) | business sponsor | one candidate use case, described |
-| Define | 2 | [`define/2-scorecard.pdf`](define/2-scorecard.pdf) | scoring panel | value and ease scores for up to five use cases |
-| Define | 3 | [`define/3-prioritisation.pdf`](define/3-prioritisation.pdf) | decision forum | the matrix and a signed decision for each use case |
-| Define | 4a | [`define/4a-brd.pdf`](define/4a-brd.pdf) | business owner | business requirements, or ... |
-| Define | 4b | [`define/4b-prd.pdf`](define/4b-prd.pdf) | product manager | ... product requirements, with the same rubric |
-| Design | 5 | [`design/tdd-spec.md`](design/tdd-spec.md) | data engineer | the technical design: one decision for each design area |
-| Design | 5 | [`design/semantics.md`](design/semantics.md) | data engineer; signed by the business owner | the design played back in business language |
-| Design | 5 | [`design/product.yaml`](design/product.yaml) | data engineer | the resolved design (contract `product-manifest.v1`) |
-| Design | 5 | [`design/adr.md`](design/adr.md) | data engineer | a record of each departure from a platform default |
+| Stage | Step | Template | Filled in by | Result | Worked example |
+|---|---|---|---|---|---|
+| Define | 1 | [`define/1-use-case.pdf`](define/1-use-case.pdf) | business sponsor | one candidate use case, described | [UC-SALES-001](../examples/sales_performance/define/use-case.pdf) |
+| Define | 2 | [`define/2-scorecard.pdf`](define/2-scorecard.pdf) | scoring panel | value and ease scores for up to five use cases | [UC-SALES-001](../examples/sales_performance/define/scorecard.pdf); [seed portfolio](../examples/use-case-portfolio/scorecard.pdf) |
+| Define | 3 | [`define/3-prioritisation.pdf`](define/3-prioritisation.pdf) | decision forum | the matrix and a signed decision for each use case | [UC-SALES-001](../examples/sales_performance/define/prioritisation.pdf); [seed portfolio](../examples/use-case-portfolio/prioritisation.pdf) |
+| Define | 4a | [`define/4a-brd.pdf`](define/4a-brd.pdf) | business owner | business requirements, or ... | [BRD-SALES-002](../examples/sales_performance/define/brd.pdf) |
+| Define | 4b | [`define/4b-prd.pdf`](define/4b-prd.pdf) | product manager | ... product requirements, with the same rubric | none yet |
+| Design | 5 | [`design/tdd-spec.md`](design/tdd-spec.md) | data engineer | the technical design: one decision for each design area | [TDD-SALES-002](../openspec/specs/products/sales/sales-performance/tdd/spec.md) |
+| Design | 5 | [`design/semantics.md`](design/semantics.md) | data engineer; signed by the business owner | the design played back in business language | [sales-performance](../openspec/specs/products/sales/sales-performance/tdd/semantics.md) |
+| Design | 5 | [`design/product.yaml`](design/product.yaml) | data engineer | the resolved design (contract `product-manifest.v1`) | [sales_performance](../products/sales_performance/product.yaml) |
+| Design | 5 | [`design/adr.md`](design/adr.md) | data engineer | a record of each departure from a platform default | [ADR-SALES-002-01](../products/sales_performance/adr/ADR-SALES-002-01-kimball-in-silver.md), [ADR-SALES-002-02](../products/sales_performance/adr/ADR-SALES-002-02-watermark-not-cdc.md) |
 
 Each PDF opens with a "How to fill this in" box and ends with the next step. The Design
 templates carry their guidance in comments, which you delete when you finish. Placeholders
 are `{like this}` in Markdown and `<like this>` in YAML (the ADR front matter and
 `product.yaml`), because YAML reads a value that starts with a brace as a mapping.
+
+> [!TIP]
+> GitHub shows a PDF in the browser: click a link in the table above. In a local clone,
+> open the PDFs in a PDF reader. An editor preview often cannot show them. The worked
+> examples exist only in the framework repository: `dpf init` copies `templates/` into a new
+> workspace, but not the examples, so those links do not work there.
 
 ## Scoring and prioritisation
 
