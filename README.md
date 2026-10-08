@@ -4,13 +4,7 @@ A spec-driven, composable data engineering toolkit for building **data products*
 Google Cloud. Specs live in [OpenSpec](https://openspec.dev); a small Python CLI, `dpf`,
 checks a machine gate at every stage and generates everything that can be generated.
 
-```
- DEFINE                        DESIGN                 BUILD                     TEST              MONITOR
- use case ▶ score ▶ BRD ─G0─▶  TDD + semantics ─G1─▶  compose ─G2─▶ generate ─G3─▶ evidence ─G4─▶  observe ─▶ breach
- (business)                    + sign-off (joint)     (skills)      (artefacts)    (deployed run)  (policy)     │
-   ▲                                                                                                            │
-   └─────────── a breach or a new need opens an OpenSpec change, which passes the same gates again ◀────────────┘
-```
+![The data product cycle. Define (use case, score and choose, BRD or PRD) passes gate G0 to Design (TDD and manifest, semantics.md, business sign-off), G1 to Compose (skill per stage, engine adapter, scenario to test), G2 to Build (generate, golden copy), G3 to Test (deploy and run, evidence) and G4 to Monitor (observe, breach). A breach or a new need opens an OpenSpec change, which passes the same gates again.](docs/images/dpf-lifecycle.svg)
 
 Define starts before the BRD: the business describes each candidate use case, scores it for
 value and ease, and chooses what to build, with the [templates](templates/README.md). After
@@ -95,7 +89,7 @@ build digest binds test evidence to exactly this build.
 | | Paths |
 |---|---|
 | **Template** (copied by `dpf init`) | `openspec/` config, schema, project context, agent rules, changes README and `specs/platform/`; `contracts/`, `methodologies/`, `engines/`, `skills/`, `registry/`, `adr/`, `dpf/`, `tools/dpf`, `requirements/`, `pyproject.toml`, `Makefile`, `.gitignore`, CI, contract tests, `docs/user-guide.md`, `templates/`, eval and golden READMEs |
-| **Example** (not copied) | `openspec/specs/products/`, `products/`, `examples/`, `tests/golden/*`, `evidence/`, the plan, method diagram and presentation in `docs/` |
+| **Example** (not copied) | `openspec/specs/products/`, `products/`, `examples/`, `tests/golden/*`, `evidence/`, the plan, method diagram, presentation and README diagram in `docs/` |
 
 **`registry/` ships without project content by design**: the source-system, glossary,
 entity and conformance catalogues are empty, so a new project never inherits someone
@@ -171,7 +165,7 @@ skills/          platform skills (Agent Skills format with dpf metadata)
 registry/        platform defaults, MCP servers, BRD rubric and vocabulary (no example data)
 adr/             architecture decision records
 templates/       Define-stage forms (fillable PDFs) and Design-stage templates (Markdown, YAML)
-docs/            user guide, presentation, design narrative, method diagram
+docs/            user guide, presentation, design narrative, method diagram, README diagram (images/)
 products/        resolved manifests, SQL bodies, acceptance mappings
 examples/        registry overlay, extractor, seed fixtures, Terraform wrapper, runbook, Define examples
 generated/       build output (gitignored; regenerate at will)

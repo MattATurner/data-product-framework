@@ -1,0 +1,150 @@
+// The data product cycle: six stages, machine gates G0-G4 between them,
+// and an OpenSpec change that starts the next loop. Reads clockwise.
+// Colours match the deck's front page: Define/Design blue, Compose/Build amber, Test/Monitor green.
+// Dendrite source for dpf-lifecycle.svg. The SVG is the Dendrite SVG export with the
+// white page margin cropped off, so it sits cleanly on GitHub's light and dark themes.
+theme: "gcp-pro"
+renderOrder: nodes-first
+direction: right
+spacing: 28
+
+const Ink = "#202124"
+const SubText = "#5f6368"
+const CardBorder = "#dadce0"
+const White = "#ffffff"
+const Blue = "#1a73e8"
+const Amber = "#e37400"
+const Green = "#1e8e3e"
+const StepGrey = "#9aa0a6"
+
+Style @Root {
+  fill: "#f8fafd", strokeColor: "#dadce0", strokeWidth: 1.5, borderRadius: 16,
+  padding: 20, gap: 16, fontColor: "#3c4043", fontSize: 18, labelWeight: bold
+}
+Style @BlueStage {
+  fill: "#e8f0fe", strokeColor: "#8ab4f8", strokeWidth: 1.5, borderRadius: 12,
+  padding: 14, gap: 14, fontColor: $Ink, fontSize: 16, labelWeight: bold
+}
+Style @AmberStage {
+  fill: "#fef7e0", strokeColor: "#fde293", strokeWidth: 1.5, borderRadius: 12,
+  padding: 14, gap: 14, fontColor: $Ink, fontSize: 16, labelWeight: bold
+}
+Style @GreenStage {
+  fill: "#e6f4ea", strokeColor: "#81c995", strokeWidth: 1.5, borderRadius: 12,
+  padding: 14, gap: 14, fontColor: $Ink, fontSize: 16, labelWeight: bold
+}
+Style @Step {
+  width: 196, height: 50,
+  fill: $White, strokeColor: $CardBorder, strokeWidth: 1, borderRadius: 8,
+  fontColor: $Ink, subFontColor: $SubText,
+  fontSize: 14, subFontSize: 12, labelWeight: bold,
+  textAlign: "left", textVAlign: "middle",
+  iconPosition: "left", iconSize: 22, padding: 10, shadow: true
+}
+
+Zone @Cycle {
+  title: "The data product cycle"
+  subtitle: "A breach or a new need opens an OpenSpec change, which passes the same gates again"
+  style: @Root
+  layout: matrix
+  cols: 3
+  areas: [
+    "define  design  compose",
+    "monitor test    build"
+  ]
+  columnGap: 54
+  rowGap: 48
+
+  Zone @Define {
+    area: "define", title: "Define", subtitle: "Business owns"
+    style: @BlueStage, layout: column, align: center
+    [use_case: "Use case" | "describe the need"] { style: @Step, icon: "Lightbulb" }
+    [score: "Score & choose" | "value and ease"] { style: @Step, icon: "BarChart3" }
+    [brd: "BRD or PRD" | "the requirements"] { style: @Step, icon: "FileText" }
+  }
+
+  Zone @Design {
+    area: "design", title: "Design", subtitle: "Business and engineering"
+    style: @BlueStage, layout: column, align: center
+    [tdd: "TDD + manifest" | "how to build it"] { style: @Step, icon: "Layers" }
+    [semantics: "semantics.md" | "what it means"] { style: @Step, icon: "BookOpen" }
+    [signoff: "Business sign-off" | "on the digest"] { style: @Step, icon: "BadgeCheck" }
+  }
+
+  Zone @Compose {
+    area: "compose", title: "Compose", subtitle: "Skills and engines"
+    style: @AmberStage, layout: column, align: center
+    [skills: "Skill per stage" | "composable units"] { style: @Step, icon: "Puzzle" }
+    [engines: "Engine adapter" | "Dataform or dbt"] { style: @Step, icon: "Plug" }
+    [ax_at: "Scenario to test" | "each AX has an AT"] { style: @Step, icon: "ListChecks" }
+  }
+
+  Zone @Build {
+    area: "build", title: "Build", subtitle: "Generated artefacts"
+    style: @AmberStage, layout: column, align: center
+    [generate: "Generate" | "deterministic"] { style: @Step, icon: "Code" }
+    [golden: "Golden copy" | "reviewed, matched"] { style: @Step, icon: "GitCompare" }
+  }
+
+  Zone @Test {
+    area: "test", title: "Test", subtitle: "A deployed run"
+    style: @GreenStage, layout: column, align: center
+    [run: "Deploy and run" | "acceptance tests"] { style: @Step, icon: "Rocket" }
+    [evidence: "Evidence" | "per build digest"] { style: @Step, icon: "ClipboardCheck" }
+  }
+
+  Zone @Monitor {
+    area: "monitor", title: "Monitor", subtitle: "Observability policy"
+    style: @GreenStage, layout: column, align: center
+    [observe: "Observe" | "freshness, volume"] { style: @Step, icon: "Activity" }
+    [breach: "Breach" | "opens a change"] { style: @Step, icon: "ShieldAlert" }
+  }
+}
+
+// Steps inside each stage (thin grey)
+[use_case] -> [score] { sourceAnchor: "bottom", targetAnchor: "top", color: $StepGrey, strokeWidth: 1.5, curve: "step" }
+[score] -> [brd] { sourceAnchor: "bottom", targetAnchor: "top", color: $StepGrey, strokeWidth: 1.5, curve: "step" }
+[tdd] -> [semantics] { sourceAnchor: "bottom", targetAnchor: "top", color: $StepGrey, strokeWidth: 1.5, curve: "step" }
+[semantics] -> [signoff] { sourceAnchor: "bottom", targetAnchor: "top", color: $StepGrey, strokeWidth: 1.5, curve: "step" }
+[skills] -> [engines] { sourceAnchor: "bottom", targetAnchor: "top", color: $StepGrey, strokeWidth: 1.5, curve: "step" }
+[engines] -> [ax_at] { sourceAnchor: "bottom", targetAnchor: "top", color: $StepGrey, strokeWidth: 1.5, curve: "step" }
+[generate] -> [golden] { sourceAnchor: "bottom", targetAnchor: "top", color: $StepGrey, strokeWidth: 1.5, curve: "step" }
+[run] -> [evidence] { sourceAnchor: "bottom", targetAnchor: "top", color: $StepGrey, strokeWidth: 1.5, curve: "step" }
+[observe] -> [breach] { sourceAnchor: "bottom", targetAnchor: "top", color: $StepGrey, strokeWidth: 1.5, curve: "step" }
+
+// Machine gates between the stages (clockwise)
+[Define] -> [Design] {
+  sourceAnchor: "right", targetAnchor: "left", color: $Blue, strokeWidth: 2.5, curve: "step",
+  sequenceBadge: "G0", badgeFill: $Blue, badgeFontColor: $White, badgeDistance: 0.5
+}
+[Design] -> [Compose] {
+  sourceAnchor: "right", targetAnchor: "left", color: $Blue, strokeWidth: 2.5, curve: "step",
+  sequenceBadge: "G1", badgeFill: $Blue, badgeFontColor: $White, badgeDistance: 0.5
+}
+[Compose] -> [Build] {
+  sourceAnchor: "bottom", targetAnchor: "top", color: $Amber, strokeWidth: 2.5, curve: "step",
+  sequenceBadge: "G2", badgeFill: $Amber, badgeFontColor: $White, badgeDistance: 0.5
+}
+[Build] -> [Test] {
+  sourceAnchor: "left", targetAnchor: "right", color: $Amber, strokeWidth: 2.5, curve: "step",
+  sequenceBadge: "G3", badgeFill: $Amber, badgeFontColor: $White, badgeDistance: 0.5
+}
+[Test] -> [Monitor] {
+  sourceAnchor: "left", targetAnchor: "right", color: $Green, strokeWidth: 2.5, curve: "step",
+  sequenceBadge: "G4", badgeFill: $Green, badgeFontColor: $White, badgeDistance: 0.5
+}
+
+// The loop: a breach or a new need opens an OpenSpec change, which goes round the same gates
+[Monitor] -.-> [Define] {
+  sourceAnchor: "top", targetAnchor: "bottom", color: $Green, strokeWidth: 2.5, dashed: true, curve: "step",
+  label: "OpenSpec change", labelStyle: "pill", fontSize: 13
+}
+
+animation "One loop" {
+  step 1: [Define] -> [Design] { packet: "G0", color: "#1a73e8" }
+  step 2: [Design] -> [Compose] { packet: "G1", color: "#1a73e8" }
+  step 3: [Compose] -> [Build] { packet: "G2", color: "#e37400" }
+  step 4: [Build] -> [Test] { packet: "G3", color: "#e37400" }
+  step 5: [Test] -> [Monitor] { packet: "G4", color: "#1e8e3e" }
+  step 6: [Monitor] -> [Define] { packet: "Change", color: "#1e8e3e" }
+}
