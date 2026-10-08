@@ -5,10 +5,16 @@ Google Cloud. Specs live in [OpenSpec](https://openspec.dev); a small Python CLI
 checks a machine gate at every stage and generates everything that can be generated.
 
 ```
- DEFINE          DESIGN                 BUILD                     TEST              MONITOR
- BRD spec ─G0─▶  TDD + semantics ─G1─▶  compose ─G2─▶ generate ─G3─▶ evidence ─G4─▶  observe ─▶ breach ─▶ change
- (business)      + sign-off (joint)     (skills)      (artefacts)    (deployed run)  (policy)
+ DEFINE                        DESIGN                 BUILD                     TEST              MONITOR
+ use case ▶ score ▶ BRD ─G0─▶  TDD + semantics ─G1─▶  compose ─G2─▶ generate ─G3─▶ evidence ─G4─▶  observe ─▶ breach
+ (business)                    + sign-off (joint)     (skills)      (artefacts)    (deployed run)  (policy)     │
+   ▲                                                                                                            │
+   └─────────── a breach or a new need opens an OpenSpec change, which passes the same gates again ◀────────────┘
 ```
+
+Define starts before the BRD: the business describes each candidate use case, scores it for
+value and ease, and chooses what to build, with the [templates](templates/README.md). After
+the first release, every change goes round the same gates, so each loop leaves new evidence.
 
 The **data product is the atomic unit**. Every BRD scopes one, every TDD resolves one,
 every artefact traces back to one of its requirements.
@@ -44,14 +50,15 @@ dpf eval                                    # 19 behavioural evals
 make ci                                     # what CI runs
 ```
 
-Starting a new project: `dpf init ../my-workspace` copies the framework with an empty
-registry and no example material.
+Starting a new project: `dpf init ../my-workspace` copies the framework and the Define and
+Design templates, with an empty registry and no example material.
 
 ## How it fits together
 
 | Plane | Decides | Where |
 |---|---|---|
 | **Specs** | What the business needs (BRD) and how it is met (TDD, `semantics.md`, sign-off) | `openspec/specs/` |
+| **Templates** | Which use cases go ahead (scored and chosen before any BRD), and the starting shape of each Define and Design document | `templates/` |
 | **Manifest** | The resolved design: sources, models, grain, history, quality, ports, schedules, governance, observability | `products/<id>/product.yaml` |
 | **Methodology** | What *shape* the data takes. Optional and pluggable: `direct` (default) or `kimball` | `methodologies/` |
 | **Engine adapters** | What runs the transforms: Dataform and dbt implemented; Dataflow and Spark planned | `engines/` |
@@ -87,7 +94,7 @@ build digest binds test evidence to exactly this build.
 
 | | Paths |
 |---|---|
-| **Template** (copied by `dpf init`) | `openspec/` config, schema, project context and `specs/platform/`; `contracts/`, `methodologies/`, `engines/`, `skills/`, `registry/`, `adr/`, `dpf/`, `requirements/`, CI, `docs/user-guide.md`, `templates/`, eval and golden READMEs |
+| **Template** (copied by `dpf init`) | `openspec/` config, schema, project context, agent rules, changes README and `specs/platform/`; `contracts/`, `methodologies/`, `engines/`, `skills/`, `registry/`, `adr/`, `dpf/`, `tools/dpf`, `requirements/`, `pyproject.toml`, `Makefile`, `.gitignore`, CI, contract tests, `docs/user-guide.md`, `templates/`, eval and golden READMEs |
 | **Example** (not copied) | `openspec/specs/products/`, `products/`, `examples/`, `tests/golden/*`, `evidence/`, the plan, method diagram and presentation in `docs/` |
 
 **`registry/` ships without project content by design**: the source-system, glossary,
@@ -104,8 +111,14 @@ and vocabulary (`brd-rubric.yaml`, `brd-vocabulary.yaml`) and the MCP catalogue
 |---|---|---|
 | Path | `direct` | Kimball silver, `direct` gold |
 | Source | object-store CSV | on-premises Oracle, outbound watermark extract (ADR-015) |
+| Define | none | UC-SALES-001: use case, scorecard (a quick win), prioritisation and BRD as filled PDFs |
 | BRD | BRD-SALES-001 @ 1.1.0 | BRD-SALES-002 @ 1.2.0 |
 | Shows | the minimum: every gate, no modelling ceremony | Type 2 history, quarantine + reject gate (R-11), masking (R-12), partner sharing (R-13), monitoring |
+
+UC-SALES-001 ([`examples/sales_performance/define/`](examples/sales_performance/define/README.md))
+was written after the product to show the chain from use case to design, so its scores are
+illustrative. [`examples/use-case-portfolio/`](examples/use-case-portfolio/README.md) scores
+the three use cases of the seed template on the same scorecard.
 
 `sales_performance` also shows the framework catching a real constraint: the source cannot
 be reached inbound from Google Cloud, so the 15-minute freshness requirement was **raised
@@ -151,15 +164,18 @@ offline checks cannot see, now fixed; see section 15 of the [user guide](docs/us
 openspec/        project context, custom `data-product` schema, platform + product specs, changes
 contracts/       22 versioned JSON Schemas: the typed handoffs
 dpf/             the CLI: gates, compose, generate/, trace, testing, monitor, lint, evals
+tools/dpf        runs the CLI from a checkout without installing it
 methodologies/   modelling packs (direct, kimball): roles, rules, skills
 engines/         engine adapters (dataform, dbt implemented; dataflow, spark planned)
 skills/          platform skills (Agent Skills format with dpf metadata)
 registry/        platform defaults, MCP servers, BRD rubric and vocabulary (no example data)
 adr/             architecture decision records
 templates/       Define-stage forms (fillable PDFs) and Design-stage templates (Markdown, YAML)
+docs/            user guide, presentation, design narrative, method diagram
 products/        resolved manifests, SQL bodies, acceptance mappings
 examples/        registry overlay, extractor, seed fixtures, Terraform wrapper, runbook, Define examples
 generated/       build output (gitignored; regenerate at will)
 evidence/        test evidence per product and build digest (created by dpf test)
 tests/           unit, contract, golden copies, behavioural evals
+requirements/    hash-locked Python requirements: dev, dbt, templates
 ```
