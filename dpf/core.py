@@ -425,14 +425,23 @@ class Product:
     # -- requirement ids
     @cached_property
     def requirement_ids(self) -> list[str]:
-        ids = [r.meta.get("id") for r in self.brd_spec.requirements if r.meta.get("id")]
+        ids = [r.meta.get("id") for r in self.brd_spec.requirements
+               if r.meta.get("id") and r.meta.get("status", "active").lower() != "deferred"]
+        return sorted(set(ids), key=lambda x: int(x.split("-")[1]))
+
+    @cached_property
+    def deferred_requirement_ids(self) -> list[str]:
+        ids = [r.meta.get("id") for r in self.brd_spec.requirements
+               if r.meta.get("id") and r.meta.get("status", "").lower() == "deferred"]
         return sorted(set(ids), key=lambda x: int(x.split("-")[1]))
 
     @cached_property
     def scenario_ids(self) -> dict[str, str]:
-        """AX id -> owning R id."""
+        """AX id -> owning R id (active requirements only)."""
         out = {}
         for r in self.brd_spec.requirements:
+            if r.meta.get("status", "active").lower() == "deferred":
+                continue
             for s in r.scenarios:
                 if s.meta.get("id"):
                     out[s.meta["id"]] = r.meta.get("id")

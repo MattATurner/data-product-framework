@@ -15,6 +15,13 @@ from dpf import __version__
 from dpf.core import Report, Workspace, find_root
 
 GATES = ["G0", "G1", "G2", "G3", "G4"]
+GATE_ALIASES = {
+    "G0": "G0", "define": "G0",
+    "G1": "G1", "design": "G1",
+    "G2": "G2", "compose": "G2",
+    "G3": "G3", "build": "G3",
+    "G4": "G4", "test": "G4",
+}
 
 
 def _products(ws: Workspace, args) -> list:
@@ -69,7 +76,7 @@ def cmd_signoff(ws, args, report):
     from dpf.design import write_signoff
     p = ws.product(args.product)
     report.head(f"sign-off — {p.id}", gate="G1")
-    so = write_signoff(p, args.by, args.role, args.date, args.note)
+    so = write_signoff(p, args.by, args.role, args.date, args.note, args.link)
     errs = ws.validate(so, "signoff.v1")
     report.check(not errs, f"signed {so['brd']} semantics by {args.by} ({args.role}); covers {', '.join(so['covers'])}; "
                            f"digest {so['semantic_digest'][:19]}…", f"signoff.yaml invalid: {'; '.join(errs[:3])}")
@@ -118,7 +125,7 @@ def cmd_test(ws, args, report):
     if args.test_cmd == "run":
         run_tests(p, report, live=args.live, environment=args.env, only=args.only)
     elif args.test_cmd == "attest":
-        attest(p, report, args.test, args.by, args.role, args.note, args.env)
+        attest(p, report, args.test, args.by, args.role, args.note, args.env, args.link)
 
 
 def cmd_monitor(ws, args, report):
@@ -137,7 +144,7 @@ def cmd_check(ws, args, report):
     from dpf.trace import check_trace
     from dpf.validate import validate
 
-    upto = GATES.index(args.gate)
+    upto = GATES.index(GATE_ALIASES[args.gate])
     products = _products(ws, args)  # an unknown product is a usage error before any check runs
     if upto >= 3:
         validate(ws, report)
@@ -209,6 +216,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--role", required=True, help="their role, e.g. business_owner")
     sp.add_argument("--date", help="YYYY-MM-DD (default: today)")
     sp.add_argument("--note")
+    sp.add_argument("--link", action="append", help="link to an approval email, wiki page or ticket (repeatable)")
     sp.set_defaults(fn=cmd_signoff)
 
     sp = sub.add_parser("compose", parents=[common], help="G2: select skills per stage and map scenarios to tests")
@@ -247,6 +255,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--by", required=True)
     sp.add_argument("--role", required=True, help="must match attested_by_role in acceptance.yaml")
     sp.add_argument("--note")
+    sp.add_argument("--link", action="append", help="link to supporting evidence, email or wiki page (repeatable)")
     sp.add_argument("--env", default="test")
     sp.set_defaults(fn=cmd_test)
 
@@ -258,7 +267,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     sp = sub.add_parser("check", parents=[common], help="run every gate up to --gate (cumulative)")
     product_args(sp)
-    sp.add_argument("--gate", choices=GATES, default="G3", help="highest gate to check (default G3)")
+    sp.add_argument("--gate", choices=list(GATE_ALIASES), default="G3",
+                    help="highest gate to check: G0/define, G1/design, G2/compose, G3/build (default), G4/test")
     sp.set_defaults(fn=cmd_check)
 
     sp = sub.add_parser("eval", parents=[common], help="run the behavioural evals in tests/evals/")

@@ -68,6 +68,14 @@
           "note": {
             "type": "string"
           },
+          "links": {
+            "type": "array",
+            "description": "Optional URLs or references to supporting artefacts, emails or wiki pages.",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
           "finished_at": {
             "type": "string",
             "format": "date-time"

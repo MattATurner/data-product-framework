@@ -57,7 +57,15 @@ the same thing to everyone.
 | **Ease**: how easily can we deliver it? | Small financial investment (2), Small time investment (3), Data readiness (4), Low delivery risk (3) |
 
 Data readiness and delivery risk are new to this framework; the other nine criteria come
-from the seed use-case template. For each axis:
+from the seed use-case template.
+
+**How each section of `1-use-case.pdf` is used downstream:**
+
+- **Justification (SWOT)** directly feeds three Value criteria on the scorecard (`2-scorecard.pdf`): *Builds on a strength* (weight 2), *Reduces a weakness* (weight 2) and *Defends against a threat* (weight 4). The `assess-use-case` skill checks that the SWOT rows give specific evidence before the panel scores them.
+- **Classification** (*New product*, *Improve operations*, *Improve intelligence*, *Productise data*, *Enhance company valuation*) tells the decision forum (`3-prioritisation.pdf`) what kind of value the use case creates and which benefit measures (profit, cost, revenue, valuation) should appear in the Benefits table.
+- **Business questions, Data landscape, Organisational changes and Risks** carry forward into the BRD or PRD (`4a-brd.pdf` / `4b-prd.pdf`) once the use case is approved. SWOT and Classification stay in the Define portfolio pack and are not carried into technical code generation.
+
+For each axis:
 
 ```text
 axis score = sum of (weight x score) for the axis / sum of the axis weights

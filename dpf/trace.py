@@ -86,6 +86,8 @@ def trace_matrix(p: Product, b: Build | None = None) -> dict:
     current, stale = latest_results(p, b.digest) if b.ok else ({}, {})
     rows = []
     for req in p.brd_spec.requirements:
+        if req.meta.get("status", "active").lower() == "deferred":
+            continue
         rid = req.meta.get("id")
         if not rid:
             continue

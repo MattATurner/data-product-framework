@@ -38,7 +38,7 @@ from dpf.core import Report, Workspace, load_yaml
 
 COPY = ["contracts", "registry", "methodologies", "engines", "skills", "openspec", "products", "adr",
         "examples", "tests/golden", "evidence"]
-IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", "out", "node_modules")
+IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", "out", "node_modules", ".terraform", ".terraform.lock.hcl", "*.tfstate*")
 TOKEN = re.compile(r"^([^\[\]]+)(?:\[([^\]]+)\])?$")
 
 

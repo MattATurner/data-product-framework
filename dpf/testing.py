@@ -410,7 +410,7 @@ def run_tests(p: Product, report: Report, live: bool = False, environment: str =
 
 
 def attest(p: Product, report: Report, test: str, by: str, role: str, note: str | None = None,
-           environment: str = "test") -> int:
+           environment: str = "test", links: list[str] | None = None) -> int:
     b = build(p)
     report.head(f"attest — {p.id} {test}", gate="G4")
     case_id = test if test.startswith("acceptance:") else f"acceptance:{test}"
@@ -422,10 +422,12 @@ def attest(p: Product, report: Report, test: str, by: str, role: str, note: str 
         report.fail(f"{test} must be attested by role '{case.get('attested_by_role')}', not '{role}'")
         return 1
     run_id = datetime.now(timezone.utc).strftime(f"attest-{test.split(':')[-1]}-%Y%m%dT%H%M%SZ")
+    res = {"test_id": case_id, "status": "passed", "attested_by": f"{by} ({role})",
+           "note": note or case["description"], "finished_at": now_iso()}
+    if links:
+        res["links"] = list(links)
     doc = {"product_id": p.id, "artefact_digest": b.digest, "run_id": run_id, "environment": environment,
-           "recorded_at": now_iso(),
-           "results": [{"test_id": case_id, "status": "passed", "attested_by": f"{by} ({role})",
-                        "note": note or case["description"], "finished_at": now_iso()}]}
+           "recorded_at": now_iso(), "results": [res]}
     write_json(p.evidence_dir / f"{run_id}.json", doc)
     report.ok(f"recorded attestation of {test} by {by} ({role}) for build {b.digest[:19]}…")
     return 0

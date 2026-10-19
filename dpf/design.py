@@ -477,7 +477,8 @@ def _signoff(p: Product, report: Report) -> None:
 
 
 # ----------------------------------------------------------------- commands
-def write_signoff(p: Product, by: str, role: str, when: str | None = None, note: str | None = None) -> dict:
+def write_signoff(p: Product, by: str, role: str, when: str | None = None, note: str | None = None,
+                  links: list[str] | None = None) -> dict:
     so = {
         "product_id": p.id,
         "signed_by": by,
@@ -490,6 +491,8 @@ def write_signoff(p: Product, by: str, role: str, when: str | None = None, note:
     }
     if note:
         so["note"] = note
+    if links:
+        so["links"] = list(links)
     import yaml
     header = ("# Business signature on semantics.md (contract signoff.v1), written by `dpf signoff`.\n"
               "# Bound to the semantic digest: editing semantics.md or any model's grain or history\n"

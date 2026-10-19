@@ -19,24 +19,25 @@ every artefact traces back to one of its requirements.
 
 | Gate | Passes when | Command |
 |---|---|---|
-| **G0** Define | The BRD answers the rubric, is approved, and uses no modelling vocabulary | `dpf brd validate <product>` |
-| **G1** Design | The TDD and manifest resolve every requirement; methodology, grain and history are justified; the business sign-off matches the semantic digest | `dpf check <product> --gate G1` |
-| **G2** Compose | Each stage selects a skill and an implemented engine adapter; every business scenario (AX) maps to an acceptance test (AT) | `dpf check <product> --gate G2` |
-| **G3** Build | Artefacts generate deterministically, match the reviewed golden copy, and every requirement reaches a decision, an artefact and a test | `dpf check <product> --gate G3` |
-| **G4** Test | Every test has passing evidence for the **current** build digest | `dpf check <product> --gate G4` |
-| Monitor | The deployed product meets its observability policy; a breach opens an OpenSpec change | `dpf monitor <product>` |
+| **G0 · Define** | The BRD answers the rubric, is approved, and uses no modelling vocabulary | `dpf brd validate <product>` (or `--gate define`) |
+| **G1 · Design** | The TDD and manifest resolve every active requirement; methodology, grain and history are justified; the business sign-off matches the semantic digest | `dpf check <product> --gate G1` (or `--gate design`) |
+| **G2 · Compose** | Each stage selects a skill and an implemented engine adapter; every business scenario (AX) maps to an acceptance test (AT) | `dpf check <product> --gate G2` (or `--gate compose`) |
+| **G3 · Build** | Artefacts generate deterministically, match the reviewed golden copy, and every requirement reaches a decision, an artefact and a test | `dpf check <product> --gate G3` (or `--gate build`) |
+| **G4 · Test** | Every test has passing evidence for the **current** build digest | `dpf check <product> --gate G4` (or `--gate test`) |
+| **Monitor** | The deployed product meets its observability policy; a breach opens an OpenSpec change | `dpf monitor <product>` |
 
-Gates are cumulative (`--gate G3` runs G0–G3). Exit code 0 means pass, 1 fail, 2 usage error,
-and `--json` gives a machine-readable report, so the same commands run locally and in CI.
+Gates are cumulative (`--gate G3` or `--gate build` runs G0–G3), and accept either the number (`G0`–`G4`) or the stage name (`define`, `design`, `compose`, `build`, `test`). Exit code 0 means pass, 1 fail, 2 usage error, and `--json` gives a machine-readable report, so the same commands run locally and in CI.
+
+**What is a golden copy?** A [golden copy](tests/golden/README.md) (`tests/golden/<product>/`) is the committed, human-reviewed snapshot of `dpf generate` output. At G3, `dpf` builds the product twice in memory to prove generation is deterministic, then compares the output against `tests/golden/<product>/` so any unintended change to generated SQL, Terraform or tests is caught in pull-request review.
 
 ## Quick start
 
 ```bash
-python3 -m venv .venv && . .venv/bin/activate
-pip install -e '.[dev]'                     # gives you `dpf`; add [gcp] for live tests and monitoring
-                                            # or `make install`: the hash-locked versions CI uses
+python3 -m venv .venv && source .venv/bin/activate
+pip install '.[dev]'                        # installs `dpf` (use `pip install -e '.[dev]'` if editing dpf itself;
+                                            # add [gcp] for live tests/monitoring, or `make install` for CI hash pins)
 
-dpf check --all --gate G3                   # both worked examples, G0 to G3: all pass
+dpf check --all --gate G3                   # both worked examples, G0 to G3: all pass (also accepts `--gate build`)
 dpf generate sales_performance              # writes generated/sales_performance/
 dpf trace sales_performance --print         # requirement -> decision -> element -> artefact -> test -> evidence
 dpf test plan sales_performance             # every test case and what it satisfies
@@ -56,7 +57,7 @@ Design templates, with an empty registry and no example material.
 | **Specs** | What the business needs (BRD) and how it is met (TDD, `semantics.md`, sign-off) | `openspec/specs/` |
 | **Templates** | Which use cases go ahead (scored and chosen before any BRD), and the starting shape of each Define and Design document | `templates/` |
 | **Manifest** | The resolved design: sources, models, grain, history, quality, ports, schedules, governance, observability | `products/<id>/product.yaml` |
-| **Methodology** | What *shape* the data takes. Optional and pluggable: `direct` (default) or `kimball` | `methodologies/` |
+| **Methodology** | What *shape* the data takes. Optional and pluggable: [`direct`](methodologies/direct/METHODOLOGY.md) (default: stage, type and expose business views/tables directly with declared grain—no star-schema ceremony) or [`kimball`](methodologies/kimball/METHODOLOGY.md) (conformed dimensions and facts) | `methodologies/` |
 | **Engine adapters** | What runs the transforms: Dataform and dbt implemented; Dataflow and Spark planned | `engines/` |
 | **Skills** | Composable units of work, selected per stage by `selects_when` | `skills/`, `methodologies/*/skills/` |
 | **Agent skills** | Which skills a coding agent loads: the 11 it runs itself, not the 15 pipeline steps that `dpf compose` and `dpf generate` handle. Also agent-only skills, such as `assess-use-case`, which checks a use case before the panel scores it | `.agents/` |
@@ -85,7 +86,34 @@ build digest binds test evidence to exactly this build.
 4. **Nothing is built that cannot be traced to a requirement**, and nothing is accepted
    without evidence for the build being accepted.
 5. **Generated artefacts are never edited by hand.** Change the inputs, regenerate, and
-   review the golden diff.
+   review the golden diff. When source data is messy, write custom SQL cleansing, casting
+   and joins in `products/<id>/sql/*.sql`; `dpf` wraps your SQL with deduplication,
+   quarantine routing and assertions.
+
+## Common design questions
+
+- **Why `product.yaml` instead of writing dbt or Dataform directly?** One rule in
+  `product.yaml` (such as a quarantine rule `QR-1` or policy tag `PT-1`) coordinates
+  multiple planes at once: it generates the staging `_valid` and `_rejects` views and
+  blocking assertion in Dataform or dbt, the datasets, IAM grants, policy tags and
+  Knowledge Catalog quality scans in Terraform, the G4 test case, and the requirement trace
+  matrix. Meanwhile, messy source cleansing stays in plain SQL (`products/<id>/sql/*.sql`),
+  so you never lose SQL control.
+- **How does DPF relate to existing observability (Slack, PagerDuty) and engine tests?**
+  DPF generates Cloud Monitoring alert policies wired to your existing Slack or PagerDuty
+  notification channel (`var.alert_channel`) and compiles automated acceptance SQL into
+  native Dataform assertions or dbt tests. What DPF adds is **business-calendar evaluation**
+  (for example, checking freshness only during Perth working hours), **attestations** for
+  checks SQL cannot prove, and **requirement traceability** so a breach can open a pre-filled
+  OpenSpec change (`dpf monitor --open-change`) naming the exact BRD requirement at risk.
+- **Where does DPF use OpenSpec as-is, and where does it extend it?** DPF uses OpenSpec's
+  directory structure (`openspec/specs/`, `openspec/changes/`), `Requirement`/`Scenario`
+  markdown grammar, delta specs (`ADDED`/`MODIFIED`/`REMOVED`), `openspec validate --strict`,
+  and custom workflow schemas (`openspec/schemas/data-product/schema.yaml`). DPF extends
+  OpenSpec by splitting each product into a business-language BRD (`brd/spec.md` + `brd.yaml`)
+  and a technical TDD (`tdd/spec.md` + `semantics.md` + `signoff.yaml`), adding traceable
+  metadata lines (`**ID:** R-1`, `**Status:** deferred`, `**Decision:** D-3`), and enforcing
+  machine gates G0–G4.
 
 ## Template or example?
 

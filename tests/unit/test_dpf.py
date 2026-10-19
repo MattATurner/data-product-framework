@@ -285,10 +285,74 @@ def test_lint_terms_flags_retired_names_in_prose_only(tmp_path):
 # ----------------------------------------------------------------- CLI
 def test_cli_gate_exit_codes(capsys):
     assert main(["check", "--all", "--gate", "G3", "--quiet", "--root", str(ROOT)]) == 0
+    assert main(["check", "--all", "--gate", "build", "--quiet", "--root", str(ROOT)]) == 0
     capsys.readouterr()
     # customer_orders has no deployed-run evidence, so G4 must fail rather than pass on nothing.
     assert main(["check", "customer_orders", "--gate", "G4", "--quiet", "--root", str(ROOT)]) == 1
     assert "no evidence for build sha256:" in capsys.readouterr().out
+    assert main(["check", "customer_orders", "--gate", "test", "--quiet", "--root", str(ROOT)]) == 1
+    capsys.readouterr()
+
+
+def test_signoff_and_attest_support_attached_links(ws, sales):
+    so = dict(sales.signoff, links=["https://confluence.example.com/display/SALES/Signoff",
+                                    "mailto:approvals@example.com"])
+    assert ws.validate(so, "signoff.v1") == []
+    ev = {
+        "product_id": "sales_performance",
+        "artefact_digest": "sha256:" + "a" * 64,
+        "run_id": "attest-AT-5-20261005T230940Z",
+        "environment": "test",
+        "recorded_at": "2026-10-05T23:09:40Z",
+        "results": [{
+            "test_id": "acceptance:AT-5",
+            "status": "passed",
+            "attested_by": "Jane Doe (finance)",
+            "note": "Reconciled to GL",
+            "links": ["https://confluence.example.com/display/FIN/GL-Rec"],
+            "finished_at": "2026-10-05T23:09:40Z",
+        }],
+    }
+    assert ws.validate(ev, "test-evidence.v1") == []
+
+
+def test_deferred_requirement_passes_g0_and_is_excluded_from_g1(tmp_path):
+    import shutil
+    from dpf.brd import check_brd
+    from dpf.design import check_design
+    from dpf.evals import COPY, IGNORE
+
+    for rel in COPY:
+        src = ROOT / rel
+        if src.is_dir():
+            shutil.copytree(src, tmp_path / rel, ignore=IGNORE)
+    spec_file = tmp_path / "openspec/specs/products/sales/customer-orders/brd/spec.md"
+    spec_file.write_text(
+        spec_file.read_text(encoding="utf-8").replace(
+            "## Scope",
+            "### Requirement: Future loyalty tier breakdown\n"
+            "**ID:** R-99 · **Status:** deferred\n\n"
+            "Users SHALL be able to filter order totals by loyalty tier in phase 2.\n\n"
+            "#### Scenario: Loyalty filter\n"
+            "**ID:** AX-99\n"
+            "- **GIVEN** orders for customers in two loyalty tiers\n"
+            "- **WHEN** a user filters by loyalty tier\n"
+            "- **THEN** they see the order total for that tier\n\n"
+            "## Scope",
+        ),
+        encoding="utf-8",
+    )
+    twin_ws = Workspace(tmp_path)
+    p = twin_ws.product("customer_orders")
+    assert "R-99" not in p.requirement_ids
+    assert p.deferred_requirement_ids == ["R-99"]
+    assert "AX-99" not in p.scenario_ids
+    r0 = quiet()
+    check_brd(p, r0, write_gaps=False)
+    assert r0.failures == 0, r0.messages("fail")
+    r1 = quiet()
+    check_design(p, r1)
+    assert r1.failures == 0, r1.messages("fail")
 
 
 def test_g4_stale_evidence_fails_even_for_a_warn_level_case(sales, monkeypatch):

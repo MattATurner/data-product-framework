@@ -52,6 +52,14 @@
     },
     "note": {
       "type": "string"
+    },
+    "links": {
+      "type": "array",
+      "description": "Optional URLs or references to approval emails, Confluence pages or tickets.",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
     }
   },
   "additionalProperties": false

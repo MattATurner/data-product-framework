@@ -82,6 +82,7 @@ def check_brd(p: Product, report: Report, write_gaps: bool = True) -> list[dict]
 
     # -- requirements and scenarios (group J)
     req_ids: list[str] = []
+    deferred_ids: list[str] = []
     ax_ids: list[str] = []
     for r in spec.requirements:
         rid = r.meta.get("id")
@@ -91,6 +92,11 @@ def check_brd(p: Product, report: Report, write_gaps: bool = True) -> list[dict]
         if rid in req_ids:
             report.fail(f"requirement id {rid} is used twice")
         req_ids.append(rid)
+        st = r.meta.get("status", "active").lower()
+        if st not in ("active", "deferred"):
+            report.fail(f"{rid} has unknown status {r.meta.get('status')!r} (expected 'active' or 'deferred')")
+        elif st == "deferred":
+            deferred_ids.append(rid)
         if not r.normative:
             report.fail(f"{rid} '{r.name}' has no SHALL or MUST statement")
         scen = [s for s in r.scenarios if s.meta.get("id")]
@@ -110,6 +116,8 @@ def check_brd(p: Product, report: Report, write_gaps: bool = True) -> list[dict]
                 report.fail(f"{sid} '{s.name}' needs WHEN and THEN steps")
     if req_ids:
         report.ok(f"{len(req_ids)} requirements, {len(ax_ids)} acceptance scenarios")
+    if deferred_ids:
+        report.info(f"deferred requirement(s) (excluded from G1–G4 until status is active): {', '.join(deferred_ids)}")
 
     # -- rubric groups A..K
     for group in rubric.get("groups", []) or []:

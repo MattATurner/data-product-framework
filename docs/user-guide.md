@@ -58,15 +58,14 @@ flowchart LR
 
 | Gate | Stage | Passes when | Command |
 |---|---|---|---|
-| G0 | Define | The BRD answers every rubric question, is approved, and uses no modelling or technology words | `dpf brd validate <product>` |
-| G1 | Design | The TDD and manifest resolve every requirement. Methodology, grain and history are justified. The business signature matches the current semantics | `dpf check <product> --gate G1` |
-| G2 | Compose | Each pipeline stage selects exactly one skill and an implemented engine adapter. Every business scenario (AX) has an acceptance test (AT) | `dpf check <product> --gate G2` |
-| G3 | Build | Generation is deterministic and matches the reviewed golden copy. Every requirement reaches a decision, a generated file and a test | `dpf check <product> --gate G3` |
-| G4 | Test | Every test case has passing evidence for the current build digest | `dpf check <product> --gate G4` |
-| – | Monitor | The deployed product meets its observability policy. A breach can open an OpenSpec change | `dpf monitor <product>` |
+| **G0 · Define** | Define | The BRD answers every rubric question, is approved, and uses no modelling or technology words | `dpf brd validate <product>` (or `--gate define`) |
+| **G1 · Design** | Design | The TDD and manifest resolve every active requirement. Methodology, grain and history are justified. The business signature matches the current semantics | `dpf check <product> --gate G1` (or `--gate design`) |
+| **G2 · Compose** | Compose | Each pipeline stage selects exactly one skill and an implemented engine adapter. Every business scenario (AX) has an acceptance test (AT) | `dpf check <product> --gate G2` (or `--gate compose`) |
+| **G3 · Build** | Build | Generation is deterministic and matches the reviewed golden copy. Every requirement reaches a decision, a generated file and a test | `dpf check <product> --gate G3` (or `--gate build`) |
+| **G4 · Test** | Test | Every test case has passing evidence for the current build digest | `dpf check <product> --gate G4` (or `--gate test`) |
+| **Monitor** | Monitor | The deployed product meets its observability policy. A breach can open an OpenSpec change | `dpf monitor <product>` |
 
-Gates are cumulative: `--gate G3` runs G0 to G3. At G3 and G4, `dpf check` also runs
-`dpf validate` and `dpf lint` first.
+Gates are cumulative: `--gate G3` (or `--gate build`) runs G0 to G3, and `--gate` accepts either the gate code (`G0`–`G4`) or the stage name (`define`, `design`, `compose`, `build`, `test`). At G3 and G4, `dpf check` also runs `dpf validate` and `dpf lint` first.
 
 ### Who uses DPF
 
@@ -107,14 +106,14 @@ Gates are cumulative: `--gate G3` runs G0 to G3. At G3 and G4, `dpf check` also 
 | Acceptance mapping | Maps each `AX-n` to an acceptance test (`AT-n`): automated SQL, a static check or an attestation | `products/<id>/acceptance.yaml` |
 | Grain | What one row means (grain statement) and the columns that make a row unique (grain columns) | manifest, TDD |
 | History semantics | How attribute changes behave: `current_only` (latest values) or `point_in_time` (values at the event date) | manifest |
-| Methodology pack | A modelling style with roles, rules and skills: `direct` (default) or `kimball` | `methodologies/` |
+| Methodology pack | A modelling style with roles, rules and skills: [`direct`](../methodologies/direct/METHODOLOGY.md) (default: stage, type and expose business views/tables directly with declared grain—no star-schema split) or [`kimball`](../methodologies/kimball/METHODOLOGY.md) (conformed dimensions and facts) | `methodologies/` |
 | Engine adapter | Declares which roles an engine implements. Dataform and dbt are implemented; Dataflow and Spark are planned | `engines/` |
 | Skill | One unit of work for one pipeline stage, selected by its `selects_when` conditions | `skills/`, `methodologies/*/skills/` |
 | Tool tier | How a skill does its work, from 1 (managed remote MCP server) to 5 (bespoke code, needs an ADR) | `registry/mcp_servers.yaml` |
 | Contract | A JSON Schema for one hand-off, for example `product-manifest.v1`. There are 22 | `contracts/` |
 | Registry | Platform defaults and shared catalogues: source systems, glossary, entities, conformed dimensions, MCP servers | `registry/` |
 | Build digest | A sha256 over every input to the build. Evidence counts only for the digest it was recorded against | `MANIFEST.json` |
-| Golden copy | The reviewed, committed copy of the generated files | `tests/golden/<product>/` |
+| Golden copy | The reviewed, committed snapshot of `dpf generate` output (`tests/golden/<product>/`). G3 builds twice in memory to prove determinism and diffs against the golden copy so PR reviews catch any unintended change | [`tests/golden/`](../tests/golden/README.md) |
 | Trace matrix | Requirement → decision → element → artefact → test → evidence | `generated/<product>/trace.md` |
 | Evidence | A `test-evidence.v1` file with test results for one build digest | `evidence/<product>/*.json` |
 | Attestation | A recorded human confirmation for a test that SQL cannot check | `dpf test attest` |
@@ -138,9 +137,9 @@ Gates are cumulative: `--gate G3` runs G0 to G3. At G3 and G4, `dpf check` also 
 ### Install
 
 ```bash
-python3 -m venv .venv && . .venv/bin/activate
-pip install -e '.[dev]'        # dpf plus pytest; loose version pins
-pip install -e '.[dev,gcp]'    # also google-cloud-bigquery, for live tests and monitoring
+python3 -m venv .venv && source .venv/bin/activate
+pip install '.[dev]'           # dpf plus pytest (use `pip install -e '.[dev]'` if editing dpf itself)
+pip install '.[dev,gcp]'       # also google-cloud-bigquery, for live tests and monitoring
 make install                   # or: the hash-locked versions that CI uses
 ```
 
@@ -767,7 +766,10 @@ any period.
 G0 checks that:
 
 - each requirement has an `**ID:** R-n` line, uses SHALL or MUST, and has at least one scenario
-  with an `**ID:** AX-n` line, a WHEN step and a THEN step
+  with an `**ID:** AX-n` line, a WHEN step and a THEN step. A requirement that is being captured
+  early for a later release can add `· **Status:** deferred` on its `**ID:**` line: G0 still
+  validates its wording and scenarios, while G1–G4 exclude it from design and test coverage
+  until `**Status:** deferred` is removed (or changed to `active`)
 - the id and version agree between `spec.md` and `brd.yaml`, and `product_id` matches
 - every rubric group is answered, and `status` is `approved` (not `draft`, `in_review` or
   `superseded`)
@@ -838,8 +840,8 @@ mean, how history behaves, what is included and excluded, timing, and known limi
   If a customer is reclassified in June, their March sales still report under the old segment.
 ```
 
-`dpf signoff <product> --by <name> --role <role> [--date YYYY-MM-DD] [--note <text>]` writes
-`signoff.yaml`:
+`dpf signoff <product> --by <name> --role <role> [--date YYYY-MM-DD] [--note <text>] [--link <url>]` writes
+`signoff.yaml` (pass `--link` one or more times to attach links to approval emails, Confluence pages or tickets):
 
 ```yaml
 product_id: sales_performance
@@ -1491,15 +1493,15 @@ go **after** the subcommand, for example `dpf check --all --gate G3 --json`.
 | `brd validate` | `[product] [--all] [--no-write]` | `generated/<p>/gaps.md` | G0 |
 | `tdd stale` | – | – | every product against its BRD version |
 | `tdd resolve` | `<product>` | – | prints the resolution guide and methodology recommendation |
-| `signoff` | `<product> --by <name> --role <role> [--date] [--note]` | `signoff.yaml` | records the business signature |
-| `compose` | `[product] [--all] [--no-write]` | `dag.json`, `dag.md` | G2 |
-| `generate` | `[product] [--all] [--engine E] [--check] [--update-golden] [--no-write]` | `generated/<p>/` | G3 build ([section 7](#7-understand-what-the-generators-produce)) |
+| `signoff` | `<product> --by <name> --role <role> [--date] [--note] [--link URL ...]` | `signoff.yaml` | records the business signature and optional approval links |
+| `compose` | `[product] [--all] [--no-write]` | `dag.json`, `dag.md` | G2 · Compose |
+| `generate` | `[product] [--all] [--engine E] [--check] [--update-golden] [--no-write]` | `generated/<p>/` | G3 · Build ([section 7](#7-understand-what-the-generators-produce)) |
 | `trace` | `[product] [--all] [--no-write] [--print]` | `trace.json`, `trace.md` | G3 traceability |
 | `test plan` | `<product>` | – | prints the cases; with `--json`, the test spec |
 | `test run` | `<product> [--live] [--env E] [--only ID ...]` | `evidence/<p>/run-*.json` (live only) | static checks only without `--live` |
-| `test attest` | `<product> <AT-n> --by <name> --role <role> [--note] [--env]` | `evidence/<p>/attest-*.json` | the role must equal `attested_by_role` |
+| `test attest` | `<product> <AT-n> --by <name> --role <role> [--note] [--link URL ...] [--env]` | `evidence/<p>/attest-*.json` | the role must equal `attested_by_role` |
 | `monitor` | `<product> [--evidence FILE] [--open-change]` | a change folder (with `--open-change`) | observability policy |
-| `check` | `[product] [--all] [--gate G0-G4]` | as the gates do, except `gaps.md` | default gate G3; cumulative |
+| `check` | `[product] [--all] [--gate G0-G4\|define..test]` | as the gates do, except `gaps.md` | default gate G3 (`build`); cumulative |
 | `eval` | `[--id ID ...]` | temporary copies only | behavioural evals |
 | `init` | `<target>` | the new workspace | the target must be empty |
 
