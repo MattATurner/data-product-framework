@@ -1,0 +1,61 @@
+# Expected results for the assess-use-case fixtures.
+#
+# `mechanical` is checked by scripts/selftest.py: the provisional verdict, and the set of
+# (check, field, severity) findings, must match exactly (or `min_blocking` when given).
+# `final_verdict` and `judgement` say what an agent following SKILL.md should conclude:
+# `must` findings are required, `may` findings are acceptable. They are the pass criteria for
+# an agent eval; the self-test does not check them.
+#
+# `{skill}` stands for this skill's folder; other paths are relative to the workspace root.
+
+cases:
+  - id: worked-example
+    input: examples/sales_performance/define/use-case.yaml
+    mechanical:
+      verdict: Ready with fixes
+      findings:
+        - {check: placeholder-size, field: benefits, severity: should_fix}
+        - {check: signoff, field: Reviewed by, severity: should_fix}
+    final_verdict: Ready with fixes
+    judgement:
+      must:
+        - The financial notes give no currency.
+        - The risks do not cover privacy, although customer contact details are in scope (Access).
+      may:
+        - Proposed by gives a role but no name.
+        - The two unknowns in the risks name no one who can answer them.
+        - The status is Approved, which needs a signed prioritisation decision.
+        - No evidence for "Supports corporate strategy" or "Defends against a threat".
+      notes: Answers listed under `illustrative` count as answered; the report says so once.
+
+  - id: weak
+    # A copy of UC-SALES-001 with the worked example's open points closed (benefit sizes, a
+    # reviewer, a currency, privacy in the risks) and three faults planted: the description
+    # names a technology, the only business question gives no decision, and "Availability"
+    # says Unknown without naming who can answer.
+    input: "{skill}/fixtures/weak-use-case.yaml"
+    mechanical:
+      verdict: Not ready
+      findings:
+        - {check: no-complete-row, field: questions, severity: blocking}
+        - {check: unknown-no-owner, field: availability, severity: should_fix}
+        - {check: vocabulary, field: description, severity: should_fix}
+    final_verdict: Not ready
+    judgement:
+      must: []
+      may:
+        - The description frames the use case as building a dashboard rather than the need.
+        - No evidence for "Supports corporate strategy" or "Defends against a threat".
+
+  - id: blank-template
+    input: templates/define/1-use-case.pdf
+    needs: pypdf
+    mechanical:
+      verdict: Not ready
+      min_blocking: 20
+
+# Fill the blank form with the worked example's answers, read it back, and require the PDF
+# reader and the YAML reader to agree on every answer and every finding.
+pdf_round_trip:
+  template: templates/define/1-use-case.pdf
+  answers: examples/sales_performance/define/use-case.yaml

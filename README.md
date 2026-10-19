@@ -7,8 +7,10 @@ checks a machine gate at every stage and generates everything that can be genera
 ![The data product cycle. Define (use case, score and choose, BRD or PRD) passes gate G0 to Design (TDD and manifest, semantics.md, business sign-off), G1 to Compose (skill per stage, engine adapter, scenario to test), G2 to Build (generate, golden copy), G3 to Test (deploy and run, evidence) and G4 to Monitor (observe, breach). A breach or a new need opens an OpenSpec change, which passes the same gates again.](docs/images/dpf-lifecycle.svg)
 
 Define starts before the BRD: the business describes each candidate use case, scores it for
-value and ease, and chooses what to build, with the [templates](templates/README.md). After
-the first release, every change goes round the same gates, so each loop leaves new evidence.
+value and ease, and chooses what to build, with the [templates](templates/README.md). The
+`assess-use-case` agent skill checks each filled use case against its template before the
+panel scores it. After the first release, every change goes round the same gates, so each
+loop leaves new evidence.
 
 The **data product is the atomic unit**. Every BRD scopes one, every TDD resolves one,
 every artefact traces back to one of its requirements.
@@ -57,6 +59,7 @@ Design templates, with an empty registry and no example material.
 | **Methodology** | What *shape* the data takes. Optional and pluggable: `direct` (default) or `kimball` | `methodologies/` |
 | **Engine adapters** | What runs the transforms: Dataform and dbt implemented; Dataflow and Spark planned | `engines/` |
 | **Skills** | Composable units of work, selected per stage by `selects_when` | `skills/`, `methodologies/*/skills/` |
+| **Agent skills** | Which skills a coding agent loads: the 11 it runs itself, not the 15 pipeline steps that `dpf compose` and `dpf generate` handle. Also agent-only skills, such as `assess-use-case`, which checks a use case before the panel scores it | `.agents/` |
 | **Contracts** | 22 JSON Schemas for every handoff, from BRD to run evidence | `contracts/` |
 | **Generators** | Manifest + SQL bodies → Dataform or dbt, Terraform, tests, docs | `dpf/generate/` |
 
@@ -90,6 +93,8 @@ build digest binds test evidence to exactly this build.
 |---|---|
 | **Template** (copied by `dpf init`) | `openspec/` config, schema, project context, agent rules, changes README and `specs/platform/`; `contracts/`, `methodologies/`, `engines/`, `skills/`, `registry/`, `adr/`, `dpf/`, `tools/dpf`, `requirements/`, `pyproject.toml`, `Makefile`, `.gitignore`, CI, contract tests, `docs/user-guide.md`, `templates/`, eval and golden READMEs |
 | **Example** (not copied) | `openspec/specs/products/`, `products/`, `examples/`, `tests/golden/*`, `evidence/`, the plan, method diagram, presentation and README diagram in `docs/` |
+
+`.agents/` (the agent skill wiring and `assess-use-case`) is not copied yet.
 
 **`registry/` ships without project content by design**: the source-system, glossary,
 entity and conformance catalogues are empty, so a new project never inherits someone
@@ -162,6 +167,7 @@ tools/dpf        runs the CLI from a checkout without installing it
 methodologies/   modelling packs (direct, kimball): roles, rules, skills
 engines/         engine adapters (dataform, dbt implemented; dataflow, spark planned)
 skills/          platform skills (Agent Skills format with dpf metadata)
+.agents/         agent skill wiring (skills.json) and agent-only skills such as assess-use-case
 registry/        platform defaults, MCP servers, BRD rubric and vocabulary (no example data)
 adr/             architecture decision records
 templates/       Define-stage forms (fillable PDFs) and Design-stage templates (Markdown, YAML)

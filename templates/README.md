@@ -132,6 +132,13 @@ when the BRD is recorded in the repository. The Design templates are checked onc
 them into place: the TDD and `semantics.md` at G1, `product.yaml` by `dpf validate` and at
 G1, and ADRs by `dpf validate`.
 
+In the framework repository, the `assess-use-case` agent skill
+([`.agents/skills/assess-use-case/`](../.agents/skills/assess-use-case/SKILL.md)) checks a
+filled use case (step 1, the PDF or a YAML copy) against this template before the panel
+scores it. It reports a verdict (ready for scoring, ready with fixes, or not ready), each gap
+as a question for the sponsor, and the answers a scorer would rely on for each criterion in
+[`scoring.yaml`](scoring.yaml). It never fills in or scores the use case.
+
 ## Worked examples
 
 | Example | Shows |

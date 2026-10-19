@@ -1,0 +1,71 @@
+# TEST FIXTURE, NOT A REAL USE CASE. A deliberately weak copy of UC-SALES-001 for the
+# assess-use-case self-test and agent evals; every name and figure in it is invented.
+# What it tests, and the verdict it should get, are in expected.yaml (kept apart so that an
+# agent under evaluation does not read the answer).
+
+values:
+  uc_id: UC-SALES-901
+  title: Sales performance insight (weak test copy)
+  domain: Sales
+  proposed_by: Example Sponsor, Head of Sales Operations
+  date: "2026-10-01"
+  version: "0.1"
+  status: Candidate
+
+  description: >
+    Build a BigQuery dashboard that gives sales leadership one consistent view of which customer
+    segments, products and regions are growing. The figures must match how Finance reports revenue.
+
+  swot:
+    - type: W
+      item: Sales, Finance and Merchandising report different figures for the same period
+      how: One measure of net sales that reconciles with Finance's revenue
+    - type: S
+      item: One system of record already holds every order, customer and product
+      how: Builds on that system instead of collecting new data
+
+  classification: [intelligence]
+
+  questions:
+    - question: Which customer segments drove net sales growth this period?
+      who: Sales leadership
+      decision: ""
+
+  existing_data: The sales system of record holds orders, order lines, customers and products.
+  more_data: None expected.
+  better_data: None needed. The data is already held as structured records.
+  improved_data: Net sales must agree with Finance's revenue.
+  availability: Unknown
+  velocity: Roughly 40,000 order lines a day, needed fresh during the working day.
+
+  infrastructure: Read access to the sales system of record, and a new place to publish the figures.
+  governance: A shared definition of net sales, agreed with Finance.
+  access: General analysts must not see customer contact details.
+  culture: About 120 people will need a short briefing on the shared definitions.
+  structure: No change.
+
+  customer_impact: Indirect. Customers receive fewer duplicate contacts from the sales team.
+  partner_impact: None.
+
+  finance_band: 10k to 100k
+  finance_notes: GBP. Order-of-magnitude estimate.
+  time_band: 3 to 6 months
+  time_notes: ""
+
+  benefits:
+    - benefit: Better segment investment decisions each quarter
+      type: revenue
+      measure: Share of growth from the segments chosen for investment
+      size: About 1% of sales in the chosen segments
+    - benefit: Less time reconciling sales and finance figures
+      type: cost
+      measure: Hours spent on month-end reconciliation
+      size: About 300 hours a year
+
+  risks: >
+    Finance must agree the definition of net sales. Customer contact details are in scope, so
+    access must follow the privacy policy.
+
+  signoff:
+    Proposed by: {name: "Example Sponsor, Head of Sales Operations"}
+    Reviewed by: {name: "Example Reviewer, Data Governance Lead"}

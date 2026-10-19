@@ -1,0 +1,23 @@
+{
+  "entries": [
+    {
+      "path": "skills",
+      "include_only": [
+        "author-brd",
+        "validate-brd",
+        "resolve-tdd",
+        "compose-pipeline",
+        "render-engine-artefacts",
+        "test-data-product",
+        "trace-coverage",
+        "monitor-data-product",
+        "publish-data-product",
+        "register-knowledge-catalog"
+      ]
+    },
+    {
+      "path": "methodologies/kimball/skills",
+      "include_only": ["design-bus-matrix"]
+    }
+  ]
+}

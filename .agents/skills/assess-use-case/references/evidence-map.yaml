@@ -1,0 +1,46 @@
+# Which use-case answers a scorer reads for each scorecard criterion.
+#
+# check_use_case.py lists these answers under "evidence" so that the scoring panel scores from
+# the text, not from memory. Criteria come from templates/scoring.yaml; if that file gains a
+# criterion that is not mapped here, the script reports it, so the two cannot drift apart
+# silently.
+#
+# `from` lists field ids in templates/src/use-case.form.yaml. A grid can be filtered by a
+# column value with {field: <grid>, where: {<column>: <value or list of values>}}.
+# `ask` is the question to put to the sponsor when there is no evidence.
+
+version: 1
+criteria:
+  strategy:
+    from: [description, swot, benefits]
+    ask: Which corporate strategic objective does this use case serve, and how directly?
+  strength:
+    from: [{field: swot, where: {type: S}}]
+    ask: Which strength in the SWOT analysis does it build on?
+  weakness:
+    from: [{field: swot, where: {type: W}}]
+    ask: Which weakness in the SWOT analysis does it reduce?
+  threat:
+    from: [{field: swot, where: {type: T}}]
+    ask: Which threat in the SWOT analysis does it defend against?
+  profit:
+    from: [{field: benefits, where: {type: [profit, cost]}}]
+    ask: Will profit rise, for example through lower costs, and by roughly how much?
+  revenue:
+    from: [{field: benefits, where: {type: revenue}}]
+    ask: Will revenue rise, and by roughly how much?
+  customers:
+    from: [customer_impact]
+    ask: Will it win new customers or keep existing ones?
+  finance:
+    from: [finance_band, finance_notes]
+    ask: How much money does it need, and in which currency?
+  time:
+    from: [time_band, time_notes]
+    ask: How long will it take to implement?
+  data_readiness:
+    from: [existing_data, more_data, better_data, improved_data, availability, velocity]
+    ask: Does the data exist, can we trust it, and can we reach it today?
+  delivery_risk:
+    from: [risks, governance, access]
+    ask: What could stop or delay it, including legal or privacy concerns?

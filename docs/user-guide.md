@@ -729,7 +729,7 @@ The OB-3 breach is expected: `fct_order_line` held five seed lines, all dated Ma
 
 | File | Written by | Checked at | Start from |
 |---|---|---|---|
-| Use case, scorecard, prioritisation, and a BRD or PRD (fillable PDFs) | the business | not checked | `templates/define/` |
+| Use case, scorecard, prioritisation, and a BRD or PRD (fillable PDFs) | the business | no gate; the `assess-use-case` skill reviews a use case | `templates/define/` |
 | `openspec/specs/products/<domain>/<product>/brd/spec.md` and `brd.yaml` | business analyst | G0 | the approved BRD or PRD |
 | `.../tdd/spec.md` | data engineer | G1 | `templates/design/tdd-spec.md` |
 | `.../tdd/semantics.md` and `signoff.yaml` | data engineer; signed by the business owner | G1 | `templates/design/semantics.md` |
@@ -1019,7 +1019,11 @@ The `fixture:` key says how to seed the build before the live run.
 | Design | [`design/tdd-spec.md`](../templates/design/tdd-spec.md), [`semantics.md`](../templates/design/semantics.md), [`product.yaml`](../templates/design/product.yaml), [`adr.md`](../templates/design/adr.md) | write the documents that G1 checks | [TDD-SALES-002](../openspec/specs/products/sales/sales-performance/tdd/spec.md), [`semantics.md`](../openspec/specs/products/sales/sales-performance/tdd/semantics.md), [`product.yaml`](../products/sales_performance/product.yaml), [ADRs](../products/sales_performance/adr/) |
 
 The Define templates are fillable PDFs written in business language. `dpf` does not read
-them and no gate checks them. The scorecard uses 11 weighted criteria scored from 1 to 5:
+them and no gate checks them. In the framework repository, the `assess-use-case` agent skill
+([`.agents/skills/assess-use-case/`](../.agents/skills/assess-use-case/SKILL.md)) checks a
+filled use case against its template before the panel scores it: every section complete,
+answers specific and in business language, and the evidence for each scorecard criterion.
+The scorecard uses 11 weighted criteria scored from 1 to 5:
 seven for value and four for ease, including data readiness and delivery risk. The
 prioritisation matrix splits each axis at 3.0 into four quadrants: quick win, strategic bet,
 fill-in and deprioritise. Change the default weights in `templates/scoring.yaml`, then run
