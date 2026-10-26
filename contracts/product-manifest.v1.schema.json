@@ -11,19 +11,32 @@
     "owner",
     "domain",
     "classification",
-    "specs",
-    "brd_id",
-    "tdd_id",
-    "satisfies",
     "deployment",
     "sources",
     "layers",
     "output_ports",
     "quality",
-    "orchestration",
-    "observability",
-    "governance"
+    "orchestration"
   ],
+  "if": {
+    "properties": {
+      "status": {
+        "not": {
+          "const": "prototype"
+        }
+      }
+    }
+  },
+  "then": {
+    "required": [
+      "specs",
+      "brd_id",
+      "tdd_id",
+      "satisfies",
+      "observability",
+      "governance"
+    ]
+  },
   "properties": {
     "product_id": {
       "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/identifier"
@@ -34,6 +47,7 @@
     "status": {
       "type": "string",
       "enum": [
+        "prototype",
         "draft",
         "provisional",
         "published",
@@ -140,6 +154,65 @@
             },
             "control": {
               "type": "string"
+            }
+          }
+        },
+        "prevent_destroy": {
+          "type": "boolean",
+          "description": "When true (default for non-prototype products), emit lifecycle { prevent_destroy = true } on stateful Terraform resources."
+        },
+        "enforce_policy_tags": {
+          "type": "boolean",
+          "description": "When false, omit policyTags in engine models and policy tag resources in Terraform (useful for dev/sandbox environments)."
+        },
+        "schedules_enabled": {
+          "type": "boolean",
+          "description": "Whether orchestration schedules are enabled in this environment."
+        },
+        "principals": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Default values for principal_var and subscriber_var variables in this environment."
+        },
+        "environments": {
+          "type": "object",
+          "description": "Per-environment overrides keyed by environment name (e.g. dev, test, prod).",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "gcp_project": {
+                "type": "string"
+              },
+              "region": {
+                "type": "string"
+              },
+              "dataset_prefix": {
+                "type": "string"
+              },
+              "datasets": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "prevent_destroy": {
+                "type": "boolean"
+              },
+              "enforce_policy_tags": {
+                "type": "boolean"
+              },
+              "schedules_enabled": {
+                "type": "boolean"
+              },
+              "principals": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
             }
           }
         }
@@ -704,6 +777,20 @@
             "warn"
           ]
         },
+        "max_reject_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "warn_reject_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "max_reject_rows": {
+          "type": "integer",
+          "minimum": 0
+        },
         "rules": {
           "type": "array",
           "items": {
@@ -725,7 +812,11 @@
           "type": "string",
           "enum": [
             "dataform",
-            "composer"
+            "composer",
+            "cloud_run_jobs",
+            "cloud_workflows",
+            "dagster",
+            "prefect"
           ]
         },
         "timezone": {
@@ -868,6 +959,40 @@
               }
             }
           }
+        }
+      }
+    },
+    "semantic_layer": {
+      "type": "object",
+      "required": [
+        "targets"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "targets": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "cube",
+              "metricflow",
+              "atscale",
+              "osi"
+            ]
+          }
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "$ref": "https://dpf.dev/contracts/semantic-layer.v1.json#/$defs/metric"
+          }
+        },
+        "brd_requirement_id": {
+          "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
+        },
+        "implements": {
+          "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/platform_capability"
         }
       }
     }

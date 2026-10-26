@@ -48,6 +48,8 @@ def grain_asserted(p: Product, g: ProductGraph, rule: dict, targets: list, ctx: 
         if not m.get("grain_statement") or not m.get("grain_columns"):
             out.append(f"{n.name}: grain statement and grain columns must both be declared")
             continue
+        if n.role == "ml_model":
+            continue
         if ctx.get("test_spec") is not None:
             cols = ", ".join(m["grain_columns"])
             case = next((c for c in _cases(ctx) if c.get("kind") == "grain" and c.get("model") == n.name), None)

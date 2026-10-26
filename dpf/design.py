@@ -42,7 +42,8 @@ def stale_reasons(p: Product) -> list[str]:
     if so is None:
         reasons.append("semantics are not signed (no signoff.yaml)")
     else:
-        if so.get("semantic_digest") != p.semantic_digest():
+        signed_digest = so.get("playback_digest") or so.get("semantic_digest")
+        if signed_digest != p.semantic_digest():
             reasons.append("semantics changed since sign-off (semantic digest differs)")
         if so.get("brd") != current:
             reasons.append(f"sign-off was given against {so.get('brd')}, the BRD is now {current}")
@@ -57,9 +58,44 @@ def _idnum(x: str) -> int:
     return int(m.group(1)) if m else 0
 
 
+def check_prototype(p: Product, report: Report) -> None:
+    """Fast structural and SQL check for status: prototype products (--gate proto)."""
+    report.head(f"proto · prototype structural check — {p.id}", gate="proto")
+    ws, man = p.ws, p.manifest
+    errs = ws.validate(man, "product-manifest.v1")
+    report.check(not errs, "product.yaml conforms to product-manifest.v1",
+                 f"product.yaml does not conform: {'; '.join(errs[:6])}")
+    if errs:
+        return
+    g = ProductGraph(p)
+    for prob in g.problems:
+        report.fail(prob)
+    if g.cycle:
+        report.fail(f"model dependency cycle: {' -> '.join(g.cycle)}")
+    for model, ref in g.unresolved_inputs():
+        report.fail(f"{model} reads '{ref}', which is not declared")
+    _roles(p, g, report)
+    _ports(p, g, report)
+    _references(p, g, report)
+    _staging(p, g, report)
+    _operability(p, g, report)
+    run_rules(p, report, g)
+    if not report.failures:
+        from dpf.generate import build
+        b = build(p)
+        for prob in b.problems:
+            report.fail(prob)
+        if b.ok:
+            report.ok(f"in-memory build succeeded ({len(b.files)} artefacts)")
+
+
 def check_design(p: Product, report: Report) -> None:
     report.head(f"G1 · design resolves the BRD — {p.id}", gate="G1")
     ws, man = p.ws, p.manifest
+
+    if p.is_prototype:
+        report.fail(f"{p.id} has status: prototype; use `dpf check {p.id} --gate proto` or promote with `dpf proto promote {p.id}` before G1")
+        return
 
     errs = ws.validate(man, "product-manifest.v1")
     report.check(not errs, "product.yaml conforms to product-manifest.v1",
@@ -166,7 +202,7 @@ def _decisions(p: Product, g: ProductGraph, report: Report) -> None:
     missing = sorted(reqs - decided, key=_idnum)
     report.check(not missing, f"every requirement is addressed by a TDD decision ({len(reqs)})",
                  f"requirement(s) with no TDD decision: {', '.join(missing)}")
-    gold_without = [n.name for n in g.models if n.layer == "gold"
+    gold_without = [n.name for n in g.models if n.layer == "gold" and n.role != "ml_model"
                     and not any(d.meta.get("model") == n.name and d.meta.get("grain") for d in p.tdd_spec.requirements)]
     report.check(not gold_without, "every consumption model's grain is decided in the TDD",
                  f"consumption model(s) with no grain decision in the TDD: {', '.join(gold_without)}")
@@ -222,8 +258,13 @@ def _roles(p: Product, g: ProductGraph, report: Report) -> None:
             missing = [a for a in rdef.get("required_attributes", []) or [] if a not in (n.model.get("attributes") or {})]
             if missing:
                 report.fail(f"{n.name}: role '{n.role}' requires attributes {', '.join(missing)}")
-        if n.layer == "gold" and not n.model.get("materialisation"):
+        mat = n.model.get("materialisation")
+        if n.layer == "gold" and not mat:
             report.fail(f"{n.name}: consumption models must declare a materialisation")
+        elif n.role == "ml_model" and mat != "bqml_model":
+            report.fail(f"{n.name}: role 'ml_model' requires materialisation 'bqml_model', not '{mat}'")
+        elif n.role != "ml_model" and mat == "bqml_model":
+            report.fail(f"{n.name}: materialisation 'bqml_model' is only valid for role 'ml_model', not '{n.role}'")
 
 
 def _ports(p: Product, g: ProductGraph, report: Report) -> None:
@@ -339,6 +380,10 @@ def _brd_derivations(p: Product, g: ProductGraph, report: Report) -> None:
         report.check(q.get("gate_behaviour") == "block" and bool(blocking),
                      "bad data stops publication (blocking quality gate)",
                      "BRD says bad data must stop publication but the quality gate does not block")
+        if q.get("max_reject_pct") or q.get("max_reject_rows"):
+            report.warn("BRD says bad data must stop publication, but quality declares a non-zero reject threshold "
+                        f"(max_reject_pct={q.get('max_reject_pct')}, max_reject_rows={q.get('max_reject_rows')}) "
+                        "that allows rejected rows through without stopping publication")
         unrouted = [r["id"] for r in blocking if r.get("on_fail") != "quarantine"]
         if unrouted:
             report.warn(f"blocking rule(s) {', '.join(unrouted)} fail the run without quarantining rows; "
@@ -467,8 +512,9 @@ def _signoff(p: Product, report: Report) -> None:
     errs = p.ws.validate(so, "signoff.v1")
     report.check(not errs, "signoff.yaml conforms to signoff.v1", f"signoff.yaml invalid: {'; '.join(errs[:3])}")
     digest = p.semantic_digest()
-    report.check(so.get("semantic_digest") == digest, f"signature matches current semantics ({digest[:19]}…)",
-                 "signature is invalid: semantics.md or a model's grain/history changed since sign-off")
+    signed_digest = so.get("playback_digest") or so.get("semantic_digest")
+    report.check(signed_digest == digest, f"signature matches current semantics ({digest[:19]}…)",
+                 "signature is invalid: semantics.md / playback.md or a model's grain/history changed since sign-off")
     report.check(so.get("brd") == _brd_ref(p), f"signed against {_brd_ref(p)}",
                  f"signed against {so.get('brd')}, the BRD is now {_brd_ref(p)}")
     missing = sorted(set(p.scenario_ids) - set(so.get("covers") or []), key=_idnum)
@@ -489,6 +535,8 @@ def write_signoff(p: Product, by: str, role: str, when: str | None = None, note:
         "covers": sorted(p.scenario_ids, key=_idnum),
         "semantic_digest": p.semantic_digest(),
     }
+    if (p.tdd_dir / "playback.md").exists():
+        so["playback_digest"] = p.playback_digest()
     if note:
         so["note"] = note
     if links:

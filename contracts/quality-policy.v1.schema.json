@@ -27,6 +27,32 @@
         "warn"
       ]
     },
+    "max_reject_pct": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Optional percentage of rows allowed to fail quarantine rules before the reject gate triggers."
+    },
+    "warn_reject_pct": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Optional percentage of quarantined rows that raises a warning check before the blocking threshold is reached."
+    },
+    "max_reject_rows": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Optional count of rows allowed in the reject relation before the reject gate triggers."
+    },
     "scan_schedule": {
       "type": [
         "string",
@@ -118,7 +144,24 @@
             "fail",
             "quarantine"
           ],
-          "description": "quarantine: route failing rows to the reject relation and block publication while any exist."
+          "description": "quarantine: route failing rows to the reject relation and block or warn according to severity, gate_behaviour and reject thresholds."
+        },
+        "max_reject_pct": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Per-rule override: maximum percentage of rows allowed to fail this quarantine rule."
+        },
+        "max_reject_rows": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "description": "Per-rule override: maximum count of rows allowed to fail this quarantine rule."
         },
         "brd_requirement_id": {
           "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"

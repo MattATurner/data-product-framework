@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dpf.core import Product
 from dpf.graph import ProductGraph
-from dpf.generate.plan import INCREMENTAL_MARKER, Action
+from dpf.generate.plan import INCREMENTAL_MARKER, MODEL_TARGET_MARKER, Action
 from dpf.generate.render import is_timestamp, js, marker, project_vars, sub_refs, sub_vars
 
 ROOT = "dataform"
@@ -13,6 +13,8 @@ ROOT = "dataform"
 def _sql(a: Action) -> str:
     sql = sub_refs(a.sql, lambda n: f'${{ref("{n}")}}')
     sql = sub_vars(sql, lambda v: f"${{dataform.projectConfig.vars.{v}}}")
+    if MODEL_TARGET_MARKER in sql:
+        sql = sql.replace(MODEL_TARGET_MARKER, "${self()}")
     if INCREMENTAL_MARKER in sql:
         pred = sub_vars(a.incremental_predicate or "", lambda v: f"${{dataform.projectConfig.vars.{v}}}")
         sql = sql.replace(INCREMENTAL_MARKER, f"${{when(incremental(), `WHERE {pred}`)}}" if pred else "")
@@ -28,6 +30,8 @@ def _config(a: Action) -> str:
         lines.append(f"  name: {js(a.name)},")
     elif a.kind != "assertion":
         lines.append(f"  schema: dataform.projectConfig.vars.{a.dataset}_dataset,")
+    if a.kind == "operations":
+        lines.append("  hasOutput: true,")
     if a.kind == "materialized_view":
         lines.append("  materialized: true,")
     lines.append(f"  description: {js(a.description)},")

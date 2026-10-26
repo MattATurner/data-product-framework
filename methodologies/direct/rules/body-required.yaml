@@ -1,6 +1,6 @@
 id: body-required
 severity: block
-applies_to: [business_view, nested_view, materialised_view, staging]
+applies_to: [business_view, nested_view, materialised_view, ml_model, ml_prediction, staging]
 description: >
   Roles whose logic is business-specific need an authored SQL body. The body file must
   exist, and every model it references must be declared upstream in the manifest.

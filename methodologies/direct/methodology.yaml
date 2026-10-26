@@ -20,6 +20,17 @@ roles:
     skill: direct/model-materialisation
     emits: semantic-model.v1
     layers: [silver, gold]
+  - id: ml_model
+    description: A BigQuery ML model trained over staging or integration models (CREATE OR REPLACE MODEL).
+    skill: direct/model-bqml
+    emits: semantic-model.v1
+    layers: [silver, gold]
+    required_attributes: [model_type]
+  - id: ml_prediction
+    description: Batch predictions or forecasts produced by ML.PREDICT or ML.FORECAST over a trained BigQuery ML model.
+    skill: direct/model-bqml
+    emits: semantic-model.v1
+    layers: [silver, gold]
 
 # Which engines can render each role. An engine may be listed only when its adapter
 # (engines/<engine>/adapter.yaml) implements the role; dpf validate enforces this.
@@ -27,6 +38,8 @@ supported_engines:
   business_view: [dataform, dbt]
   nested_view: [dataform, dbt]
   materialised_view: [dataform, dbt]
+  ml_model: [dataform, dbt]
+  ml_prediction: [dataform, dbt]
 
 engine_notes:
   business_view: The spark and dataflow adapters are planned; list them here once their adapters implement the role.

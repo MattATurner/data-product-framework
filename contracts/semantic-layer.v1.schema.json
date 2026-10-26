@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dpf.dev/contracts/semantic-layer.v1.json",
+  "title": "Semantic layer specification",
+  "description": "Versioned BI semantic layer descriptor (Cube, MetricFlow, AtScale SML, Open Semantic Interchange) generated from the product manifest and bound to the build digest.",
+  "type": "object",
+  "required": [
+    "product_id",
+    "version",
+    "artefact_digest",
+    "targets",
+    "cubes",
+    "metrics"
+  ],
+  "properties": {
+    "product_id": {
+      "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/identifier"
+    },
+    "version": {
+      "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/semver"
+    },
+    "artefact_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "cube",
+          "metricflow",
+          "atscale",
+          "osi"
+        ]
+      }
+    },
+    "cubes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "table_ref",
+          "grain_columns",
+          "dimensions",
+          "measures"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "table_ref": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "grain_columns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "dimensions": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "measures": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "joins": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/metric"
+      }
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "brd_requirement_id": {
+      "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "metric": {
+      "type": "object",
+      "required": [
+        "name",
+        "model"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "simple",
+            "ratio",
+            "derived",
+            "cumulative"
+          ]
+        },
+        "model": {
+          "type": "string"
+        },
+        "measure": {
+          "type": "string"
+        },
+        "expr": {
+          "type": "string"
+        },
+        "aggregation": {
+          "type": "string"
+        },
+        "filter": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "time_grain": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "brd_requirement_id": {
+          "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
+        }
+      }
+    }
+  }
+}

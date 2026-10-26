@@ -3,11 +3,11 @@
 **Derived from TDD-{DOMAIN}-{nnn}. Written for the business. Signed before build.**
 
 <!--
-semantics.md template · Design stage · Data Product Framework
+playback.md (formerly semantics.md) template · Design stage · Data Product Framework
 
 This page tells the business owner what the design will deliver, in their own words. They
 sign it before anything is built. Save it as
-openspec/specs/products/{domain}/{product}/tdd/semantics.md, beside the TDD. The worked
+openspec/specs/products/{domain}/{product}/tdd/playback.md (or semantics.md), beside the TDD. The worked
 example is openspec/specs/products/sales/sales-performance/tdd/semantics.md.
 
 - Write for the business owner. Use the words of the BRD.

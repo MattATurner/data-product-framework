@@ -30,6 +30,7 @@ def action_name(case_id: str) -> str:
         return "assert_" + rest.lower().replace("-", "_")
     parts = rest.split(":")
     suffix = {"grain": "grain", "grain_not_null": "grain_not_null", "reject_gate": "no_rejects",
+              "reject_warn": "warn_rejects", "ml_eval": "ml_eval",
               "scd_overlap": "scd_no_overlap", "scd_current": "scd_one_current"}.get(kind)
     if suffix:
         return f"assert_{parts[0]}_{suffix}"
@@ -72,6 +73,22 @@ def build_test_spec(p: Product, g: ProductGraph, digest: str) -> dict:
         m = n.model
         reqs = list(m.get("brd_requirement_id") or [])
         grain = list(m.get("grain_columns") or [])
+        attrs = m.get("attributes") or {}
+        if n.role == "ml_model":
+            eval_cfg = attrs.get("evaluation") or {}
+            metric = eval_cfg.get("metric")
+            conds = []
+            if eval_cfg.get("min") is not None:
+                conds.append(f"{metric} < {eval_cfg['min']}")
+            if eval_cfg.get("max") is not None:
+                conds.append(f"{metric} > {eval_cfg['max']}")
+            if metric and conds:
+                add(id=f"ml_eval:{name}", kind="quality", method="automated",
+                    severity=eval_cfg.get("severity", "block"), model=name,
+                    description=f"{name}: ML.EVALUATE metric {metric} meets threshold",
+                    sql=f"SELECT *\nFROM ML.EVALUATE(MODEL {{{{ ref('{name}') }}}})\nWHERE {' OR '.join(conds)}",
+                    satisfies=reqs, implements=PLATFORM)
+            continue
         add(id=f"grain:{name}", kind="grain", method="automated", severity="block", model=name,
             description=f"{name}: {m.get('grain_statement')} — no duplicates on ({', '.join(grain)})",
             sql=(f"SELECT {_cols(grain)}, COUNT(*) AS rows_per_grain\nFROM {{{{ ref('{name}') }}}}\n"
@@ -84,13 +101,55 @@ def build_test_spec(p: Product, g: ProductGraph, digest: str) -> dict:
         if n.layer == "staging":
             rules = g.quarantine_rules(name)
             if rules:
-                add(id=f"reject_gate:{name}", kind="reject_gate", method="automated", severity="block", model=name,
-                    description=f"{name}: no row is quarantined ({', '.join(r['id'] for r in rules)}); "
-                                "any rejected row blocks every downstream refresh",
-                    sql=f"SELECT *\nFROM {{{{ ref('{name}_rejects') }}}}",
+                q_cfg = man.get("quality") or {}
+                gate_beh = q_cfg.get("gate_behaviour", "block")
+                has_blocking_rule = any(r.get("severity", "block") == "block" for r in rules)
+                sev = "block" if (gate_beh == "block" and has_blocking_rule) else "warn"
+                rule_pcts = [r["max_reject_pct"] for r in rules if r.get("max_reject_pct") is not None]
+                max_pct = min(rule_pcts) if rule_pcts else q_cfg.get("max_reject_pct")
+                rule_rows = [r["max_reject_rows"] for r in rules if r.get("max_reject_rows") is not None]
+                max_rows = min(rule_rows) if rule_rows else q_cfg.get("max_reject_rows")
+                if max_pct is not None:
+                    gate_sql = (f"SELECT\n"
+                                f"  COUNTIF(_reject_reason IS NOT NULL) AS rejected_rows,\n"
+                                f"  COUNT(*) AS candidate_rows,\n"
+                                f"  SAFE_DIVIDE(COUNTIF(_reject_reason IS NOT NULL) * 100.0, COUNT(*)) AS reject_pct\n"
+                                f"FROM {{{{ ref('{name}__candidates') }}}}\n"
+                                f"WHERE _dpf_row_rank = 1\n"
+                                f"HAVING SAFE_DIVIDE(COUNTIF(_reject_reason IS NOT NULL) * 100.0, COUNT(*)) > {max_pct}")
+                    desc = f"{name}: quarantined row share ({', '.join(r['id'] for r in rules)}) does not exceed {max_pct}%"
+                elif max_rows is not None:
+                    gate_sql = (f"SELECT COUNT(*) AS rejected_rows\n"
+                                f"FROM {{{{ ref('{name}_rejects') }}}}\n"
+                                f"HAVING COUNT(*) > {max_rows}")
+                    desc = f"{name}: quarantined row count ({', '.join(r['id'] for r in rules)}) does not exceed {max_rows}"
+                else:
+                    gate_sql = f"SELECT *\nFROM {{{{ ref('{name}_rejects') }}}}"
+                    if sev == "block":
+                        desc = (f"{name}: no row is quarantined ({', '.join(r['id'] for r in rules)}); "
+                                "any rejected row blocks every downstream refresh")
+                    else:
+                        desc = (f"{name}: quarantined rows ({', '.join(r['id'] for r in rules)}) are excluded "
+                                "and logged as a warning without blocking downstream refreshes")
+                add(id=f"reject_gate:{name}", kind="reject_gate", method="automated", severity=sev, model=name,
+                    description=desc,
+                    sql=gate_sql,
                     satisfies=sorted({x for r in rules for x in r.get("brd_requirement_id") or []}),
                     implements="enforce-data-quality")
-        attrs = m.get("attributes") or {}
+                warn_pct = q_cfg.get("warn_reject_pct")
+                if warn_pct is not None:
+                    warn_sql = (f"SELECT\n"
+                                f"  COUNTIF(_reject_reason IS NOT NULL) AS rejected_rows,\n"
+                                f"  COUNT(*) AS candidate_rows,\n"
+                                f"  SAFE_DIVIDE(COUNTIF(_reject_reason IS NOT NULL) * 100.0, COUNT(*)) AS reject_pct\n"
+                                f"FROM {{{{ ref('{name}__candidates') }}}}\n"
+                                f"WHERE _dpf_row_rank = 1\n"
+                                f"HAVING SAFE_DIVIDE(COUNTIF(_reject_reason IS NOT NULL) * 100.0, COUNT(*)) > {warn_pct}")
+                    add(id=f"reject_warn:{name}", kind="reject_gate", method="automated", severity="warn", model=name,
+                        description=f"{name}: warn when quarantined row share exceeds {warn_pct}%",
+                        sql=warn_sql,
+                        satisfies=sorted({x for r in rules for x in r.get("brd_requirement_id") or []}),
+                        implements="enforce-data-quality")
         if n.role == "dimension" and int(attrs.get("scd_type", 1) or 1) == 2:
             nk = list(m.get("natural_key") or [])
             on = " AND ".join(f"a.{c} = b.{c}" for c in nk)

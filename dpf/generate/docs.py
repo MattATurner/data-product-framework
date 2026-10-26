@@ -22,7 +22,8 @@ def dumps(obj) -> str:
 
 def semantics_signed(p: Product) -> bool:
     so = p.signoff
-    return bool(so) and so.get("semantic_digest") == p.semantic_digest() and not [
+    signed_digest = (so or {}).get("playback_digest") or (so or {}).get("semantic_digest")
+    return bool(so) and signed_digest == p.semantic_digest() and not [
         r for r in stale_reasons(p) if "sign" in r]
 
 
@@ -80,9 +81,19 @@ def data_product(p: Product) -> dict:
         cal = ob.get("calendar")
         fresh.append(f"{ob['id']} {ob['model']} within {ob['max_staleness']}"
                      + (f" ({','.join(cal['days'])} {cal['start']}-{cal['end']} {cal['timezone']})" if cal else ""))
+    q_cfg = man.get("quality") or {}
+    gate_beh = q_cfg.get("gate_behaviour") or "block"
+    q_desc = "warn-only checks do not block publication" if gate_beh == "warn" else "blocking checks stop publication"
+    thr = []
+    if q_cfg.get("max_reject_pct") is not None:
+        thr.append(f"max_reject_pct={q_cfg['max_reject_pct']}%")
+    if q_cfg.get("max_reject_rows") is not None:
+        thr.append(f"max_reject_rows={q_cfg['max_reject_rows']}")
+    if thr:
+        q_desc += f" ({', '.join(thr)})"
     slo = {"freshness": "; ".join(fresh) or "not declared",
            "availability": f"{(obs.get('slo') or {}).get('objective', 'n/a')} over {(obs.get('slo') or {}).get('window', 'n/a')}",
-           "quality": f"gate {((man.get('quality') or {}).get('gate_behaviour') or 'block')}: blocking checks stop publication"}
+           "quality": f"gate {gate_beh}: {q_desc}"}
     consumers = sorted({c for pt in man.get("output_ports", []) or [] for c in pt.get("consumers") or []})
     return {
         "product_id": p.id, "version": str(man.get("version")), "brd_id": man.get("brd_id"), "tdd_id": man.get("tdd_id"),
@@ -110,7 +121,11 @@ def catalog_registration(p: Product, g: ProductGraph) -> dict:
             grain[pt["name"]] = {"statement": found[1].get("grain_statement"), "columns": found[1].get("grain_columns")}
     cadence = "; ".join(f"{s['id']}: {s['cron']} ({timezone(p)})" for s in (man.get("orchestration") or {}).get("schedules", []) or [])
     root = p.ws.root
-    return {
+    brd_spec = p.brd_dir / "spec.md"
+    tdd_spec = p.tdd_dir / "spec.md"
+    pb_file = p.tdd_dir / "playback.md"
+    sem_path = p.semantics_path
+    out = {
         "entry_ref": f"bigquery.googleapis.com/projects/{dep.get('gcp_project')}/datasets/{ds.get('gold')}",
         "aspects": {
             "owner": man.get("owner"), "domain": man.get("domain"), "classification": man.get("classification"),
@@ -125,26 +140,44 @@ def catalog_registration(p: Product, g: ProductGraph) -> dict:
         "steward": man.get("steward"),
         "lineage_edges": edges,
         "quality_scan_ref": ", ".join(scans) or None,
-        "brd_link": str((p.brd_dir / "spec.md").relative_to(root)),
-        "tdd_link": str((p.tdd_dir / "spec.md").relative_to(root)),
-        "semantics_link": str(p.semantics_path.relative_to(root)),
+        "brd_link": str(brd_spec.relative_to(root)) if not p.is_prototype or brd_spec.exists() else None,
+        "tdd_link": str(tdd_spec.relative_to(root)) if not p.is_prototype or tdd_spec.exists() else None,
+        "semantics_link": str(sem_path.relative_to(root)) if not p.is_prototype or sem_path.exists() else None,
         "registered_via": (man.get("governance") or {}).get("registered_via", "knowledge-catalog-mcp"),
         "brd_requirement_id": p.requirement_ids,
     }
+    if pb_file.exists():
+        out["playback_link"] = str(pb_file.relative_to(root))
+    return out
 
 
 def observability_policy(p: Product) -> dict:
-    return {"product_id": p.id, "policy": p.manifest.get("observability") or {}}
+    pol = p.manifest.get("observability")
+    if not pol and p.is_prototype:
+        first_model = next((m["name"] for _, m in p.models()), "model")
+        pol = {
+            "freshness": [{"id": "OB-1", "model": first_model, "max_staleness": "PT24H"}],
+            "schema_drift": {"on_additive": "land_and_record", "on_breaking": "quarantine_and_alert"},
+            "alerting": {"notification_channel_var": "alert_channel"},
+            "slo": {"objective": 0.99, "window": "P7D"},
+        }
+    return {"product_id": p.id, "policy": pol or {}}
 
 
 def quality_policy(p: Product, g: ProductGraph) -> dict:
     man = p.manifest
-    rules = [dict(r) for r in (man.get("quality") or {}).get("rules", []) or []]
+    q_cfg = man.get("quality") or {}
+    rules = [dict(r) for r in q_cfg.get("rules", []) or []]
     for n in g.models:
+        if n.role == "ml_model":
+            continue
         rules.append({"id": f"GR-{n.name}", "model": n.name, "type": "unique",
                       "columns": list(n.model.get("grain_columns") or []), "severity": "block",
                       "on_fail": "fail", "implements": "test-data-product"})
-    out = {"product_id": p.id, "rules": rules, "gate_behaviour": (man.get("quality") or {}).get("gate_behaviour", "block")}
+    out = {"product_id": p.id, "rules": rules, "gate_behaviour": q_cfg.get("gate_behaviour", "block")}
+    for k in ("max_reject_pct", "warn_reject_pct", "max_reject_rows"):
+        if q_cfg.get(k) is not None:
+            out[k] = q_cfg[k]
     qs = (man.get("observability") or {}).get("quality_scans")
     if qs:
         out["scan_schedule"] = qs.get("schedule")
@@ -204,9 +237,10 @@ def readme(p: Product, engine: str, actions: list[Action], files: list[str], dig
     man = p.manifest
     count = lambda kind: sum(1 for a in actions if a.kind == kind)  # noqa: E731
     eng_dir = "dataform/" if engine == "dataform" else "dbt/"
+    prov = "prototype" if p.is_prototype and not man.get("satisfies") else f"{man.get('satisfies')}, {man.get('tdd_id')}"
     lines = [
         f"# {p.id} — generated build", "",
-        f"Generated by `dpf generate` from `products/{p.id}/product.yaml` ({man.get('satisfies')}, {man.get('tdd_id')}). "
+        f"Generated by `dpf generate` from `products/{p.id}/product.yaml` ({prov}). "
         "Do not edit: change the manifest, the authored SQL bodies or the generators, then regenerate. "
         "`MANIFEST.json` lists every file with its hash and the build digest that test evidence is bound to.", "",
         "| Path | What it is |", "|---|---|",

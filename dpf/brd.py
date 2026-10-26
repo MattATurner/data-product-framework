@@ -54,6 +54,9 @@ def check_brd(p: Product, report: Report, write_gaps: bool = True) -> list[dict]
     """Run G0 for one product. Returns the gap list (also written to gaps.md)."""
     report.head(f"G0 · BRD completeness — {p.id}", gate="G0")
     gaps: list[dict] = []
+    if p.is_prototype:
+        report.fail(f"{p.id} has status: prototype; use `dpf check {p.id} --gate proto` or promote with `dpf proto promote {p.id}` before G0")
+        return gaps
     reg = p.registry
     rubric = reg.rubric
     brd = p.brd

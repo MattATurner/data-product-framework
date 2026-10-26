@@ -26,8 +26,8 @@ openspec/specs/products/sales/sales-performance/tdd/spec.md.
 5. Give every consumption (gold) model a decision with **Model:** and **Grain:**.
 6. Record each departure from registry/platform-defaults.yaml in an ADR
    (templates/design/adr.md).
-7. Write semantics.md and product.yaml from templates/design/.
-8. Get the business owner to sign semantics.md. Then run `dpf check {product} --gate G1`.
+7. Write playback.md (or semantics.md) and product.yaml from templates/design/.
+8. Get the business owner to sign playback.md (or semantics.md). Then run `dpf check {product} --gate G1`.
 
 Replace every {placeholder}. Delete these comments when you finish.
 -->

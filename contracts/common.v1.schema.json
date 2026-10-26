@@ -43,7 +43,8 @@
         "view",
         "materialized_view",
         "table",
-        "incremental_table"
+        "incremental_table",
+        "bqml_model"
       ]
     },
     "history_semantics": {

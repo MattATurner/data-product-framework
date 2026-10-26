@@ -341,19 +341,30 @@ class Product:
     def __init__(self, ws: Workspace, pid: str, path: Path):
         self.ws, self.id, self.path = ws, pid, path
         self.dir = path.parent
+        self.active_env: str | None = None
 
     @cached_property
     def manifest(self) -> dict:
         return load_yaml(self.path)
 
+    @property
+    def is_prototype(self) -> bool:
+        return self.manifest.get("status") == "prototype"
+
     # -- specs
     @property
     def brd_dir(self) -> Path:
-        return self.ws.root / "openspec/specs" / self.manifest["specs"]["brd"]
+        specs = self.manifest.get("specs") or {}
+        if specs.get("brd"):
+            return self.ws.root / "openspec/specs" / specs["brd"]
+        return self.ws.root / "openspec/specs/_prototype" / self.id / "brd"
 
     @property
     def tdd_dir(self) -> Path:
-        return self.ws.root / "openspec/specs" / self.manifest["specs"]["tdd"]
+        specs = self.manifest.get("specs") or {}
+        if specs.get("tdd"):
+            return self.ws.root / "openspec/specs" / specs["tdd"]
+        return self.ws.root / "openspec/specs/_prototype" / self.id / "tdd"
 
     @cached_property
     def brd(self) -> dict:
@@ -362,15 +373,23 @@ class Product:
 
     @cached_property
     def brd_spec(self) -> Spec:
-        return parse_spec((self.brd_dir / "spec.md").read_text(encoding="utf-8"), self.brd_dir / "spec.md")
+        p = self.brd_dir / "spec.md"
+        return parse_spec(p.read_text(encoding="utf-8"), p) if p.exists() else Spec(path=p)
 
     @cached_property
     def tdd_spec(self) -> Spec:
-        return parse_spec((self.tdd_dir / "spec.md").read_text(encoding="utf-8"), self.tdd_dir / "spec.md")
+        p = self.tdd_dir / "spec.md"
+        return parse_spec(p.read_text(encoding="utf-8"), p) if p.exists() else Spec(path=p)
+
+    @property
+    def playback_path(self) -> Path:
+        pb = self.tdd_dir / "playback.md"
+        sem = self.tdd_dir / "semantics.md"
+        return pb if pb.exists() or not sem.exists() else sem
 
     @property
     def semantics_path(self) -> Path:
-        return self.tdd_dir / "semantics.md"
+        return self.playback_path
 
     @cached_property
     def signoff(self) -> dict | None:
@@ -457,6 +476,9 @@ class Product:
         sem = normalise_text(self.semantics_path.read_text(encoding="utf-8")) if self.semantics_path.exists() else ""
         return sha256(canonical({"semantics": sem, "models": models}))
 
+    def playback_digest(self) -> str:
+        return self.semantic_digest()
+
     def build_digest(self, engine: str | None = None) -> str:
         """Digest of every input the build is generated from. Evidence is bound to it."""
         parts: dict[str, Any] = {
@@ -475,6 +497,34 @@ class Product:
             "adapters": {k: {kk: vv for kk, vv in v.items() if not kk.startswith("_")} for k, v in self.ws.adapters.items()},
         }
         return sha256(canonical(parts))
+
+
+def retarget_env(p: Product, env: str) -> Product:
+    """Return a shallow copy of p with deployment.environments[env] merged into deployment."""
+    import copy
+    man = copy.deepcopy(p.manifest)
+    dep = man.setdefault("deployment", {})
+    envs = dep.get("environments") or {}
+    if env not in envs:
+        known = ", ".join(sorted(envs)) or "none"
+        raise SystemExit(f"product '{p.id}' does not declare environment '{env}' (known: {known})")
+    cfg = envs[env]
+    if cfg.get("gcp_project"):
+        dep["gcp_project"] = cfg["gcp_project"]
+    if cfg.get("region"):
+        dep["region"] = cfg["region"]
+    prefix = cfg.get("dataset_prefix") or ""
+    if prefix:
+        dep["datasets"] = {k: f"{prefix}{v}" for k, v in (dep.get("datasets") or {}).items()}
+    if cfg.get("datasets"):
+        dep.setdefault("datasets", {}).update(cfg["datasets"])
+    for key in ("prevent_destroy", "enforce_policy_tags", "schedules_enabled", "principals"):
+        if key in cfg:
+            dep[key] = cfg[key]
+    clone = Product(p.ws, p.id, p.path)
+    clone.active_env = env
+    clone.__dict__["manifest"] = man
+    return clone
 
 
 def iter_elements(manifest: dict) -> Iterable[tuple[str, dict]]:
@@ -500,6 +550,8 @@ def iter_elements(manifest: dict) -> Iterable[tuple[str, dict]]:
         yield "observability:quality_scans", obs["quality_scans"]
     for t in (manifest.get("governance") or {}).get("policy_tags", []) or []:
         yield f"policy:{t.get('id')}", t
+    if manifest.get("semantic_layer"):
+        yield "semantic_layer", manifest["semantic_layer"]
 
 
 def find_root(start: Path | None = None) -> Path:

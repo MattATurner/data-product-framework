@@ -38,7 +38,7 @@ Roughly two thirds is mechanical; the rest is engineering judgement and gets an 
 4. Write `tdd/spec.md`: one `### Requirement:` per decision with
    `**Decision:** D-n · **Satisfies:** R-..` (plus `**Model:**` and `**Grain:**` when the
    decision fixes a grain) and a verification scenario.
-5. Write `tdd/semantics.md`: the design restated in business language, for signature.
+5. Write `tdd/playback.md` (or `tdd/semantics.md`): the design restated in business language, for signature.
 6. Write `products/<product>/product.yaml` (contract `product-manifest.v1`): every element
    cites `brd_requirement_id` or the platform capability it `implements`.
 7. Get the business owner to sign: `dpf signoff <product> --by <name> --role business_owner`.

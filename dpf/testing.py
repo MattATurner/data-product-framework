@@ -13,7 +13,7 @@ import json
 import re
 from datetime import datetime, timezone
 
-from dpf.core import Product, Report, write_json
+from dpf.core import Product, Report, retarget_env, write_json
 from dpf.generate import Build, build
 from dpf.generate.plan import relation_dataset
 from dpf.generate.render import dts_schedule, duration_minutes, project_vars, sub_refs, sub_vars
@@ -382,11 +382,14 @@ def run_tests(p: Product, report: Report, live: bool = False, environment: str =
     except ImportError:
         report.fail("--live needs google-cloud-bigquery (pip install google-cloud-bigquery)")
         return 1
-    client = bigquery.Client(project=(p.manifest.get("deployment") or {}).get("gcp_project"))
+    envs = (p.manifest.get("deployment") or {}).get("environments") or {}
+    live_p = retarget_env(p, environment) if environment in envs else p
+    live_b = build(live_p) if live_p is not p else b
+    client = bigquery.Client(project=(live_p.manifest.get("deployment") or {}).get("gcp_project"))
     for case in b.spec["cases"]:
         if case["method"] != "automated" or (only and case["id"] not in only):
             continue
-        sql = render_live_sql(p, b, case["sql"])
+        sql = render_live_sql(live_p, live_b, case["sql"])
         try:
             rows = list(client.query(f"SELECT COUNT(*) AS n FROM (\n{sql}\n)").result())
             n = int(rows[0]["n"])

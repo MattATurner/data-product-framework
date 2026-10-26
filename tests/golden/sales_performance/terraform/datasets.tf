@@ -9,6 +9,9 @@ resource "google_bigquery_dataset" "raw" {
     dpf_product = "sales_performance"
     dpf_layer   = "raw"
   }
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # dpf: dataset=staging implements=select-engine-and-storage
@@ -21,6 +24,9 @@ resource "google_bigquery_dataset" "staging" {
   labels = {
     dpf_product = "sales_performance"
     dpf_layer   = "staging"
+  }
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
@@ -35,6 +41,9 @@ resource "google_bigquery_dataset" "silver" {
     dpf_product = "sales_performance"
     dpf_layer   = "silver"
   }
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # dpf: dataset=gold implements=select-engine-and-storage
@@ -47,6 +56,9 @@ resource "google_bigquery_dataset" "gold" {
   labels = {
     dpf_product = "sales_performance"
     dpf_layer   = "gold"
+  }
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
@@ -61,6 +73,9 @@ resource "google_bigquery_dataset" "share" {
     dpf_product = "sales_performance"
     dpf_layer   = "share"
   }
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # dpf: dataset=assertions implements=select-engine-and-storage
@@ -74,6 +89,9 @@ resource "google_bigquery_dataset" "assertions" {
     dpf_product = "sales_performance"
     dpf_layer   = "assertions"
   }
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # dpf: dataset=control implements=select-engine-and-storage
@@ -86,5 +104,8 @@ resource "google_bigquery_dataset" "control" {
   labels = {
     dpf_product = "sales_performance"
     dpf_layer   = "control"
+  }
+  lifecycle {
+    prevent_destroy = true
   }
 }

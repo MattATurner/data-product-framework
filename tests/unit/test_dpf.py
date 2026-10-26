@@ -377,6 +377,8 @@ def test_g4_stale_evidence_fails_even_for_a_warn_level_case(sales, monkeypatch):
 def test_cli_usage_errors_exit_2(capsys):
     assert main(["check", "--gate", "G1", "--root", str(ROOT)]) == 2   # neither a product nor --all
     assert "name a product or pass --all" in capsys.readouterr().err
+    assert main(["proto", "init", "--quiet", "--root", str(ROOT)]) == 2
+    assert "name a product" in capsys.readouterr().err
     with pytest.raises(SystemExit) as exc:
         main(["check", "--all", "--gate", "G9"])
     assert exc.value.code == 2
@@ -399,3 +401,267 @@ def test_eval_runner_warns_on_a_fresh_workspace_and_fails_on_unknown_ids(tmp_pat
     r = quiet()
     assert run_evals(Workspace(tmp_path), r, only=["no-such-eval"]) == 1
     assert r.messages("fail") == ["no eval with id no-such-eval under tests/evals/"]
+
+
+# ----------------------------------------------------------------- wishlist capabilities
+def _clone_workspace(tmp_path: Path) -> Workspace:
+    import shutil
+    from dpf.evals import COPY, IGNORE
+    for rel in COPY:
+        src = ROOT / rel
+        if src.is_dir():
+            shutil.copytree(src, tmp_path / rel, ignore=IGNORE)
+    return Workspace(tmp_path)
+
+
+def test_multi_environment_configs_and_permissions(tmp_path):
+    twin_ws = _clone_workspace(tmp_path)
+    p = twin_ws.product("sales_performance")
+    man = p.manifest
+    man["deployment"]["environments"] = {
+        "dev": {
+            "gcp_project": "example-dpf-dev",
+            "dataset_prefix": "dev_",
+            "prevent_destroy": False,
+            "enforce_policy_tags": False,
+            "principals": {
+                "finance_readers_group": "dev-finance@example.com",
+                "pii_unmasked_group": "dev-pii@example.com",
+            },
+        },
+        "prod": {
+            "gcp_project": "example-dpf-prod",
+            "prevent_destroy": True,
+            "enforce_policy_tags": True,
+            "principals": {
+                "finance_readers_group": "prod-finance@example.com",
+                "pii_unmasked_group": "prod-pii@example.com",
+            },
+        },
+    }
+    assert twin_ws.validate(man, "product-manifest.v1") == []
+
+    b_base = build(p)
+    assert "terraform/envs/dev.tfvars" in b_base.files
+    assert "terraform/envs/prod.tfvars" in b_base.files
+
+    b_dev = build(p, env="dev")
+    assert b_dev.ok, b_dev.problems
+    assert "terraform/envs/dev.tfvars" in b_dev.files
+    assert "terraform/envs/prod.tfvars" not in b_dev.files
+    assert 'project_id = "example-dpf-dev"' in b_dev.files["terraform/envs/dev.tfvars"]
+    assert 'finance_readers_group = "dev-finance@example.com"' in b_dev.files["terraform/envs/dev.tfvars"]
+    # dev disables policy tags and prevent_destroy, and prefixes datasets with dev_
+    assert "terraform/governance.tf" not in b_dev.files
+    assert "prevent_destroy = false" in b_dev.files["terraform/datasets.tf"]
+    assert 'dataset_id                 = "dev_gold_sales"' in b_dev.files["terraform/datasets.tf"]
+    assert "bigqueryPolicyTags" not in b_dev.files["dataform/definitions/silver/dim_customer.sqlx"]
+
+    b_prod = build(p, env="prod", engine="dbt")
+    assert b_prod.ok, b_prod.problems
+    assert "terraform/governance.tf" in b_prod.files
+    assert "prevent_destroy = true" in b_prod.files["terraform/datasets.tf"]
+    profiles = yaml.safe_load(b_prod.files["dbt/profiles.yml.example"])
+    assert set(profiles["dpf_sales_performance"]["outputs"]) == {"dev", "prod"}
+    assert profiles["dpf_sales_performance"]["outputs"]["dev"]["dataset"] == "dev_stg_sales"
+
+
+def test_non_blocking_quarantine_and_percentage_thresholds(tmp_path):
+    twin_ws = _clone_workspace(tmp_path)
+    p = twin_ws.product("customer_orders")
+    man = p.manifest
+    man["quality"]["max_reject_pct"] = 5.0
+    man["quality"]["warn_reject_pct"] = 1.0
+    for r in man["quality"]["rules"]:
+        if r.get("on_fail") == "quarantine":
+            r["severity"] = "warn"
+    assert twin_ws.validate(man, "product-manifest.v1") == []
+
+    b = build(p)
+    assert b.ok, b.problems
+    # Staging still filters out bad rows (_reject_reason IS NULL)
+    assert "_reject_reason IS NULL" in b.files["dataform/definitions/staging/stg_orders.sqlx"]
+    # Reject gate is now warn-level and checks > 5.0%, and does NOT block downstream customer_orders
+    gate_case = next(c for c in b.spec["cases"] if c["id"] == "reject_gate:stg_orders")
+    assert gate_case["severity"] == "warn"
+    assert "SAFE_DIVIDE(COUNTIF(_reject_reason IS NOT NULL) * 100.0, COUNT(*)) > 5.0" in gate_case["sql"]
+    warn_case = next(c for c in b.spec["cases"] if c["id"] == "reject_warn:stg_orders")
+    assert warn_case["severity"] == "warn"
+    co_action = next(a for a in b.actions if a.name == "customer_orders")
+    assert "assert_stg_orders_no_rejects" not in co_action.dependencies
+
+
+def test_bqml_model_training_and_prediction_roles(tmp_path):
+    twin_ws = _clone_workspace(tmp_path)
+    p = twin_ws.product("customer_orders")
+    pdir = p.dir
+    (pdir / "sql/mdl_high_value.sql").write_text(
+        "SELECT\n  order_total,\n  IF(order_total > 100, 1, 0) AS label\nFROM {{ ref('stg_orders') }}\n",
+        encoding="utf-8",
+    )
+    (pdir / "sql/pred_high_value.sql").write_text(
+        "SELECT\n  order_id,\n  predicted_label\n"
+        "FROM ML.PREDICT(MODEL {{ ref('mdl_high_value') }}, (SELECT order_id, order_total FROM {{ ref('stg_orders') }}))\n",
+        encoding="utf-8",
+    )
+    man = p.manifest
+    man["layers"]["gold"]["models"].extend([
+        {
+            "name": "mdl_high_value",
+            "role": "ml_model",
+            "grain_statement": "One trained logistic regression model over stg_orders",
+            "grain_columns": ["order_id"],
+            "history_semantics": "current_only",
+            "materialisation": "bqml_model",
+            "body": "sql/mdl_high_value.sql",
+            "attributes": {
+                "model_type": "LOGISTIC_REG",
+                "options": {"input_label_cols": ["label"]},
+                "evaluation": {"metric": "roc_auc", "min": 0.75},
+            },
+            "brd_requirement_id": ["R-1"],
+        },
+        {
+            "name": "pred_high_value",
+            "role": "ml_prediction",
+            "grain_statement": "One prediction row per order_id",
+            "grain_columns": ["order_id"],
+            "history_semantics": "current_only",
+            "materialisation": "table",
+            "body": "sql/pred_high_value.sql",
+            "brd_requirement_id": ["R-1"],
+        },
+    ])
+    assert twin_ws.validate(man, "product-manifest.v1") == []
+
+    b_df = build(p)
+    assert b_df.ok, b_df.problems
+    mdl_sqlx = b_df.files["dataform/definitions/gold/mdl_high_value.sqlx"]
+    assert 'type: "operations"' in mdl_sqlx
+    assert "hasOutput: true" in mdl_sqlx
+    assert "CREATE OR REPLACE MODEL ${self()}" in mdl_sqlx
+    assert "OPTIONS(model_type='LOGISTIC_REG', input_label_cols=['label']) AS" in mdl_sqlx
+    eval_sqlx = b_df.files["dataform/definitions/assertions/assert_mdl_high_value_ml_eval.sqlx"]
+    assert 'FROM ML.EVALUATE(MODEL ${ref("mdl_high_value")})' in eval_sqlx
+    assert "WHERE roc_auc < 0.75" in eval_sqlx
+
+    b_dbt = build(p, engine="dbt")
+    assert b_dbt.ok, b_dbt.problems
+    assert "materialized='bqml_model'" in b_dbt.files["dbt/models/gold/mdl_high_value.sql"]
+    assert "CREATE OR REPLACE MODEL {{ this }}" in b_dbt.files["dbt/models/gold/mdl_high_value.sql"]
+    assert "dbt/macros/materializations/bqml_model.sql" in b_dbt.files
+
+
+def test_versioned_semantic_layer_generation(tmp_path):
+    twin_ws = _clone_workspace(tmp_path)
+    p = twin_ws.product("sales_performance")
+    p.manifest["semantic_layer"] = {
+        "targets": ["cube", "metricflow", "atscale", "osi"],
+        "brd_requirement_id": ["R-1"],
+    }
+    assert twin_ws.validate(p.manifest, "product-manifest.v1") == []
+    b = build(p)
+    assert b.ok, b.problems
+    assert "semantic-layer.json" in b.files
+    sl = json.loads(b.files["semantic-layer.json"])
+    assert sl["artefact_digest"] == b.digest
+    assert sl["version"] == str(p.manifest["version"])
+    assert "semantic_layer/cube/fct_order_line.yml" in b.files
+    assert "semantic_layer/metricflow/semantic_models.yml" in b.files
+    assert "semantic_layer/atscale/sales_performance.atscale.yml" in b.files
+    assert "semantic_layer/osi/sales_performance.osi.yaml" in b.files
+
+
+def test_playback_md_and_playback_digest_support(tmp_path):
+    from dpf.design import check_design, write_signoff
+    twin_ws = _clone_workspace(tmp_path)
+    p = twin_ws.product("customer_orders")
+    old_sem = p.tdd_dir / "semantics.md"
+    new_pb = p.tdd_dir / "playback.md"
+    new_pb.write_text(old_sem.read_text(encoding="utf-8"), encoding="utf-8")
+    old_sem.unlink()
+    assert p.playback_path == new_pb
+    assert p.semantics_path == new_pb
+    so = write_signoff(p, by="Test Owner", role="business_owner")
+    assert "playback_digest" in so
+    assert so["playback_digest"] == p.playback_digest()
+    r = quiet()
+    check_design(twin_ws.product("customer_orders"), r)
+    assert r.failures == 0, r.messages("fail")
+    b = build(twin_ws.product("customer_orders"))
+    cat = json.loads(b.files["catalog-registration.json"])
+    assert cat["playback_link"].endswith("playback.md")
+
+
+def test_expanded_orchestration_engines(tmp_path):
+    import re
+    var_ref = re.compile(r"\bvar\.([A-Za-z0-9_]+)")
+    var_decl = re.compile(r'^variable\s+"([A-Za-z0-9_]+)"', re.M)
+
+    twin_ws = _clone_workspace(tmp_path)
+    p = twin_ws.product("customer_orders")
+
+    for orch in ("dataform", "composer", "cloud_run_jobs", "cloud_workflows", "dagster", "prefect"):
+        for eng in (None, "dbt"):
+            p.manifest["orchestration"]["engine"] = orch
+            b = build(p, engine=eng)
+            assert b.ok, f"orch={orch} eng={eng}: {b.problems}"
+            declared = set(var_decl.findall(b.files.get("terraform/variables.tf", "")))
+            used = {v for path, text in b.files.items()
+                    if path.startswith("terraform/") and path.endswith(".tf")
+                    for v in var_ref.findall(text)}
+            assert used - declared == set(), f"orch={orch} eng={eng} undeclared={used - declared}"
+            has_df_wf = "google_dataform_repository_workflow_config" in b.files.get("terraform/orchestration.tf", "")
+            assert has_df_wf == (orch == "dataform" and eng is None)
+
+    p.manifest["orchestration"]["engine"] = "cloud_run_jobs"
+    b_cr = build(p)
+    assert 'resource "google_cloud_run_v2_job" "runner"' in b_cr.files["terraform/orchestration.tf"]
+    assert 'resource "google_cloud_scheduler_job" "daily"' in b_cr.files["terraform/orchestration.tf"]
+
+    p.manifest["orchestration"]["engine"] = "cloud_workflows"
+    b_wf = build(p)
+    assert 'resource "google_workflows_workflow" "product"' in b_wf.files["terraform/orchestration.tf"]
+    assert "workflowInvocations" in b_wf.files["terraform/orchestration.tf"]
+
+    p.manifest["orchestration"]["engine"] = "composer"
+    b_af = build(p)
+    assert "airflow/dags/customer_orders_dag.py" in b_af.files
+    assert "pendulum.datetime(2026, 1, 1, tz='Australia/Perth')" in b_af.files["airflow/dags/customer_orders_dag.py"]
+
+    p.manifest["orchestration"]["engine"] = "dagster"
+    b_dg = build(p)
+    assert "dagster/customer_orders_assets.py" in b_dg.files
+
+    p.manifest["orchestration"]["engine"] = "prefect"
+    b_pf = build(p)
+    assert "prefect/customer_orders_flow.py" in b_pf.files
+
+
+def test_terraform_prevent_destroy_safeguard(ws, sales):
+    b = build(sales)
+    for tf_file in ("terraform/datasets.tf", "terraform/governance.tf", "terraform/sharing.tf", "terraform/control.tf"):
+        assert "lifecycle {\n    prevent_destroy = true\n  }" in b.files[tf_file]
+
+
+def test_prototype_cheat_code_and_promotion(tmp_path, capsys):
+    _clone_workspace(tmp_path)
+    root = str(tmp_path)
+    # 1. Scaffold prototype product without BRD/TDD
+    assert main(["proto", "init", "citibike_proto", "--quiet", "--root", root]) == 0
+    # 2. --gate proto passes
+    assert main(["check", "citibike_proto", "--gate", "proto", "--quiet", "--root", root]) == 0
+    # 3. dpf generate works directly in prototype mode (and sets prevent_destroy = false)
+    assert main(["generate", "citibike_proto", "--quiet", "--root", root]) == 0
+    ds_tf = (tmp_path / "generated/citibike_proto/terraform/datasets.tf").read_text(encoding="utf-8")
+    assert "prevent_destroy = false" in ds_tf
+    # 4. G0 and G1 block prototype products until promoted
+    assert main(["check", "citibike_proto", "--gate", "G0", "--quiet", "--root", root]) == 1
+    assert main(["check", "citibike_proto", "--gate", "G1", "--quiet", "--root", root]) == 1
+    capsys.readouterr()
+    # 5. Promote prototype to draft and verify BRD/TDD + playback.md are scaffolded
+    assert main(["proto", "promote", "citibike_proto", "--quiet", "--root", root]) == 0
+    p = Workspace(tmp_path).product("citibike_proto")
+    assert not p.is_prototype
+    assert (p.tdd_dir / "playback.md").exists()
+

@@ -1,0 +1,16 @@
+id: reject-threshold-warns
+asserts: When the BRD requires bad data to stop publication, a non-zero max_reject_pct emits a G1 warning.
+mutate:
+- set:
+    file: products/customer_orders/product.yaml
+    path: quality.max_reject_pct
+    value: 5.0
+run:
+  command: check
+  product: customer_orders
+  gate: G1
+expect:
+  outcome: pass
+  level: warn
+  messages:
+  - BRD says bad data must stop publication, but quality declares a non-zero reject threshold

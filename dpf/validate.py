@@ -163,8 +163,9 @@ def validate_products(ws: Workspace, report: Report) -> None:
         if p.brd_dir.exists():
             berr = ws.validate(p.brd, "brd.v1")
             report.check(not berr, f"{pid}: brd.yaml conforms to brd.v1", f"{pid}: brd.yaml: {'; '.join(berr[:3])}")
-        else:
-            report.fail(f"{pid}: BRD directory openspec/specs/{p.manifest['specs']['brd']} is missing")
+        elif not p.is_prototype:
+            brd_rel = (p.manifest.get("specs") or {}).get("brd", "<missing specs.brd>")
+            report.fail(f"{pid}: BRD directory openspec/specs/{brd_rel} is missing")
         if p.acceptance is not None:
             aerr = ws.validate(p.acceptance, "acceptance.v1")
             report.check(not aerr, f"{pid}: acceptance.yaml conforms to acceptance.v1",

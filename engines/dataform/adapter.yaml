@@ -1,7 +1,7 @@
 # Contract: engine-adapter.v1. A pack may list this engine for a role only if it is here.
 engine_id: dataform
 status: implemented
-implemented_roles: [staging, business_view, nested_view, materialised_view, dimension, fact, calendar]
+implemented_roles: [staging, business_view, nested_view, materialised_view, ml_model, ml_prediction, dimension, fact, calendar]
 renders:
   - workflow_settings.yaml
   - definitions/sources/*.sqlx (raw declarations)

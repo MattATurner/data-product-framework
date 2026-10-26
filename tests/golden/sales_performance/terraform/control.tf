@@ -13,6 +13,9 @@ resource "google_bigquery_table" "extract_watermark" {
     { name = "row_count", type = "INT64", mode = "NULLABLE" },
     { name = "updated_at", type = "TIMESTAMP", mode = "NULLABLE" }
   ])
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # dpf: element=source:ora_local satisfies=R-10 implements=land-immutable-raw
@@ -37,6 +40,9 @@ resource "google_bigquery_table" "landing_manifest" {
     { name = "manifest", type = "JSON", mode = "NULLABLE" },
     { name = "recorded_at", type = "TIMESTAMP", mode = "REQUIRED" }
   ])
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # dpf: element=source:ora_local satisfies=R-10 implements=land-immutable-raw
@@ -55,4 +61,7 @@ resource "google_bigquery_table" "schema_registry" {
     { name = "recorded_at", type = "TIMESTAMP", mode = "REQUIRED" },
     { name = "batch_id", type = "STRING", mode = "NULLABLE" }
   ])
+  lifecycle {
+    prevent_destroy = true
+  }
 }

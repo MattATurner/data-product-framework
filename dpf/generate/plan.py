@@ -16,6 +16,7 @@ from dpf.graph import ProductGraph, body_refs
 from dpf.generate.testspec import action_name, quality_condition
 
 INCREMENTAL_MARKER = "/* dpf:incremental */"
+MODEL_TARGET_MARKER = "/* dpf:model_target */"
 LOW_TS = "TIMESTAMP '1900-01-01 00:00:00+00'"
 HIGH_TS = "TIMESTAMP '9999-12-31 00:00:00+00'"
 
@@ -252,17 +253,39 @@ def model_schedules(p: Product, g: ProductGraph) -> dict[str, list[str]]:
     return out
 
 
+def bqml_model_sql(m: dict, body: str) -> str:
+    attrs = m.get("attributes") or {}
+    opts = {"model_type": attrs.get("model_type", "LINEAR_REG")}
+    opts.update(attrs.get("options") or {})
+    opt_parts = []
+    for k, v in opts.items():
+        if isinstance(v, bool):
+            opt_parts.append(f"{k}={str(v).upper()}")
+        elif isinstance(v, (int, float)):
+            opt_parts.append(f"{k}={v}")
+        elif isinstance(v, list):
+            arr = ", ".join("'" + str(x) + "'" if isinstance(x, str) else str(x) for x in v)
+            opt_parts.append(f"{k}=[{arr}]")
+        else:
+            opt_parts.append(f"{k}='{v}'")
+    return (f"CREATE OR REPLACE MODEL {MODEL_TARGET_MARKER}\n"
+            f"OPTIONS({', '.join(opt_parts)}) AS\n"
+            f"{strip_leading_comments(body)}")
+
+
 def build_plan(p: Product, g: ProductGraph, spec: dict, skills: dict[str, str]) -> list[Action]:
     man = p.manifest
     tz = (man.get("orchestration") or {}).get("timezone") or p.registry.defaults.get("business_timezone", "UTC")
     scheds = model_schedules(p, g)
     actions: list[Action] = []
     hist = g.scd2_sources()
+    enforce_tags = (man.get("deployment") or {}).get("enforce_policy_tags", True)
     policy_cols: dict[str, dict[str, dict]] = {}
-    for t in (man.get("governance") or {}).get("policy_tags", []) or []:
-        for c in t["columns"]:
-            policy_cols.setdefault(t["model"], {})[c] = {"policy_tag_var": f"policy_tag_{t['tag']}",
-                                                        "description": f"Policy tag {t['tag']} ({t['id']})."}
+    if enforce_tags:
+        for t in (man.get("governance") or {}).get("policy_tags", []) or []:
+            for c in t["columns"]:
+                policy_cols.setdefault(t["model"], {})[c] = {"policy_tag_var": f"policy_tag_{t['tag']}",
+                                                            "description": f"Policy tag {t['tag']} ({t['id']})."}
 
     def header(n, extra: dict | None = None) -> dict:
         h = {"model": n.name, "layer": n.layer, "role": n.role, "skill": skills.get(n.name, "unknown"),
@@ -326,10 +349,14 @@ def build_plan(p: Product, g: ProductGraph, spec: dict, skills: dict[str, str]) 
             actions.append(Action(name=name, kind=kind, sql=sql, unique_key=list(m.get("grain_columns") or []),
                                   incremental_predicate=pred if kind == "incremental" else None,
                                   inputs=[i for i in n.inputs], **common))
+        elif n.role == "ml_model":
+            body = strip_leading_comments(p.body(m) or "")
+            actions.append(Action(name=name, kind="operations", sql=bqml_model_sql(m, body),
+                                  inputs=list(n.inputs), **common))
         else:
             body = strip_leading_comments(p.body(m) or "")
             kind = {"view": "view", "table": "table", "incremental_table": "incremental",
-                    "materialized_view": "materialized_view"}[mat]
+                    "materialized_view": "materialized_view", "bqml_model": "operations"}[mat]
             actions.append(Action(name=name, kind=kind, sql=body, unique_key=list(m.get("grain_columns") or []),
                                   inputs=list(n.inputs), **common))
 

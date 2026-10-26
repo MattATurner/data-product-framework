@@ -16,6 +16,7 @@ from dpf.core import Report, Workspace, find_root
 
 GATES = ["G0", "G1", "G2", "G3", "G4"]
 GATE_ALIASES = {
+    "proto": "proto", "prototype": "proto",
     "G0": "G0", "define": "G0",
     "G1": "G1", "design": "G1",
     "G2": "G2", "compose": "G2",
@@ -90,16 +91,20 @@ def cmd_compose(ws, args, report):
 
 
 def cmd_generate(ws, args, report):
-    from dpf.generate import declared_engine, generate, golden_dir
+    from dpf.generate import RENDERERS, declared_engine, generate
     for p in _products(ws, args):
         engines = [args.engine] if args.engine else [None]
-        if not args.engine and args.all:
+        if not args.engine and args.all and not args.env:
             # Golden copies define which alternative engines are kept reproducible.
-            engines += sorted(d.name.split("--", 1)[1] for d in (ws.root / "tests/golden").glob(f"{p.id}--*") if d.is_dir())
+            engines += sorted(
+                suffix for d in (ws.root / "tests/golden").glob(f"{p.id}--*")
+                if d.is_dir() and (suffix := d.name.split("--", 1)[1]) in RENDERERS
+            )
         for eng in engines:
             if eng == declared_engine(p):
                 eng = None
-            generate(p, report, engine=eng, check=args.check, update_golden=args.update_golden, write=not args.no_write)
+            generate(p, report, engine=eng, check=args.check, update_golden=args.update_golden,
+                     write=not args.no_write, env=args.env, semantic_targets=args.semantic_layer)
 
 
 def cmd_trace(ws, args, report):
@@ -137,15 +142,20 @@ def cmd_monitor(ws, args, report):
 def cmd_check(ws, args, report):
     from dpf.brd import check_brd
     from dpf.compose import check_acceptance, compose
-    from dpf.design import check_design
+    from dpf.design import check_design, check_prototype
     from dpf.generate import generate
     from dpf.lint import lint
     from dpf.testing import check_evidence
     from dpf.trace import check_trace
     from dpf.validate import validate
 
-    upto = GATES.index(GATE_ALIASES[args.gate])
+    resolved = GATE_ALIASES[args.gate]
     products = _products(ws, args)  # an unknown product is a usage error before any check runs
+    if resolved == "proto":
+        for p in products:
+            check_prototype(p, report)
+        return
+    upto = GATES.index(resolved)
     if upto >= 3:
         validate(ws, report)
         lint(ws, report)
@@ -161,6 +171,174 @@ def cmd_check(ws, args, report):
             check_trace(p, report, b)
         if upto >= 4:
             check_evidence(p, report, b)
+
+
+def cmd_proto(ws, args, report):
+    import yaml
+    from dpf.core import load_yaml, write_text
+
+    if not getattr(args, "product", None):
+        raise SystemExit("name a product")
+    pid = args.product
+    pdir = ws.root / "products" / pid
+    if args.proto_cmd == "init":
+        report.head(f"proto · init — {pid}", gate="proto")
+        if (pdir / "product.yaml").exists():
+            report.fail(f"products/{pid}/product.yaml already exists")
+            return
+        sys_id = args.source or "erp_orders"
+        entity = args.entity or "orders"
+        man = {
+            "product_id": pid,
+            "version": "0.1.0",
+            "status": "prototype",
+            "owner": f"{pid}-owner@example.com",
+            "domain": args.domain or "commerce",
+            "classification": "INTERNAL",
+            "deployment": {
+                "gcp_project": args.project or "example-dpf-dev",
+                "region": "europe-west2",
+                "datasets": {
+                    "raw": f"{pid}_raw",
+                    "staging": f"{pid}_staging",
+                    "gold": f"{pid}_gold",
+                    "assertions": f"{pid}_assertions",
+                    "control": f"{pid}_control",
+                },
+            },
+            "sources": [{
+                "system_id": sys_id,
+                "engine": "postgres",
+                "capture_mode": "watermark",
+                "watermark_column": "updated_at",
+                "schedule": "0 * * * *",
+                "entities": [entity],
+            }],
+            "layers": {
+                "raw": {"storage": "bigquery_native"},
+                "staging": {
+                    "methodology": None,
+                    "engine": "dataform",
+                    "storage": "bigquery_native",
+                    "models": [{
+                        "name": f"stg_{entity}",
+                        "role": "staging",
+                        "grain_statement": f"One row per {entity} natural key",
+                        "grain_columns": ["id"],
+                        "natural_key": ["id"],
+                        "dedupe_order": ["source_modified_ts DESC", "_ingest_ts DESC"],
+                        "history_semantics": "current_only",
+                        "materialisation": "view",
+                        "body": f"sql/stg_{entity}.sql",
+                    }],
+                },
+                "gold": {
+                    "methodology": "direct",
+                    "engine": "dataform",
+                    "storage": "bigquery_native",
+                    "models": [{
+                        "name": f"obt_{pid}",
+                        "role": "business_view",
+                        "grain_statement": f"One row per {entity} record in {pid}",
+                        "grain_columns": ["id"],
+                        "history_semantics": "current_only",
+                        "materialisation": "view",
+                        "body": f"sql/obt_{pid}.sql",
+                    }],
+                },
+            },
+            "output_ports": [{
+                "name": f"{pid}_port",
+                "model": f"obt_{pid}",
+                "type": "bigquery_view",
+                "access": "dataset_grant",
+            }],
+            "quality": {"gate_behaviour": "warn", "rules": []},
+            "orchestration": {
+                "engine": "dataform",
+                "timezone": "UTC",
+                "schedules": [{"id": "hourly", "cron": "15 * * * *"}],
+            },
+        }
+        write_text(pdir / "product.yaml", yaml.safe_dump(man, sort_keys=False))
+        write_text(pdir / "sql" / f"stg_{entity}.sql",
+                   f"SELECT\n  id,\n  updated_at AS source_modified_ts,\n  _ingest_ts\nFROM {{{{ ref('raw_{entity}') }}}}\n")
+        write_text(pdir / "sql" / f"obt_{pid}.sql",
+                   f"SELECT\n  id,\n  source_modified_ts\nFROM {{{{ ref('stg_{entity}') }}}}\n")
+        report.ok(f"scaffolded prototype products/{pid}/product.yaml (run `dpf check {pid} --gate proto` and `dpf generate {pid}`)")
+    elif args.proto_cmd == "promote":
+        report.head(f"proto · promote — {pid}", gate="proto")
+        mpath = pdir / "product.yaml"
+        if not mpath.exists():
+            report.fail(f"products/{pid}/product.yaml does not exist")
+            return
+        man = load_yaml(mpath)
+        slug = pid.replace("_", "-")
+        domain = man.get("domain", "commerce")
+        brd_rel = f"products/{domain}/{slug}/brd"
+        tdd_rel = f"products/{domain}/{slug}/tdd"
+        man["status"] = "draft"
+        man.setdefault("brd_id", f"BRD-{slug.upper()}-001")
+        man.setdefault("tdd_id", f"TDD-{slug.upper()}-001")
+        man.setdefault("satisfies", f"{man['brd_id']}@1.0.0")
+        man.setdefault("specs", {"brd": brd_rel, "tdd": tdd_rel})
+        man.setdefault("observability", {
+            "freshness": [{"id": "OB-1", "model": f"obt_{pid}", "max_staleness": "PT24H"}],
+            "schema_drift": {"on_additive": "land_and_record", "on_breaking": "quarantine_and_alert"},
+            "alerting": {"notification_channel_var": "alert_channel"},
+            "slo": {"objective": 0.99, "window": "P28D"},
+        })
+        man.setdefault("governance", {"register": "knowledge_catalog", "registered_via": "knowledge-catalog-mcp"})
+        write_text(mpath, yaml.safe_dump(man, sort_keys=False))
+        brd_dir = ws.root / "openspec/specs" / brd_rel
+        tdd_dir = ws.root / "openspec/specs" / tdd_rel
+        if not (brd_dir / "spec.md").exists():
+            write_text(brd_dir / "spec.md", f"# {pid} — Business Requirements\n\n## Purpose\n\n**BRD:** {man['brd_id']} · **Version:** 1.0.0\n\n## Requirements\n\n### Requirement: Core output\n**ID:** R-1\n\nThe product SHALL provide {pid} records for business reporting.\n\n#### Scenario: Records are available\n**ID:** AX-1\n- **WHEN** the dataset is refreshed\n- **THEN** each record SHALL appear once\n")
+        if not (brd_dir / "brd.yaml").exists():
+            brd_doc = {
+                "brd_id": man["brd_id"],
+                "product_id": pid,
+                "status": "draft",
+                "version": "1.0.0",
+                "business_owner": man.get("owner", f"{pid}-owner@example.com"),
+                "data_steward": man.get("steward", "data-analytics"),
+                "domain": domain,
+                "sensitivity": man.get("classification", "INTERNAL"),
+                "residency": "[NEEDS-DECISION: residency]",
+                "business_questions": [{"id": "BQ-1", "text": "[NEEDS-DECISION: BQ-1]", "decision_supported": "[NEEDS-DECISION]", "consumers": [man.get("owner", "analytics")]}],
+                "required_outputs": [{"id": "OUT-1", "type": "dataset", "figures": ["record count"], "attributes": ["id"], "slices": ["id"], "satisfies": ["R-1"]}],
+                "level_of_detail": {"drill_to": "a single record", "distinct_by": "each record appears once", "satisfies": ["R-1"]},
+                "history_behaviour": [{"id": "HB-1", "attribute": "record details", "question": "If details change, should past records show old or current values?", "answer": "Current values are fine.", "satisfies": ["R-1"]}],
+                "totalling": {"can_be_summed_across": ["days"], "satisfies": ["R-1"]},
+                "timeliness": {"freshness_need": "daily", "justification": "[NEEDS-DECISION: timeliness]", "expected_users": "analytics team", "satisfies": ["R-1"]},
+                "exceptions": [],
+                "fitness": {"unusable_row": "[NEEDS-DECISION: fitness]", "on_bad_data": "quarantine and warn", "satisfies": ["R-1"]},
+                "sources_believed": [{"system": (man.get("sources") or [{}])[0].get("system_id", "source"), "holds": ", ".join((man.get("sources") or [{}])[0].get("entities") or ["records"]), "authority": "system of record"}],
+                "protection": {"who_may_access": [man.get("owner", "analytics")], "satisfies": ["R-1"]},
+                "external_readers": {"required": False, "access": "internal only", "satisfies": ["R-1"]},
+                "non_goals": ["[NEEDS-DECISION: non_goals]"],
+                "open_questions": [],
+            }
+            write_text(brd_dir / "brd.yaml", yaml.safe_dump(brd_doc, sort_keys=False))
+        if not (tdd_dir / "spec.md").exists():
+            tdd_tmpl = ws.root / "templates/design/tdd-spec.md"
+            tdd_txt = (tdd_tmpl.read_text(encoding="utf-8")
+                       .replace("{Product name}", pid)
+                       .replace("{product name}", pid)
+                       .replace("{product_id}", pid)
+                       .replace("{product}", pid)
+                       .replace("{DOMAIN}", domain.upper())
+                       .replace("{domain}", domain)) if tdd_tmpl.exists() else f"# {pid} — Technical Design\n\n## Purpose\n\n**TDD:** {man['tdd_id']} · **Satisfies:** {man['satisfies']}\n"
+            write_text(tdd_dir / "spec.md", tdd_txt)
+        if not (tdd_dir / "playback.md").exists():
+            sem_tmpl = ws.root / "templates/design/semantics.md"
+            pb_txt = (sem_tmpl.read_text(encoding="utf-8")
+                      .replace("{Product name}", pid)
+                      .replace("{product}", pid)
+                      .replace("{DOMAIN}", domain.upper())
+                      .replace("{domain}", domain)) if sem_tmpl.exists() else f"# Business playback — {pid}\n\nPlain-language playback of {pid} for business owner sign-off.\n"
+            write_text(tdd_dir / "playback.md", pb_txt)
+        report.ok(f"promoted {pid} to status: draft and scaffolded {brd_rel} and {tdd_rel} (with playback.md)")
 
 
 def cmd_eval(ws, args, report):
@@ -227,6 +405,9 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("generate", parents=[common], help="G3: render every artefact into generated/<product>/")
     product_args(sp)
     sp.add_argument("--engine", help="render with another engine adapter (e.g. dbt) into generated/<product>--<engine>/")
+    sp.add_argument("--env", help="render with environment overrides from deployment.environments.<env>")
+    sp.add_argument("--semantic-layer", nargs="*", choices=["cube", "metricflow", "atscale", "osi"],
+                    help="override semantic layer targets (cube, metricflow, atscale, osi)")
     sp.add_argument("--check", action="store_true", help="compare with the golden copy in tests/golden/ and prove determinism")
     sp.add_argument("--update-golden", action="store_true", help="replace the golden copy with this build")
     sp.add_argument("--no-write", action="store_true", help="render in memory only")
@@ -268,8 +449,21 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("check", parents=[common], help="run every gate up to --gate (cumulative)")
     product_args(sp)
     sp.add_argument("--gate", choices=list(GATE_ALIASES), default="G3",
-                    help="highest gate to check: G0/define, G1/design, G2/compose, G3/build (default), G4/test")
+                    help="highest gate to check: proto/prototype, G0/define, G1/design, G2/compose, G3/build (default), G4/test")
     sp.set_defaults(fn=cmd_check)
+
+    proto = sub.add_parser("proto", help="fast prototyping cheat code (status: prototype)")
+    psub = proto.add_subparsers(dest="proto_cmd", required=True)
+    sp = psub.add_parser("init", parents=[common], help="scaffold a minimal status: prototype product without BRD/TDD")
+    product_args(sp, all_ok=False)
+    sp.add_argument("--source", help="source system_id (default: erp_orders)")
+    sp.add_argument("--entity", help="source entity name (default: orders)")
+    sp.add_argument("--domain", help="domain name (default: commerce)")
+    sp.add_argument("--project", help="GCP project id (default: example-dpf-dev)")
+    sp.set_defaults(fn=cmd_proto)
+    sp = psub.add_parser("promote", parents=[common], help="promote a prototype product to status: draft and scaffold BRD/TDD")
+    product_args(sp, all_ok=False)
+    sp.set_defaults(fn=cmd_proto)
 
     sp = sub.add_parser("eval", parents=[common], help="run the behavioural evals in tests/evals/")
     sp.add_argument("--id", nargs="*", help="eval ids to run (default: all)")

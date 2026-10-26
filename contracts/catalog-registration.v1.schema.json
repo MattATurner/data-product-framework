@@ -72,7 +72,10 @@
       }
     },
     "steward": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "lineage_edges": {
       "type": "array",
@@ -87,13 +90,28 @@
       ]
     },
     "brd_link": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "tdd_link": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "semantics_link": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "playback_link": {
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "registered_via": {
       "type": "string",

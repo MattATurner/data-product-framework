@@ -17,10 +17,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from dpf import __version__
-from dpf.core import Product, Report, sha256, write_text
+from dpf.core import Product, Report, retarget_env, sha256, write_text
 from dpf.compose import compose, render_dag_md
 from dpf.graph import ProductGraph
-from dpf.generate import dataform, dbt, docs, terraform
+from dpf.generate import dataform, dbt, docs, orchestration, semantic_layer, terraform
 from dpf.generate.plan import Action, build_plan
 from dpf.generate.render import undefined_vars
 from dpf.generate.testspec import build_test_spec
@@ -32,6 +32,7 @@ RENDERERS = {"dataform": dataform.render, "dbt": dbt.render}
 class Build:
     product: Product
     engine: str | None = None
+    env: str | None = None
     ok: bool = True
     problems: list[str] = field(default_factory=list)
     files: dict[str, str] = field(default_factory=dict)
@@ -44,7 +45,8 @@ class Build:
     @property
     def name(self) -> str:
         p = self.product
-        return p.id if not self.engine or self.engine == declared_engine(p) else f"{p.id}--{self.engine}"
+        base = p.id if not self.engine or self.engine == declared_engine(p) else f"{p.id}--{self.engine}"
+        return f"{base}--{self.env}" if self.env else base
 
 
 def declared_engine(p: Product) -> str | None:
@@ -58,9 +60,10 @@ def retarget(p: Product, engine: str) -> Product:
     for layer in ("staging", "silver", "gold"):
         if (man.get("layers") or {}).get(layer):
             man["layers"][layer]["engine"] = engine
-    if man.get("orchestration"):
+    if man.get("orchestration") and man["orchestration"].get("engine") in (None, "dataform", "dbt"):
         man["orchestration"]["engine"] = engine
     q = Product(p.ws, p.id, p.path)
+    q.active_env = p.active_env
     q.__dict__["manifest"] = man
     return q
 
@@ -77,10 +80,12 @@ def skill_map(dag: dict) -> dict[str, str]:
     return out
 
 
-def build(p: Product, engine: str | None = None) -> Build:
+def build(p: Product, engine: str | None = None, env: str | None = None,
+          semantic_targets: list[str] | None = None) -> Build:
     """Render the whole build in memory. Never writes."""
-    b = Build(product=p, engine=engine)
-    q = retarget(p, engine) if engine and engine != declared_engine(p) else p
+    b = Build(product=p, engine=engine, env=env)
+    q = retarget_env(p, env) if env else p
+    q = retarget(q, engine) if engine and engine != declared_engine(q) else q
     r = Report(quiet=True, stream=io.StringIO())
     ok, dag = compose(q, r, write=False)
     b.dag = dag
@@ -109,6 +114,8 @@ def build(p: Product, engine: str | None = None) -> Build:
     files: dict[str, str] = {}
     files.update(RENDERERS[eng](q, g, b.actions))
     files.update(terraform.render(q, g, b.actions, eng))
+    files.update(orchestration.render(q, eng))
+    files.update(semantic_layer.render(q, g, b.digest, semantic_targets))
     files["test-spec.json"] = docs.dumps(b.spec)
     files["dag.json"] = docs.dumps(dag)
     files["dag.md"] = render_dag_md(dag)
@@ -137,7 +144,7 @@ def build(p: Product, engine: str | None = None) -> Build:
 CONTRACT_OF = {
     "test-spec.json": "test-spec.v1", "data-product.json": "data-product.v1",
     "catalog-registration.json": "catalog-registration.v1", "observability-policy.json": "observability-policy.v1",
-    "quality-policy.json": "quality-policy.v1",
+    "quality-policy.json": "quality-policy.v1", "semantic-layer.json": "semantic-layer.v1",
 }
 
 
@@ -186,8 +193,9 @@ def write_tree(files: dict[str, str], root: Path, clean: bool) -> None:
 
 
 def generate(p: Product, report: Report, engine: str | None = None, check: bool = False,
-             update_golden: bool = False, write: bool = True) -> Build:
-    b = build(p, engine)
+             update_golden: bool = False, write: bool = True, env: str | None = None,
+             semantic_targets: list[str] | None = None) -> Build:
+    b = build(p, engine, env=env, semantic_targets=semantic_targets)
     report.head(f"G3 · generate artefacts — {b.name}", gate="G3")
     for prob in b.problems:
         report.fail(prob)
@@ -211,7 +219,7 @@ def generate(p: Product, report: Report, engine: str | None = None, check: bool 
                         f"{' --engine ' + engine if engine else ''} --update-golden`)")
         else:
             diffs = diff_tree(b.files, gd)
-            again = build(p, engine)
+            again = build(p, engine, env=env, semantic_targets=semantic_targets)
             stable = again.files == b.files
             report.check(stable, "generation is deterministic (two runs are byte-identical)",
                          "generation is not deterministic: two runs differ")

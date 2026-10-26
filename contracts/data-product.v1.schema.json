@@ -23,7 +23,10 @@
       "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/semver"
     },
     "brd_id": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "tdd_id": {
       "type": [
@@ -33,11 +36,12 @@
     },
     "semantics_signed": {
       "type": "boolean",
-      "description": "True only when signoff.yaml matches the current semantic digest."
+      "description": "True only when signoff.yaml matches the current playback/semantic digest."
     },
     "status": {
       "type": "string",
       "enum": [
+        "prototype",
         "draft",
         "provisional",
         "published",

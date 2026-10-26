@@ -11,7 +11,7 @@ decides: grain
 
 ## Decision
 
-Grain, history type, conformance and additivity are derived in the TDD from business answers, played back in semantics.md, and signed before build. The signature is bound to a digest of semantics.md and every model's grain and history declaration.
+Grain, history type, conformance and additivity are derived in the TDD from business answers, played back in `playback.md` (or `semantics.md` for backwards compatibility), and signed before build. The signature is bound to a digest (`playback_digest` / `semantic_digest`) of the playback document and every model's grain and history declaration.
 
 ## Consequences
 

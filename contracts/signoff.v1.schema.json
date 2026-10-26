@@ -50,6 +50,11 @@
       "type": "string",
       "pattern": "^sha256:[0-9a-f]{64}$"
     },
+    "playback_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Digest of playback.md (formerly semantics.md) and every model's grain and history declaration."
+    },
     "note": {
       "type": "string"
     },

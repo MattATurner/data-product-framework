@@ -1,0 +1,15 @@
+id: prototype-blocks-g1
+asserts: A product with status prototype cannot pass G0 or G1 until promoted via dpf proto promote.
+mutate:
+- set:
+    file: products/customer_orders/product.yaml
+    path: status
+    value: prototype
+run:
+  command: check
+  product: customer_orders
+  gate: G1
+expect:
+  outcome: fail
+  messages:
+  - 'has status: prototype; use `dpf check customer_orders --gate proto` or promote'
