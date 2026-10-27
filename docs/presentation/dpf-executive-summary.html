@@ -381,8 +381,6 @@
   <meta name="tags" content="Executive Summary,Data Product Framework,BigQuery,Knowledge Catalog">
   <meta name="deck-role" content="master">
   <meta name="catalog-visibility" content="visible">
-  <meta name="git-commit" content="378141e">
-  <meta name="published-at" content="2026-10-27T02:16:06Z">
 </head>
 <body>
 
@@ -527,62 +525,70 @@
               <filter id="nodeShadow" x="-15%" y="-15%" width="130%" height="135%">
                 <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.10"/>
               </filter>
-              <marker id="arrowGreen" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <marker id="arrowBlue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+                <path d="M 0 1 L 9 5 L 0 9 z" fill="#1a73e8"/>
+              </marker>
+              <marker id="arrowAmber" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+                <path d="M 0 1 L 9 5 L 0 9 z" fill="#e37400"/>
+              </marker>
+              <marker id="arrowGreen" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
                 <path d="M 0 1 L 9 5 L 0 9 z" fill="#188038"/>
               </marker>
             </defs>
 
-            <!-- Outer Subtle Halo Ring -->
-            <circle cx="310" cy="238" r="188" fill="none" stroke="var(--rule)" stroke-width="26" opacity="0.45"/>
+            <!-- =========================================================
+                 CENTRE LAYER: ROTATING DIRECTIONAL ARROW RING (r = 104)
+                 Completely unobstructed in the inner annulus!
+                 ========================================================= -->
+            <circle cx="310" cy="238" r="104" fill="none" stroke="var(--surface-2)" stroke-width="18"/>
+            <circle cx="310" cy="238" r="104" fill="none" stroke="var(--rule)" stroke-width="1.5" stroke-dasharray="5 5" class="orbit-anim"/>
 
-            <!-- Main Clockwise Lifecycle Track (Stages 1 -> 6) -->
-            <circle cx="310" cy="238" r="188" fill="none" stroke="#1a73e8" stroke-width="3.5" stroke-dasharray="10 6" class="orbit-anim" opacity="0.75"/>
-
-            <!-- Return Feedback Arc (6. Monitor -> 1. Define: OpenSpec Change Proposal) -->
-            <path d="M 125 204 A 188 188 0 0 1 200 86" fill="none" stroke="#188038" stroke-width="4" stroke-dasharray="7 5" marker-end="url(#arrowGreen)"/>
-
-            <!-- Center Hub: Unbroken Traceability Core -->
-            <circle cx="310" cy="238" r="96" fill="var(--surface-2)" stroke="var(--rule)" stroke-width="2"/>
-            <circle cx="310" cy="238" r="84" fill="var(--surface)" stroke="#1a73e8" stroke-width="1.5" stroke-dasharray="4 4"/>
-            <text x="310" y="206" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" font-weight="700" fill="#1a73e8" letter-spacing="1.2">UNBROKEN TRACE</text>
-            <text x="310" y="226" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="14" font-weight="700" fill="var(--ink)">6 Stages · 5 Gates</text>
-            <text x="310" y="245" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="11" fill="var(--ink-2)">Requirement → Decision</text>
-            <text x="310" y="261" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="11" fill="var(--ink-2)">Artefact → Test → Proof</text>
-            <rect x="252" y="271" width="116" height="20" rx="10" fill="var(--green-lt)" stroke="#188038" stroke-width="1"/>
-            <text x="310" y="284" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" font-weight="700" fill="#188038">CONTINUOUS LOOP</text>
+            <!-- Central Core Hub (r = 76) -->
+            <circle cx="310" cy="238" r="76" fill="var(--surface)" stroke="var(--rule)" stroke-width="2" filter="url(#nodeShadow)"/>
+            <text x="310" y="213" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" font-weight="700" fill="#1a73e8" letter-spacing="1.1">UNBROKEN TRACE</text>
+            <text x="310" y="232" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="13.5" font-weight="700" fill="var(--ink)">6 Stages · 5 Gates</text>
+            <text x="310" y="249" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10.5" fill="var(--ink-2)">BRD → TDD → DAG</text>
+            <text x="310" y="264" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10.5" fill="var(--ink-2)">Build → Test → SLO</text>
 
             <!-- =========================================================
                  GROUP 1 (Step 1): 1. DEFINE -> G0 -> 2. DESIGN -> G1
                  ========================================================= -->
             <g class="cycle-group group-1">
-              <g filter="url(#nodeShadow)" transform="translate(132, 52)">
-                <rect width="144" height="68" rx="12" fill="var(--surface)" stroke="#1a73e8" stroke-width="2.5"/>
-                <rect x="0" y="0" width="144" height="20" rx="10" fill="#1a73e8"/>
-                <rect x="0" y="10" width="144" height="10" fill="#1a73e8"/>
-                <text x="72" y="14" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700" fill="#ffffff">STAGE 1 · DEFINE</text>
-                <text x="72" y="39" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="12.5" font-weight="700" fill="var(--ink)">Use Case &amp; BRD</text>
-                <text x="72" y="55" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10.5" fill="var(--muted)">Scorecard · Plain English</text>
+              <!-- Centre-Layer Clockwise Arrow 1 (Blue: 10 o'clock -> 2 o'clock, r=104) -->
+              <path d="M 220 186 A 104 104 0 0 1 400 186" fill="none" stroke="#1a73e8" stroke-width="4.5" stroke-linecap="round" marker-end="url(#arrowBlue)"/>
+
+              <!-- Stage 1: DEFINE -->
+              <g filter="url(#nodeShadow)" transform="translate(124, 52)">
+                <rect width="148" height="68" rx="12" fill="var(--surface)" stroke="#1a73e8" stroke-width="2.5"/>
+                <rect x="0" y="0" width="148" height="20" rx="10" fill="#1a73e8"/>
+                <rect x="0" y="10" width="148" height="10" fill="#1a73e8"/>
+                <text x="74" y="14" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700" fill="#ffffff">STAGE 1 · DEFINE</text>
+                <text x="74" y="39" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="12.5" font-weight="700" fill="var(--ink)">Use Case &amp; BRD</text>
+                <text x="74" y="55" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10.5" fill="var(--muted)">Scorecard · Plain English</text>
               </g>
 
-              <g filter="url(#nodeShadow)" transform="translate(274, 29)">
+              <!-- Gate G0 Pill -->
+              <g filter="url(#nodeShadow)" transform="translate(274, 24)">
                 <rect width="72" height="36" rx="18" fill="#1a73e8" stroke="#ffffff" stroke-width="2"/>
                 <text x="36" y="16" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" font-weight="700" fill="#ffffff">GATE G0</text>
                 <text x="36" y="28" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="9" font-weight="600" fill="#e8f0fe">BRD Valid</text>
               </g>
 
-              <g filter="url(#nodeShadow)" transform="translate(344, 52)">
-                <rect width="144" height="68" rx="12" fill="var(--surface)" stroke="#1a73e8" stroke-width="2.5"/>
-                <rect x="0" y="0" width="144" height="20" rx="10" fill="#1a73e8"/>
-                <rect x="0" y="10" width="144" height="10" fill="#1a73e8"/>
-                <text x="72" y="14" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700" fill="#ffffff">STAGE 2 · DESIGN</text>
-                <text x="72" y="39" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="12.5" font-weight="700" fill="var(--ink)">TDD &amp; Playback</text>
-                <text x="72" y="55" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10.5" fill="var(--muted)">Business Sign-Off</text>
+              <!-- Stage 2: DESIGN -->
+              <g filter="url(#nodeShadow)" transform="translate(348, 52)">
+                <rect width="148" height="68" rx="12" fill="var(--surface)" stroke="#1a73e8" stroke-width="2.5"/>
+                <rect x="0" y="0" width="148" height="20" rx="10" fill="#1a73e8"/>
+                <rect x="0" y="10" width="148" height="10" fill="#1a73e8"/>
+                <text x="74" y="14" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700" fill="#ffffff">STAGE 2 · DESIGN</text>
+                <text x="74" y="39" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="12.5" font-weight="700" fill="var(--ink)">TDD &amp; Playback</text>
+                <text x="74" y="55" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10.5" fill="var(--muted)">Kimball · SCD2 · Sign-Off</text>
               </g>
 
-              <g filter="url(#nodeShadow)" transform="translate(450, 126)">
+              <!-- Gate G1 Pill -->
+              <g filter="url(#nodeShadow)" transform="translate(464, 134)">
                 <rect width="76" height="36" rx="18" fill="#1a73e8" stroke="#ffffff" stroke-width="2"/>
                 <text x="38" y="16" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" font-weight="700" fill="#ffffff">GATE G1</text>
-                <text x="38" y="28" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="9" font-weight="600" fill="#e8f0fe">Sign-Off</text>
+                <text x="38" y="28" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="9" font-weight="600" fill="#e8f0fe">Signed TDD</text>
               </g>
             </g>
 
@@ -590,31 +596,38 @@
                  GROUP 2 (Step 2): 3. COMPOSE -> G2 -> 4. BUILD -> G3
                  ========================================================= -->
             <g class="cycle-group group-2">
-              <g filter="url(#nodeShadow)" transform="translate(432, 204)">
+              <!-- Centre-Layer Clockwise Arrow 2 (Amber: 2:30 -> 5:30, r=104) -->
+              <path d="M 408 202 A 104 104 0 0 1 322 341" fill="none" stroke="#e37400" stroke-width="4.5" stroke-linecap="round" marker-end="url(#arrowAmber)"/>
+
+              <!-- Stage 3: COMPOSE -->
+              <g filter="url(#nodeShadow)" transform="translate(438, 204)">
                 <rect width="148" height="68" rx="12" fill="var(--surface)" stroke="#e37400" stroke-width="2.5"/>
                 <rect x="0" y="0" width="148" height="20" rx="10" fill="#e37400"/>
                 <rect x="0" y="10" width="148" height="10" fill="#e37400"/>
                 <text x="74" y="14" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700" fill="#ffffff">STAGE 3 · COMPOSE</text>
-                <text x="74" y="39" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="12.5" font-weight="700" fill="var(--ink)">Select Patterns</text>
-                <text x="74" y="55" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10.5" fill="var(--muted)">Dimensional · History</text>
+                <text x="74" y="39" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="12.5" font-weight="700" fill="var(--ink)">Bind Skill DAG</text>
+                <text x="74" y="55" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10.5" fill="var(--muted)">Match Skills · Type-Check</text>
               </g>
 
-              <g filter="url(#nodeShadow)" transform="translate(450, 312)">
+              <!-- Gate G2 Pill -->
+              <g filter="url(#nodeShadow)" transform="translate(464, 306)">
                 <rect width="76" height="36" rx="18" fill="#e37400" stroke="#ffffff" stroke-width="2"/>
                 <text x="38" y="16" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" font-weight="700" fill="#ffffff">GATE G2</text>
-                <text x="38" y="28" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="9" font-weight="600" fill="#fef7e0">Verified Flow</text>
+                <text x="38" y="28" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="9" font-weight="600" fill="#fef7e0">Typed DAG</text>
               </g>
 
-              <g filter="url(#nodeShadow)" transform="translate(344, 356)">
-                <rect width="144" height="68" rx="12" fill="var(--surface)" stroke="#e37400" stroke-width="2.5"/>
-                <rect x="0" y="0" width="144" height="20" rx="10" fill="#e37400"/>
-                <rect x="0" y="10" width="144" height="10" fill="#e37400"/>
-                <text x="72" y="14" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700" fill="#ffffff">STAGE 4 · BUILD</text>
-                <text x="72" y="39" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="12.5" font-weight="700" fill="var(--ink)">Generate Code</text>
-                <text x="72" y="55" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10.5" fill="var(--muted)">SQL · Infrastructure</text>
+              <!-- Stage 4: BUILD -->
+              <g filter="url(#nodeShadow)" transform="translate(348, 356)">
+                <rect width="148" height="68" rx="12" fill="var(--surface)" stroke="#e37400" stroke-width="2.5"/>
+                <rect x="0" y="0" width="148" height="20" rx="10" fill="#e37400"/>
+                <rect x="0" y="10" width="148" height="10" fill="#e37400"/>
+                <text x="74" y="14" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700" fill="#ffffff">STAGE 4 · BUILD</text>
+                <text x="74" y="39" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="12.5" font-weight="700" fill="var(--ink)">Render Artefacts</text>
+                <text x="74" y="55" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10.5" fill="var(--muted)">SQL · Infrastructure · Tests</text>
               </g>
 
-              <g filter="url(#nodeShadow)" transform="translate(272, 408)">
+              <!-- Gate G3 Pill -->
+              <g filter="url(#nodeShadow)" transform="translate(272, 414)">
                 <rect width="76" height="36" rx="18" fill="#e37400" stroke="#ffffff" stroke-width="2"/>
                 <text x="38" y="16" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" font-weight="700" fill="#ffffff">GATE G3</text>
                 <text x="38" y="28" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="9" font-weight="600" fill="#fef7e0">100% Trace</text>
@@ -625,22 +638,28 @@
                  GROUP 3 (Step 3): 5. TEST -> G4 -> 6. MONITOR -> LOOP
                  ========================================================= -->
             <g class="cycle-group group-3">
-              <g filter="url(#nodeShadow)" transform="translate(132, 356)">
-                <rect width="144" height="68" rx="12" fill="var(--surface)" stroke="#188038" stroke-width="2.5"/>
-                <rect x="0" y="0" width="144" height="20" rx="10" fill="#188038"/>
-                <rect x="0" y="10" width="144" height="10" fill="#188038"/>
-                <text x="72" y="14" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700" fill="#ffffff">STAGE 5 · TEST</text>
-                <text x="72" y="39" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="12.5" font-weight="700" fill="var(--ink)">Verify &amp; Publish</text>
-                <text x="72" y="55" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10.5" fill="var(--muted)">Sandbox · Catalog</text>
+              <!-- Centre-Layer Clockwise Arrow 3 (Green: 6:30 -> 9:30, r=104, completing the circle!) -->
+              <path d="M 298 341 A 104 104 0 0 1 212 202" fill="none" stroke="#188038" stroke-width="4.5" stroke-linecap="round" marker-end="url(#arrowGreen)"/>
+
+              <!-- Stage 5: TEST -->
+              <g filter="url(#nodeShadow)" transform="translate(124, 356)">
+                <rect width="148" height="68" rx="12" fill="var(--surface)" stroke="#188038" stroke-width="2.5"/>
+                <rect x="0" y="0" width="148" height="20" rx="10" fill="#188038"/>
+                <rect x="0" y="10" width="148" height="10" fill="#188038"/>
+                <text x="74" y="14" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700" fill="#ffffff">STAGE 5 · TEST</text>
+                <text x="74" y="39" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="12.5" font-weight="700" fill="var(--ink)">Verify &amp; Publish</text>
+                <text x="74" y="55" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10.5" fill="var(--muted)">Sandbox · Catalog</text>
               </g>
 
-              <g filter="url(#nodeShadow)" transform="translate(94, 312)">
+              <!-- Gate G4 Pill -->
+              <g filter="url(#nodeShadow)" transform="translate(80, 306)">
                 <rect width="78" height="36" rx="18" fill="#188038" stroke="#ffffff" stroke-width="2"/>
                 <text x="39" y="16" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" font-weight="700" fill="#ffffff">GATE G4</text>
                 <text x="39" y="28" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="9" font-weight="600" fill="#e6f4ea">Signed Proof</text>
               </g>
 
-              <g filter="url(#nodeShadow)" transform="translate(40, 204)">
+              <!-- Stage 6: MONITOR -->
+              <g filter="url(#nodeShadow)" transform="translate(34, 204)">
                 <rect width="148" height="68" rx="12" fill="var(--surface)" stroke="#188038" stroke-width="2.5"/>
                 <rect x="0" y="0" width="148" height="20" rx="10" fill="#188038"/>
                 <rect x="0" y="10" width="148" height="10" fill="#188038"/>
@@ -649,10 +668,11 @@
                 <text x="74" y="55" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10.5" fill="var(--muted)">Freshness · Drift · Quality</text>
               </g>
 
-              <g filter="url(#nodeShadow)" transform="translate(76, 126)">
-                <rect width="108" height="36" rx="18" fill="var(--green-lt)" stroke="#188038" stroke-width="2"/>
-                <text x="54" y="16" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" font-weight="700" fill="#188038">CHANGE LOOP</text>
-                <text x="54" y="28" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="9" font-weight="600" fill="#188038">Re-enters G0</text>
+              <!-- Change Loop Pill (symmetric with Gate G1 at y=134) -->
+              <g filter="url(#nodeShadow)" transform="translate(56, 134)">
+                <rect width="104" height="36" rx="18" fill="var(--green-lt)" stroke="#188038" stroke-width="2"/>
+                <text x="52" y="16" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" font-weight="700" fill="#188038">CHANGE LOOP</text>
+                <text x="52" y="28" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="9" font-weight="600" fill="#188038">Re-enters G0 ↻</text>
               </g>
             </g>
           </svg>
@@ -666,8 +686,8 @@
               <span style="font:700 11px/1 var(--font-mono);color:var(--accent);background:var(--accent-lt);padding:4px 8px;border-radius:6px;">STAGES 1 &amp; 2 · DEFINE &amp; DESIGN</span>
               <span style="font:700 11px/1 var(--font-mono);color:var(--accent);">Gates G0 &amp; G1</span>
             </div>
-            <h3>Lock business meaning before writing code</h3>
-            <p>Sponsors score the use case and author a plain-English BRD or PRD (<strong>G0</strong>). The technical design is translated back into a plain-English playback for business sign-off (<strong>G1</strong>).</p>
+            <h3>Define rules, dimensional model, and playback</h3>
+            <p>Sponsors approve a plain-English BRD or PRD (<strong>G0</strong>). In <strong>Design</strong>, the Technical Design (TDD) resolves the Kimball star schema, SCD Type 2 history, conformed dimensions, and grains—and plays them back in plain English for business sign-off (<strong>G1</strong>).</p>
           </div>
 
           <div class="card" data-build="2" style="border-left:4px solid var(--amber);flex:1;display:flex;flex-direction:column;justify-content:center;">
@@ -675,8 +695,8 @@
               <span style="font:700 11px/1 var(--font-mono);color:var(--amber);background:var(--amber-lt);padding:4px 8px;border-radius:6px;">STAGES 3 &amp; 4 · COMPOSE &amp; BUILD</span>
               <span style="font:700 11px/1 var(--font-mono);color:var(--amber);">Gates G2 &amp; G3</span>
             </div>
-            <h3>Assemble approved patterns and generate code</h3>
-            <p>The pipeline composer selects pre-tested modelling patterns (star schema, point-in-time history) and verifies every handoff (<strong>G2</strong>). Templates deterministically generate SQL, infrastructure, and test suites (<strong>G3</strong>).</p>
+            <h3>Bind executable skills, type-check DAG, and build</h3>
+            <p><strong>Compose</strong> matches each designed model (such as SCD Type 2 dimensions and transaction facts) to its executable skill and type-checks every contract handoff in the pipeline DAG (<strong>G2</strong>). <strong>Build</strong> then renders the SQL, infrastructure, and tests (<strong>G3</strong>).</p>
           </div>
 
           <div class="card" data-build="3" style="border-left:4px solid var(--green);flex:1;display:flex;flex-direction:column;justify-content:center;">
