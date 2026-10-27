@@ -82,13 +82,16 @@
 
   .slide {
     position: absolute; inset: 0;
-    padding: 40px 56px 50px;
+    padding: 36px 56px 46px;
     display: flex; flex-direction: column;
+    background: var(--bg);
     opacity: 0; pointer-events: none;
-    transition: opacity 0.28s ease;
     z-index: 1;
   }
-  .slide.active { opacity: 1; pointer-events: auto; }
+  body.ready .slide {
+    transition: opacity 0.25s ease;
+  }
+  .slide.active { opacity: 1; pointer-events: auto; z-index: 2; }
 
   /* Header Hierarchy */
   .eyebrow {
@@ -381,8 +384,6 @@
   <meta name="tags" content="Executive Summary,Data Product Framework,BigQuery,Knowledge Catalog">
   <meta name="deck-role" content="master">
   <meta name="catalog-visibility" content="visible">
-  <meta name="git-commit" content="8d1498f">
-  <meta name="published-at" content="2026-10-27T02:45:37Z">
 </head>
 <body>
 
@@ -514,15 +515,15 @@
        SLIDE 3 (idx 2): CIRCULAR DIAGRAM OF THE 6 STAGES & 5 GATES
        ===================================================================== -->
   <section class="slide" data-steps="3">
-    <div class="eyebrow">02 · THE VIRTUOUS CIRCULAR LIFECYCLE</div>
-    <h2>Every data product and change moves clockwise through six stages and five automated gates</h2>
+    <div class="eyebrow">02 · THE VIRTUOUS CIRCULAR LIFECYCLE &amp; GATE GOVERNANCE</div>
+    <h2 style="font-size:25.5px;">Six stages and five machine gates: four with digest-bound HITL sign-off, one 100% automated</h2>
 
-    <div class="body">
-      <div class="row" style="flex:1;align-items:stretch;">
+    <div class="body" style="padding-top:12px;gap:10px;">
+      <div class="row" style="flex:1;min-height:0;align-items:stretch;">
 
         <!-- Left: Prominent Circular Lifecycle Diagram -->
-        <div class="card" style="width:650px;flex-shrink:0;padding:12px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;">
-          <svg id="cycle-svg" viewBox="0 0 620 475" style="width:100%;height:100%;max-height:465px;">
+        <div class="card" style="width:635px;flex-shrink:0;padding:8px 14px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;min-height:0;">
+          <svg id="cycle-svg" viewBox="0 0 620 462" style="width:100%;flex:1;min-height:0;">
             <defs>
               <filter id="nodeShadow" x="-15%" y="-15%" width="130%" height="135%">
                 <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.10"/>
@@ -547,10 +548,10 @@
 
             <!-- Central Core Hub (r = 76) -->
             <circle cx="310" cy="238" r="76" fill="var(--surface)" stroke="var(--rule)" stroke-width="2" filter="url(#nodeShadow)"/>
-            <text x="310" y="213" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" font-weight="700" fill="#1a73e8" letter-spacing="1.1">UNBROKEN TRACE</text>
-            <text x="310" y="232" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="13.5" font-weight="700" fill="var(--ink)">6 Stages · 5 Gates</text>
-            <text x="310" y="249" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10.5" fill="var(--ink-2)">BRD → TDD → DAG</text>
-            <text x="310" y="264" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10.5" fill="var(--ink-2)">Build → Test → SLO</text>
+            <text x="310" y="211" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" font-weight="700" fill="#1a73e8" letter-spacing="1.0">UNBROKEN TRACE</text>
+            <text x="310" y="230" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="13.5" font-weight="700" fill="var(--ink)">6 Stages · 5 Gates</text>
+            <text x="310" y="247" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10.5" font-weight="700" fill="var(--ink-2)">4 HITL + Machine</text>
+            <text x="310" y="262" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10" fill="var(--muted)">1 Pure Auto (G2)</text>
 
             <!-- =========================================================
                  GROUP 1 (Step 1): 1. DEFINE -> G0 -> 2. DESIGN -> G1
@@ -560,7 +561,7 @@
               <path d="M 220 186 A 104 104 0 0 1 400 186" fill="none" stroke="#1a73e8" stroke-width="4.5" stroke-linecap="round" marker-end="url(#arrowBlue)"/>
 
               <!-- Stage 1: DEFINE -->
-              <g filter="url(#nodeShadow)" transform="translate(124, 52)">
+              <g filter="url(#nodeShadow)" transform="translate(118, 52)">
                 <rect width="148" height="68" rx="12" fill="var(--surface)" stroke="#1a73e8" stroke-width="2.5"/>
                 <rect x="0" y="0" width="148" height="20" rx="10" fill="#1a73e8"/>
                 <rect x="0" y="10" width="148" height="10" fill="#1a73e8"/>
@@ -569,15 +570,15 @@
                 <text x="74" y="55" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10.5" fill="var(--muted)">Scorecard · Plain English</text>
               </g>
 
-              <!-- Gate G0 Pill -->
-              <g filter="url(#nodeShadow)" transform="translate(274, 24)">
-                <rect width="72" height="36" rx="18" fill="#1a73e8" stroke="#ffffff" stroke-width="2"/>
-                <text x="36" y="16" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" font-weight="700" fill="#ffffff">GATE G0</text>
-                <text x="36" y="28" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="9" font-weight="600" fill="#e8f0fe">BRD Valid</text>
+              <!-- Gate G0 Pill (HITL + Machine) -->
+              <g filter="url(#nodeShadow)" transform="translate(262, 18)">
+                <rect width="96" height="40" rx="20" fill="#1a73e8" stroke="#ffffff" stroke-width="2"/>
+                <text x="48" y="17" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700" fill="#ffffff">G0 · HITL</text>
+                <text x="48" y="30" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="9" font-weight="600" fill="#e8f0fe">BRD Sign-Off</text>
               </g>
 
               <!-- Stage 2: DESIGN -->
-              <g filter="url(#nodeShadow)" transform="translate(348, 52)">
+              <g filter="url(#nodeShadow)" transform="translate(354, 52)">
                 <rect width="148" height="68" rx="12" fill="var(--surface)" stroke="#1a73e8" stroke-width="2.5"/>
                 <rect x="0" y="0" width="148" height="20" rx="10" fill="#1a73e8"/>
                 <rect x="0" y="10" width="148" height="10" fill="#1a73e8"/>
@@ -586,11 +587,11 @@
                 <text x="74" y="55" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10.5" fill="var(--muted)">Kimball · SCD2 · Sign-Off</text>
               </g>
 
-              <!-- Gate G1 Pill -->
-              <g filter="url(#nodeShadow)" transform="translate(464, 134)">
-                <rect width="76" height="36" rx="18" fill="#1a73e8" stroke="#ffffff" stroke-width="2"/>
-                <text x="38" y="16" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" font-weight="700" fill="#ffffff">GATE G1</text>
-                <text x="38" y="28" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="9" font-weight="600" fill="#e8f0fe">Signed TDD</text>
+              <!-- Gate G1 Pill (HITL + Machine) -->
+              <g filter="url(#nodeShadow)" transform="translate(460, 134)">
+                <rect width="104" height="40" rx="20" fill="#1a73e8" stroke="#ffffff" stroke-width="2"/>
+                <text x="52" y="17" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700" fill="#ffffff">G1 · HITL</text>
+                <text x="52" y="30" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="9" font-weight="600" fill="#e8f0fe">Signed Playback</text>
               </g>
             </g>
 
@@ -611,15 +612,15 @@
                 <text x="74" y="55" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10.5" fill="var(--muted)">Match Skills · Type-Check</text>
               </g>
 
-              <!-- Gate G2 Pill -->
-              <g filter="url(#nodeShadow)" transform="translate(464, 306)">
-                <rect width="76" height="36" rx="18" fill="#e37400" stroke="#ffffff" stroke-width="2"/>
-                <text x="38" y="16" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" font-weight="700" fill="#ffffff">GATE G2</text>
-                <text x="38" y="28" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="9" font-weight="600" fill="#fef7e0">Typed DAG</text>
+              <!-- Gate G2 Pill (100% AUTOMATED — distinct outline pill!) -->
+              <g filter="url(#nodeShadow)" transform="translate(460, 302)">
+                <rect width="104" height="40" rx="20" fill="#fffbeb" stroke="#e37400" stroke-width="2.2" stroke-dasharray="4 2"/>
+                <text x="52" y="17" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700" fill="#b45309">G2 · AUTO ⚡</text>
+                <text x="52" y="30" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="9" font-weight="700" fill="#d97706">Typed Skill DAG</text>
               </g>
 
               <!-- Stage 4: BUILD -->
-              <g filter="url(#nodeShadow)" transform="translate(348, 356)">
+              <g filter="url(#nodeShadow)" transform="translate(354, 356)">
                 <rect width="148" height="68" rx="12" fill="var(--surface)" stroke="#e37400" stroke-width="2.5"/>
                 <rect x="0" y="0" width="148" height="20" rx="10" fill="#e37400"/>
                 <rect x="0" y="10" width="148" height="10" fill="#e37400"/>
@@ -628,11 +629,11 @@
                 <text x="74" y="55" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10.5" fill="var(--muted)">SQL · Infrastructure · Tests</text>
               </g>
 
-              <!-- Gate G3 Pill -->
-              <g filter="url(#nodeShadow)" transform="translate(272, 414)">
-                <rect width="76" height="36" rx="18" fill="#e37400" stroke="#ffffff" stroke-width="2"/>
-                <text x="38" y="16" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" font-weight="700" fill="#ffffff">GATE G3</text>
-                <text x="38" y="28" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="9" font-weight="600" fill="#fef7e0">100% Trace</text>
+              <!-- Gate G3 Pill (HITL + Machine) -->
+              <g filter="url(#nodeShadow)" transform="translate(258, 414)">
+                <rect width="104" height="40" rx="20" fill="#e37400" stroke="#ffffff" stroke-width="2"/>
+                <text x="52" y="17" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700" fill="#ffffff">G3 · HITL</text>
+                <text x="52" y="30" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="9" font-weight="600" fill="#fef7e0">Golden PR Diff</text>
               </g>
             </g>
 
@@ -644,7 +645,7 @@
               <path d="M 298 341 A 104 104 0 0 1 212 202" fill="none" stroke="#188038" stroke-width="4.5" stroke-linecap="round" marker-end="url(#arrowGreen)"/>
 
               <!-- Stage 5: TEST -->
-              <g filter="url(#nodeShadow)" transform="translate(124, 356)">
+              <g filter="url(#nodeShadow)" transform="translate(118, 356)">
                 <rect width="148" height="68" rx="12" fill="var(--surface)" stroke="#188038" stroke-width="2.5"/>
                 <rect x="0" y="0" width="148" height="20" rx="10" fill="#188038"/>
                 <rect x="0" y="10" width="148" height="10" fill="#188038"/>
@@ -653,11 +654,11 @@
                 <text x="74" y="55" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10.5" fill="var(--muted)">Sandbox · Catalog</text>
               </g>
 
-              <!-- Gate G4 Pill -->
-              <g filter="url(#nodeShadow)" transform="translate(80, 306)">
-                <rect width="78" height="36" rx="18" fill="#188038" stroke="#ffffff" stroke-width="2"/>
-                <text x="39" y="16" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" font-weight="700" fill="#ffffff">GATE G4</text>
-                <text x="39" y="28" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="9" font-weight="600" fill="#e6f4ea">Signed Proof</text>
+              <!-- Gate G4 Pill (HITL + Machine) -->
+              <g filter="url(#nodeShadow)" transform="translate(56, 302)">
+                <rect width="104" height="40" rx="20" fill="#188038" stroke="#ffffff" stroke-width="2"/>
+                <text x="52" y="17" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700" fill="#ffffff">G4 · HITL</text>
+                <text x="52" y="30" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="9" font-weight="600" fill="#e6f4ea">Sandbox + Attest</text>
               </g>
 
               <!-- Stage 6: MONITOR -->
@@ -672,53 +673,95 @@
 
               <!-- Change Loop Pill (symmetric with Gate G1 at y=134) -->
               <g filter="url(#nodeShadow)" transform="translate(56, 134)">
-                <rect width="104" height="36" rx="18" fill="var(--green-lt)" stroke="#188038" stroke-width="2"/>
-                <text x="52" y="16" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" font-weight="700" fill="#188038">CHANGE LOOP</text>
-                <text x="52" y="28" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="9" font-weight="600" fill="#188038">Re-enters G0 ↻</text>
+                <rect width="104" height="40" rx="20" fill="var(--green-lt)" stroke="#188038" stroke-width="2" stroke-dasharray="4 2"/>
+                <text x="52" y="17" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" font-weight="700" fill="#188038">LOOP · AUTO</text>
+                <text x="52" y="30" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="9" font-weight="600" fill="#188038">Re-enters G0 ↻</text>
               </g>
             </g>
           </svg>
+
+          <!-- Compact Legend Strip at bottom of Circular Diagram Card -->
+          <div style="display:flex;gap:14px;align-items:center;justify-content:center;width:100%;padding-top:5px;border-top:1px solid var(--rule);font:600 10.5px/1.15 var(--font-sans);color:var(--ink-2);flex-shrink:0;">
+            <span style="display:inline-flex;align-items:center;gap:5px;">
+              <span style="width:9px;height:9px;border-radius:99px;background:var(--accent);display:inline-block;"></span>
+              <strong>Solid Pill (G0, G1, G3, G4):</strong> Machine Check + Digest-Bound HITL
+            </span>
+            <span style="display:inline-flex;align-items:center;gap:5px;">
+              <span style="width:9px;height:9px;border-radius:99px;border:2px dashed var(--amber);background:#fffbeb;display:inline-block;"></span>
+              <strong>Dashed Pill (G2 &amp; Loop):</strong> 100% Automated Gate
+            </span>
+          </div>
         </div>
 
-        <!-- Right: 3 Progressive Phase Breakdown Cards -->
-        <div class="col scaffold-group" style="gap:12px;justify-content:space-between;">
+        <!-- Right: 3 Progressive Phase Breakdown Cards with Explicit Gate Highlights -->
+        <div class="col scaffold-group" style="gap:8px;justify-content:space-between;min-height:0;">
 
-          <div class="card" data-build="1" style="border-left:4px solid var(--accent);flex:1;display:flex;flex-direction:column;justify-content:center;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-              <span style="font:700 11px/1 var(--font-mono);color:var(--accent);background:var(--accent-lt);padding:4px 8px;border-radius:6px;">STAGES 1 &amp; 2 · DEFINE &amp; DESIGN</span>
-              <span style="font:700 11px/1 var(--font-mono);color:var(--accent);">Gates G0 &amp; G1</span>
+          <div class="card" data-build="1" style="border-left:4px solid var(--accent);flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;padding:9px 14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+              <span style="font:700 10px/1 var(--font-mono);color:var(--accent);background:var(--accent-lt);padding:3px 7px;border-radius:5px;">STAGES 1 &amp; 2 · DEFINE &amp; DESIGN</span>
+              <span style="font:700 10px/1 var(--font-mono);color:var(--accent);">2 HITL Gates · G0 &amp; G1</span>
             </div>
-            <h3>Define rules, dimensional model, and playback</h3>
-            <p>Sponsors approve a plain-English BRD or PRD (<strong>G0</strong>). In <strong>Design</strong>, the Technical Design (TDD) resolves the Kimball star schema, SCD Type 2 history, conformed dimensions, and grains—and plays them back in plain English for business sign-off (<strong>G1</strong>).</p>
+            <h3 style="font-size:14.5px;margin-bottom:2px;">Define rules, dimensional model, and playback</h3>
+            <p style="font-size:12px;line-height:1.35;margin-bottom:6px;">Sponsors score the use case and approve a plain-English BRD. In <strong>Design</strong>, the TDD resolves the Kimball star schema, SCD Type 2 history, and grains—played back in plain English.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+              <div style="background:var(--accent-lt);border:1px solid rgba(26,115,232,0.25);border-radius:7px;padding:5px 8px;">
+                <div style="font:700 9.5px/1.15 var(--font-mono);color:var(--accent);">G0 · HITL — BUSINESS OWNER</div>
+                <div style="font-size:11px;color:var(--ink-2);line-height:1.3;margin-top:2px;">Machine checks rubric &amp; zero jargon; <strong>Sponsor</strong> signs off BRD.</div>
+              </div>
+              <div style="background:var(--accent-lt);border:1px solid rgba(26,115,232,0.25);border-radius:7px;padding:5px 8px;">
+                <div style="font:700 9.5px/1.15 var(--font-mono);color:var(--accent);">G1 · HITL — BUSINESS + ARCH</div>
+                <div style="font-size:11px;color:var(--ink-2);line-height:1.3;margin-top:2px;"><strong>Sponsor</strong> signs <code>semantics.md</code> (<code>sha256</code>) + <strong>Architect</strong> approves TDD.</div>
+              </div>
+            </div>
           </div>
 
-          <div class="card" data-build="2" style="border-left:4px solid var(--amber);flex:1;display:flex;flex-direction:column;justify-content:center;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-              <span style="font:700 11px/1 var(--font-mono);color:var(--amber);background:var(--amber-lt);padding:4px 8px;border-radius:6px;">STAGES 3 &amp; 4 · COMPOSE &amp; BUILD</span>
-              <span style="font:700 11px/1 var(--font-mono);color:var(--amber);">Gates G2 &amp; G3</span>
+          <div class="card" data-build="2" style="border-left:4px solid var(--amber);flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;padding:9px 14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+              <span style="font:700 10px/1 var(--font-mono);color:var(--amber);background:var(--amber-lt);padding:3px 7px;border-radius:5px;">STAGES 3 &amp; 4 · COMPOSE &amp; BUILD</span>
+              <span style="font:700 10px/1 var(--font-mono);color:var(--amber);">1 Auto (G2) · 1 HITL (G3)</span>
             </div>
-            <h3>Bind executable skills, type-check DAG, and build</h3>
-            <p><strong>Compose</strong> matches each designed model (such as SCD Type 2 dimensions and transaction facts) to its executable skill and type-checks every contract handoff in the pipeline DAG (<strong>G2</strong>). <strong>Build</strong> then renders the SQL, infrastructure, and tests (<strong>G3</strong>).</p>
+            <h3 style="font-size:14.5px;margin-bottom:2px;">Bind executable skills, type-check DAG, and build</h3>
+            <p style="font-size:12px;line-height:1.35;margin-bottom:6px;"><strong>Compose</strong> matches each designed model (such as SCD Type 2 dimensions and facts) to its skill and type-checks the DAG. <strong>Build</strong> renders deterministic SQL, Terraform, and tests.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+              <div style="background:#fffbeb;border:1px dashed #e37400;border-radius:7px;padding:5px 8px;">
+                <div style="font:700 9.5px/1.15 var(--font-mono);color:#b45309;">G2 · AUTO ⚡ — 100% MACHINE</div>
+                <div style="font-size:11px;color:var(--ink-2);line-height:1.3;margin-top:2px;"><strong>Zero HITL:</strong> Binds skills, type-checks 22 contracts &amp; maps <code>AX → AT</code>.</div>
+              </div>
+              <div style="background:var(--amber-lt);border:1px solid rgba(227,116,0,0.28);border-radius:7px;padding:5px 8px;">
+                <div style="font:700 9.5px/1.15 var(--font-mono);color:#b45309;">G3 · HITL — ENGINEER PR DIFF</div>
+                <div style="font-size:11px;color:var(--ink-2);line-height:1.3;margin-top:2px;">Double-builds for determinism &amp; 100% trace; <strong>Engineer</strong> reviews Golden Copy PR.</div>
+              </div>
+            </div>
           </div>
 
-          <div class="card" data-build="3" style="border-left:4px solid var(--green);flex:1;display:flex;flex-direction:column;justify-content:center;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-              <span style="font:700 11px/1 var(--font-mono);color:var(--green);background:var(--green-lt);padding:4px 8px;border-radius:6px;">STAGES 5 &amp; 6 · TEST, PUBLISH &amp; MONITOR</span>
-              <span style="font:700 11px/1 var(--font-mono);color:var(--green);">Gate G4 &amp; Loop</span>
+          <div class="card" data-build="3" style="border-left:4px solid var(--green);flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;padding:9px 14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+              <span style="font:700 10px/1 var(--font-mono);color:var(--green);background:var(--green-lt);padding:3px 7px;border-radius:5px;">STAGES 5 &amp; 6 · TEST, PUBLISH &amp; MONITOR</span>
+              <span style="font:700 10.5px/1 var(--font-mono);color:var(--green);">1 HITL (G4) · Auto Loop</span>
             </div>
-            <h3>Prove every scenario and guard production</h3>
-            <p>Sandbox execution proves every business scenario before publishing to BigQuery and <strong>Knowledge Catalog</strong> (<strong>G4</strong>). Live drift or service breaches automatically open a change proposal back at Stage 1.</p>
+            <h3 style="font-size:14.5px;margin-bottom:2px;">Prove every scenario and guard production</h3>
+            <p style="font-size:12px;line-height:1.35;margin-bottom:6px;">Sandbox execution proves every business scenario before publishing to BigQuery and <strong>Knowledge Catalog</strong>. Live service watches automatically reopen changes on drift.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+              <div style="background:var(--green-lt);border:1px solid rgba(24,128,56,0.28);border-radius:7px;padding:5px 8px;">
+                <div style="font:700 9.5px/1.15 var(--font-mono);color:var(--green);">G4 · HITL — DOMAIN ATTEST</div>
+                <div style="font-size:11px;color:var(--ink-2);line-height:1.3;margin-top:2px;">Sandbox SQL tests pass + <strong>Finance &amp; Merchandising</strong> attest (<code>sha256</code>).</div>
+              </div>
+              <div style="background:#f0fdf4;border:1px dashed #188038;border-radius:7px;padding:5px 8px;">
+                <div style="font:700 9.5px/1.15 var(--font-mono);color:var(--green);">LOOP · AUTO ↻ — BREACH GUARD</div>
+                <div style="font-size:11px;color:var(--ink-2);line-height:1.3;margin-top:2px;">SLA or schema breach auto-opens a change proposal back at <strong>G0 · HITL</strong>.</div>
+              </div>
+            </div>
           </div>
 
         </div>
       </div>
 
-      <div class="callout-strip">
-        <strong>Why it is a circle, not a one-way pipe:</strong> Production schema drift, volume anomalies, or changing business rules automatically trigger a governed change proposal that re-enters Gate G0.
+      <div class="callout-strip" style="padding:9px 16px;font-size:13px;">
+        <strong>Why HITL Sign-Offs Never Go Stale:</strong> Every human signature at <strong>G1</strong> (<code>semantics.md</code>) and <strong>G4</strong> (<code>dpf test attest</code>) is bound to a cryptographic <code>sha256</code> digest—if any requirement, grain, or SQL changes, the gate automatically invalidates the signature.
       </div>
     </div>
     <aside class="notes">
-      Slide 3 presents the circular 6-stage lifecycle. Notice how Define and Design sit at the top (guarded by G0 and G1), Compose and Build sit on the right and bottom (guarded by G2 and G3), and Test and Monitor sit on the left (guarded by G4), feeding back into Define through the change loop.
+      Slide 3 presents the circular 6-stage lifecycle and highlights the exact balance between machine gates and Human-in-the-Loop (HITL) governance. Four gates (G0, G1, G3, G4) pair automated CLI checks with human sign-off (Business Owner at G0, Business + Architect on the sha256 playback digest at G1, Engineer PR review of the Golden Copy diff at G3, and Finance/Merchandising domain attestation on the sha256 build digest at G4). Gate G2 (Compose) and the Monitor Breach Loop are 100% automated.
     </aside>
   </section>
 
@@ -1136,15 +1179,18 @@
     else if (e.key >= '1' && e.key <= '7') go(parseInt(e.key, 10) - 1);
   });
 
-  if (new URLSearchParams(window.location.search).get('print') === '1') {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('print') === '1') {
     slides.forEach(s => {
       s.querySelectorAll('[data-build]').forEach(el => el.classList.add('built'));
     });
   } else {
     const initialHash = parseInt(window.location.hash.replace('#', ''), 10);
-    if (initialHash >= 1 && initialHash <= slides.length) go(initialHash - 1);
-    else go(0);
+    const initialStep = urlParams.get('step') ? parseInt(urlParams.get('step'), 10) : undefined;
+    if (initialHash >= 1 && initialHash <= slides.length) go(initialHash - 1, initialStep);
+    else go(0, initialStep);
   }
+  requestAnimationFrame(() => document.body.classList.add('ready'));
 </script>
 </body>
 </html>
