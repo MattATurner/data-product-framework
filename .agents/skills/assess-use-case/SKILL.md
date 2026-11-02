@@ -47,6 +47,10 @@ python3 .agents/skills/assess-use-case/scripts/check_use_case.py <filled 1-use-c
 
 ## 2. Add the judgement checks
 
+If this session helped draft or discuss the use case, run Step 2 in a fresh, zero-context
+subagent ("Goldfish") given only `checks.json`, `templates/src/use-case.form.yaml` and
+`references/report-template.md` so earlier conversation does not soften the findings.
+
 Read each answer in `checks.json` `answers`, with the hints in
 `templates/src/use-case.form.yaml`. Add a finding wherever an answer is not good enough:
 

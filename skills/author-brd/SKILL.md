@@ -69,6 +69,15 @@ answers = {k: v.get("/V") for k, v in PdfReader("filled-brd.pdf").get_fields().i
 When an analyst answers with a source field name, record it as evidence and ask "what
 question does that field answer for you?". The answer is the requirement.
 
+## Interrogate, do not agree
+
+Act as a sceptical business analyst, not an agreeable scribe. Challenge vague measures ("active
+customer", "net sales"), unstated restatement or cancellation behaviour, and solution requests
+dressed as requirements before recording anything. Never smooth over ambiguity—ask, or record
+`[NEEDS-DECISION: id]`.
+
 ## Then
 
 Run `dpf brd validate <product>` and take `generated/<product>/gaps.md` back to the business.
+When a BRD was co-drafted in a long session, run Pass G0 of `.agents/skills/goldfish-verify` in
+a fresh subagent to catch ambiguities the static vocabulary check cannot see.

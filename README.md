@@ -30,6 +30,12 @@ Gates are cumulative (`--gate G3` or `--gate build` runs G0–G3), and accept ei
 
 **What is a golden copy?** A [golden copy](tests/golden/README.md) (`tests/golden/<product>/`) is the committed, human-reviewed snapshot of `dpf generate` output. At G3, `dpf` builds the product twice in memory to prove generation is deterministic, then compares the output against `tests/golden/<product>/` so any unintended change to generated SQL, Terraform or tests is caught in pull-request review.
 
+**What is a Goldfish check?** Deterministic gates (`dpf check`) prove schema conformance, vocabulary rules, traceability and byte-identical generation, but they cannot catch semantic blind spots when the *same* long-lived coding-agent session interviews the business, resolves the TDD, writes `semantics.md` (`playback.md`) and authors custom SQL. Borrowing from Google's [Elephant-Goldfish Model](https://github.com/google/elephant-goldfish-model), DPF pairs **the Elephant** (your context-rich session that remembers every requirement and trade-off) with **Goldfish checks** ([`.agents/skills/goldfish-verify`](.agents/skills/goldfish-verify/SKILL.md))—fresh, zero-memory subagents handed *only* the artefacts under test and none of the conversation:
+
+- **G0 · Define** — reads `checks.json` or the draft BRD cold to flag vague measures and disguised design choices that slipped past the static word list.
+- **G1 · Design** — reads *only* `product.yaml` and `products/<id>/sql/*.sql` (never the BRD or `semantics.md`) to reconstruct a blind business-language playback (`generated/<id>/goldfish-playback.md`), surfacing silent design drift before `dpf signoff`.
+- **G3 · Build** — audits custom SQL and acceptance queries cold for offline traps (`HAVING` alias collisions, grain-multiplying joins, vacuous zero-row assertions) that `compile` and `parse` cannot see before updating `tests/golden/`.
+
 ## Quick start
 
 ```bash
@@ -60,7 +66,7 @@ Design templates, with an empty registry and no example material.
 | **Methodology** | What *shape* the data takes. Optional and pluggable: [`direct`](methodologies/direct/METHODOLOGY.md) (default: stage, type and expose business views/tables directly with declared grain—no star-schema ceremony) or [`kimball`](methodologies/kimball/METHODOLOGY.md) (conformed dimensions and facts) | `methodologies/` |
 | **Engine adapters** | What runs the transforms: Dataform and dbt implemented; Dataflow and Spark planned | `engines/` |
 | **Skills** | Composable units of work, selected per stage by `selects_when` | `skills/`, `methodologies/*/skills/` |
-| **Agent skills** | Which skills a coding agent loads: the 11 it runs itself, not the 15 pipeline steps that `dpf compose` and `dpf generate` handle. Also agent-only skills, such as `assess-use-case`, which checks a use case before the panel scores it | `.agents/` |
+| **Agent skills** | Which skills a coding agent loads: the 11 it runs itself, not the 15 pipeline steps that `dpf compose` and `dpf generate` handle. Also agent-only skills, such as `assess-use-case` (checks a use case before the panel scores it) and `goldfish-verify` (runs zero-context subagent semantic checks at G0, G1 and G3) | `.agents/` |
 | **Contracts** | 22 JSON Schemas for every handoff, from BRD to run evidence | `contracts/` |
 | **Generators** | Manifest + SQL bodies → Dataform or dbt, Terraform, tests, docs | `dpf/generate/` |
 
@@ -122,7 +128,7 @@ build digest binds test evidence to exactly this build.
 | **Template** (copied by `dpf init`) | `openspec/` config, schema, project context, agent rules, changes README and `specs/platform/`; `contracts/`, `methodologies/`, `engines/`, `skills/`, `registry/`, `adr/`, `dpf/`, `tools/dpf`, `requirements/`, `pyproject.toml`, `Makefile`, `.gitignore`, CI, contract tests, `docs/user-guide.md`, `templates/`, eval and golden READMEs |
 | **Example** (not copied) | `openspec/specs/products/`, `products/`, `examples/`, `tests/golden/*`, `evidence/`, the plan, method diagram, presentation and README diagram in `docs/` |
 
-`.agents/` (the agent skill wiring and `assess-use-case`) is not copied yet.
+`.agents/` (the agent skill wiring, `assess-use-case` and `goldfish-verify`) is not copied yet.
 
 **`registry/` ships without project content by design**: the source-system, glossary,
 entity and conformance catalogues are empty, so a new project never inherits someone
@@ -195,7 +201,7 @@ tools/dpf        runs the CLI from a checkout without installing it
 methodologies/   modelling packs (direct, kimball): roles, rules, skills
 engines/         engine adapters (dataform, dbt implemented; dataflow, spark planned)
 skills/          platform skills (Agent Skills format with dpf metadata)
-.agents/         agent skill wiring (skills.json) and agent-only skills such as assess-use-case
+.agents/         agent skill wiring (skills.json) and agent-only skills (assess-use-case, goldfish-verify)
 registry/        platform defaults, MCP servers, BRD rubric and vocabulary (no example data)
 adr/             architecture decision records
 templates/       Define-stage forms (fillable PDFs) and Design-stage templates (Markdown, YAML)

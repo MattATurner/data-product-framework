@@ -41,8 +41,12 @@ Roughly two thirds is mechanical; the rest is engineering judgement and gets an 
 5. Write `tdd/playback.md` (or `tdd/semantics.md`): the design restated in business language, for signature.
 6. Write `products/<product>/product.yaml` (contract `product-manifest.v1`): every element
    cites `brd_requirement_id` or the platform capability it `implements`.
-7. Get the business owner to sign: `dpf signoff <product> --by <name> --role business_owner`.
-8. `dpf check <product> --gate G1`.
+7. Run Pass G1 of `.agents/skills/goldfish-verify` in a fresh, zero-context subagent given
+   only `products/<product>/product.yaml` and `products/<product>/sql/*.sql` (never `brd/` or
+   `tdd/`), and reconcile `generated/<product>/goldfish-playback.md` against `tdd/playback.md`
+   (`tdd/semantics.md`) and `brd/brd.yaml` before asking for sign-off.
+8. Get the business owner to sign: `dpf signoff <product> --by <name> --role business_owner`.
+9. `dpf check <product> --gate G1`.
 
 ## Feasibility failures are business issues
 

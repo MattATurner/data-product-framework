@@ -14,6 +14,10 @@
 5. **Prefer MCP and existing agents.** Before writing integration code, consult
    `registry/mcp_servers.yaml` and the tier order in
    `openspec/specs/platform/tool-selection/spec.md`.
+6. **Design with an elephant; verify with a goldfish.** Long sessions share your unspoken
+   assumptions. Before business sign-off (G1) or accepting a golden diff on custom SQL (G3),
+   spawn a fresh, zero-context subagent (`.agents/skills/goldfish-verify`) that sees only the
+   artefacts under test—never the chat history or upstream prose.
 
 ## Tool selection order (enforced)
 

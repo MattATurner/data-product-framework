@@ -37,3 +37,6 @@ dpf generate --all --check        # diff against tests/golden/ (CI)
 | `MANIFEST.json` | digest of every file plus the build digest evidence is bound to |
 
 Never edit `generated/` by hand. Change the manifest, SQL bodies or packs and regenerate.
+When `products/<product>/sql/*.sql` or `products/<product>/acceptance.yaml` changed, run Pass G3
+of `.agents/skills/goldfish-verify` in a fresh subagent before accepting `--update-golden` to
+catch offline SQL and assertion traps that `compile` and `parse` cannot see.
