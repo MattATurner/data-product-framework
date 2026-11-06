@@ -2,7 +2,14 @@ config {
   type: "table",
   schema: dataform.projectConfig.vars.silver_dataset,
   description: "One row per calendar day.",
-  tags: ["hourly", "monthly"]
+  tags: ["hourly", "monthly"],
+  bigquery: {
+    labels: {
+      dpf_product: "sales_performance",
+      dpf_layer: "silver",
+      dpf_status: "draft"
+    }
+  }
 }
 
 -- dpf: model=dim_date layer=silver role=calendar skill=kimball/model-date-dimension satisfies=R-1

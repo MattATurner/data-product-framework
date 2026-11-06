@@ -10,6 +10,9 @@
 - You can **add the figures up** across days, months, regions, categories and segments
   without double counting.
 - Every monthly figure can be **traced to the order lines** that make it up.
+- An **interactive sales summary board and self-service view** lets leadership filter by date,
+  region, customer segment and product category, compare trends and drill straight to the
+  underlying order lines.
 
 ## How history behaves
 

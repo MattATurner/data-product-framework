@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://dpf.dev/contracts/semantic-layer.v1.json",
   "title": "Semantic layer specification",
-  "description": "Versioned BI semantic layer descriptor (Cube, MetricFlow, AtScale SML, Open Semantic Interchange) generated from the product manifest and bound to the build digest.",
+  "description": "Versioned BI semantic layer descriptor (Cube, MetricFlow, AtScale SML, Open Semantic Interchange, Looker LookML Explores and Dashboards) generated from the product manifest and bound to the build digest.",
   "type": "object",
   "required": [
     "product_id",
@@ -32,7 +32,8 @@
           "cube",
           "metricflow",
           "atscale",
-          "osi"
+          "osi",
+          "lookml"
         ]
       }
     },
@@ -67,6 +68,27 @@
               "type": "string"
             }
           },
+          "surrogate_key": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "partition_by": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "history_semantics": {
+            "type": "string"
+          },
+          "policy_tags": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
           "dimensions": {
             "type": "array",
             "items": {
@@ -92,6 +114,21 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/metric"
+      }
+    },
+    "looker": {
+      "$ref": "#/$defs/looker_config"
+    },
+    "explores": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/explore"
+      }
+    },
+    "dashboards": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/dashboard"
       }
     },
     "files": {
@@ -158,6 +195,332 @@
         },
         "brd_requirement_id": {
           "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
+        }
+      }
+    },
+    "looker_config": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "auth_mode": {
+          "type": "string",
+          "enum": [
+            "oauth",
+            "service_account"
+          ]
+        },
+        "service_account_var": {
+          "type": "string"
+        },
+        "project_name": {
+          "type": "string"
+        },
+        "import_views_from": {
+          "type": "string",
+          "description": "Optional Hub-and-Spoke upstream Looker project name; emits local_dependency and +view refinements."
+        },
+        "datagroup_max_cache_age": {
+          "type": "string"
+        },
+        "allow_pdt": {
+          "type": "boolean"
+        }
+      }
+    },
+    "explore": {
+      "type": "object",
+      "required": [
+        "name",
+        "from"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/identifier"
+        },
+        "from": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "always_filter_partition": {
+          "type": "boolean"
+        },
+        "partition_default_filter": {
+          "type": "string"
+        },
+        "sql_always_where": {
+          "type": "string"
+        },
+        "joins": {
+          "oneOf": [
+            {
+              "type": "string",
+              "const": "auto"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "view"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "view": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "left_outer",
+                      "inner",
+                      "full_outer",
+                      "cross"
+                    ]
+                  },
+                  "relationship": {
+                    "type": "string",
+                    "enum": [
+                      "many_to_one",
+                      "one_to_one",
+                      "one_to_many",
+                      "many_to_many"
+                    ]
+                  },
+                  "sql_on": {
+                    "type": "string"
+                  },
+                  "foreign_key": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "aggregate_tables": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "name",
+                  "dimensions",
+                  "measures"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "dimensions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "measures": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "timezone": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "brd_requirement_id": {
+          "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
+        },
+        "implements": {
+          "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/platform_capability"
+        }
+      }
+    },
+    "dashboard_filter": {
+      "type": "object",
+      "required": [
+        "name",
+        "field"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "field": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "default_value": {
+          "type": "string"
+        }
+      }
+    },
+    "dashboard_tile": {
+      "type": "object",
+      "required": [
+        "name",
+        "title",
+        "kind"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/identifier"
+        },
+        "title": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "kpi",
+            "bullet",
+            "time_series",
+            "ranked_bar",
+            "column",
+            "table",
+            "markdown",
+            "pie",
+            "donut"
+          ]
+        },
+        "explore": {
+          "type": "string"
+        },
+        "dimensions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "measures": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sorts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "pivots": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "note": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "target": {
+          "type": "number"
+        },
+        "y_axis_zero": {
+          "type": "boolean"
+        },
+        "body": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 24
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 24
+        },
+        "row": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "col": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 23
+        },
+        "listen": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "brd_requirement_id": {
+          "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
+        }
+      }
+    },
+    "dashboard": {
+      "type": "object",
+      "required": [
+        "name",
+        "title"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/identifier"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "explore": {
+          "type": "string"
+        },
+        "file": {
+          "type": "string",
+          "description": "Optional path (relative to the product directory) to an authored .dashboard.lookml file."
+        },
+        "filters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/dashboard_filter"
+          }
+        },
+        "tiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/dashboard_tile"
+          }
+        },
+        "brd_requirement_id": {
+          "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
+        },
+        "implements": {
+          "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/platform_capability"
         }
       }
     }

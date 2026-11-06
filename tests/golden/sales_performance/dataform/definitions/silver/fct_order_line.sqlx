@@ -8,7 +8,12 @@ config {
   bigquery: {
     partitionBy: "order_date",
     clusterBy: ["sk_customer", "sk_product"],
-    updatePartitionFilter: "order_date >= DATE_SUB(CURRENT_DATE('Australia/Perth'), INTERVAL 90 DAY)"
+    updatePartitionFilter: "order_date >= DATE_SUB(CURRENT_DATE('Australia/Perth'), INTERVAL 90 DAY)",
+    labels: {
+      dpf_product: "sales_performance",
+      dpf_layer: "silver",
+      dpf_status: "draft"
+    }
   }
 }
 

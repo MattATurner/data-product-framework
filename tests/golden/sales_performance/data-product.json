@@ -50,6 +50,41 @@
       "brd_requirement_id": [
         "R-13"
       ]
+    },
+    {
+      "name": "sales_performance_explore",
+      "type": "looker_explore",
+      "explore": "order_lines",
+      "access": "looker_model_set",
+      "consumers": [
+        "sales-leadership",
+        "sales-operations",
+        "finance"
+      ],
+      "brd_requirement_id": [
+        "R-1",
+        "R-2",
+        "R-4",
+        "R-6",
+        "R-7",
+        "R-8",
+        "R-12"
+      ]
+    },
+    {
+      "name": "executive_sales_pulse",
+      "type": "looker_dashboard",
+      "dashboard": "executive_sales_pulse",
+      "access": "looker_folder_grant",
+      "consumers": [
+        "sales-leadership",
+        "sales-operations"
+      ],
+      "brd_requirement_id": [
+        "R-1",
+        "R-2",
+        "R-7"
+      ]
     }
   ],
   "slo": {

@@ -43,6 +43,9 @@ class Action:
     severity: str = "block"
     case_id: str | None = None
     blocking: bool = False
+    database: str | None = None
+    schema_literal: str | None = None
+    phys_name: str | None = None
 
     @property
     def refs(self) -> list[str]:
@@ -299,6 +302,13 @@ def build_plan(p: Product, g: ProductGraph, spec: dict, skills: dict[str, str]) 
         actions.append(Action(name=r.name, kind="declaration", dataset="raw", subdir="sources", model=r.name,
                               layer="raw", description=f"Raw, append-only landing of {r.name} from {r.source}.",
                               header={"relation": r.name, "source": r.source, "skill": skills.get(f"land:{r.source}", "")}))
+    for u in g.upstream_nodes:
+        actions.append(Action(
+            name=u.name, kind="declaration", dataset="upstream", subdir="sources", model=u.name,
+            layer="upstream", description=f"Upstream relation {u.name} bound from {u.source}.",
+            database=u.model.get("_upstream_project"), schema_literal=u.model.get("_upstream_dataset"),
+            phys_name=u.model.get("_phys_table") or u.name,
+            header={"relation": u.name, "source": u.source, "skill": skills.get(f"integrate:upstream_{u.source}", "")}))
 
     for name in [x for x in g.topo() if g.nodes[x].kind == "model"]:
         n = g.nodes[name]

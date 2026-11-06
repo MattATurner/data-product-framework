@@ -1,0 +1,15 @@
+id: lookml-unpinned-bar-axis
+asserts: "A LookML bar or column chart tile with y_axis_zero: false violates Stephen Few zero-baseline rules and fails G1."
+mutate:
+  - set:
+      file: products/sales_performance/product.yaml
+      path: "semantic_layer.dashboards[name=executive_sales_pulse].tiles[name=net_sales_by_region].y_axis_zero"
+      value: false
+run:
+  command: check
+  product: sales_performance
+  gate: G1
+expect:
+  outcome: fail
+  messages:
+    - "bar and column charts must anchor Y-axis at zero (y_axis_zero: true)"

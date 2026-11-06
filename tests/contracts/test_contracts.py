@@ -8,8 +8,9 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMAS = sorted((ROOT / "contracts").glob("*.schema.json"))
 # Contracts that describe design elements must carry the universal traceability field.
-TRACEABLE = ["catalog-registration.v1", "data-product.v1", "landing-manifest.v1", "quality-policy.v1",
-             "raw-table.v1", "semantic-model.v1", "source-binding.v1", "staging-model.v1"]
+TRACEABLE = ["catalog-registration.v1", "data-product.v1", "foundation-binding.v1", "landing-manifest.v1",
+             "quality-policy.v1", "raw-table.v1", "semantic-layer.v1", "semantic-model.v1",
+             "source-binding.v1", "staging-model.v1"]
 
 
 def load(name: str) -> dict:

@@ -21,6 +21,10 @@ modelling_terms:
   - kimball
   - dimensional model
   - data mart
+  - symmetric aggregate
+  - persistent derived table
+  - pdt
+  - looker explore
 
 # Technology belongs in the TDD and ADRs, not the BRD.
 technology_terms:
@@ -33,6 +37,8 @@ technology_terms:
   - iceberg
   - parquet
   - terraform
+  - looker
+  - lookml
 
 patterns:
   - id: cloud-region

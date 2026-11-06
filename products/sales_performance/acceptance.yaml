@@ -194,3 +194,17 @@ tests:
     check: sharing_listing_only
     element: port:sales_performance_partner_extract
     description: The partner receives a listing subscription only, over closed months without customer columns.
+
+  - id: AT-15
+    verifies: [AX-1, AX-2]
+    method: static
+    check: lookml_explore
+    element: explore:order_lines
+    description: LookML explore joins point-in-time dimensions by surrogate key, enforces primary keys and filters partitions by default.
+
+  - id: AT-16
+    verifies: [AX-1, AX-2]
+    method: static
+    check: lookml_dashboard
+    element: dashboard:executive_sales_pulse
+    description: Executive LookML dashboard binds filters to tiles, resolves every field and keeps zero baselines on bar charts.

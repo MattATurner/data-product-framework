@@ -74,6 +74,12 @@
           "model": {
             "type": "string"
           },
+          "explore": {
+            "type": "string"
+          },
+          "dashboard": {
+            "type": "string"
+          },
           "access": {
             "type": "string"
           },
@@ -143,7 +149,9 @@
         "materialized_view",
         "bigquery_sharing_listing",
         "iceberg_table",
-        "extract_file"
+        "extract_file",
+        "looker_explore",
+        "looker_dashboard"
       ]
     }
   }

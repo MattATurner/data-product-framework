@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dpf.dev/contracts/foundation-binding.v1.json",
+  "title": "Foundation binding",
+  "description": "Contract for an established BigQuery data foundation (upstream DPF product or external curated warehouse tables) consumed by a decoupled semantic or consumption data product.",
+  "type": "object",
+  "required": [
+    "foundation_id",
+    "gcp_project",
+    "dataset",
+    "tables"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "foundation_id": {
+      "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/identifier"
+    },
+    "gcp_project": {
+      "type": "string"
+    },
+    "dataset": {
+      "type": "string"
+    },
+    "max_staleness": {
+      "type": "string",
+      "description": "Upstream freshness guarantee (ISO-8601 duration, e.g. PT1H)."
+    },
+    "owner": {
+      "type": "string"
+    },
+    "tables": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/foundation_table"
+      }
+    },
+    "brd_requirement_id": {
+      "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
+    }
+  },
+  "$defs": {
+    "foundation_table": {
+      "type": "object",
+      "required": [
+        "name",
+        "role",
+        "grain_statement",
+        "grain_columns"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/identifier"
+        },
+        "table_name": {
+          "type": "string",
+          "description": "Physical BigQuery table or view name if different from name."
+        },
+        "dataset": {
+          "type": "string",
+          "description": "Per-table BigQuery dataset override."
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "fact",
+            "dimension",
+            "calendar",
+            "business_view",
+            "consumption"
+          ]
+        },
+        "methodology": {
+          "type": "string",
+          "enum": [
+            "direct",
+            "kimball"
+          ]
+        },
+        "grain_statement": {
+          "type": "string",
+          "minLength": 10
+        },
+        "grain_columns": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "history_semantics": {
+          "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/history_semantics"
+        },
+        "natural_key": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "surrogate_key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "partition_by": {
+          "type": "string"
+        },
+        "cluster_by": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "attributes": {
+          "type": "object"
+        },
+        "policy_tags": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "column",
+              "tag"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "column": {
+                "type": "string"
+              },
+              "tag": {
+                "type": "string"
+              },
+              "masking": {
+                "type": "string",
+                "enum": [
+                  "always_null",
+                  "sha256",
+                  "default_masking_value"
+                ]
+              }
+            }
+          }
+        },
+        "brd_requirement_id": {
+          "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
+        },
+        "implements": {
+          "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/platform_capability"
+        }
+      }
+    },
+    "upstream_entry": {
+      "type": "object",
+      "oneOf": [
+        {
+          "required": [
+            "product",
+            "models"
+          ]
+        },
+        {
+          "required": [
+            "foundation"
+          ]
+        }
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "product": {
+          "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/identifier"
+        },
+        "min_version": {
+          "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/semver"
+        },
+        "models": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "foundation": {
+          "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/identifier"
+        },
+        "gcp_project": {
+          "type": "string"
+        },
+        "dataset": {
+          "type": "string"
+        },
+        "max_staleness": {
+          "type": "string"
+        },
+        "tables": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/foundation_table"
+          }
+        },
+        "brd_requirement_id": {
+          "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
+        },
+        "implements": {
+          "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/platform_capability"
+        }
+      }
+    }
+  }
+}

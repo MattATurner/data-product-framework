@@ -146,6 +146,7 @@ def kebab(s: str) -> str:
 _REGISTRY_KEYS = {  # list key -> identity field, per registry file
     "mcp_servers.yaml": [("servers", "id"), ("tools", "id"), ("no_mcp_option_yet", None)],
     "source_systems.yaml": [("systems", "system_id")],
+    "foundations.yaml": [("foundations", "foundation_id")],
     "conformance.yaml": [("conformed_dimensions", "name")],
     "entities.yaml": [("entities", "name")],
     "glossary.yaml": [("terms", "id")],
@@ -201,6 +202,14 @@ class Registry:
     @property
     def systems(self) -> dict[str, dict]:
         return {s["system_id"]: s for s in self.get("source_systems.yaml", "systems", []) or []}
+
+    @property
+    def foundations(self) -> dict[str, dict]:
+        raw = self.get("foundations.yaml", "foundations", []) or []
+        if isinstance(raw, dict):
+            return {str(k): ({"foundation_id": str(k), **v} if isinstance(v, dict) else {"foundation_id": str(k)})
+                    for k, v in raw.items()}
+        return {f["foundation_id"]: f for f in raw if isinstance(f, dict) and "foundation_id" in f}
 
     @property
     def conformed(self) -> dict[str, dict]:
@@ -474,7 +483,39 @@ class Product:
               "history_semantics": m.get("history_semantics")} for _, m in self.models()],
             key=lambda d: d["name"])
         sem = normalise_text(self.semantics_path.read_text(encoding="utf-8")) if self.semantics_path.exists() else ""
-        return sha256(canonical({"semantics": sem, "models": models}))
+        payload: dict[str, Any] = {"semantics": sem, "models": models}
+        if self.manifest.get("upstream"):
+            payload["upstream"] = [
+                {"source": u.get("product") or u.get("foundation"),
+                 "models": sorted(u.get("models") or []),
+                 "tables": sorted(
+                     [{"name": t["name"], "grain_columns": sorted(t.get("grain_columns") or []),
+                       "history_semantics": t.get("history_semantics")}
+                      for t in (u.get("tables") or [])],
+                     key=lambda d: d["name"])}
+                for u in (self.manifest.get("upstream") or [])
+            ]
+        sl = self.manifest.get("semantic_layer")
+        if sl:
+            payload["semantic_layer"] = {
+                "metrics": sorted(
+                    [{"name": m["name"], "model": m.get("model"), "expr": m.get("expr") or m.get("sql"),
+                      "type": m.get("type"), "filter": m.get("filter")}
+                     for m in (sl.get("metrics") or [])],
+                    key=lambda d: d["name"]),
+                "explores": sorted(
+                    [{"name": e["name"], "from": e.get("from"), "joins": e.get("joins")}
+                     for e in (sl.get("explores") or [])],
+                    key=lambda d: d["name"]),
+                "dashboards": sorted(
+                    [{"name": d["name"], "explore": d.get("explore"), "file": d.get("file"),
+                      "tiles": [{"name": t.get("name") or t.get("id"), "kind": t["kind"],
+                                 "measures": t.get("measures"),
+                                 "dimensions": t.get("dimensions")} for t in (d.get("tiles") or [])]}
+                     for d in (sl.get("dashboards") or [])],
+                    key=lambda d: d["name"]),
+            }
+        return sha256(canonical(payload))
 
     def playback_digest(self) -> str:
         return self.semantic_digest()
@@ -496,6 +537,14 @@ class Product:
             "rules": {k: {kk: vv for kk, vv in v.items() if not kk.startswith("_")} for k, v in self.ws.rules.items()},
             "adapters": {k: {kk: vv for kk, vv in v.items() if not kk.startswith("_")} for k, v in self.ws.adapters.items()},
         }
+        sl = self.manifest.get("semantic_layer") or {}
+        ext_files: dict[str, str | None] = {}
+        for d in sl.get("dashboards") or []:
+            if d.get("file"):
+                fp = self.dir / d["file"]
+                ext_files[d["file"]] = fp.read_text(encoding="utf-8") if fp.exists() else None
+        if ext_files:
+            parts["lookml_files"] = ext_files
         return sha256(canonical(parts))
 
 
@@ -531,6 +580,13 @@ def iter_elements(manifest: dict) -> Iterable[tuple[str, dict]]:
     """Every traceable design element in a manifest as (element_ref, element)."""
     for s in manifest.get("sources", []) or []:
         yield f"source:{s.get('system_id')}", s
+    for u in manifest.get("upstream", []) or []:
+        ref = u.get("product") or u.get("foundation")
+        if not (u.get("brd_requirement_id") or u.get("implements")):
+            inherited = sorted({r for t in (u.get("tables") or []) for r in (t.get("brd_requirement_id") or [])})
+            yield f"upstream:{ref}", ({**u, "brd_requirement_id": inherited} if inherited else u)
+        else:
+            yield f"upstream:{ref}", u
     for layer in LAYERS:
         for m in ((manifest.get("layers") or {}).get(layer) or {}).get("models", []) or []:
             yield f"model:{m.get('name')}", m
@@ -550,8 +606,22 @@ def iter_elements(manifest: dict) -> Iterable[tuple[str, dict]]:
         yield "observability:quality_scans", obs["quality_scans"]
     for t in (manifest.get("governance") or {}).get("policy_tags", []) or []:
         yield f"policy:{t.get('id')}", t
-    if manifest.get("semantic_layer"):
-        yield "semantic_layer", manifest["semantic_layer"]
+    agf = (manifest.get("governance") or {}).get("agf")
+    if agf and (agf.get("brd_requirement_id") or agf.get("implements")):
+        yield "governance:agf", agf
+    sl = manifest.get("semantic_layer")
+    if sl:
+        children = bool(sl.get("explores") or sl.get("dashboards"))
+        if sl.get("brd_requirement_id") or sl.get("implements") or not children:
+            yield "semantic_layer", sl
+        for e in sl.get("explores") or []:
+            el = e if (e.get("brd_requirement_id") or e.get("implements")) else {
+                **e, "brd_requirement_id": sl.get("brd_requirement_id"), "implements": sl.get("implements")}
+            yield f"explore:{e.get('name')}", el
+        for d in sl.get("dashboards") or []:
+            dl = d if (d.get("brd_requirement_id") or d.get("implements")) else {
+                **d, "brd_requirement_id": sl.get("brd_requirement_id"), "implements": sl.get("implements")}
+            yield f"dashboard:{d.get('name')}", dl
 
 
 def find_root(start: Path | None = None) -> Path:

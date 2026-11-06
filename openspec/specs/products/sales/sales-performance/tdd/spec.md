@@ -223,6 +223,18 @@ failed builds SHALL alert the sales data channel.
 - **THEN** an alert SHALL fire
 - **AND** `dpf monitor` SHALL be able to open a change proposal for the breach
 
+### Requirement: Governed Looker semantic explore and executive dashboard
+**Decision:** D-19 · **Satisfies:** R-1, R-2, R-4, R-6, R-7, R-8, R-12 · **ADR:** ADR-018
+
+The product SHALL publish an `order_lines` LookML explore over `fct_order_line` joined
+`many_to_one` by surrogate key (`sk_customer`, `sk_product`, `date_key`), an aggregate table
+for `sales_performance_monthly`, and an `executive_sales_pulse` dashboard using OAuth caller
+pass-through so BigQuery policy-tag masking remains enforced.
+
+#### Scenario: Interactive exploration and drill-down
+- **WHEN** a sales manager slices net sales by region, segment or product category in Looker and drills into a figure
+- **THEN** net sales SHALL exclude cancelled lines, join each sale to the segment and category valid on the sale date, and keep BigQuery column masking active for general analysts
+
 ## Derivations
 
 D-1 is driven by three BRD signals, not by preference:
@@ -262,3 +274,4 @@ Both remain solvable later (CDC once connectivity exists) without redesigning th
 - **ADR-SALES-002-01**: Kimball in silver, departing from the `direct` default (D-1).
 - **ADR-SALES-002-02**: Watermark capture instead of CDC (D-10), reviewed when connectivity changes.
 - **ADR-015** (platform): outbound-only watermark extractor written as bespoke code (tool tier 5).
+- **ADR-018** (platform): governed LookML semantic explore and Stephen Few LookML dashboard with zero Looker PDTs (D-19).

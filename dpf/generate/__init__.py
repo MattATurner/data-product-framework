@@ -51,7 +51,11 @@ class Build:
 
 def declared_engine(p: Product) -> str | None:
     engines = {p.layer_cfg(layer).get("engine") for layer in ("staging", "silver", "gold") if p.layer_cfg(layer).get("models")}
-    return engines.pop() if len(engines) == 1 else None
+    if len(engines) == 1:
+        return engines.pop()
+    if not engines and "lookml" in ((p.manifest.get("semantic_layer") or {}).get("targets") or []):
+        return "lookml"
+    return None
 
 
 def retarget(p: Product, engine: str) -> Product:
@@ -98,7 +102,7 @@ def build(p: Product, engine: str | None = None, env: str | None = None,
         b.ok = False
         b.problems.append("models use more than one engine; the generators render one engine per product")
         return b
-    if eng not in RENDERERS:
+    if eng not in RENDERERS and eng != "lookml":
         b.ok = False
         b.problems.append(f"no renderer for engine '{eng}'")
         return b
@@ -106,16 +110,20 @@ def build(p: Product, engine: str | None = None, env: str | None = None,
     b.graph = g
     b.digest = q.build_digest(engine if engine and engine != declared_engine(p) else None)
     b.spec = build_test_spec(q, g, b.digest)
-    b.actions = build_plan(q, g, b.spec, skill_map(dag))
+    b.actions = build_plan(q, g, b.spec, skill_map(dag)) if eng in RENDERERS else []
     missing = undefined_vars(q, g, [a.sql for a in b.actions])
     if missing:
         b.ok = False
         b.problems.append(f"bodies use undefined vars: {', '.join(missing)}")
     files: dict[str, str] = {}
-    files.update(RENDERERS[eng](q, g, b.actions))
+    if eng in RENDERERS:
+        files.update(RENDERERS[eng](q, g, b.actions))
     files.update(terraform.render(q, g, b.actions, eng))
-    files.update(orchestration.render(q, eng))
-    files.update(semantic_layer.render(q, g, b.digest, semantic_targets))
+    if eng in RENDERERS:
+        files.update(orchestration.render(q, eng))
+    sl_files, sl_problems = semantic_layer.render(q, g, b.digest, semantic_targets)
+    files.update(sl_files)
+    b.problems += sl_problems
     files["test-spec.json"] = docs.dumps(b.spec)
     files["dag.json"] = docs.dumps(dag)
     files["dag.md"] = render_dag_md(dag)

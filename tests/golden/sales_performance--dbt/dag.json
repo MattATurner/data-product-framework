@@ -419,6 +419,24 @@
       "detail": {}
     },
     {
+      "id": "render:render-lookml-artefacts",
+      "stage": "render",
+      "scope": "product",
+      "instance": "sales_performance",
+      "skill": "render-lookml-artefacts",
+      "tool": "dpf-local",
+      "tier": 4,
+      "consumes": [
+        "semantic-model.v1",
+        "product-manifest.v1"
+      ],
+      "produces": [
+        "semantic-layer.v1"
+      ],
+      "implements": "generate-artefacts",
+      "detail": {}
+    },
+    {
       "id": "orchestrate:orchestrate-pipeline",
       "stage": "orchestrate",
       "scope": "product",
@@ -501,12 +519,22 @@
     },
     {
       "from": "consume:sales_order_line_detail",
+      "to": "render:render-lookml-artefacts",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "consume:sales_order_line_detail",
       "to": "test:test-data-product",
       "contract": "semantic-model.v1"
     },
     {
       "from": "consume:sales_performance_monthly",
       "to": "render:render-engine-artefacts",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "consume:sales_performance_monthly",
+      "to": "render:render-lookml-artefacts",
       "contract": "semantic-model.v1"
     },
     {
@@ -517,6 +545,11 @@
     {
       "from": "consume:sales_performance_partner_extract",
       "to": "render:render-engine-artefacts",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "consume:sales_performance_partner_extract",
+      "to": "render:render-lookml-artefacts",
       "contract": "semantic-model.v1"
     },
     {
@@ -566,6 +599,11 @@
     },
     {
       "from": "integrate:dim_customer",
+      "to": "render:render-lookml-artefacts",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:dim_customer",
       "to": "test:test-data-product",
       "contract": "semantic-model.v1"
     },
@@ -596,6 +634,11 @@
     },
     {
       "from": "integrate:dim_date",
+      "to": "render:render-lookml-artefacts",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:dim_date",
       "to": "test:test-data-product",
       "contract": "semantic-model.v1"
     },
@@ -626,6 +669,11 @@
     },
     {
       "from": "integrate:dim_product",
+      "to": "render:render-lookml-artefacts",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:dim_product",
       "to": "test:test-data-product",
       "contract": "semantic-model.v1"
     },
@@ -647,6 +695,11 @@
     {
       "from": "integrate:fct_order_line",
       "to": "render:render-engine-artefacts",
+      "contract": "semantic-model.v1"
+    },
+    {
+      "from": "integrate:fct_order_line",
+      "to": "render:render-lookml-artefacts",
       "contract": "semantic-model.v1"
     },
     {

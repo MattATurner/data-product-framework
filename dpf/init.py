@@ -12,13 +12,13 @@ from dpf.core import Report, Workspace
 TEMPLATE_PATHS = [
     "openspec/config.yaml", "openspec/schemas", "openspec/project.md", "openspec/AGENTS.md",
     "openspec/changes/README.md", "openspec/specs/platform", "contracts", "methodologies", "engines",
-    "skills", "registry", "adr", "dpf", "tools/dpf", "pyproject.toml", "requirements", "Makefile", ".gitignore",
-    ".github/workflows/ci.yml", "tests/contracts", "tests/evals/README.md", "tests/golden/README.md",
+    "skills", ".agents", "registry", "adr", "dpf", "tools/dpf", "pyproject.toml", "requirements", "Makefile",
+    ".gitignore", ".github/workflows/ci.yml", "tests/contracts", "tests/evals/README.md", "tests/golden/README.md",
     "docs/user-guide.md", "templates",
 ]
 EMPTY_DIRS = ["openspec/specs/products", "openspec/changes", "products", "generated", "evidence", "tests/golden"]
 EXCLUDED = ["openspec/specs/products/*", "products/*", "examples/", "generated/", "evidence/", "tests/golden/*",
-            "docs/presentation/", "docs/index.html", "docs/data-product-framework-plan.md"]
+            "fhd/", "docs/presentation/", "docs/index.html", "docs/data-product-framework-plan.md"]
 IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store")
 
 

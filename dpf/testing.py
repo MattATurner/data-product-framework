@@ -35,7 +35,11 @@ def _file(b: Build, suffix: str) -> str:
 
 
 def _engine(b: Build) -> str:
-    return "dbt" if any(p.startswith("dbt/") for p in b.files) else "dataform"
+    if any(p.startswith("dbt/") for p in b.files):
+        return "dbt"
+    if any(p.startswith("dataform/") for p in b.files):
+        return "dataform"
+    return "lookml"
 
 
 def _resource(tf: str, rtype: str, name: str) -> str | None:
@@ -247,6 +251,37 @@ def check_access_limited(b: Build, case: dict) -> list[str]:
     return probs
 
 
+def check_lookml_explore(b: Build, case: dict) -> list[str]:
+    _, exp_name = _element(case)
+    text = _file(b, f"semantic_layer/lookml/explores/{exp_name}.explore.lkml")
+    if not text:
+        return [f"explore '{exp_name}' was not generated under semantic_layer/lookml/explores/"]
+    probs: list[str] = []
+    sl_json = _file(b, "semantic-layer.json")
+    spec = json.loads(sl_json) if sl_json else {}
+    from dpf.generate.lookml import validate_lookml_files
+    lfiles = {k: v for k, v in b.files.items() if k.startswith("semantic_layer/lookml/")}
+    probs += validate_lookml_files(lfiles, spec)
+    hub = ((spec.get("looker") or {}).get("import_views_from"))
+    if not hub:
+        for k, v in lfiles.items():
+            if k.endswith(".view.lkml") and "primary_key: yes" not in v:
+                probs.append(f"{k}: view has no 'primary_key: yes' dimension (breaks Looker symmetric aggregates)")
+    return probs
+
+
+def check_lookml_dashboard(b: Build, case: dict) -> list[str]:
+    _, dash_name = _element(case)
+    text = _file(b, f"semantic_layer/lookml/dashboards/{dash_name}.dashboard.lookml")
+    if not text:
+        return [f"dashboard '{dash_name}' was not generated under semantic_layer/lookml/dashboards/"]
+    sl_json = _file(b, "semantic-layer.json")
+    spec = json.loads(sl_json) if sl_json else {}
+    from dpf.generate.lookml import validate_lookml_files
+    lfiles = {k: v for k, v in b.files.items() if k.startswith("semantic_layer/lookml/")}
+    return validate_lookml_files(lfiles, spec)
+
+
 STATIC_CHECKS = {
     "restatement_window": check_restatement_window,
     "freshness_policy": check_freshness_policy,
@@ -255,6 +290,8 @@ STATIC_CHECKS = {
     "sharing_listing_only": check_sharing_listing_only,
     "current_state_only": check_current_state_only,
     "access_limited": check_access_limited,
+    "lookml_explore": check_lookml_explore,
+    "lookml_dashboard": check_lookml_dashboard,
 }
 
 
@@ -348,7 +385,15 @@ def render_live_sql(p: Product, b: Build, sql: str) -> str:
     dep = p.manifest.get("deployment") or {}
     ds = dep.get("datasets") or {}
     vals = project_vars(p)
-    out = sub_refs(sql, lambda n: f"`{dep.get('gcp_project')}.{ds.get(relation_dataset(p, b.graph, n))}.{n}`")
+
+    def _tbl(n: str) -> str:
+        node = b.graph.get(n) if b.graph else None
+        if node is not None and node.kind == "upstream":
+            return (f"`{node.model.get('_upstream_project')}.{node.model.get('_upstream_dataset')}"
+                    f".{node.model.get('_phys_table') or n}`")
+        return f"`{dep.get('gcp_project')}.{ds.get(relation_dataset(p, b.graph, n))}.{n}`"
+
+    out = sub_refs(sql, _tbl)
     return sub_vars(out, lambda v: vals.get(v, ""))
 
 

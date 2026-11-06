@@ -1,0 +1,15 @@
+id: lookml-pdt-without-adr
+asserts: "Enabling Looker PDTs (allow_pdt: true) without a product ADR deciding semantic_layer fails G1."
+mutate:
+  - set:
+      file: products/sales_performance/product.yaml
+      path: semantic_layer.looker.allow_pdt
+      value: true
+run:
+  command: check
+  product: sales_performance
+  gate: G1
+expect:
+  outcome: fail
+  messages:
+    - "semantic_layer.looker.allow_pdt: true requires a product ADR deciding semantic_layer beyond ADR-018"

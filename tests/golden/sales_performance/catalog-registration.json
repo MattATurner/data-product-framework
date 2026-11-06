@@ -66,6 +66,13 @@
           "product_category",
           "region"
         ]
+      },
+      "sales_performance_explore": {
+        "statement": "one row per order line at its latest amended values",
+        "columns": [
+          "order_id",
+          "order_line_no"
+        ]
       }
     },
     "refresh_cadence": "hourly: 10 * * * * (Australia/Perth); monthly: 0 7 2 * * (Australia/Perth)",
@@ -77,26 +84,18 @@
         "region": "region",
         "customer_name": "customer"
       },
-      "dim_product": {
-        "product_category": "product_category"
-      },
       "dim_date": {
         "month": "month",
         "year_month": "month"
+      },
+      "dim_product": {
+        "product_category": "product_category"
       },
       "fct_order_line": {
         "order_date": "order_date",
         "quantity": "units_sold",
         "net_amount": "net_sales",
         "order_status": "order_status"
-      },
-      "sales_performance_monthly": {
-        "year_month": "month",
-        "customer_segment": "customer_segment",
-        "product_category": "product_category",
-        "region": "region",
-        "net_sales": "net_sales",
-        "units_sold": "units_sold"
       },
       "sales_order_line_detail": {
         "order_date": "order_date",
@@ -108,6 +107,14 @@
         "order_status": "order_status",
         "quantity": "units_sold",
         "net_amount": "net_sales"
+      },
+      "sales_performance_monthly": {
+        "year_month": "month",
+        "customer_segment": "customer_segment",
+        "product_category": "product_category",
+        "region": "region",
+        "net_sales": "net_sales",
+        "units_sold": "units_sold"
       },
       "sales_performance_partner_extract": {
         "year_month": "month",

@@ -3,6 +3,7 @@ engine_id: dataform
 status: implemented
 implemented_roles: [staging, business_view, nested_view, materialised_view, ml_model, ml_prediction, dimension, fact, calendar]
 renders:
+  - GEMINI.md (Data Engineering Agent guardrails and model grain contracts)
   - workflow_settings.yaml
   - definitions/sources/*.sqlx (raw declarations)
   - definitions/<layer>/*.sqlx (tables, views, incremental tables)

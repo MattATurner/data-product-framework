@@ -1,0 +1,16 @@
+id: lookml-broken-dashboard-field
+asserts: A LookML dashboard tile referencing an undeclared field in its Explore fails G1.
+mutate:
+  - set:
+      file: products/sales_performance/product.yaml
+      path: "semantic_layer.dashboards[name=executive_sales_pulse].tiles[name=kpi_net_sales].measures"
+      value:
+        - fct_order_line.nonexistent_metric
+run:
+  command: check
+  product: sales_performance
+  gate: G1
+expect:
+  outcome: fail
+  messages:
+    - "measure 'fct_order_line.nonexistent_metric' does not exist in explore 'order_lines'"

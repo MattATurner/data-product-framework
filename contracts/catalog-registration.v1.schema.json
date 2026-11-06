@@ -122,6 +122,43 @@
       ],
       "description": "Tier 1 MCP preferred - see registry/mcp_servers.yaml. CLI/API identifiers keep legacy strings."
     },
+    "agf_aspects": {
+      "type": "object",
+      "description": "Canonical ADG-00 Single-Writer Knowledge Catalog Aspect payloads emitted when governance.agf.enabled is true (ADR-019).",
+      "required": [
+        "governance-ownership-v1",
+        "catalog-registration-v1",
+        "sensitivity-classification-v1",
+        "cde-financial-governance-v1",
+        "lineage-governance-v1",
+        "data-product-quality-v1",
+        "retention-lifecycle-v1"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "governance-ownership-v1": {
+          "type": "object"
+        },
+        "catalog-registration-v1": {
+          "type": "object"
+        },
+        "sensitivity-classification-v1": {
+          "type": "object"
+        },
+        "cde-financial-governance-v1": {
+          "type": "object"
+        },
+        "lineage-governance-v1": {
+          "type": "object"
+        },
+        "data-product-quality-v1": {
+          "type": "object"
+        },
+        "retention-lifecycle-v1": {
+          "type": "object"
+        }
+      }
+    },
     "brd_requirement_id": {
       "$ref": "https://dpf.dev/contracts/common.v1.json#/$defs/requirement_ids"
     }

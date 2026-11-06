@@ -32,7 +32,11 @@ Typed, deduplicated, house-standard rows. **No methodology applies here.**
 
 Only the typed projection, in `products/<product>/sql/<model>.sql`: explicit casts and
 business names, reading raw with `{{ ref('raw_<entity>') }}`. Read the raw schema through
-the BigQuery MCP server; do not guess it.
+the BigQuery MCP server; do not guess it. For complex messy-data wrangling or BigQuery AI/ML
+projections on Dataform projects, you may delegate draft SQL authoring to the tier-3
+`data-engineering-agent-api` (ADR-017), saving the resulting query back to
+`products/<product>/sql/<model>.sql` in engine-neutral `{{ ref('...') }}` syntax without
+top-level `WHERE` or `QUALIFY` filters.
 
 ## What dpf generates from the manifest
 

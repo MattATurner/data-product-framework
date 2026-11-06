@@ -34,6 +34,10 @@ def grain_checksum(m: dict) -> str:
 
 def table_ref(p: Product, g: ProductGraph, name: str) -> str:
     from dpf.generate.plan import relation_dataset
+    node = g.get(name)
+    if node is not None and node.kind == "upstream":
+        return (f"{node.model.get('_upstream_project')}.{node.model.get('_upstream_dataset')}"
+                f".{node.model.get('_phys_table') or name}")
     dep = p.manifest.get("deployment") or {}
     ds = (dep.get("datasets") or {}).get(relation_dataset(p, g, name))
     return f"{dep.get('gcp_project')}.{ds}.{name}"
@@ -52,9 +56,7 @@ def glossary_bindings(p: Product, g: ProductGraph) -> dict[str, dict[str, str]]:
         for a in t.get("aliases") or []:
             index.setdefault(a.lower().replace(" ", "_"), t["id"])
     out: dict[str, dict[str, str]] = {}
-    for n in g.models:
-        if n.layer == "staging":
-            continue
+    for n in g.semantic_nodes:
         cols = g.output_columns(n.name) or []
         hits = {c: index[c] for c in cols if c in index}
         if hits:
@@ -67,12 +69,21 @@ def data_product(p: Product) -> dict:
     obs = man.get("observability") or {}
     assumptions = [a if isinstance(a, str) else (a.get("text") or a.get("assumption") or json.dumps(a))
                    for a in p.brd.get("assumptions") or []]
+    g = ProductGraph(p)
     ports = []
     for pt in man.get("output_ports", []) or []:
-        found = p.model(pt["model"])
-        port = {"name": pt["name"], "type": pt["type"], "model": pt["model"], "access": pt["access"]}
-        if found:
-            port["grain_statement"] = found[1].get("grain_statement")
+        port: dict = {"name": pt["name"], "type": pt["type"]}
+        if pt.get("model"):
+            port["model"] = pt["model"]
+        if pt.get("explore"):
+            port["explore"] = pt["explore"]
+        if pt.get("dashboard"):
+            port["dashboard"] = pt["dashboard"]
+        port["access"] = pt["access"]
+        if pt.get("model"):
+            node = g.get(pt["model"])
+            if node and node.model.get("grain_statement"):
+                port["grain_statement"] = node.model.get("grain_statement")
         port["consumers"] = list(pt.get("consumers") or [])
         port["brd_requirement_id"] = list(pt.get("brd_requirement_id") or [])
         ports.append(port)
@@ -111,22 +122,33 @@ def catalog_registration(p: Product, g: ProductGraph) -> dict:
     ds = dep.get("datasets") or {}
     obs = man.get("observability") or {}
     bindings = glossary_bindings(p, g)
-    edges = sorted({f"{i} -> {n.name}" for n in g.models for i in n.inputs})
+    edges = sorted({
+        *(f"{i} -> {n.name}" for n in g.models for i in n.inputs),
+        *(f"{n.source}.{n.model.get('_phys_table') or n.name} -> {n.name}" for n in g.upstream_nodes),
+    })
     scans = [f"projects/{dep.get('gcp_project')}/locations/{dep.get('region')}/dataScans/{kebab_id('dpf', p.id, m)}"
              for m in (obs.get("quality_scans") or {}).get("models", []) or []]
     grain = {}
+    explores = {e["name"]: e for e in ((man.get("semantic_layer") or {}).get("explores") or [])}
     for pt in man.get("output_ports", []) or []:
-        found = p.model(pt["model"])
-        if found:
-            grain[pt["name"]] = {"statement": found[1].get("grain_statement"), "columns": found[1].get("grain_columns")}
+        mname = pt.get("model") or (explores.get(pt.get("explore") or "") or {}).get("from")
+        node = g.get(mname) if mname else None
+        if node and node.model.get("grain_statement") and node.model.get("grain_columns"):
+            grain[pt["name"]] = {
+                "statement": node.model.get("grain_statement"),
+                "columns": node.model.get("grain_columns"),
+            }
     cadence = "; ".join(f"{s['id']}: {s['cron']} ({timezone(p)})" for s in (man.get("orchestration") or {}).get("schedules", []) or [])
     root = p.ws.root
     brd_spec = p.brd_dir / "spec.md"
     tdd_spec = p.tdd_dir / "spec.md"
     pb_file = p.tdd_dir / "playback.md"
     sem_path = p.semantics_path
+    entry_proj = dep.get("gcp_project") if ds.get("gold") else (
+        (g.upstream_nodes[0].model.get("_upstream_project") if g.upstream_nodes else None) or dep.get("gcp_project"))
+    entry_ds = ds.get("gold") or (g.upstream_nodes[0].model.get("_upstream_dataset") if g.upstream_nodes else p.id)
     out = {
-        "entry_ref": f"bigquery.googleapis.com/projects/{dep.get('gcp_project')}/datasets/{ds.get('gold')}",
+        "entry_ref": f"bigquery.googleapis.com/projects/{entry_proj}/datasets/{entry_ds}",
         "aspects": {
             "owner": man.get("owner"), "domain": man.get("domain"), "classification": man.get("classification"),
             "service_levels": {"freshness": obs.get("freshness") or [], "slo": obs.get("slo") or {}},
@@ -148,13 +170,76 @@ def catalog_registration(p: Product, g: ProductGraph) -> dict:
     }
     if pb_file.exists():
         out["playback_link"] = str(pb_file.relative_to(root))
+    agf = (man.get("governance") or {}).get("agf") or {}
+    if agf.get("enabled"):
+        q_cfg = man.get("quality") or {}
+        q_rules = q_cfg.get("rules") or []
+        out["agf_aspects"] = {
+            "governance-ownership-v1": {
+                "owner": man.get("owner"),
+                "steward": man.get("steward"),
+                "domain": man.get("domain"),
+                "accountability_status": "ASSIGNED" if man.get("owner") and man.get("steward") else "PENDING_STEWARD",
+            },
+            "catalog-registration-v1": {
+                "product_id": p.id,
+                "version": str(man.get("version")),
+                "authoritative_provisioning_point": out["entry_ref"],
+                "output_ports": [pt["name"] for pt in (man.get("output_ports") or [])],
+                "purpose_codes": sorted(agf.get("purpose_codes") or []),
+                "brd_satisfies": man.get("satisfies"),
+                "semantics_signed": semantics_signed(p),
+            },
+            "sensitivity-classification-v1": {
+                "product_classification": man.get("classification"),
+                "classified_columns": dict(sorted((agf.get("classified_columns") or {}).items())),
+                "policy_tag_bindings": [
+                    {
+                        "id": t["id"],
+                        "model": t["model"],
+                        "columns": sorted(t.get("columns") or []),
+                        "tag": t["tag"],
+                        "masking": t["masking"],
+                    }
+                    for t in sorted((man.get("governance") or {}).get("policy_tags") or [], key=lambda x: x["id"])
+                ],
+                "birth_quarantine_cleared": True,
+            },
+            "cde-financial-governance-v1": {
+                "cde_terms": sorted(agf.get("cde_terms") or []),
+                "glossary_ref": agf.get("glossary_ref"),
+                "gl_reconciliation_required": bool(agf.get("cde_terms")),
+            },
+            "lineage-governance-v1": {
+                "design_lineage_edges": edges,
+                "openlineage_verification": "REQUIRED",
+                "brd_link": out["brd_link"],
+                "tdd_link": out["tdd_link"],
+            },
+            "data-product-quality-v1": {
+                "gate_behaviour": q_cfg.get("gate_behaviour", "block"),
+                "blocking_rule_count": sum(1 for r in q_rules if r.get("severity") == "block"),
+                "quality_scan_refs": scans,
+                "freshness_slos": [
+                    {"id": ob["id"], "model": ob["model"], "max_staleness": ob["max_staleness"]}
+                    for ob in (obs.get("freshness") or [])
+                ],
+            },
+            "retention-lifecycle-v1": {
+                "retention_years": int(agf.get("retention_years") or 7),
+                "legal_hold_default": bool(agf.get("legal_hold_default", False)),
+                "allowed_regions": sorted(agf.get("allowed_regions") or ([dep["region"]] if dep.get("region") else [])),
+                "purge_mode": "CRYPTOGRAPHIC_TOMBSTONE_WITH_HITL",
+            },
+        }
     return out
 
 
 def observability_policy(p: Product) -> dict:
     pol = p.manifest.get("observability")
-    if not pol and p.is_prototype:
-        first_model = next((m["name"] for _, m in p.models()), "model")
+    if not pol and (p.is_prototype or p.manifest.get("upstream")):
+        first_model = (next((m["name"] for _, m in p.models()), None)
+                       or next((n.name for n in ProductGraph(p).semantic_nodes), "model"))
         pol = {
             "freshness": [{"id": "OB-1", "model": first_model, "max_staleness": "PT24H"}],
             "schema_drift": {"on_additive": "land_and_record", "on_breaking": "quarantine_and_alert"},
@@ -168,7 +253,7 @@ def quality_policy(p: Product, g: ProductGraph) -> dict:
     man = p.manifest
     q_cfg = man.get("quality") or {}
     rules = [dict(r) for r in q_cfg.get("rules", []) or []]
-    for n in g.models:
+    for n in (*g.upstream_nodes, *g.models):
         if n.role == "ml_model":
             continue
         rules.append({"id": f"GR-{n.name}", "model": n.name, "type": "unique",
@@ -236,7 +321,7 @@ def raw_table(p: Product, g: ProductGraph, name: str) -> dict:
 def readme(p: Product, engine: str, actions: list[Action], files: list[str], digest: str) -> str:
     man = p.manifest
     count = lambda kind: sum(1 for a in actions if a.kind == kind)  # noqa: E731
-    eng_dir = "dataform/" if engine == "dataform" else "dbt/"
+    has_lookml = any(f.startswith("semantic_layer/lookml/") for f in files)
     prov = "prototype" if p.is_prototype and not man.get("satisfies") else f"{man.get('satisfies')}, {man.get('tdd_id')}"
     lines = [
         f"# {p.id} — generated build", "",
@@ -244,12 +329,25 @@ def readme(p: Product, engine: str, actions: list[Action], files: list[str], dig
         "Do not edit: change the manifest, the authored SQL bodies or the generators, then regenerate. "
         "`MANIFEST.json` lists every file with its hash and the build digest that test evidence is bound to.", "",
         "| Path | What it is |", "|---|---|",
-        f"| `{eng_dir}` | {engine} project: {count('declaration')} raw declarations, "
-        f"{sum(1 for a in actions if a.kind not in ('declaration', 'assertion'))} models and helper views, "
-        f"{count('assertion')} assertions |",
+    ]
+    if engine != "lookml":
+        eng_dir = "dataform/" if engine == "dataform" else "dbt/"
+        lines.append(
+            f"| `{eng_dir}` | {engine} project: {count('declaration')} raw declarations, "
+            f"{sum(1 for a in actions if a.kind not in ('declaration', 'assertion'))} models and helper views, "
+            f"{count('assertion')} assertions |"
+        )
+    if has_lookml:
+        lines.append(
+            "| `semantic_layer/lookml/` | Governed LookML views, symmetric-aggregate keys, Explores and LookML dashboards |"
+        )
+    lines += [
         "| `terraform/` | Datasets, access, policy tags and masking, sharing, orchestration, checks, alerts, "
         "Knowledge Catalog quality scans, control tables |",
-        "| `semantic/`, `staging/`, `raw/` | One contract document per relation |",
+    ]
+    if engine != "lookml":
+        lines.append("| `semantic/`, `staging/`, `raw/` | One contract document per relation |")
+    lines += [
         "| `test-spec.json` | Every check the product must pass (test-spec.v1) |",
         "| `data-product.json`, `catalog-registration.json` | Product descriptor and Knowledge Catalog registration |",
         "| `observability-policy.json`, `quality-policy.json` | Runtime service levels and quality rules |",
@@ -259,9 +357,12 @@ def readme(p: Product, engine: str, actions: list[Action], files: list[str], dig
         "providers (see `examples/<product>/terraform`). Apply it before the first extract: it creates the control tables.",
     ]
     if engine == "dataform":
-        lines.append("2. Push `dataform/` to the default branch of the Dataform repository named in "
-                     "`dataform_repository`. The release configuration compiles it hourly; one workflow configuration per "
-                     "schedule runs the actions tagged with that schedule.")
+        lines.append("2. Push `dataform/` to the Dataform repository named in `dataform_repository` (governed products "
+                     "disable hourly auto-release by default per ADR-017 so only reviewed G3 builds release; one "
+                     "workflow configuration per schedule runs the actions tagged with that schedule).")
+    elif engine == "lookml":
+        lines.append("2. Push `semantic_layer/lookml/` to the Looker Git repository configured for this project "
+                     "(ADR-018; override `GCP_PROJECT` and `DATASET_*` constants per environment as needed).")
     else:
         lines.append("2. Run the schedules in `dbt/orchestration.md` with `dbt build` (policy tag vars from "
                      "`terraform output policy_tags`).")

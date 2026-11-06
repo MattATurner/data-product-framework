@@ -1,0 +1,5 @@
+# Established BigQuery data foundations available for decoupled semantic or consumption
+# data products (contract foundation-binding.v1). Ships empty so new workspaces inherit no
+# project-specific tables.
+
+foundations: []

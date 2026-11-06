@@ -15,7 +15,7 @@ specs:
 brd_id: BRD-SALES-002
 tdd_id: TDD-SALES-002
 satisfies: BRD-SALES-002@1.2.0
-adrs: [ADR-SALES-002-01, ADR-SALES-002-02, ADR-015]
+adrs: [ADR-SALES-002-01, ADR-SALES-002-02, ADR-015, ADR-018]
 acceptance: acceptance.yaml
 
 deployment:
@@ -213,6 +213,18 @@ output_ports:
       listing_id: sales_performance_monthly_extract
       subscriber_var: partner_subscriber
     brd_requirement_id: [R-13]
+  - name: sales_performance_explore
+    type: looker_explore
+    explore: order_lines
+    access: looker_model_set
+    consumers: [sales-leadership, sales-operations, finance]
+    brd_requirement_id: [R-1, R-2, R-4, R-6, R-7, R-8, R-12]
+  - name: executive_sales_pulse
+    type: looker_dashboard
+    dashboard: executive_sales_pulse
+    access: looker_folder_grant
+    consumers: [sales-leadership, sales-operations]
+    brd_requirement_id: [R-1, R-2, R-7]
 
 quality:
   gate_behaviour: block
@@ -302,3 +314,103 @@ governance:
       masked_readers: [analyst_group]
       fine_grained_readers: [contact_reader_group]
       brd_requirement_id: [R-12]
+
+semantic_layer:
+  targets: [lookml]
+  looker:
+    connection: bigquery_sales
+    project_name: sales_performance
+    auth_mode: oauth
+    datagroup_max_cache_age: "90 minutes"
+  metrics:
+    - name: net_sales
+      label: Net Sales (AUD)
+      type: simple
+      model: fct_order_line
+      expr: net_amount
+      filter: "is_cancelled = FALSE"
+      description: Net sales in AUD excluding tax and cancelled order lines.
+    - name: units_sold
+      label: Units Sold
+      type: simple
+      model: fct_order_line
+      expr: quantity
+      filter: "is_cancelled = FALSE"
+      description: Total units sold excluding cancelled order lines.
+  explores:
+    - name: order_lines
+      from: fct_order_line
+      label: "Sales Performance — Order Lines"
+      description: "Order-line sales joined to point-in-time customer segment, product category and calendar."
+      joins: auto
+      always_filter_partition: true
+      partition_default_filter: "90 days"
+      aggregate_tables: [sales_performance_monthly]
+      brd_requirement_id: [R-1, R-2, R-4, R-6, R-7, R-8, R-12]
+  dashboards:
+    - name: executive_sales_pulse
+      title: Executive Sales Performance
+      description: "Stephen Few operational summary of net sales, units sold and order-line detail."
+      explore: order_lines
+      brd_requirement_id: [R-1, R-2, R-7]
+      filters:
+        - name: order_date
+          title: Order Date
+          field: fct_order_line.order_date
+          type: date_filter
+          default_value: "90 days"
+        - name: region
+          title: Region
+          field: dim_customer.region
+        - name: customer_segment
+          title: Customer Segment
+          field: dim_customer.customer_segment
+        - name: product_category
+          title: Product Category
+          field: dim_product.product_category
+      tiles:
+        - name: kpi_net_sales
+          title: Net Sales (AUD)
+          kind: kpi
+          measures: [fct_order_line.net_sales]
+        - name: kpi_units_sold
+          title: Units Sold
+          kind: kpi
+          measures: [fct_order_line.units_sold]
+        - name: kpi_order_lines
+          title: Order Lines
+          kind: kpi
+          measures: [fct_order_line.count]
+        - name: monthly_net_sales_trend
+          title: Monthly Net Sales Trend
+          kind: time_series
+          dimensions: [dim_date.year_month]
+          measures: [fct_order_line.net_sales]
+          sorts: [dim_date.year_month asc]
+        - name: net_sales_by_region
+          title: Net Sales by Region
+          kind: ranked_bar
+          dimensions: [dim_customer.region]
+          measures: [fct_order_line.net_sales]
+          y_axis_zero: true
+        - name: net_sales_by_category
+          title: Net Sales by Product Category
+          kind: ranked_bar
+          dimensions: [dim_product.product_category]
+          measures: [fct_order_line.net_sales]
+          y_axis_zero: true
+        - name: order_line_drill_detail
+          title: Order Line Drill-Down Detail
+          kind: table
+          dimensions:
+            - fct_order_line.order_id
+            - fct_order_line.order_line_no
+            - fct_order_line.order_date
+            - dim_customer.customer_name
+            - dim_customer.customer_segment
+            - dim_product.product_category
+            - fct_order_line.order_status
+          measures:
+            - fct_order_line.net_sales
+            - fct_order_line.units_sold
+          limit: 100

@@ -1,4 +1,4 @@
-"""`dpf` command line: one entry point for define, design, build, test and monitor.
+"""`dpf` command line: one entry point for describe, design, build, accept and monitor.
 
 Exit codes: 0 when every check passes, 1 when any check fails, 2 for usage errors.
 Every command accepts `--json` (machine-readable report on stdout) and `--root`.
@@ -17,11 +17,11 @@ from dpf.core import Report, Workspace, find_root
 GATES = ["G0", "G1", "G2", "G3", "G4"]
 GATE_ALIASES = {
     "proto": "proto", "prototype": "proto",
-    "G0": "G0", "define": "G0",
+    "G0": "G0", "describe": "G0", "define": "G0",
     "G1": "G1", "design": "G1",
     "G2": "G2", "compose": "G2",
     "G3": "G3", "build": "G3",
-    "G4": "G4", "test": "G4",
+    "G4": "G4", "accept": "G4", "test": "G4",
 }
 
 
@@ -266,6 +266,30 @@ def cmd_proto(ws, args, report):
         write_text(pdir / "sql" / f"obt_{pid}.sql",
                    f"SELECT\n  id,\n  source_modified_ts\nFROM {{{{ ref('stg_{entity}') }}}}\n")
         report.ok(f"scaffolded prototype products/{pid}/product.yaml (run `dpf check {pid} --gate proto` and `dpf generate {pid}`)")
+    elif args.proto_cmd == "import-dataform":
+        from dpf.dataform_import import import_dataform
+        import_dataform(
+            ws,
+            pid,
+            Path(args.src),
+            report,
+            domain=args.domain,
+            project=args.project,
+            region=args.region,
+            source_id=args.source,
+        )
+    elif args.proto_cmd == "import-looker":
+        from dpf.looker_import import import_looker
+        import_looker(
+            ws,
+            pid,
+            Path(args.src),
+            report,
+            domain=args.domain,
+            project=args.project,
+            region=args.region,
+            dataset=args.dataset,
+        )
     elif args.proto_cmd == "promote":
         report.head(f"proto · promote — {pid}", gate="proto")
         mpath = pdir / "product.yaml"
@@ -282,12 +306,18 @@ def cmd_proto(ws, args, report):
         man.setdefault("tdd_id", f"TDD-{slug.upper()}-001")
         man.setdefault("satisfies", f"{man['brd_id']}@1.0.0")
         man.setdefault("specs", {"brd": brd_rel, "tdd": tdd_rel})
-        man.setdefault("observability", {
-            "freshness": [{"id": "OB-1", "model": f"obt_{pid}", "max_staleness": "PT24H"}],
-            "schema_drift": {"on_additive": "land_and_record", "on_breaking": "quarantine_and_alert"},
+        first_model = f"obt_{pid}"
+        if man.get("upstream") and not man.get("layers"):
+            up0 = (man.get("upstream") or [{}])[0]
+            first_model = (up0.get("models") or [t.get("name") for t in (up0.get("tables") or [])] or [first_model])[0]
+        obs_default = {
+            "freshness": [{"id": "OB-1", "model": first_model, "max_staleness": "PT24H"}],
             "alerting": {"notification_channel_var": "alert_channel"},
             "slo": {"objective": 0.99, "window": "P28D"},
-        })
+        }
+        if man.get("sources"):
+            obs_default["schema_drift"] = {"on_additive": "land_and_record", "on_breaking": "quarantine_and_alert"}
+        man.setdefault("observability", obs_default)
         man.setdefault("governance", {"register": "knowledge_catalog", "registered_via": "knowledge-catalog-mcp"})
         write_text(mpath, yaml.safe_dump(man, sort_keys=False))
         brd_dir = ws.root / "openspec/specs" / brd_rel
@@ -406,8 +436,8 @@ def build_parser() -> argparse.ArgumentParser:
     product_args(sp)
     sp.add_argument("--engine", help="render with another engine adapter (e.g. dbt) into generated/<product>--<engine>/")
     sp.add_argument("--env", help="render with environment overrides from deployment.environments.<env>")
-    sp.add_argument("--semantic-layer", nargs="*", choices=["cube", "metricflow", "atscale", "osi"],
-                    help="override semantic layer targets (cube, metricflow, atscale, osi)")
+    sp.add_argument("--semantic-layer", nargs="*", choices=["cube", "metricflow", "atscale", "osi", "lookml"],
+                    help="override semantic layer targets (cube, metricflow, atscale, osi, lookml)")
     sp.add_argument("--check", action="store_true", help="compare with the golden copy in tests/golden/ and prove determinism")
     sp.add_argument("--update-golden", action="store_true", help="replace the golden copy with this build")
     sp.add_argument("--no-write", action="store_true", help="render in memory only")
@@ -449,7 +479,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("check", parents=[common], help="run every gate up to --gate (cumulative)")
     product_args(sp)
     sp.add_argument("--gate", choices=list(GATE_ALIASES), default="G3",
-                    help="highest gate to check: proto/prototype, G0/define, G1/design, G2/compose, G3/build (default), G4/test")
+                    help="highest gate to check: proto/prototype, G0/describe/define, G1/design, G2/compose, G3/build (default), G4/accept/test")
     sp.set_defaults(fn=cmd_check)
 
     proto = sub.add_parser("proto", help="fast prototyping cheat code (status: prototype)")
@@ -460,6 +490,24 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--entity", help="source entity name (default: orders)")
     sp.add_argument("--domain", help="domain name (default: commerce)")
     sp.add_argument("--project", help="GCP project id (default: example-dpf-dev)")
+    sp.set_defaults(fn=cmd_proto)
+    sp = psub.add_parser("import-dataform", parents=[common],
+                         help="import a Dataform / Data Engineering Agent workspace into status: prototype")
+    product_args(sp, all_ok=False)
+    sp.add_argument("--from", dest="src", required=True, help="path to Dataform repository or definitions/ directory")
+    sp.add_argument("--source", help="source system_id (default: <product>_src)")
+    sp.add_argument("--domain", help="domain name (default: commerce)")
+    sp.add_argument("--project", help="GCP project id (overrides workflow_settings.yaml)")
+    sp.add_argument("--region", help="GCP region (overrides workflow_settings.yaml)")
+    sp.set_defaults(fn=cmd_proto)
+    sp = psub.add_parser("import-looker", parents=[common],
+                         help="import an existing LookML directory (views, explores, dashboards) into status: prototype")
+    product_args(sp, all_ok=False)
+    sp.add_argument("--from", dest="src", required=True, help="path to LookML project directory")
+    sp.add_argument("--domain", help="domain name (default: analytics)")
+    sp.add_argument("--project", help="GCP project id (overrides manifest.lkml / sql_table_name)")
+    sp.add_argument("--dataset", help="default BigQuery dataset when sql_table_name is unqualified")
+    sp.add_argument("--region", help="GCP region (default: europe-west2)")
     sp.set_defaults(fn=cmd_proto)
     sp = psub.add_parser("promote", parents=[common], help="promote a prototype product to status: draft and scaffold BRD/TDD")
     product_args(sp, all_ok=False)

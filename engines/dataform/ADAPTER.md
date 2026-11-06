@@ -21,5 +21,10 @@ Notes:
   the acceptance mapping. They are never hand-written.
 - Every generated file starts with a `dpf:` header naming the skill and requirements it
   realises, so `dpf trace` can follow a requirement to the artefact.
+- `GEMINI.md` is emitted at the repository root with declared model grain contracts and
+  anti-drift guardrails (ADR-017) so BigQuery Studio's Data Engineering Agent and Data
+  Agent Kit respect `dpf` ownership and quarantine rules.
+- Table and incremental actions emit `dpf_product`, `dpf_layer` and `dpf_status` BigQuery
+  labels alongside descriptions and policy tags for Knowledge Catalog discovery.
 - Workflow configs (one per orchestration schedule) are rendered as Terraform in
   `generated/<product>/terraform/`.

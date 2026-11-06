@@ -82,14 +82,18 @@ running `dpf signoff`.
   - **Goldfish may read ONLY:**
     - `products/<product>/product.yaml`
     - `products/<product>/sql/*.sql` (if any)
-    - `registry/platform-defaults.yaml` and `registry/glossary.yaml` (plus `registry_overlay`)
+    - `products/<product>/lookml/*.lookml` (if any)
+    - `registry/platform-defaults.yaml`, `registry/foundations.yaml` and `registry/glossary.yaml`
+      (plus `registry_overlay`)
   - **Goldfish must NOT read:** `openspec/specs/` (`brd/` and `tdd/`, including
     `playback.md` / `semantics.md`), `products/<product>/acceptance.yaml`, or chat history.
   - **Prompt task:** Restate in plain business English (zero SQL, cloud or modelling jargon)
     what this data product actually delivers: one row per what, how historical changes and
     as-at joins behave (including start-of-day or go-live cut-offs), what gets quarantined or
-    excluded, how fresh figures are, and who can see masked vs unmasked values. Write the
-    blind reconstruction to `generated/<product>/goldfish-playback.md`.
+    excluded, how fresh figures are, who can see masked vs unmasked values, and — when Looker
+    Explores or Dashboards are declared — which KPIs, filters and drill paths business users
+    actually see and whether metric filter rules (such as cancelled-line exclusions) match the
+    underlying tables. Write the blind reconstruction to `generated/<product>/goldfish-playback.md`.
 - **Step 2 — Elephant reconciliation:**
   - In the parent session, compare `generated/<product>/goldfish-playback.md` against both
     `brd/brd.yaml` (`brd/spec.md`) and `tdd/playback.md` (`tdd/semantics.md`).
@@ -122,8 +126,16 @@ changed.
   3. **Vacuous acceptance assertions (`AT-*`):** Queries in `acceptance.yaml` /
      `test-spec.json` that return zero failing rows when the source or target table is empty,
      or that test tautologies rather than falsifiable business invariants.
-  4. **Cross-tool first-apply ordering:** Resources in `generated/<product>/terraform/` (such
+  4. **Silent staging drops & engine-agent leakage:** SQL bodies in `products/<product>/sql/*.sql`
+     (especially those drafted or imported via Dataform's Data Engineering Agent) that silently
+     filter out bad rows with `WHERE` or inline `QUALIFY` before `<model>_rejects` quarantine,
+     or leak engine-specific `${ref(...)}` / `${when(...)}` syntax.
+  5. **Cross-tool first-apply ordering:** Resources in `generated/<product>/terraform/` (such
      as Knowledge Catalog quality scans or Dataform release schedules) that depend on tables
      or service constraints created only after the first pipeline run.
+  6. **LookML join fanout & dashboard parity:** When `generated/<product>/semantic_layer/lookml/`
+     is present, inspect `.view.lkml`, `.explore.lkml` and `.dashboard.lookml` for `one_to_many`
+     join fanouts missing symmetric-aggregate keys, measures whose filters diverge from gold SQL
+     views, or dashboard tiles whose labels misstate what the queried measure computes.
 - **Output:** `generated/<product>/goldfish-g3.md` listing findings by severity (`Blocking`,
   `Should fix`, `Note`) with exact file paths and SQL/HCL snippets.

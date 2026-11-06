@@ -110,7 +110,8 @@ class Module:
         return node.model.get("dataset") or node.layer
 
     def ports_in(self, dataset_key: str) -> list[dict]:
-        return [pt for pt in self.man.get("output_ports", []) or [] if self.dataset_of(pt["model"]) == dataset_key]
+        return [pt for pt in self.man.get("output_ports", []) or []
+                if pt.get("model") and self.dataset_of(pt["model"]) == dataset_key]
 
     @property
     def prevent_destroy(self) -> bool:
@@ -194,8 +195,29 @@ resource "google_bigquery_dataset_access" "{key}_{snake_id(pv)}" {{
   role           = {q(role)}
   group_by_email = var.{pv}
 }}""")
+        # Looker service account consumption grant when auth_mode == service_account.
+        looker_cfg = ((self.man.get("semantic_layer") or {}).get("looker") or {})
+        sa_var = looker_cfg.get("service_account_var")
+        if sa_var:
+            if sa_var in self.principals:
+                self.var(sa_var, "Looker connection service account email granted READER on consumption datasets.",
+                         self.principals[sa_var], True)
+            else:
+                self.var(sa_var, "Looker connection service account email granted READER on consumption datasets.")
+            for key in [k for k in ("silver", "gold") if k in self.ds]:
+                lports = [pt for pt in (self.man.get("output_ports") or [])
+                          if pt.get("type") in ("looker_explore", "looker_dashboard")]
+                hdr = trace([f"port:{pt['name']}" for pt in lports], reqs_of(*lports),
+                            None if lports else "generate-artefacts", dataset=key)
+                self.emit("access.tf", hdr, f"""
+resource "google_bigquery_dataset_access" "{key}_looker_{snake_id(sa_var)}" {{
+  project       = var.project_id
+  dataset_id    = google_bigquery_dataset.{key}.dataset_id
+  role          = "READER"
+  user_by_email = var.{sa_var}
+}}""")
         # Authorised datasets: consumer-facing views read other datasets without granting them.
-        port_ds = {self.dataset_of(pt["model"]) for pt in self.man.get("output_ports", []) or []}
+        port_ds = {self.dataset_of(pt["model"]) for pt in self.man.get("output_ports", []) or [] if pt.get("model")}
         pairs: dict[tuple[str, str], list[str]] = {}
         for a in self.actions:
             if a.kind != "view" or a.dataset not in port_ds:
@@ -205,7 +227,7 @@ resource "google_bigquery_dataset_access" "{key}_{snake_id(pv)}" {{
                 if src != a.dataset and src in self.ds:
                     pairs.setdefault((src, a.dataset), []).append(a.model)
         for (src, viewer), models in sorted(pairs.items()):
-            ports = [pt for pt in self.man.get("output_ports", []) or [] if pt["model"] in models]
+            ports = [pt for pt in self.man.get("output_ports", []) or [] if pt.get("model") in models]
             self.emit("access.tf", trace([f"port:{pt['name']}" for pt in ports], reqs_of(*ports),
                                          None if ports else "generate-artefacts"), f"""
 resource "google_bigquery_dataset_access" "{src}_authorizes_{viewer}_views" {{
@@ -361,12 +383,13 @@ resource "google_cloud_run_v2_job" "runner" {{
 }}""")
 
     def _dataform_release_config(self) -> None:
+        auto_rel = "0 * * * *" if self.man.get("status") == "prototype" else ""
         self.var("dataform_repository", "Existing Dataform repository (name) whose default branch holds the generated "
                                         "dataform/ tree.")
         self.var("dataform_git_commitish", "Branch, tag or commit the release configuration compiles.", "main", True)
-        self.var("dataform_release_schedule", "Cron for automatic release compilation. Empty: no automatic release, so "
-                                              "each deploy compiles and releases (required for a Dataform-hosted "
-                                              "repository with strict act-as checks).", "0 * * * *", True)
+        self.var("dataform_release_schedule", "Cron for automatic release compilation. Defaults to empty on governed "
+                                              "products so unreviewed Dataform workspace edits cannot auto-release "
+                                              "(ADR-017), and hourly on prototypes.", auto_rel, True)
         self.var("dataform_service_account", "Service account workflow invocations run as (needed under strict act-as "
                                              "checks). Empty: the repository's default service account.", "", True)
         tags = (self.man.get("governance") or {}).get("policy_tags", []) or [] if self.enforce_policy_tags else []
@@ -527,11 +550,22 @@ resource "google_dataform_repository_workflow_config" "{snake_id(s['id'])}" {{
 }}""")
 
     # ------------------------------------------------------------------ monitoring
+    def _relation_parts(self, model: str) -> tuple[str, str, str]:
+        node = self.g.get(model)
+        if node is not None and node.kind == "upstream":
+            dep_proj = (self.man.get("deployment") or {}).get("gcp_project")
+            u_proj = node.model.get("_upstream_project")
+            proj_expr = "${var.project_id}" if (not u_proj or u_proj == dep_proj) else u_proj
+            return proj_expr, str(node.model.get("_upstream_dataset")), str(node.model.get("_phys_table") or model)
+        return "${var.project_id}", str(self.ds.get(self.dataset_of(model))), model
+
     def _table(self, model: str) -> str:
-        return f"`${{var.project_id}}.{self.ds.get(self.dataset_of(model))}.{model}`"
+        proj, ds, tbl = self._relation_parts(model)
+        return f"`{proj}.{ds}.{tbl}`"
 
     def freshness_sql(self, ob: dict) -> str:
         model, max_min = ob["model"], duration_minutes(ob["max_staleness"])
+        proj, ds, tbl = self._relation_parts(model)
         cal = ob.get("calendar")
         lines = [f"-- {ob['id']}: {model} must be no older than {max_min} minutes ({ob['max_staleness']})"
                  + (f", {' '.join(cal['days'])} {cal['start']}-{cal['end']} {cal['timezone']}." if cal else ", at all times."),
@@ -543,8 +577,8 @@ resource "google_dataform_repository_workflow_config" "{snake_id(s['id'])}" {{
                  "     'fresh') AS status",
                  "FROM (",
                  "  SELECT TIMESTAMP_DIFF(CURRENT_TIMESTAMP(), TIMESTAMP_MILLIS(MAX(last_modified_time)), MINUTE) AS age_minutes",
-                 f"  FROM `${{var.project_id}}.{self.ds.get(self.dataset_of(model))}.__TABLES__`",
-                 f"  WHERE table_id = '{model}'",
+                 f"  FROM `{proj}.{ds}.__TABLES__`",
+                 f"  WHERE table_id = '{tbl}'",
                  ")"]
         if cal:
             days = ", ".join(str(DAYS[d]) for d in cal["days"])
@@ -727,8 +761,9 @@ resource "google_monitoring_alert_policy" "{mid}" {{
             for r in rules_by_model.get(model, []):
                 rules.append(self._quality_rule(r))
             body = "\n".join(x for x in rules if x)
-            ds = self.ds.get(self.dataset_of(model))
-            self.emit("quality.tf", trace(["observability:quality_scans", f"model:{model}"],
+            proj, ds, tbl = self._relation_parts(model)
+            elem_ref = f"upstream:{node.source}" if node.kind == "upstream" else f"model:{model}"
+            self.emit("quality.tf", trace(["observability:quality_scans", elem_ref],
                                           reqs_of(qs, *rules_by_model.get(model, [])), qs.get("implements")), f"""
 resource "google_dataplex_datascan" "dq_{model}" {{
   project      = var.project_id
@@ -737,7 +772,7 @@ resource "google_dataplex_datascan" "dq_{model}" {{
   display_name = {q(f"dpf {self.p.id} {model}")}
   description  = {q(f"Knowledge Catalog data quality scan of {model}: grain, keys and quality rules (generated by dpf).")}
   data {{
-    resource = "//bigquery.googleapis.com/projects/${{var.project_id}}/datasets/{ds}/tables/{model}"
+    resource = "//bigquery.googleapis.com/projects/{proj}/datasets/{ds}/tables/{tbl}"
   }}
   execution_spec {{
     trigger {{
@@ -812,14 +847,21 @@ resource "google_bigquery_table" "{table}" {{
         return "\n".join(f"    {k.ljust(width)} = {v}" for k, v in entries)
 
     def outputs(self) -> None:
-        ds = self._map([(k, f"google_bigquery_dataset.{k}.dataset_id") for k in self.ds])
-        out = [f"""
+        if self.ds:
+            ds = self._map([(k, f"google_bigquery_dataset.{k}.dataset_id") for k in self.ds])
+            out = [f"""
 output "datasets" {{
   description = "Dataset ids by deployment key."
   value = {{
 {ds}
   }}
 }}"""]
+        else:
+            out = ["""
+output "datasets" {
+  description = "Dataset ids by deployment key."
+  value       = {}
+}"""]
         tags = sorted({t["tag"] for t in (self.man.get("governance") or {}).get("policy_tags", []) or []})
         if tags and self.enforce_policy_tags:
             tv = self._map([(f"policy_tag_{t}", f"google_data_catalog_policy_tag.{t}.name") for t in tags])

@@ -14,7 +14,7 @@ import re
 from datetime import date
 
 from dpf.core import LAYERS, Product, Report, front_matter, iter_elements, write_text
-from dpf.graph import ProductGraph
+from dpf.graph import ProductGraph, strip_sql_comments
 from dpf.methodology import history_point_in_time, recommend, run_rules
 from dpf.specs import split_ids
 
@@ -76,10 +76,13 @@ def check_prototype(p: Product, report: Report) -> None:
         report.fail(f"{model} reads '{ref}', which is not declared")
     _roles(p, g, report)
     _ports(p, g, report)
+    _upstream(p, g, report)
+    _semantic_layer(p, g, report)
     _references(p, g, report)
     _staging(p, g, report)
     _operability(p, g, report)
-    run_rules(p, report, g)
+    if g.models:
+        run_rules(p, report, g)
     if not report.failures:
         from dpf.generate import build
         b = build(p)
@@ -123,16 +126,20 @@ def check_design(p: Product, report: Report) -> None:
     _elements(p, report)
     _roles(p, g, report)
     _ports(p, g, report)
+    _upstream(p, g, report)
+    _semantic_layer(p, g, report)
     _references(p, g, report)
     _brd_derivations(p, g, report)
+    _agf_governance(p, g, report)
     _methodology(p, g, report)
     _history(p, g, report)
     _capture(p, report)
     _staging(p, g, report)
     _operability(p, g, report)
     _envy(p, g, report)
-    report.head(f"G1 · design rules — {p.id}")
-    run_rules(p, report, g)
+    if g.models:
+        report.head(f"G1 · design rules — {p.id}")
+        run_rules(p, report, g)
     report.head(f"G1 · semantics sign-off — {p.id}")
     _signoff(p, report)
 
@@ -178,7 +185,7 @@ def _decisions(p: Product, g: ProductGraph, report: Report) -> None:
         model = d.meta.get("model")
         if model:
             node = g.get(model)
-            if node is None or node.kind != "model":
+            if node is None or node.kind not in ("model", "upstream"):
                 report.fail(f"{did} describes model '{model}', which the manifest does not declare")
             else:
                 if d.meta.get("grain"):
@@ -271,9 +278,33 @@ def _ports(p: Product, g: ProductGraph, report: Report) -> None:
     datasets_used: dict[str, list[str]] = {}
     for n in g.models:
         datasets_used.setdefault(n.model.get("dataset") or n.layer, []).append(n.name)
+    sl = p.manifest.get("semantic_layer") or {}
+    known_explores = {e["name"] for e in (sl.get("explores") or [])}
+    known_dashboards = {d["name"] for d in (sl.get("dashboards") or [])}
     for port in p.manifest.get("output_ports", []) or []:
-        node = g.get(port.get("model", ""))
         name = port.get("name")
+        ptype = port.get("type")
+        access = port.get("access")
+        if ptype == "looker_explore":
+            exp_name = port.get("explore")
+            if exp_name not in known_explores:
+                report.fail(f"port {name}: explore '{exp_name}' is not declared in semantic_layer.explores")
+            if access != "looker_model_set":
+                report.fail(f"port {name}: looker_explore ports must use access 'looker_model_set', not '{access}'")
+            continue
+        if ptype == "looker_dashboard":
+            dash_name = port.get("dashboard")
+            if dash_name not in known_dashboards:
+                report.fail(f"port {name}: dashboard '{dash_name}' is not declared in semantic_layer.dashboards")
+            if access not in ("looker_folder_grant", "looker_model_set"):
+                report.fail(
+                    f"port {name}: looker_dashboard ports must use access 'looker_folder_grant' or 'looker_model_set', "
+                    f"not '{access}'"
+                )
+            continue
+        if access in ("looker_model_set", "looker_folder_grant"):
+            report.fail(f"port {name}: access '{access}' is only valid on looker_explore or looker_dashboard ports")
+        node = g.get(port.get("model", ""))
         if node is None or node.kind != "model":
             report.fail(f"port {name}: model '{port.get('model')}' is not declared")
             continue
@@ -283,7 +314,6 @@ def _ports(p: Product, g: ProductGraph, report: Report) -> None:
         allowed = PORT_MATERIALISATION.get(port["type"], set())
         if allowed and mat not in allowed:
             report.fail(f"port {name}: type {port['type']} does not fit materialisation '{mat}' of {node.name}")
-        access = port.get("access")
         if access == "authorized_view" and mat != "view":
             report.fail(f"port {name}: authorized_view access needs a view, {node.name} is a {mat}")
         if access == "sharing_listing":
@@ -296,6 +326,216 @@ def _ports(p: Product, g: ProductGraph, report: Report) -> None:
         if port["type"] == "bigquery_sharing_listing" and access != "sharing_listing":
             report.fail(f"port {name}: a sharing listing port must use sharing_listing access")
     report.ok(f"{len(p.manifest.get('output_ports') or [])} output port(s) checked against their models")
+
+
+def _semver_tuple(ver: str | None) -> tuple[int, int, int]:
+    if not ver:
+        return (0, 0, 0)
+    parts = str(ver).split("-", 1)[0].split("+")[0].split(".")
+    nums = [int(x) if x.isdigit() else 0 for x in (parts + ["0", "0", "0"])[:3]]
+    return (nums[0], nums[1], nums[2])
+
+
+def _upstream(p: Product, g: ProductGraph, report: Report) -> None:
+    upstreams = p.manifest.get("upstream") or []
+    if not upstreams:
+        return
+    from dpf.generate.render import duration_minutes
+
+    down_fresh = {
+        ob.get("model"): ob for ob in ((p.manifest.get("observability") or {}).get("freshness") or [])
+    }
+    for u in upstreams:
+        if u.get("product"):
+            up_id = u["product"]
+            up_path = p.ws.root / "products" / up_id / "product.yaml"
+            if not up_path.exists():
+                continue
+            up_prod = p.ws.product(up_id)
+            min_v = u.get("min_version")
+            act_v = str(up_prod.manifest.get("version") or "0.0.0")
+            if min_v and _semver_tuple(act_v) < _semver_tuple(min_v):
+                report.fail(
+                    f"upstream product '{up_id}' is at version {act_v}, below required min_version {min_v}"
+                )
+            else:
+                report.ok(f"upstream product '{up_id}' ({act_v}) satisfies binding")
+            up_obs = {
+                ob.get("model"): ob.get("max_staleness")
+                for ob in ((up_prod.manifest.get("observability") or {}).get("freshness") or [])
+            }
+            default_up_stale = u.get("max_staleness") or next(iter(up_obs.values()), None)
+            for mname in u.get("models") or []:
+                up_iso = up_obs.get(mname) or default_up_stale
+                dob = down_fresh.get(mname)
+                if up_iso and dob and dob.get("max_staleness"):
+                    if duration_minutes(dob["max_staleness"]) < duration_minutes(up_iso):
+                        report.fail(
+                            f"{dob['id']}: downstream freshness {dob['max_staleness']} on '{mname}' is tighter "
+                            f"than upstream '{up_id}' guarantees ({up_iso})"
+                        )
+        else:
+            fid = u.get("foundation") or "unknown"
+            reg_f = p.registry.foundations.get(fid) or {}
+            up_iso = u.get("max_staleness") or reg_f.get("max_staleness")
+            tables = u.get("tables") if u.get("tables") is not None else (reg_f.get("tables") or [])
+            for t in tables:
+                tname = t["name"]
+                dob = down_fresh.get(tname)
+                if up_iso and dob and dob.get("max_staleness"):
+                    if duration_minutes(dob["max_staleness"]) < duration_minutes(up_iso):
+                        report.fail(
+                            f"{dob['id']}: downstream freshness {dob['max_staleness']} on '{tname}' is tighter "
+                            f"than upstream foundation '{fid}' guarantees ({up_iso})"
+                        )
+                if t.get("columns"):
+                    known_cols = {c["name"] for c in t["columns"]}
+                    missing_g = [c for c in (t.get("grain_columns") or []) if c not in known_cols]
+                    if missing_g:
+                        report.fail(
+                            f"upstream foundation '{fid}' table '{tname}': grain column(s) {', '.join(missing_g)} "
+                            "are not in declared columns"
+                        )
+                    if t.get("surrogate_key") and t["surrogate_key"] not in known_cols:
+                        report.fail(
+                            f"upstream foundation '{fid}' table '{tname}': surrogate_key '{t['surrogate_key']}' "
+                            "is not in declared columns"
+                        )
+
+
+def _semantic_layer(p: Product, g: ProductGraph, report: Report) -> None:
+    sl = p.manifest.get("semantic_layer")
+    if not sl:
+        return
+    from dpf.generate.lookml import explore_field_map
+    from dpf.generate.semantic_layer import build_semantic_spec
+
+    looker_cfg = sl.get("looker") or {}
+    if looker_cfg.get("allow_pdt"):
+        sem_adrs = [
+            a for a in (p.manifest.get("adrs") or [])
+            if a != "ADR-018" and a in p.ws.adrs and front_matter(p.ws.adrs[a])[0].get("decides") == "semantic_layer"
+        ]
+        report.check(
+            bool(sem_adrs),
+            f"Looker PDT exception is backed by ADR ({', '.join(sem_adrs)})",
+            "semantic_layer.looker.allow_pdt: true requires a product ADR deciding semantic_layer beyond ADR-018",
+        )
+
+    measure_additivity: dict[tuple[str, str], str] = {}
+    sem_names = {n.name for n in g.semantic_nodes}
+    for n in g.semantic_nodes:
+        for ms in ((n.model.get("attributes") or {}).get("measures") or []):
+            measure_additivity[(n.name, ms["name"])] = ms.get("additivity", "additive")
+
+    for mt in sl.get("metrics") or []:
+        mmodel = mt.get("model")
+        if mmodel not in sem_names:
+            report.fail(f"metric '{mt['name']}': model '{mmodel}' is not a consumption, silver or upstream model")
+            continue
+        src_col = mt.get("expr") or mt.get("measure") or mt.get("name")
+        if mt.get("type", "simple") == "simple" and measure_additivity.get((mmodel, src_col)) == "non_additive":
+            report.fail(
+                f"metric '{mt['name']}': cannot aggregate non_additive measure '{src_col}' on {mmodel} as type "
+                "'simple' (sum); use type 'derived' or 'ratio'"
+            )
+
+    spec = build_semantic_spec(p, g, "sha256:" + "0" * 64) or {}
+    cubes_by_name = {c["name"]: c for c in spec.get("cubes") or []}
+    explores_by_name = {e["name"]: e for e in (sl.get("explores") or [])}
+    field_ref_re = re.compile(r"\$\{([A-Za-z0-9_]+)\.([A-Za-z0-9_]+)\}")
+
+    for exp in sl.get("explores") or []:
+        ename = exp["name"]
+        base_name = exp.get("from")
+        if base_name not in cubes_by_name:
+            report.fail(f"explore '{ename}': base model '{base_name}' is not a declared semantic model")
+            continue
+        reach = explore_field_map(exp, cubes_by_name)
+        joins = exp.get("joins")
+        if isinstance(joins, list):
+            for j in joins:
+                jview = j.get("view")
+                if jview not in cubes_by_name:
+                    report.fail(f"explore '{ename}': joined view '{jview}' is not a declared semantic model")
+                    continue
+                jnode = g.get(jview)
+                if jnode:
+                    is_scd2 = (
+                        int((jnode.model.get("attributes") or {}).get("scd_type", 1) or 1) == 2
+                        or jnode.model.get("history_semantics") == "scd2"
+                    )
+                    sk = jnode.model.get("surrogate_key")
+                    nks = list(jnode.model.get("natural_key") or [])
+                    sql_on = j.get("sql_on") or ""
+                    if is_scd2 and sk and f".{sk}" not in sql_on and any(f".{nk}" in sql_on for nk in nks):
+                        report.fail(
+                            f"explore '{ename}' join '{jview}': joins SCD2 dimension on natural key instead of "
+                            f"surrogate key '{sk}' (causes fanout across historical versions)"
+                        )
+                    for vr, fr in field_ref_re.findall(sql_on):
+                        if vr != "TABLE" and f"{vr}.{fr}" not in reach:
+                            report.fail(
+                                f"explore '{ename}' join '{jview}': unresolved field '${{{vr}.{fr}}}' in sql_on"
+                            )
+        for agg in exp.get("aggregate_tables") or []:
+            if isinstance(agg, str) and agg not in cubes_by_name:
+                report.fail(f"explore '{ename}': aggregate_table '{agg}' is not a declared semantic model")
+
+    for dash in sl.get("dashboards") or []:
+        dname = dash["name"]
+        if dash.get("file"):
+            fpath = p.dir / dash["file"]
+            if not fpath.exists():
+                report.fail(f"dashboard '{dname}': LookML file '{dash['file']}' does not exist under products/{p.id}/")
+            continue
+        dexp = dash.get("explore")
+        if dexp and dexp not in explores_by_name:
+            report.fail(f"dashboard '{dname}': explore '{dexp}' is not declared in semantic_layer.explores")
+            continue
+        base_reach = explore_field_map(explores_by_name[dexp], cubes_by_name) if dexp else {}
+        for flt in dash.get("filters") or []:
+            if base_reach and flt["field"] not in base_reach:
+                report.fail(
+                    f"dashboard '{dname}' filter '{flt['name']}': field '{flt['field']}' does not exist in explore '{dexp}'"
+                )
+        for tile in dash.get("tiles") or []:
+            tid, tkind = tile.get("name") or tile.get("id"), tile["kind"]
+            if tkind in ("pie", "donut"):
+                report.fail(f"dashboard '{dname}' tile '{tid}': chart kind '{tkind}' violates Stephen Few visual rules")
+                continue
+            if tkind in ("ranked_bar", "column") and tile.get("y_axis_zero") is False:
+                report.fail(
+                    f"dashboard '{dname}' tile '{tid}': bar and column charts must anchor Y-axis at zero (y_axis_zero: true)"
+                )
+            if tkind == "markdown":
+                continue
+            texp_name = tile.get("explore") or dexp
+            if not texp_name or texp_name not in explores_by_name:
+                report.fail(f"dashboard '{dname}' tile '{tid}': unknown explore '{texp_name}'")
+                continue
+            treach = explore_field_map(explores_by_name[texp_name], cubes_by_name)
+            for df in tile.get("dimensions") or []:
+                if df not in treach:
+                    report.fail(
+                        f"dashboard '{dname}' tile '{tid}': dimension '{df}' does not exist in explore '{texp_name}'"
+                    )
+                elif treach[df] != "dimension":
+                    report.fail(f"dashboard '{dname}' tile '{tid}': '{df}' is a {treach[df]}, not a dimension")
+            for mf in tile.get("measures") or []:
+                if mf not in treach:
+                    report.fail(
+                        f"dashboard '{dname}' tile '{tid}': measure '{mf}' does not exist in explore '{texp_name}'"
+                    )
+                elif treach[mf] != "measure":
+                    report.fail(f"dashboard '{dname}' tile '{tid}': '{mf}' is a {treach[mf]}, not a measure")
+                else:
+                    vp, fp = mf.split(".", 1)
+                    if measure_additivity.get((vp, fp)) == "non_additive":
+                        report.fail(
+                            f"dashboard '{dname}' tile '{tid}': references raw non_additive measure '{mf}' directly; "
+                            "define a derived or ratio metric instead"
+                        )
 
 
 def _references(p: Product, g: ProductGraph, report: Report) -> None:
@@ -367,11 +607,16 @@ def _brd_derivations(p: Product, g: ProductGraph, report: Report) -> None:
         report.fail("a sharing listing port exists but the BRD has no external readers")
     prot = brd.get("protection") or {}
     tags = (man.get("governance") or {}).get("policy_tags") or []
+    has_upstream_tags = any(n.model.get("_policy_tags") for n in g.upstream_nodes)
     if prot.get("restricted_attributes"):
-        report.check(bool(tags), "restricted attributes are protected by policy tags",
+        report.check(bool(tags or has_upstream_tags), "restricted attributes are protected by policy tags",
                      f"BRD restricts {', '.join(prot['restricted_attributes'])} but no policy tag is declared")
     if prot.get("who_may_access"):
-        report.check(bool((man.get("governance") or {}).get("access")), "access grants are declared",
+        has_looker_grants = not g.models and any(
+            pt.get("access") in ("looker_model_set", "looker_folder_grant") for pt in ports
+        )
+        report.check(bool((man.get("governance") or {}).get("access")) or has_looker_grants,
+                     "access grants are declared",
                      "BRD names who may access the data but governance.access is empty")
     on_bad = ((brd.get("fitness") or {}).get("on_bad_data") or "").lower()
     if "stop" in on_bad or "not publish" in on_bad:
@@ -399,7 +644,107 @@ def _brd_derivations(p: Product, g: ProductGraph, report: Report) -> None:
                          f"restatement_window_days: {days}")
 
 
+def _agf_governance(p: Product, g: ProductGraph, report: Report) -> None:
+    """ADR-019 — compile-time AGF (ADG-00) sensitivity, sharing-port leak, CDE and residency checks."""
+    gov = p.manifest.get("governance") or {}
+    agf = gov.get("agf")
+    if not agf or agf.get("enabled") is False:
+        return
+    dep = p.manifest.get("deployment") or {}
+    allowed_regions = agf.get("allowed_regions") or []
+    if allowed_regions:
+        reg = dep.get("region")
+        if reg and reg not in allowed_regions:
+            report.fail(f"AGF C10: deployment.region '{reg}' is outside governance.agf.allowed_regions "
+                        f"({', '.join(allowed_regions)})")
+        for env_name, env_cfg in (dep.get("environments") or {}).items():
+            ereg = (env_cfg or {}).get("region")
+            if ereg and ereg not in allowed_regions:
+                report.fail(f"AGF C10: deployment.environments.{env_name}.region '{ereg}' is outside "
+                            f"governance.agf.allowed_regions ({', '.join(allowed_regions)})")
+
+    terms = p.registry.glossary_terms
+    known_term_ids = {t["id"] for t in terms}
+    if agf.get("cde_terms") and known_term_ids:
+        bad_cde = [c for c in agf["cde_terms"] if c not in known_term_ids]
+        if bad_cde:
+            report.fail(f"AGF DC-2: unknown cde_terms {', '.join(bad_cde)} (not in registry glossary)")
+
+    restricted_term_cols: set[str] = set()
+    for t in terms:
+        if str(t.get("classification") or "").lower() == "restricted":
+            restricted_term_cols.add(t["id"])
+            for a in t.get("aliases") or []:
+                restricted_term_cols.add(a.lower().replace(" ", "_"))
+
+    tagged_cols: set[tuple[str, str]] = {
+        (t["model"], c) for t in (gov.get("policy_tags") or []) for c in (t.get("columns") or [])
+    }
+    for un in g.upstream_nodes:
+        for c in un.model.get("_policy_tags") or []:
+            tagged_cols.add((un.name, c))
+
+    semantic_names = {n.name for n in g.semantic_nodes}
+    restricted_cols: set[tuple[str, str]] = set()
+    for ref, tier in sorted((agf.get("classified_columns") or {}).items()):
+        if "." not in ref:
+            report.fail(f"AGF C6: classified_columns key '{ref}' must be '<model>.<column>'")
+            continue
+        mname, cname = ref.split(".", 1)
+        node = g.get(mname)
+        if node is None:
+            report.fail(f"AGF C6: classified_columns references undeclared model '{mname}'")
+            continue
+        cols = g.output_columns(mname)
+        if cols is not None and cname not in cols:
+            report.fail(f"AGF C6: {mname} does not produce classified column '{cname}'")
+            continue
+        if tier == "RESTRICTED":
+            restricted_cols.add((mname, cname))
+
+    for n in g.semantic_nodes:
+        for c in g.output_columns(n.name) or []:
+            if c in restricted_term_cols:
+                restricted_cols.add((n.name, c))
+
+    untagged = sorted((m, c) for (m, c) in restricted_cols if m in semantic_names and (m, c) not in tagged_cols)
+    if untagged:
+        report.fail("AGF C6: restricted column(s) "
+                    + ", ".join(f"{m}.{c}" for m, c in untagged)
+                    + " must be protected by governance.policy_tags")
+
+    def _ancestors(start: str) -> set[str]:
+        seen: set[str] = set()
+        stack = [start]
+        while stack:
+            cur = stack.pop()
+            if cur in seen:
+                continue
+            seen.add(cur)
+            nd = g.get(cur)
+            if nd:
+                stack.extend(nd.inputs)
+        return seen
+
+    for port in p.manifest.get("output_ports") or []:
+        if port.get("access") != "sharing_listing" or not port.get("model"):
+            continue
+        pm = port["model"]
+        pcols = set(g.output_columns(pm) or [])
+        anc = _ancestors(pm)
+        anc_restricted_names = {c for (m, c) in restricted_cols if m in anc} | restricted_term_cols
+        leaked = sorted(pcols & anc_restricted_names)
+        if leaked:
+            report.fail(f"AGF C6: external sharing_listing port '{port['name']}' exposes restricted column(s) "
+                        f"{', '.join(leaked)} on {pm}")
+    if not report.failures:
+        report.ok("AGF (ADG-00) governance contract checks passed")
+
+
 def _methodology(p: Product, g: ProductGraph, report: Report) -> None:
+    if not g.models:
+        report.ok("decoupled semantic product: methodology is inherited from upstream bindings")
+        return
     layer = "silver" if p.layer_cfg("silver").get("models") else "gold"
     chosen = g.layer_pack(layer)
     default = ((p.registry.defaults.get("defaults") or {}).get("methodology") or {}).get(layer, "direct")
@@ -421,9 +766,10 @@ def _methodology(p: Product, g: ProductGraph, report: Report) -> None:
 def _history(p: Product, g: ProductGraph, report: Report) -> None:
     for hb in history_point_in_time(p.brd):
         rids = set(hb.get("satisfies") or [])
-        models = [n for n in g.models if n.layer != "staging" and rids & set(n.model.get("brd_requirement_id") or [])]
+        models = [n for n in (*g.upstream_nodes, *g.models)
+                  if n.layer != "staging" and rids & set(n.model.get("brd_requirement_id") or [])]
         current = [n.name for n in models if n.model.get("history_semantics") == "current_only"]
-        pit = [n.name for n in models if n.model.get("history_semantics") in ("point_in_time", "full_history")]
+        pit = [n.name for n in models if n.model.get("history_semantics") in ("point_in_time", "full_history", "scd2")]
         if current:
             report.fail(f"{hb['id']} asks that {hb.get('attribute')} stay as it was, but {', '.join(current)} "
                         "declare current_only history")
@@ -458,13 +804,75 @@ def _capture(p: Product, report: Report) -> None:
 
 ROW_LEVEL_RULES = {"not_null", "range", "set_membership", "custom_sql"}
 FRESHNESS_MATERIALISED = {"table", "incremental_table", "materialized_view"}
+DATAFORM_JS = re.compile(r"\$\{\s*(?:ref|self|when)\s*\(|\bdataform\.projectConfig\b")
+
+
+def _blank_literals_and_parens(sql: str) -> str:
+    """Strip SQL comments, string literals and parenthesised subqueries, leaving depth-0 SQL."""
+    text = strip_sql_comments(sql)
+    out: list[str] = []
+    depth, i, n = 0, 0, len(text)
+    while i < n:
+        c = text[i]
+        if c in ("'", '"', "`"):
+            j = i + 1
+            while j < n:
+                if text[j] == "\\" and j + 1 < n:
+                    j += 2
+                    continue
+                if text[j] == c:
+                    break
+                j += 1
+            if depth == 0:
+                out.append(" '' ")
+            i = j + 1
+            continue
+        if c == "(":
+            depth += 1
+            if depth == 1:
+                out.append(" () ")
+        elif c == ")":
+            depth = max(0, depth - 1)
+        elif depth == 0:
+            out.append(c)
+        i += 1
+    return "".join(out)
+
+
+def _strip_literals(sql: str) -> str:
+    text = strip_sql_comments(sql)
+    return re.sub(r"'(?:\\.|[^'])*'|\"(?:\\.|[^\"])*\"", "''", text)
 
 
 def _staging(p: Product, g: ProductGraph, report: Report) -> None:
-    """Staging deduplicates on the source change time, so both must be produced by the body."""
+    """Staging deduplicates on the source change time, never silently drops rows, and stays engine-neutral."""
+    tdd_decisions = {d.meta.get("decision") for d in p.tdd_spec.requirements if d.meta.get("decision")}
     for n in g.models:
+        raw_body = p.body(n.model) or ""
+        if raw_body and DATAFORM_JS.search(_strip_literals(raw_body)):
+            report.fail(f"{n.name}: body contains Dataform-specific '${{...}}' syntax; use engine-neutral "
+                        "{{ ref('...') }} / {{ var('...') }} (or import with `dpf proto import-dataform`)")
         if n.layer != "staging":
             continue
+        top = _blank_literals_and_parens(raw_body)
+        if re.search(r"\b(QUALIFY|LIMIT)\b", top, re.I):
+            report.fail(f"{n.name}: top-level QUALIFY or LIMIT in a staging body bypasses dpf deduplication and "
+                        "quarantine; declare natural_key and dedupe_order in product.yaml instead")
+        where_m = re.search(r"\bWHERE\b(.*)$", top, re.I | re.S)
+        if where_m and not re.match(r"^\s*TRUE\s*;?\s*$", where_m.group(1), re.I):
+            from dpf.generate.render import parse_markers
+            allow = next((mk for mk in parse_markers(raw_body)
+                          if str(mk.get("allow_staging_filter", "")).lower() in ("true", "1", "yes")), None)
+            if allow is None:
+                report.fail(f"{n.name}: top-level WHERE in a staging body silently drops rows before quarantine; "
+                            "move row validation to quality.rules (on_fail: quarantine), or mark an intentional "
+                            "source-scope filter with '-- dpf: allow_staging_filter=true decision=D-n'")
+            elif p.is_prototype:
+                report.warn(f"{n.name}: staging body uses an allowed top-level WHERE filter; convert row validation "
+                            "to quality.rules (on_fail: quarantine) or bind decision=D-n before G1")
+            elif allow.get("decision") not in tdd_decisions:
+                report.fail(f"{n.name}: '-- dpf: allow_staging_filter=true' must cite a valid TDD decision=D-n at G1 "
+                            f"(got decision={allow.get('decision')!r})")
         cols = g.output_columns(n.name)
         if cols is None:
             report.fail(f"{n.name}: cannot read the select list, so the dedupe columns cannot be checked")

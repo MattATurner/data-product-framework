@@ -72,7 +72,8 @@
               "enum": [
                 "product",
                 "source",
-                "model"
+                "model",
+                "upstream"
               ]
             },
             "implements": {

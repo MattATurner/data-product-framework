@@ -1,6 +1,6 @@
 {
   "product_id": "sales_performance",
-  "artefact_digest": "sha256:25ca785bf827608db402c6d915d7f6a311e18f46a2b8bbfcf6e42c03ef10e162",
+  "artefact_digest": "sha256:30628057e48a3d2cc3c9f24c11061b7b34a2282505592c7ad6393e8d24a5f758",
   "cases": [
     {
       "id": "grain:stg_customers",
@@ -453,6 +453,42 @@
       "tags": []
     },
     {
+      "id": "lookml_explore:order_lines",
+      "kind": "static",
+      "method": "static",
+      "severity": "block",
+      "check": "lookml_explore",
+      "element": "explore:order_lines",
+      "description": "explore order_lines: every joined view declares primary_key, joins use surrogate keys and zero PDTs exist",
+      "satisfies": [
+        "R-1",
+        "R-2",
+        "R-4",
+        "R-6",
+        "R-7",
+        "R-8",
+        "R-12"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
+      "id": "lookml_dashboard:executive_sales_pulse",
+      "kind": "static",
+      "method": "static",
+      "severity": "block",
+      "check": "lookml_dashboard",
+      "element": "dashboard:executive_sales_pulse",
+      "description": "dashboard executive_sales_pulse: valid LookML YAML, Stephen Few chart types and resolved Explore fields",
+      "satisfies": [
+        "R-1",
+        "R-2",
+        "R-7"
+      ],
+      "implements": "test-data-product",
+      "tags": []
+    },
+    {
       "kind": "acceptance",
       "severity": "block",
       "model": "sales_performance_monthly",
@@ -697,6 +733,46 @@
       ],
       "satisfies": [
         "R-13"
+      ],
+      "tags": [
+        "acceptance"
+      ]
+    },
+    {
+      "kind": "static",
+      "severity": "block",
+      "check": "lookml_explore",
+      "element": "explore:order_lines",
+      "id": "acceptance:AT-15",
+      "method": "static",
+      "description": "LookML explore joins point-in-time dimensions by surrogate key, enforces primary keys and filters partitions by default.",
+      "verifies": [
+        "AX-1",
+        "AX-2"
+      ],
+      "satisfies": [
+        "R-1",
+        "R-2"
+      ],
+      "tags": [
+        "acceptance"
+      ]
+    },
+    {
+      "kind": "static",
+      "severity": "block",
+      "check": "lookml_dashboard",
+      "element": "dashboard:executive_sales_pulse",
+      "id": "acceptance:AT-16",
+      "method": "static",
+      "description": "Executive LookML dashboard binds filters to tiles, resolves every field and keeps zero baselines on bar charts.",
+      "verifies": [
+        "AX-1",
+        "AX-2"
+      ],
+      "satisfies": [
+        "R-1",
+        "R-2"
       ],
       "tags": [
         "acceptance"

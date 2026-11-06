@@ -95,3 +95,18 @@ jobs:
           done
         env:
           DBT_SEND_ANONYMOUS_USAGE_STATS: "false"
+      - name: LookML and dashboard validation (golden copies)
+        run: |
+          .dpf-venv/bin/python -c '
+          import json, pathlib
+          from dpf.generate.lookml import validate_lookml_files
+          for gdir in sorted(pathlib.Path("tests/golden").iterdir()):
+              lk = gdir / "semantic_layer/lookml"
+              if not lk.is_dir():
+                  continue
+              spec = json.loads((gdir / "semantic-layer.json").read_text(encoding="utf-8"))
+              files = {str(p.relative_to(gdir)): p.read_text(encoding="utf-8") for p in lk.rglob("*") if p.is_file()}
+              errs = validate_lookml_files(files, spec)
+              assert not errs, f"{gdir}: {errs}"
+              print(f"validated {len(files)} LookML artefact(s) in {lk}")
+          '

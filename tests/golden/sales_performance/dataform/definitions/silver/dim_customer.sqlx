@@ -4,6 +4,13 @@ config {
   description: "One row per customer per validity period.",
   tags: ["hourly", "monthly"],
   dependencies: ["assert_stg_customers_grain", "assert_stg_customers_grain_not_null"],
+  bigquery: {
+    labels: {
+      dpf_product: "sales_performance",
+      dpf_layer: "silver",
+      dpf_status: "draft"
+    }
+  },
   columns: {
     customer_email: {
       description: "Policy tag pii_contact (PT-1).",

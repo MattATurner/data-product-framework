@@ -1,0 +1,20 @@
+id: agf-restricted-leak
+asserts: When AGF (ADG-00) governance is enabled, a RESTRICTED column lacking a policy tag fails G1.
+mutate:
+  - set:
+      file: products/sales_performance/product.yaml
+      path: governance.agf
+      value:
+        enabled: true
+        classified_columns:
+          dim_customer.customer_name: RESTRICTED
+run:
+  command: check
+  product: sales_performance
+  gate: G1
+expect:
+  outcome: fail
+  messages:
+    - "AGF C6: restricted column(s) dim_customer.customer_name must be protected by governance.policy_tags"
+  absent:
+    - "orphan design element"

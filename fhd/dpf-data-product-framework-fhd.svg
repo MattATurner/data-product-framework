@@ -1,0 +1,477 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2644 770" width="100%" height="100%">
+<defs>
+
+    <style>
+      .fd-font { font-family: 'Inter', 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+      .fd-mono { font-family: 'JetBrains Mono', 'Roboto Mono', ui-monospace, SFMono-Regular, monospace; }
+    </style>
+    <filter id="card-shadow" x="-4%" y="-4%" width="108%" height="112%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0F172A" flood-opacity="0.06"/>
+    </filter>
+  
+</defs>
+<rect x="0" y="0" width="2644" height="770" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+<text x="48" y="38" class="fd-font" font-size="18" font-weight="700" fill="#0F172A">DPF — Data Product Framework</text>
+<text x="48" y="58" class="fd-font" font-size="12" font-weight="500" fill="#64748B">Functional Hierarchy Diagram (FHD) · Root: DPF-00</text>
+<line x1="1322.0" y1="158.0" x2="1322.0" y2="184.0" stroke="#64748B" stroke-width="1.75"/>
+<line x1="247.0" y1="184.0" x2="2397.0" y2="184.0" stroke="#64748B" stroke-width="1.75"/>
+<line x1="247.0" y1="184.0" x2="247.0" y2="210.0" stroke="#64748B" stroke-width="1.75"/>
+<line x1="677.0" y1="184.0" x2="677.0" y2="210.0" stroke="#64748B" stroke-width="1.75"/>
+<line x1="1107.0" y1="184.0" x2="1107.0" y2="210.0" stroke="#64748B" stroke-width="1.75"/>
+<line x1="1537.0" y1="184.0" x2="1537.0" y2="210.0" stroke="#64748B" stroke-width="1.75"/>
+<line x1="1967.0" y1="184.0" x2="1967.0" y2="210.0" stroke="#64748B" stroke-width="1.75"/>
+<line x1="2397.0" y1="184.0" x2="2397.0" y2="210.0" stroke="#64748B" stroke-width="1.75"/>
+<line x1="34.0" y1="246.0" x2="48.0" y2="246.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="34.0" y1="246.0" x2="34.0" y2="510.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="34.0" y1="334.0" x2="70.0" y2="334.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="34.0" y1="422.0" x2="70.0" y2="422.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="34.0" y1="510.0" x2="70.0" y2="510.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="464.0" y1="246.0" x2="478.0" y2="246.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="464.0" y1="246.0" x2="464.0" y2="598.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="464.0" y1="334.0" x2="500.0" y2="334.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="464.0" y1="422.0" x2="500.0" y2="422.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="464.0" y1="510.0" x2="500.0" y2="510.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="464.0" y1="598.0" x2="500.0" y2="598.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="894.0" y1="246.0" x2="908.0" y2="246.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="894.0" y1="246.0" x2="894.0" y2="686.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="894.0" y1="334.0" x2="930.0" y2="334.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="894.0" y1="422.0" x2="930.0" y2="422.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="894.0" y1="510.0" x2="930.0" y2="510.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="894.0" y1="598.0" x2="930.0" y2="598.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="894.0" y1="686.0" x2="930.0" y2="686.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1324.0" y1="246.0" x2="1338.0" y2="246.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1324.0" y1="246.0" x2="1324.0" y2="686.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1324.0" y1="334.0" x2="1360.0" y2="334.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1324.0" y1="422.0" x2="1360.0" y2="422.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1324.0" y1="510.0" x2="1360.0" y2="510.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1324.0" y1="598.0" x2="1360.0" y2="598.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1324.0" y1="686.0" x2="1360.0" y2="686.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1754.0" y1="246.0" x2="1768.0" y2="246.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1754.0" y1="246.0" x2="1754.0" y2="686.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1754.0" y1="334.0" x2="1790.0" y2="334.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1754.0" y1="422.0" x2="1790.0" y2="422.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1754.0" y1="510.0" x2="1790.0" y2="510.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1754.0" y1="598.0" x2="1790.0" y2="598.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1754.0" y1="686.0" x2="1790.0" y2="686.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="2184.0" y1="246.0" x2="2198.0" y2="246.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="2184.0" y1="246.0" x2="2184.0" y2="598.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="2184.0" y1="334.0" x2="2220.0" y2="334.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="2184.0" y1="422.0" x2="2220.0" y2="422.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="2184.0" y1="510.0" x2="2220.0" y2="510.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="2184.0" y1="598.0" x2="2220.0" y2="598.0" stroke="#94A3B8" stroke-width="1.5"/>
+<g filter="url(#card-shadow)">
+<rect x="1092.0" y="84.0" width="460.0" height="74.0" rx="6" fill="#0F172A" stroke="#0F172A" stroke-width="1.75"/>
+<rect x="1092.0" y="84.0" width="5" height="74.0" rx="2.5" fill="#38BDF8"/>
+<rect x="1104.0" y="95.0" width="57.0" height="20" rx="4" fill="#1E293B"/>
+<text x="1132.5" y="109.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#38BDF8">DPF-00</text>
+<rect x="1491.0" y="96.0" width="51.0" height="18" rx="4" fill="#1E293B"/>
+<text x="1516.5" y="108.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#E2E8F0">DOMAIN</text>
+<text x="1169.0" y="109.5" class="fd-font" font-size="12" font-weight="700" fill="#FFFFFF">Data Product Framework</text>
+<text x="1104.0" y="130.0" class="fd-font" font-size="10.8" font-weight="400" fill="#CBD5E1">Accelerates enterprise data products from candidate use case to governed</text>
+<text x="1104.0" y="144.0" class="fd-font" font-size="10.8" font-weight="400" fill="#CBD5E1">outcome in 6 human-gated steps.</text>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="48.0" y="210.0" width="398.0" height="72.0" rx="6" fill="#F8FAFC" stroke="#1A73E8" stroke-width="1.75"/>
+<rect x="48.0" y="210.0" width="5" height="72.0" rx="2.5" fill="#1A73E8"/>
+<rect x="60.0" y="221.0" width="57.0" height="20" rx="4" fill="#E8F0FE"/>
+<text x="88.5" y="235.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#174EA6">DPF-01</text>
+<rect x="385.0" y="222.0" width="51.0" height="18" rx="4" fill="#E8F0FE"/>
+<text x="410.5" y="234.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#174EA6">DOMAIN</text>
+<text x="125.0" y="235.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">1. Discover &amp; Prioritise</text>
+<text x="60.0" y="256.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Evaluates candidate business ideas and ranks Value vs Ease</text>
+<text x="60.0" y="270.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">before engineering starts.</text>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="70.0" y="298.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="70.0" y="298.0" width="5" height="72.0" rx="2.5" fill="#7C3AED"/>
+<rect x="82.0" y="309.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="121.8" y="323.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-01-01</text>
+<rect x="391.5" y="310.0" width="44.5" height="18" rx="4" fill="#EDE9FE"/>
+<text x="413.8" y="322.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#5B21B6">AGENT</text>
+<text x="169.5" y="323.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Use-Case Readiness Agent</text>
+<text x="82.0" y="344.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Reviews candidate submissions against the 11-criterion</text>
+<text x="82.0" y="358.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">evidence rubric before panel scoring.</text>
+<polygon points="432.0,353.5 436.5,358.0 432.0,362.5 427.5,358.0" fill="none" stroke="#7C3AED" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="432.0" cy="358.0" r="1.2" fill="#7C3AED"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="70.0" y="386.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="70.0" y="386.0" width="5" height="72.0" rx="2.5" fill="#2563EB"/>
+<rect x="82.0" y="397.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="121.8" y="411.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-01-02</text>
+<rect x="385.0" y="398.0" width="51.0" height="18" rx="4" fill="#DBEAFE"/>
+<text x="410.5" y="410.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#1E40AF">BIZ FN</text>
+<text x="169.5" y="411.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">11-Criterion Scoring Engine</text>
+<text x="82.0" y="432.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Calculates weighted Value (3.05) and Ease (3.33) scores</text>
+<text x="82.0" y="446.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">across eleven portfolio criteria.</text>
+<polygon points="432.0,441.5 436.5,446.0 432.0,450.5 427.5,446.0" fill="none" stroke="#2563EB" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="432.0" cy="446.0" r="1.2" fill="#2563EB"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="70.0" y="474.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="70.0" y="474.0" width="5" height="72.0" rx="2.5" fill="#D97706"/>
+<rect x="82.0" y="485.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="121.8" y="499.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-01-03</text>
+<rect x="365.5" y="486.0" width="70.5" height="18" rx="4" fill="#FEF3C7"/>
+<text x="400.8" y="498.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#92400E">UI / HITL</text>
+<text x="169.5" y="499.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Portfolio Gate Workbench</text>
+<text x="82.0" y="520.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Presents the 2x2 Quick Win vs Strategic Bet matrix for</text>
+<text x="82.0" y="534.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">human funding sign-off.</text>
+<polygon points="432.0,529.5 436.5,534.0 432.0,538.5 427.5,534.0" fill="none" stroke="#D97706" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="432.0" cy="534.0" r="1.2" fill="#D97706"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="478.0" y="210.0" width="398.0" height="72.0" rx="6" fill="#F8FAFC" stroke="#1A73E8" stroke-width="1.75"/>
+<rect x="478.0" y="210.0" width="5" height="72.0" rx="2.5" fill="#1A73E8"/>
+<rect x="490.0" y="221.0" width="57.0" height="20" rx="4" fill="#E8F0FE"/>
+<text x="518.5" y="235.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#174EA6">DPF-02</text>
+<rect x="815.0" y="222.0" width="51.0" height="18" rx="4" fill="#E8F0FE"/>
+<text x="840.5" y="234.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#174EA6">DOMAIN</text>
+<text x="555.0" y="235.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">2. Describe (Gate G0)</text>
+<text x="490.0" y="256.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Captures structured plain-English business requirements and</text>
+<text x="490.0" y="270.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">validates rubric completeness.</text>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="500.0" y="298.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="500.0" y="298.0" width="5" height="72.0" rx="2.5" fill="#7C3AED"/>
+<rect x="512.0" y="309.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="551.8" y="323.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-02-01</text>
+<rect x="821.5" y="310.0" width="44.5" height="18" rx="4" fill="#EDE9FE"/>
+<text x="843.8" y="322.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#5B21B6">AGENT</text>
+<text x="599.5" y="323.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Plain-English BRD Author</text>
+<text x="512.0" y="344.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Interviews business stakeholders and drafts requirements</text>
+<text x="512.0" y="358.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">strictly in commercial language.</text>
+<polygon points="862.0,353.5 866.5,358.0 862.0,362.5 857.5,358.0" fill="none" stroke="#7C3AED" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="862.0" cy="358.0" r="1.2" fill="#7C3AED"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="500.0" y="386.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="500.0" y="386.0" width="5" height="72.0" rx="2.5" fill="#2563EB"/>
+<rect x="512.0" y="397.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="551.8" y="411.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-02-02</text>
+<rect x="815.0" y="398.0" width="51.0" height="18" rx="4" fill="#DBEAFE"/>
+<text x="840.5" y="410.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#1E40AF">BIZ FN</text>
+<text x="599.5" y="411.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Gate G0 Rubric Validator</text>
+<text x="512.0" y="432.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Verifies groups A-K completeness, glossary alignment,</text>
+<text x="512.0" y="446.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">and zero technical jargon.</text>
+<polygon points="862.0,441.5 866.5,446.0 862.0,450.5 857.5,446.0" fill="none" stroke="#2563EB" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="862.0" cy="446.0" r="1.2" fill="#2563EB"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="500.0" y="474.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="500.0" y="474.0" width="5" height="72.0" rx="2.5" fill="#D97706"/>
+<rect x="512.0" y="485.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="551.8" y="499.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-02-03</text>
+<rect x="795.5" y="486.0" width="70.5" height="18" rx="4" fill="#FEF3C7"/>
+<text x="830.8" y="498.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#92400E">UI / HITL</text>
+<text x="599.5" y="499.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Business Need Sign-Off</text>
+<text x="512.0" y="520.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Captures named business owner approval on the</text>
+<text x="512.0" y="534.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">jargon-free requirement specification.</text>
+<polygon points="862.0,529.5 866.5,534.0 862.0,538.5 857.5,534.0" fill="none" stroke="#D97706" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="862.0" cy="534.0" r="1.2" fill="#D97706"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="500.0" y="562.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="500.0" y="562.0" width="5" height="72.0" rx="2.5" fill="#0891B2"/>
+<rect x="512.0" y="573.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="551.8" y="587.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-02-04</text>
+<rect x="815.0" y="574.0" width="51.0" height="18" rx="4" fill="#CFFAFE"/>
+<text x="840.5" y="586.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#155E75">INGEST</text>
+<text x="599.5" y="587.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Prototype Sandbox Importer</text>
+<text x="512.0" y="608.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Imports existing Dataform or LookML repositories into</text>
+<text x="512.0" y="622.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">fast-path prototype mode.</text>
+<polygon points="862.0,617.5 866.5,622.0 862.0,626.5 857.5,622.0" fill="none" stroke="#0891B2" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="862.0" cy="622.0" r="1.2" fill="#0891B2"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="908.0" y="210.0" width="398.0" height="72.0" rx="6" fill="#F8FAFC" stroke="#1A73E8" stroke-width="1.75"/>
+<rect x="908.0" y="210.0" width="5" height="72.0" rx="2.5" fill="#1A73E8"/>
+<rect x="920.0" y="221.0" width="57.0" height="20" rx="4" fill="#E8F0FE"/>
+<text x="948.5" y="235.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#174EA6">DPF-03</text>
+<rect x="1245.0" y="222.0" width="51.0" height="18" rx="4" fill="#E8F0FE"/>
+<text x="1270.5" y="234.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#174EA6">DOMAIN</text>
+<text x="985.0" y="235.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">3. Design (Gate G1)</text>
+<text x="920.0" y="256.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Resolves grain, history, methodology, Looker safety, and AGF</text>
+<text x="920.0" y="270.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">privacy rules with playback sign-off.</text>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="930.0" y="298.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="930.0" y="298.0" width="5" height="72.0" rx="2.5" fill="#7C3AED"/>
+<rect x="942.0" y="309.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="981.8" y="323.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-03-01</text>
+<rect x="1251.5" y="310.0" width="44.5" height="18" rx="4" fill="#EDE9FE"/>
+<text x="1273.8" y="322.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#5B21B6">AGENT</text>
+<text x="1029.5" y="323.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">TDD &amp; Methodology Resolver</text>
+<text x="942.0" y="344.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Recommends direct vs Kimball modelling and surfaces</text>
+<text x="942.0" y="358.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">source connectivity constraints early.</text>
+<polygon points="1292.0,353.5 1296.5,358.0 1292.0,362.5 1287.5,358.0" fill="none" stroke="#7C3AED" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="1292.0" cy="358.0" r="1.2" fill="#7C3AED"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="930.0" y="386.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="930.0" y="386.0" width="5" height="72.0" rx="2.5" fill="#2563EB"/>
+<rect x="942.0" y="397.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="981.8" y="411.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-03-02</text>
+<rect x="1245.0" y="398.0" width="51.0" height="18" rx="4" fill="#DBEAFE"/>
+<text x="1270.5" y="410.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#1E40AF">BIZ FN</text>
+<text x="1029.5" y="411.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Gate G1 &amp; AGF Privacy Engine</text>
+<text x="942.0" y="432.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Enforces grain parity, SCD2 surrogate joins, Looker</text>
+<text x="942.0" y="446.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">rules, and AGF C6/C10 privacy gates.</text>
+<polygon points="1292.0,441.5 1296.5,446.0 1292.0,450.5 1287.5,446.0" fill="none" stroke="#2563EB" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="1292.0" cy="446.0" r="1.2" fill="#2563EB"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="930.0" y="474.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="930.0" y="474.0" width="5" height="72.0" rx="2.5" fill="#7C3AED"/>
+<rect x="942.0" y="485.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="981.8" y="499.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-03-03</text>
+<rect x="1251.5" y="486.0" width="44.5" height="18" rx="4" fill="#EDE9FE"/>
+<text x="1273.8" y="498.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#5B21B6">AGENT</text>
+<text x="1029.5" y="499.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Zero-Context Playback Critic</text>
+<text x="942.0" y="520.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Audits product.yaml and SQL blind against semantics.md</text>
+<text x="942.0" y="534.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">to catch conversational anchoring.</text>
+<polygon points="1292.0,529.5 1296.5,534.0 1292.0,538.5 1287.5,534.0" fill="none" stroke="#7C3AED" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="1292.0" cy="534.0" r="1.2" fill="#7C3AED"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="930.0" y="562.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="930.0" y="562.0" width="5" height="72.0" rx="2.5" fill="#059669"/>
+<rect x="942.0" y="573.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="981.8" y="587.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-03-04</text>
+<rect x="1252.0" y="574.0" width="44.0" height="18" rx="4" fill="#D1FAE5"/>
+<text x="1274.0" y="586.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#065F46">CRUD</text>
+<text x="1029.5" y="587.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Playback Sign-Off Ledger</text>
+<text x="942.0" y="608.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Persists SHA-256 semantic digest signatures in</text>
+<text x="942.0" y="622.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">signoff.yaml to lock business meaning.</text>
+<polygon points="1292.0,617.5 1296.5,622.0 1292.0,626.5 1287.5,622.0" fill="none" stroke="#059669" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="1292.0" cy="622.0" r="1.2" fill="#059669"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="930.0" y="650.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="930.0" y="650.0" width="5" height="72.0" rx="2.5" fill="#D97706"/>
+<rect x="942.0" y="661.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="981.8" y="675.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-03-05</text>
+<rect x="1225.5" y="662.0" width="70.5" height="18" rx="4" fill="#FEF3C7"/>
+<text x="1260.8" y="674.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#92400E">UI / HITL</text>
+<text x="1029.5" y="675.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Business Playback Gate</text>
+<text x="942.0" y="696.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Presents one-page plain-English semantics.md for</text>
+<text x="942.0" y="710.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">business owner confirmation.</text>
+<polygon points="1292.0,705.5 1296.5,710.0 1292.0,714.5 1287.5,710.0" fill="none" stroke="#D97706" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="1292.0" cy="710.0" r="1.2" fill="#D97706"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="1338.0" y="210.0" width="398.0" height="72.0" rx="6" fill="#F8FAFC" stroke="#1A73E8" stroke-width="1.75"/>
+<rect x="1338.0" y="210.0" width="5" height="72.0" rx="2.5" fill="#1A73E8"/>
+<rect x="1350.0" y="221.0" width="57.0" height="20" rx="4" fill="#E8F0FE"/>
+<text x="1378.5" y="235.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#174EA6">DPF-04</text>
+<rect x="1675.0" y="222.0" width="51.0" height="18" rx="4" fill="#E8F0FE"/>
+<text x="1700.5" y="234.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#174EA6">DOMAIN</text>
+<text x="1415.0" y="235.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">4. Build (Gates G2-G3)</text>
+<text x="1350.0" y="256.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Composes stage skills and compiles deterministic SQL,</text>
+<text x="1350.0" y="270.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Terraform, Catalog, and LookML.</text>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="1360.0" y="298.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="1360.0" y="298.0" width="5" height="72.0" rx="2.5" fill="#2563EB"/>
+<rect x="1372.0" y="309.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="1411.8" y="323.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-04-01</text>
+<rect x="1675.0" y="310.0" width="51.0" height="18" rx="4" fill="#DBEAFE"/>
+<text x="1700.5" y="322.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#1E40AF">BIZ FN</text>
+<text x="1459.5" y="323.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Gate G2 Pipeline Composer</text>
+<text x="1372.0" y="344.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Selects stage skills and type-checks contract handoffs</text>
+<text x="1372.0" y="358.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">and engine support across the DAG.</text>
+<polygon points="1722.0,353.5 1726.5,358.0 1722.0,362.5 1717.5,358.0" fill="none" stroke="#2563EB" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="1722.0" cy="358.0" r="1.2" fill="#2563EB"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="1360.0" y="386.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="1360.0" y="386.0" width="5" height="72.0" rx="2.5" fill="#7C3AED"/>
+<rect x="1372.0" y="397.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="1411.8" y="411.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-04-02</text>
+<rect x="1681.5" y="398.0" width="44.5" height="18" rx="4" fill="#EDE9FE"/>
+<text x="1703.8" y="410.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#5B21B6">AGENT</text>
+<text x="1459.5" y="411.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Bounded Dataform SQL Agent</text>
+<text x="1372.0" y="432.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Assists messy source SQL wrangling inside deterministic</text>
+<text x="1372.0" y="446.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">GEMINI.md guardrails.</text>
+<polygon points="1722.0,441.5 1726.5,446.0 1722.0,450.5 1717.5,446.0" fill="none" stroke="#7C3AED" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="1722.0" cy="446.0" r="1.2" fill="#7C3AED"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="1360.0" y="474.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="1360.0" y="474.0" width="5" height="72.0" rx="2.5" fill="#2563EB"/>
+<rect x="1372.0" y="485.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="1411.8" y="499.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-04-03</text>
+<rect x="1675.0" y="486.0" width="51.0" height="18" rx="4" fill="#DBEAFE"/>
+<text x="1700.5" y="498.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#1E40AF">BIZ FN</text>
+<text x="1459.5" y="499.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Gate G3 Multi-Plane Compiler</text>
+<text x="1372.0" y="520.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Compiles Dataform/dbt SQL, Terraform IAM, LookML, and 7</text>
+<text x="1372.0" y="534.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">ADG-00 Catalog aspects.</text>
+<polygon points="1722.0,529.5 1726.5,534.0 1722.0,538.5 1717.5,534.0" fill="none" stroke="#2563EB" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="1722.0" cy="534.0" r="1.2" fill="#2563EB"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="1360.0" y="562.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="1360.0" y="562.0" width="5" height="72.0" rx="2.5" fill="#059669"/>
+<rect x="1372.0" y="573.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="1411.8" y="587.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-04-04</text>
+<rect x="1682.0" y="574.0" width="44.0" height="18" rx="4" fill="#D1FAE5"/>
+<text x="1704.0" y="586.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#065F46">CRUD</text>
+<text x="1459.5" y="587.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Watermark Control Ledger</text>
+<text x="1372.0" y="608.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Maintains atomic high-watermark and batch manifest rows</text>
+<text x="1372.0" y="622.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">in dpf_watermark_log.</text>
+<polygon points="1722.0,617.5 1726.5,622.0 1722.0,626.5 1717.5,622.0" fill="none" stroke="#059669" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="1722.0" cy="622.0" r="1.2" fill="#059669"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="1360.0" y="650.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="1360.0" y="650.0" width="5" height="72.0" rx="2.5" fill="#D97706"/>
+<rect x="1372.0" y="661.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="1411.8" y="675.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-04-05</text>
+<rect x="1655.5" y="662.0" width="70.5" height="18" rx="4" fill="#FEF3C7"/>
+<text x="1690.8" y="674.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#92400E">UI / HITL</text>
+<text x="1459.5" y="675.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Golden Copy PR Review</text>
+<text x="1372.0" y="696.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Surfaces byte-identical SQL, Terraform, and LookML diffs</text>
+<text x="1372.0" y="710.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">for engineer PR approval.</text>
+<polygon points="1722.0,705.5 1726.5,710.0 1722.0,714.5 1717.5,710.0" fill="none" stroke="#D97706" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="1722.0" cy="710.0" r="1.2" fill="#D97706"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="1768.0" y="210.0" width="398.0" height="72.0" rx="6" fill="#F8FAFC" stroke="#1A73E8" stroke-width="1.75"/>
+<rect x="1768.0" y="210.0" width="5" height="72.0" rx="2.5" fill="#1A73E8"/>
+<rect x="1780.0" y="221.0" width="57.0" height="20" rx="4" fill="#E8F0FE"/>
+<text x="1808.5" y="235.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#174EA6">DPF-05</text>
+<rect x="2105.0" y="222.0" width="51.0" height="18" rx="4" fill="#E8F0FE"/>
+<text x="2130.5" y="234.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#174EA6">DOMAIN</text>
+<text x="1845.0" y="235.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">5. Accept (Gate G4)</text>
+<text x="1780.0" y="256.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Runs live BigQuery assertions, captures human attestations,</text>
+<text x="1780.0" y="270.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">and publishes Catalog ports.</text>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="1790.0" y="298.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="1790.0" y="298.0" width="5" height="72.0" rx="2.5" fill="#0891B2"/>
+<rect x="1802.0" y="309.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="1841.8" y="323.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-05-01</text>
+<rect x="2105.0" y="310.0" width="51.0" height="18" rx="4" fill="#CFFAFE"/>
+<text x="2130.5" y="322.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#155E75">INGEST</text>
+<text x="1889.5" y="323.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Outbound Watermark Extractor</text>
+<text x="1802.0" y="344.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Extracts incremental source rows with lookback safety</text>
+<text x="1802.0" y="358.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">into append-only raw BigQuery.</text>
+<polygon points="2152.0,353.5 2156.5,358.0 2152.0,362.5 2147.5,358.0" fill="none" stroke="#0891B2" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="2152.0" cy="358.0" r="1.2" fill="#0891B2"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="1790.0" y="386.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="1790.0" y="386.0" width="5" height="72.0" rx="2.5" fill="#059669"/>
+<rect x="1802.0" y="397.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="1841.8" y="411.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-05-02</text>
+<rect x="2112.0" y="398.0" width="44.0" height="18" rx="4" fill="#D1FAE5"/>
+<text x="2134.0" y="410.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#065F46">CRUD</text>
+<text x="1889.5" y="411.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Quarantine Reject Ledger</text>
+<text x="1802.0" y="432.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Routes invalid staging rows to _rejects relations and</text>
+<text x="1802.0" y="446.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">blocks partial publication.</text>
+<polygon points="2152.0,441.5 2156.5,446.0 2152.0,450.5 2147.5,446.0" fill="none" stroke="#059669" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="2152.0" cy="446.0" r="1.2" fill="#059669"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="1790.0" y="474.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="1790.0" y="474.0" width="5" height="72.0" rx="2.5" fill="#2563EB"/>
+<rect x="1802.0" y="485.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="1841.8" y="499.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-05-03</text>
+<rect x="2105.0" y="486.0" width="51.0" height="18" rx="4" fill="#DBEAFE"/>
+<text x="2130.5" y="498.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#1E40AF">BIZ FN</text>
+<text x="1889.5" y="499.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Live Acceptance Test Runner</text>
+<text x="1802.0" y="520.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Executes automated BigQuery SQL assertions and static</text>
+<text x="1802.0" y="534.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">checks bound to build_digest.</text>
+<polygon points="2152.0,529.5 2156.5,534.0 2152.0,538.5 2147.5,534.0" fill="none" stroke="#2563EB" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="2152.0" cy="534.0" r="1.2" fill="#2563EB"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="1790.0" y="562.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="1790.0" y="562.0" width="5" height="72.0" rx="2.5" fill="#D97706"/>
+<rect x="1802.0" y="573.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="1841.8" y="587.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-05-04</text>
+<rect x="2085.5" y="574.0" width="70.5" height="18" rx="4" fill="#FEF3C7"/>
+<text x="2120.8" y="586.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#92400E">UI / HITL</text>
+<text x="1889.5" y="587.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Domain Attestation Gate</text>
+<text x="1802.0" y="608.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Records Finance and domain expert sign-offs on non-SQL</text>
+<text x="1802.0" y="622.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">business truths at Gate G4.</text>
+<polygon points="2152.0,617.5 2156.5,622.0 2152.0,626.5 2147.5,622.0" fill="none" stroke="#D97706" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="2152.0" cy="622.0" r="1.2" fill="#D97706"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="1790.0" y="650.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="1790.0" y="650.0" width="5" height="72.0" rx="2.5" fill="#7C3AED"/>
+<rect x="1802.0" y="661.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="1841.8" y="675.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-05-05</text>
+<rect x="2111.5" y="662.0" width="44.5" height="18" rx="4" fill="#EDE9FE"/>
+<text x="2133.8" y="674.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#5B21B6">AGENT</text>
+<text x="1889.5" y="675.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Knowledge Catalog Publisher</text>
+<text x="1802.0" y="696.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Registers published ports, glossary EntryLinks, and 7</text>
+<text x="1802.0" y="710.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">ADG-00 aspects in Catalog.</text>
+<polygon points="2152.0,705.5 2156.5,710.0 2152.0,714.5 2147.5,710.0" fill="none" stroke="#7C3AED" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="2152.0" cy="710.0" r="1.2" fill="#7C3AED"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="2198.0" y="210.0" width="398.0" height="72.0" rx="6" fill="#F8FAFC" stroke="#1A73E8" stroke-width="1.75"/>
+<rect x="2198.0" y="210.0" width="5" height="72.0" rx="2.5" fill="#1A73E8"/>
+<rect x="2210.0" y="221.0" width="57.0" height="20" rx="4" fill="#E8F0FE"/>
+<text x="2238.5" y="235.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#174EA6">DPF-06</text>
+<rect x="2535.0" y="222.0" width="51.0" height="18" rx="4" fill="#E8F0FE"/>
+<text x="2560.5" y="234.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#174EA6">DOMAIN</text>
+<text x="2275.0" y="235.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">6. Monitor (Day 2 Loop)</text>
+<text x="2210.0" y="256.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Evaluates business-calendar SLOs and AGF estate alerts to open</text>
+<text x="2210.0" y="270.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">traced change proposals.</text>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="2220.0" y="298.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="2220.0" y="298.0" width="5" height="72.0" rx="2.5" fill="#2563EB"/>
+<rect x="2232.0" y="309.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="2271.8" y="323.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-06-01</text>
+<rect x="2535.0" y="310.0" width="51.0" height="18" rx="4" fill="#DBEAFE"/>
+<text x="2560.5" y="322.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#1E40AF">BIZ FN</text>
+<text x="2319.5" y="323.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Business-Calendar Monitor</text>
+<text x="2232.0" y="344.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Evaluates freshness, volume, and schema drift strictly</text>
+<text x="2232.0" y="358.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">during business working hours.</text>
+<polygon points="2582.0,353.5 2586.5,358.0 2582.0,362.5 2577.5,358.0" fill="none" stroke="#2563EB" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="2582.0" cy="358.0" r="1.2" fill="#2563EB"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="2220.0" y="386.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="2220.0" y="386.0" width="5" height="72.0" rx="2.5" fill="#0891B2"/>
+<rect x="2232.0" y="397.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="2271.8" y="411.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-06-02</text>
+<rect x="2535.0" y="398.0" width="51.0" height="18" rx="4" fill="#CFFAFE"/>
+<text x="2560.5" y="410.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#155E75">INGEST</text>
+<text x="2319.5" y="411.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">AGF &amp; Catalog Breach Feed</text>
+<text x="2232.0" y="432.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Ingests AGF lineage, ledger, and Knowledge Catalog scan</text>
+<text x="2232.0" y="446.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">alerts as run-evidence.v1.</text>
+<polygon points="2582.0,441.5 2586.5,446.0 2582.0,450.5 2577.5,446.0" fill="none" stroke="#0891B2" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="2582.0" cy="446.0" r="1.2" fill="#0891B2"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="2220.0" y="474.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="2220.0" y="474.0" width="5" height="72.0" rx="2.5" fill="#059669"/>
+<rect x="2232.0" y="485.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="2271.8" y="499.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-06-03</text>
+<rect x="2542.0" y="486.0" width="44.0" height="18" rx="4" fill="#D1FAE5"/>
+<text x="2564.0" y="498.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#065F46">CRUD</text>
+<text x="2319.5" y="499.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Build &amp; Run Evidence Ledger</text>
+<text x="2232.0" y="520.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Stores immutable test, attestation, and runtime health</text>
+<text x="2232.0" y="534.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">evidence per build digest.</text>
+<polygon points="2582.0,529.5 2586.5,534.0 2582.0,538.5 2577.5,534.0" fill="none" stroke="#059669" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="2582.0" cy="534.0" r="1.2" fill="#059669"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="2220.0" y="562.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="2220.0" y="562.0" width="5" height="72.0" rx="2.5" fill="#D97706"/>
+<rect x="2232.0" y="573.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="2271.8" y="587.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">DPF-06-04</text>
+<rect x="2515.5" y="574.0" width="70.5" height="18" rx="4" fill="#FEF3C7"/>
+<text x="2550.8" y="586.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#92400E">UI / HITL</text>
+<text x="2319.5" y="587.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Change Proposal Workbench</text>
+<text x="2232.0" y="608.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Opens requirement-traced delta specs for human review</text>
+<text x="2232.0" y="622.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">when breaches or new needs arise.</text>
+<polygon points="2582.0,617.5 2586.5,622.0 2582.0,626.5 2577.5,622.0" fill="none" stroke="#D97706" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="2582.0" cy="622.0" r="1.2" fill="#D97706"/>
+</g>
+</svg>

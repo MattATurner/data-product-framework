@@ -3,7 +3,14 @@ config {
   schema: dataform.projectConfig.vars.gold_dataset,
   description: "One row per month per customer segment per product category per region.",
   tags: ["hourly"],
-  dependencies: ["assert_dim_customer_grain", "assert_dim_customer_grain_not_null", "assert_dim_customer_scd_no_overlap", "assert_dim_customer_scd_one_current", "assert_dim_date_grain", "assert_dim_date_grain_not_null", "assert_dim_product_grain", "assert_dim_product_grain_not_null", "assert_dim_product_scd_no_overlap", "assert_dim_product_scd_one_current", "assert_fct_order_line_customer_id_not_null", "assert_fct_order_line_grain", "assert_fct_order_line_grain_not_null", "assert_fct_order_line_product_id_not_null", "assert_stg_customers_grain", "assert_stg_customers_grain_not_null", "assert_stg_order_lines_grain", "assert_stg_order_lines_grain_not_null", "assert_stg_order_lines_no_rejects", "assert_stg_products_grain", "assert_stg_products_grain_not_null"]
+  dependencies: ["assert_dim_customer_grain", "assert_dim_customer_grain_not_null", "assert_dim_customer_scd_no_overlap", "assert_dim_customer_scd_one_current", "assert_dim_date_grain", "assert_dim_date_grain_not_null", "assert_dim_product_grain", "assert_dim_product_grain_not_null", "assert_dim_product_scd_no_overlap", "assert_dim_product_scd_one_current", "assert_fct_order_line_customer_id_not_null", "assert_fct_order_line_grain", "assert_fct_order_line_grain_not_null", "assert_fct_order_line_product_id_not_null", "assert_stg_customers_grain", "assert_stg_customers_grain_not_null", "assert_stg_order_lines_grain", "assert_stg_order_lines_grain_not_null", "assert_stg_order_lines_no_rejects", "assert_stg_products_grain", "assert_stg_products_grain_not_null"],
+  bigquery: {
+    labels: {
+      dpf_product: "sales_performance",
+      dpf_layer: "gold",
+      dpf_status: "draft"
+    }
+  }
 }
 
 -- dpf: model=sales_performance_monthly layer=gold role=business_view skill=direct/model-business-view satisfies=R-1,R-4,R-7,R-8

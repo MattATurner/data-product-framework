@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DPF — Data Product Framework: Functional Hierarchy Diagram</title>
+  <meta name="description" content="Specification-Driven Data Engineering Across 6 Human-Gated Steps on Google Cloud — Interactive Functional Decomposition (DPF-00) with node-level functional specifications, CRUD entity matrices, and AI agent details."/>
+  <meta name="keywords" content="Functional Decomposition, FHD, DPF, Data Product Framework, BigQuery, Knowledge Catalog, Dataform, Looker, Gemini Platform"/>
+  <meta name="author" content="Matt Turner"/>
+  <style>
+    :root {
+      --bg: #F1F5F9;
+      --surface: #FFFFFF;
+      --surface-alt: #F8FAFC;
+      --border: #CBD5E1;
+      --border-subtle: #E2E8F0;
+      --text: #0F172A;
+      --muted: #475569;
+      --subtle: #64748B;
+      --accent: #1A73E8;
+      --accent-soft: #E8F0FE;
+      --shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+    }
+    html[data-theme="dark"] {
+      --bg: #0B1120;
+      --surface: #111827;
+      --surface-alt: #1E293B;
+      --border: #334155;
+      --border-subtle: #1E293B;
+      --text: #F8FAFC;
+      --muted: #CBD5E1;
+      --subtle: #94A3B8;
+      --accent: #38BDF8;
+      --accent-soft: rgba(56, 189, 248, 0.15);
+      --shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: 'Inter', 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    /* Header Toolbar */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 12px 18px;
+      box-shadow: var(--shadow);
+    }
+    .title-block h1 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .title-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      background: #0F172A;
+      color: #38BDF8;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+    .title-block p {
+      margin: 3px 0 0 0;
+      font-size: 12px;
+      color: var(--subtle);
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+    .controls label {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .controls select, .controls input, .controls button {
+      font-size: 12px;
+      font-family: inherit;
+      padding: 6px 10px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      color: var(--text);
+      cursor: pointer;
+    }
+    .controls input {
+      cursor: text;
+      width: 160px;
+    }
+    .controls button:hover {
+      border-color: var(--accent);
+    }
+    /* Subbar: Breadcrumbs + Node Type Legend Filter */
+    .subbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 8px 14px;
+    }
+    .breadcrumbs {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 12px;
+    }
+    .crumb {
+      padding: 4px 9px;
+      border-radius: 6px;
+      background: var(--surface-alt);
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+    }
+    .crumb.active {
+      background: #0F172A;
+      color: #38BDF8;
+      border-color: #0F172A;
+    }
+    .type-filters {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+    .type-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .type-chip.active {
+      background: var(--text);
+      color: var(--surface);
+      border-color: var(--text);
+    }
+    .type-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    /* Main Workspace Split Grid: Left Diagram Canvas + Right Detail Card */
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 410px;
+      gap: 14px;
+      align-items: start;
+      flex: 1;
+    }
+    .workspace-grid.card-hidden {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .workspace-grid.card-hidden .detail-card {
+      display: none;
+    }
+    @media (max-width: 1100px) {
+      .workspace-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .canvas-shell {
+      position: relative;
+      min-width: 0;
+    }
+    .controls button.btn-active-pill {
+      background: #1A73E8;
+      color: #FFFFFF;
+      border-color: #1A73E8;
+      font-weight: 600;
+    }
+    .btn-card-close {
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      color: var(--subtle);
+      cursor: pointer;
+    }
+    .btn-card-close:hover {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+    .floating-show-card {
+      display: none;
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      z-index: 20;
+      font-family: inherit;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid #1A73E8;
+      background: var(--surface);
+      color: var(--accent);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+    }
+    .floating-show-card:hover {
+      background: #1A73E8;
+      color: #FFFFFF;
+    }
+    .workspace-grid.card-hidden .floating-show-card {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .workspace-grid.card-hidden .matrix-summary-bar {
+      padding-right: 235px;
+    }
+    .matrix-summary-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .matrix-table th {
+      text-align: left;
+      padding: 9px 10px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--subtle);
+      background: var(--surface-alt);
+      border-bottom: 2px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+    .matrix-table td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: top;
+      color: var(--text);
+    }
+    .matrix-table tr.matrix-row {
+      cursor: pointer;
+      transition: background 0.12s ease;
+    }
+    .matrix-table tr.matrix-row:hover {
+      background: var(--surface-alt);
+    }
+    .matrix-table tr.matrix-row.selected {
+      background: rgba(37, 99, 235, 0.08);
+    }
+    .ds-mini-pill {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #EFF6FF;
+      color: #1D4ED8;
+      border: 1px solid #BFDBFE;
+      margin: 0 4px 3px 0;
+    }
+    [data-theme="dark"] .ds-mini-pill {
+      background: #1E3A8A;
+      color: #BFDBFE;
+      border-color: #2563EB;
+    }
+    .canvas-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 14px;
+      overflow-x: auto;
+      box-shadow: var(--shadow);
+      min-height: 540px;
+    }
+    svg {
+      display: block;
+      margin: 0 auto;
+      max-width: 100%;
+      height: auto;
+    }
+    .fd-node-group {
+      cursor: pointer;
+      transition: opacity 0.18s ease;
+    }
+    .fd-node-group.dimmed {
+      opacity: 0.22;
+    }
+    .fd-node-group:hover rect.main-box {
+      stroke: #1A73E8;
+      stroke-width: 2.25px;
+    }
+    .fd-node-group.selected rect.main-box {
+      stroke: #2563EB;
+      stroke-width: 2.75px;
+      filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.32));
+    }
+    /* Right-Hand Functional Detail Card */
+    .detail-card {
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 16px;
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .detail-header {
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 12px;
+    }
+    .detail-badges {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .uid-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: 6px;
+      background: #0F172A;
+      color: #38BDF8;
+    }
+    .ntype-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+    }
+    .detail-title {
+      margin: 0 0 4px 0;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .detail-Path {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--subtle);
+    }
+    .detail-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .btn-primary, .btn-secondary {
+      flex: 1;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 10px;
+      border-radius: 7px;
+      cursor: pointer;
+      text-align: center;
+      border: 1px solid transparent;
+    }
+    .btn-primary {
+      background: #1A73E8;
+      color: #FFFFFF;
+    }
+    .btn-primary:hover {
+      background: #1557B0;
+    }
+    .btn-secondary {
+      background: var(--surface-alt);
+      color: var(--text);
+      border-color: var(--border);
+    }
+    .btn-secondary:hover {
+      border-color: var(--accent);
+    }
+    .detail-section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .detail-section h3 {
+      margin: 0;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--subtle);
+    }
+    .detail-section p {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text);
+    }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .meta-item span {
+      display: block;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--subtle);
+      text-transform: uppercase;
+    }
+    .meta-item strong {
+      font-size: 12px;
+      color: var(--text);
+    }
+    .detail-list {
+      margin: 0;
+      padding-left: 18px;
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: var(--text);
+    }
+    .detail-list li {
+      margin-bottom: 4px;
+    }
+    /* CRUD Table Matrix */
+    .crud-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .crud-table th, .crud-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--border-subtle);
+      text-align: left;
+    }
+    .crud-table th {
+      background: var(--surface-alt);
+      font-size: 10.5px;
+      text-transform: uppercase;
+      color: var(--subtle);
+    }
+    .crud-op {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      line-height: 20px;
+      text-align: center;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      font-weight: 700;
+      margin-right: 3px;
+    }
+    .crud-op.on-C { background: #D1FAE5; color: #065F46; }
+    .crud-op.on-R { background: #DBEAFE; color: #1E40AF; }
+    .crud-op.on-U { background: #FEF3C7; color: #92400E; }
+    .crud-op.on-D { background: #FEE2E2; color: #991B1B; }
+    .crud-op.off { background: var(--surface-alt); color: var(--subtle); opacity: 0.4; }
+    /* Agent Spec Box */
+    .agent-box {
+      background: var(--surface-alt);
+      border-left: 3px solid #7C3AED;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .skill-pill {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      background: #EDE9FE;
+      color: #5B21B6;
+      padding: 2px 7px;
+      border-radius: 4px;
+      margin: 2px 4px 2px 0;
+    }
+    .child-pill-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .child-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 10px;
+      border-radius: 7px;
+      border: 1px solid var(--border-subtle);
+      background: var(--surface-alt);
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .child-item:hover {
+      border-color: var(--accent);
+    }
+    .atomic-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      padding: 9px 11px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      line-height: 1.45;
+      border: 1px solid var(--border-subtle);
+      background: var(--surface-alt);
+    }
+    .atomic-banner.is-atomic {
+      border-left: 3px solid #F59E0B;
+      background: rgba(245, 158, 11, 0.08);
+    }
+    .atomic-banner.is-composite {
+      border-left: 3px solid #3B82F6;
+    }
+    .atomic-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--accent);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .ds-bar {
+      display: none;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 8px 14px;
+    }
+    .ds-bar-left {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+    .ds-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .ds-chip.active {
+      background: #0F172A;
+      color: #F8FAFC;
+      border-color: #0F172A;
+    }
+    .ds-row-box {
+      border: 1px solid var(--border-subtle);
+      border-left: 4px solid #2563EB;
+      border-radius: 7px;
+      padding: 8px 10px;
+      background: var(--surface-alt);
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      margin-bottom: 6px;
+    }
+    .impl-box {
+      border: 1px solid var(--border-subtle);
+      border-left: 4px solid #2563EB;
+      border-radius: 9px;
+      padding: 10px 12px;
+      background: var(--surface-alt);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .impl-summary {
+      margin: 0;
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: var(--text);
+    }
+    .impl-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
+    .impl-cell {
+      padding: 7px 9px;
+      border-radius: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      font-size: 11.5px;
+      line-height: 1.4;
+    }
+    .impl-cell span {
+      display: block;
+      font-size: 9.8px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--subtle);
+      margin-bottom: 2px;
+    }
+    .impl-cell strong {
+      color: var(--text);
+      font-weight: 600;
+      word-break: break-word;
+    }
+    .impl-cmd {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 7px 10px;
+      border-radius: 6px;
+      background: #0F172A;
+      color: #E2E8F0;
+      border: 1px solid #334155;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Header Toolbar -->
+  <div class="toolbar">
+    <div class="title-block">
+      <h1>
+        <span class="title-pill">DPF-00</span>
+        <span id="hdr-title">Data Product Framework</span>
+      </h1>
+      <p>Specification-Driven Data Engineering Across 6 Human-Gated Steps on Google Cloud</p>
+    </div>
+    <div class="controls">
+      <input type="text" id="inp-search" placeholder="Search UID, terraform, cli..."/>
+      <label for="sel-lens">Color Lens:</label>
+      <select id="sel-lens">
+        <option value="type">Architecture Node Type</option>
+        <option value="impl">Implementation (How It's Built)</option>
+      </select>
+      <label for="sel-root">Start Node:</label>
+      <select id="sel-root"></select>
+      <label for="sel-depth">Depth:</label>
+      <select id="sel-depth">
+        <option value="99">All Levels</option>
+        <option value="1">1 Level Down</option>
+        <option value="2">2 Levels Down</option>
+        <option value="3">3 Levels Down</option>
+      </select>
+      <button id="btn-collapse-sub" title="Collapse Level-2+ subtrees (−)">− Collapse</button>
+      <button id="btn-expand-all" title="Expand all nodes (+)">+ Expand All</button>
+      <label for="sel-layout">Layout:</label>
+      <select id="sel-layout">
+        <option value="pillar">Hybrid Pillar Tree</option>
+        <option value="tree">Classic Org-Chart Tree</option>
+        <option value="matrix">Process ↔ Dataset Matrix</option>
+      </select>
+      <button id="btn-matrix" title="Toggle Process-to-Dataset Matrix Table (Shortcut: M)">Matrix (M)</button>
+      <button id="btn-toggle-card" title="Hide or Show Right-Hand Specification Card (Shortcut: D)">Hide Card (D)</button>
+      <button id="btn-reset" title="Reset to Top-Level Capability Root">Reset Root</button>
+      <button id="btn-theme" title="Toggle Light/Dark Mode (Shortcut: T)">Theme (T)</button>
+    </div>
+  </div>
+
+  <!-- Subbar: Breadcrumbs + Node Type Legend Filter -->
+  <div class="subbar">
+    <div class="breadcrumbs" id="crumb-bar"></div>
+    <div class="type-filters" id="type-filter-bar"></div>
+  </div>
+
+  <!-- Optional Dataset Overlay Filter Bar -->
+  <div class="ds-bar" id="ds-bar">
+    <div class="ds-bar-left" id="ds-filter-bar"></div>
+  </div>
+
+  <!-- Split Workspace: Left Interactive FHD Canvas + Right Functional Specification Card -->
+  <div class="workspace-grid" id="workspace-grid">
+    <div class="canvas-shell">
+      <button id="btn-floating-show-card" class="floating-show-card" onclick="toggleDetailCard(true)" title="Show Right-Hand Specification Card (Shortcut: D)"></button>
+      <div class="canvas-wrap" id="svg-container"></div>
+    </div>
+    <aside class="detail-card" id="detail-panel"></aside>
+  </div>
+
+<script>
+const TREE_DATA = {"acronym": "DPF", "capability_name": "Data Product Framework", "subtitle": "Specification-Driven Data Engineering Across 6 Human-Gated Steps on Google Cloud", "tags": ["Functional Decomposition", "FHD", "DPF", "Data Product Framework", "BigQuery", "Knowledge Catalog", "Dataform", "Looker", "Gemini Platform"], "dataset_catalog": [], "overlay": null, "root": {"uid": "DPF-00", "label": "Data Product Framework", "description": "Accelerates enterprise data products from candidate use case to governed outcome in 6 human-gated steps.", "node_type": "capability", "is_atomic": false, "abs_depth": 0, "parent_uid": null, "ancestors": [], "details": {"purpose": "End-to-end build-time delivery framework pairing plain-English business specifications and reusable organisational context with deterministic multi-plane compilation (Dataform, dbt, Terraform, LookML, and BigQuery Knowledge Catalog) and symbiotic runtime integration with the Agentic Data Governance Framework (ADG-00).", "owner": "Data Platform & Domain Product Engineering", "status": "Production-Verified Reference Implementation", "sla": "Offline Gates G0-G3 \u003c 10s \u00b7 Byte-Identical Deterministic Builds", "platform_service": "Python CLI, BigQuery, Dataform, Looker, Knowledge Catalog & Gemini Platform", "inputs": ["Candidate two-page use-case forms and plain-English Business Requirement Documents (BRDs)", "Organisational context registries (glossary.yaml, source_systems.yaml, foundations.yaml, platform-defaults.yaml)", "Concise authored SQL bodies and runtime health or AGF governance feedback events"], "outputs": ["Deterministic Dataform or dbt projects, Terraform IAM/masking modules, and governed LookML Explores & Dashboards", "Signed SHA-256 plain-English semantics playbacks and digest-bound test & human attestation evidence", "BigQuery Knowledge Catalog registrations carrying all 7 canonical ADG-00 Single-Writer Aspect payloads"], "business_rules": ["Plain-English Boundary (Gate G0): Business requirements contain zero database or cloud modelling jargon.", "Signed Semantics Invariant (Gate G1): Any change to grain, history, or metric definitions invalidates signoff.yaml until re-signed.", "Deterministic Multi-Plane Build (Gate G3): Building the same manifest twice produces byte-identical SQL, Terraform, LookML, and Catalog artefacts.", "Symbiotic Governance (ADR-019): DPF enforces compile-time privacy and residency rules and emits ADG-00 aspects to Knowledge Catalog rather than duplicating runtime estate daemons."], "delivery_unit": "Composite Capability / Framework (6 chronological human-gated pillars)", "implementation": {"mode": "multi_stack", "summary": "Runs as a zero-daemon Python CLI and Agent Skills suite in Git, compiling multi-plane Google Cloud artefacts offline and verifying live deployments in BigQuery and Knowledge Catalog.", "provisioned_via": "dpf init \u003cworkspace\u003e + Terraform generated modules", "runtime": "Python 3.12 CLI, Agent Skills, Dataform/dbt, BigQuery & Looker", "trigger": "Developer CLI \u00b7 Pull Request CI \u00b7 Scheduled Business-Hours Monitor", "entrypoint": "dpf/cli.py \u00b7 skills/ \u00b7 contracts/ \u00b7 methodologies/ \u00b7 engines/", "command": "dpf check --all --gate G3 && dpf eval"}, "is_atomic": false, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": [{"uid": "DPF-01", "label": "1. Discover & Prioritise", "description": "Evaluates candidate business ideas and ranks Value vs Ease before engineering starts.", "node_type": "capability", "is_atomic": false, "abs_depth": 1, "parent_uid": "DPF-00", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}], "details": {"purpose": "Stage 1 inception pillar ensuring teams invest engineering capacity only in concrete, business-sponsored use cases with honest source feasibility visibility.", "owner": "Business Sponsor & Data Portfolio Panel", "status": "Implemented", "sla": "Single-Session Portfolio Scoring", "platform_service": "DPF Define Templates & Agent Skills on Gemini Platform", "inputs": ["Two-page candidate use-case submission (1-use-case.pdf or YAML)"], "outputs": ["Readiness assessment report, 11-criterion scorecard, and Quick Win prioritisation matrix"], "business_rules": ["Candidate submissions must state the commercial decision, measurable value, and believed sources in plain language.", "Readiness review assesses completeness without pre-scoring; the human panel owns final scoring at the Portfolio Gate."], "delivery_unit": "Composite Stage Pillar (3 sub-modules)", "implementation": {"mode": "multi_stack", "summary": "Combines an agentic readiness check skill with a weighted 11-criterion scoring rubric and fillable portfolio PDF forms.", "provisioned_via": "dpf init (templates/define/ & .agents/skills/assess-use-case/)", "runtime": "Agent Skill + Fillable PDF / YAML Scorecard", "trigger": "New Use-Case Submission", "entrypoint": "templates/define/ \u00b7 templates/scoring.yaml \u00b7 .agents/skills/assess-use-case/", "command": "python3 templates/src/build_templates.py"}, "is_atomic": false, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": [{"uid": "DPF-01-01", "label": "Use-Case Readiness Agent", "description": "Reviews candidate submissions against the 11-criterion evidence rubric before panel scoring.", "node_type": "agent", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-01", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-01", "label": "1. Discover & Prioritise"}], "details": {"purpose": "Agentic inception reviewer that checks every section of a submitted 2-page use case for specificity, plain business language, and honest unknowns before the scoring panel meets.", "owner": "Data Product Portfolio Lead", "status": "Implemented in DPF v0.3", "sla": "\u003c 2m Automated Readiness Check", "platform_service": "Gemini Platform Agent Skill (assess-use-case)", "inputs": ["Submitted 1-use-case.pdf or candidate YAML", "templates/scoring.yaml rubric"], "outputs": ["Structured readiness verdict and pre-panel question list"], "business_rules": ["Never assigns numeric scores on behalf of the panel; flags vague value claims and hidden technical jargon."], "implementation": {"mode": "adk_agent", "summary": "Agent skill invoked when a sponsor submits a candidate use case.", "provisioned_via": "Copied via .agents/skills/assess-use-case/", "runtime": "Gemini Platform / Coding Agent Skill", "trigger": "On Candidate Use-Case Submission", "entrypoint": ".agents/skills/assess-use-case/SKILL.md", "command": "dpf check --gate describe"}, "agent_config": {"model": "gemini-2.5-pro", "hitl_mode": "Advisory Pre-Gate Review", "skills": ["assess-use-case"]}, "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "crud_entities": [], "dataset_overlays": []}, "children": []}, {"uid": "DPF-01-02", "label": "11-Criterion Scoring Engine", "description": "Calculates weighted Value (3.05) and Ease (3.33) scores across eleven portfolio criteria.", "node_type": "business_function", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-01", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-01", "label": "1. Discover & Prioritise"}], "details": {"purpose": "Deterministic weighting rubric across Value (decision impact, strategic alignment, breadth) and Ease (source readiness, definition clarity, sponsorship).", "owner": "Data Portfolio Office", "status": "Implemented in DPF v0.3", "sla": "Deterministic Instant Calculation", "platform_service": "DPF Scoring Specification (templates/scoring.yaml)", "inputs": ["Panel criterion scores (1-5 scale) across 11 dimensions"], "outputs": ["Weighted Value score, Ease score, total points (/170), and quadrant placement"], "business_rules": ["Weights and anchors are version-controlled in templates/scoring.yaml so all domains are scored on identical terms."], "implementation": {"mode": "cli_batch", "summary": "Declarative YAML rubric rendered into interactive fillable scorecards.", "provisioned_via": "templates/scoring.yaml", "runtime": "Python Template Builder & Scorecard Forms", "trigger": "Prioritisation Panel Session", "entrypoint": "templates/scoring.yaml", "command": "python3 templates/src/build_templates.py"}, "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": []}, {"uid": "DPF-01-03", "label": "Portfolio Gate Workbench", "description": "Presents the 2x2 Quick Win vs Strategic Bet matrix for human funding sign-off.", "node_type": "ui_workbench", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-01", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-01", "label": "1. Discover & Prioritise"}], "details": {"purpose": "Human-in-the-loop portfolio gate where leadership compares scored candidates and selects funded Quick Wins and Strategic Bets.", "owner": "Executive Sponsor & Domain Leads", "status": "Implemented in DPF v0.3", "sla": "Portfolio Cadence Gate", "platform_service": "DPF Fillable Portfolio Matrix (2-scorecard.pdf & 3-prioritisation.pdf)", "inputs": ["Scored candidate use cases"], "outputs": ["Approved UC-\u003cDOMAIN\u003e-\u003cNNN\u003e charter authorised for Step 2 (Describe)"], "business_rules": ["No engineering design or pipeline work starts without Portfolio Gate selection or explicit prototype fast-path status."], "implementation": {"mode": "chat_ui", "summary": "Fillable PDF scorecard and 2x2 portfolio matrix archived alongside product specs.", "provisioned_via": "templates/define/2-scorecard.pdf \u00b7 templates/define/3-prioritisation.pdf", "runtime": "Human Portfolio Review", "trigger": "Scheduled or Ad-Hoc Portfolio Gate", "entrypoint": "templates/define/", "command": "ls templates/define/"}, "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": []}]}, {"uid": "DPF-02", "label": "2. Describe (Gate G0)", "description": "Captures structured plain-English business requirements and validates rubric completeness.", "node_type": "capability", "is_atomic": false, "abs_depth": 1, "parent_uid": "DPF-00", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}], "details": {"purpose": "Stage 2 pillar turning a funded use case into an unambiguous, jargon-free Business Requirement Document (BRD) verified deterministically at Gate G0.", "owner": "Business Owner & Business Analyst", "status": "Implemented", "sla": "Gate G0 Validation \u003c 1s", "platform_service": "DPF CLI (dpf brd validate) & Agent Skills", "inputs": ["Approved use case, registry/glossary.yaml, registry/brd-rubric.yaml, and registry/brd-vocabulary.yaml"], "outputs": ["Approved brd/spec.md + brd.yaml passing Gate G0 (or gap register of plain-English business questions)"], "business_rules": ["All 11 rubric groups (A-K) must be answered or explicitly deferred.", "Modelling and cloud terms (fact table, SCD, partition, BigQuery) fail Gate G0 immediately."], "delivery_unit": "Composite Stage Pillar (4 sub-modules)", "implementation": {"mode": "multi_stack", "summary": "Pairs conversational BRD authoring and sandbox prototype import with deterministic Gate G0 rubric, glossary, and anti-jargon validation.", "provisioned_via": "skills/author-brd/ + dpf/brd.py", "runtime": "Python CLI & Agent Skill", "trigger": "dpf brd validate \u003cproduct\u003e / dpf check --gate describe", "entrypoint": "dpf/brd.py \u00b7 skills/author-brd/ \u00b7 skills/validate-brd/", "command": "dpf check --all --gate describe"}, "is_atomic": false, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": [{"uid": "DPF-02-01", "label": "Plain-English BRD Author", "description": "Interviews business stakeholders and drafts requirements strictly in commercial language.", "node_type": "agent", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-02", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-02", "label": "2. Describe (Gate G0)"}], "details": {"purpose": "Guided interview agent that translates stakeholder intent into Requirement/Scenario specs (spec.md) and structured answers (brd.yaml) without leaking technical design choices.", "owner": "Business Analyst & Product Owner", "status": "Implemented in DPF v0.3", "sla": "Interactive 30-60m Authoring Session", "platform_service": "Gemini Platform Agent Skill (author-brd)", "inputs": ["Approved use case", "registry/brd-rubric.yaml", "registry/glossary.yaml"], "outputs": ["openspec/specs/products/\u003cdomain\u003e/\u003cproduct\u003e/brd/spec.md & brd.yaml"], "business_rules": ["Every metric and attribute must bind to an agreed term or alias in registry/glossary.yaml."], "implementation": {"mode": "adk_agent", "summary": "Structured interview skill enforcing the 11-group business rubric.", "provisioned_via": "skills/author-brd/SKILL.md", "runtime": "Gemini Platform / Coding Agent Skill", "trigger": "New Product Kickoff or Gap Register Resolution", "entrypoint": "skills/author-brd/SKILL.md", "command": "dpf brd gaps \u003cproduct\u003e"}, "agent_config": {"model": "gemini-2.5-pro", "hitl_mode": "Co-Drafted with Business Owner", "skills": ["author-brd", "validate-brd"]}, "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "crud_entities": [], "dataset_overlays": []}, "children": []}, {"uid": "DPF-02-02", "label": "Gate G0 Rubric Validator", "description": "Verifies groups A-K completeness, glossary alignment, and zero technical jargon.", "node_type": "business_function", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-02", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-02", "label": "2. Describe (Gate G0)"}], "details": {"purpose": "Deterministic Gate G0 checker verifying brd.v1 schema conformance, spec-to-YAML version parity, scenario coverage, glossary bindings, and banned technical vocabulary.", "owner": "Data Platform Engineering", "status": "Implemented in DPF v0.3", "sla": "\u003c 1s Offline Execution", "platform_service": "DPF CLI (dpf/brd.py)", "inputs": ["brd/spec.md", "brd/brd.yaml", "registry/brd-rubric.yaml", "registry/brd-vocabulary.yaml"], "outputs": ["Pass/Fail Gate G0 report and plain-English gaps.md question list"], "business_rules": ["Deferred requirements (**Status:** deferred) remain documented in spec.md without blocking v1 delivery."], "implementation": {"mode": "cli_batch", "summary": "Deterministic Python validator invoked via CLI and CI.", "provisioned_via": "dpf/brd.py \u00b7 contracts/brd.v1.schema.json", "runtime": "Python CLI", "trigger": "dpf brd validate / dpf check --gate describe", "entrypoint": "dpf/brd.py", "command": "dpf brd validate sales_performance --no-write"}, "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": []}, {"uid": "DPF-02-03", "label": "Business Need Sign-Off", "description": "Captures named business owner approval on the jargon-free requirement specification.", "node_type": "ui_workbench", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-02", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-02", "label": "2. Describe (Gate G0)"}], "details": {"purpose": "Human Business Need Gate ensuring the domain sponsor confirms the commercial rules, timeliness, privacy boundaries, and exceptions before technical design begins.", "owner": "Named Business Owner", "status": "Implemented in DPF v0.3", "sla": "Human Gate Sign-Off", "platform_service": "OpenSpec BRD Specification & Fillable 4-brd.pdf", "inputs": ["Validated brd/spec.md & brd/brd.yaml (zero G0 gaps)"], "outputs": ["Approved BRD version (e.g. BRD-SALES-002@1.2.0)"], "business_rules": ["Gate G0 stays red until approval.approved_by and approval.role are recorded by the business owner."], "implementation": {"mode": "chat_ui", "summary": "Readable 4-page Markdown or PDF business specification signed by the business owner.", "provisioned_via": "templates/define/4-brd.pdf \u00b7 openspec/specs/products/", "runtime": "Human Review & Git Approval", "trigger": "Completion of Gate G0 Validation", "entrypoint": "openspec/specs/products/sales/sales-performance/brd/spec.md", "command": "dpf check sales_performance --gate describe"}, "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": []}, {"uid": "DPF-02-04", "label": "Prototype Sandbox Importer", "description": "Imports existing Dataform or LookML repositories into fast-path prototype mode.", "node_type": "integration", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-02", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-02", "label": "2. Describe (Gate G0)"}], "details": {"purpose": "Reverse-onboarding adapter that ingests brownfield Dataform SQLX or Looker LookML projects (including shadow assets flagged by AGF ADG-05) into status: prototype manifests.", "owner": "Data Engineering", "status": "Implemented in DPF v0.3", "sla": "\u003c 5s Repository Import", "platform_service": "DPF Prototype Fast-Path (ADR-016, ADR-017, ADR-018)", "inputs": ["Existing Dataform repository or LookML project directory"], "outputs": ["Scaffolded products/\u003cid\u003e/product.yaml in prototype mode ready for dpf proto promote"], "business_rules": ["Prototype products pass structural --gate proto checks immediately but cannot pass G1 until promoted with a signed BRD and TDD."], "implementation": {"mode": "cli_batch", "summary": "CLI importers parsing SQLX config blocks and LookML views/explores/dashboards.", "provisioned_via": "dpf/dataform_import.py \u00b7 dpf/looker_import.py", "runtime": "Python CLI", "trigger": "dpf proto import-dataform / dpf proto import-looker", "entrypoint": "dpf/dataform_import.py \u00b7 dpf/looker_import.py", "command": "dpf check \u003cproduct\u003e --gate proto"}, "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": []}]}, {"uid": "DPF-03", "label": "3. Design (Gate G1)", "description": "Resolves grain, history, methodology, Looker safety, and AGF privacy rules with playback sign-off.", "node_type": "capability", "is_atomic": false, "abs_depth": 1, "parent_uid": "DPF-00", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}], "details": {"purpose": "Stage 3 pillar translating the approved BRD into a justified technical design (TDD + product.yaml), verifying source feasibility and AGF C6/C10 rules, and binding business sign-off to a SHA-256 semantic digest.", "owner": "Lead Data Architect & Business Owner", "status": "Implemented", "sla": "Gate G1 Verification \u003c 2s", "platform_service": "DPF Design Engine (dpf/design.py), Methodology Packs & Goldfish Verifier", "inputs": ["Approved BRD, registry/source_systems.yaml, registry/foundations.yaml, methodologies/"], "outputs": ["Validated tdd/spec.md, product.yaml, plain-English semantics.md, and signed signoff.yaml"], "business_rules": ["Every requirement must be realised by a design element, and every design element must cite a requirement or platform capability (zero orphans).", "Departures from default direct methodology or Looker no-PDT rules require an Architecture Decision Record (ADR)."], "delivery_unit": "Composite Stage Pillar (5 sub-modules)", "implementation": {"mode": "multi_stack", "summary": "Combines methodology recommendation, deterministic Gate G1 + AGF C6/C10 checks, zero-context blind playback verification, and SHA-256 semantic digest signing.", "provisioned_via": "dpf/design.py \u00b7 dpf/methodology.py \u00b7 skills/resolve-tdd/", "runtime": "Python CLI & Zero-Context Subagent Verifier", "trigger": "dpf tdd resolve / dpf check --gate G1 / dpf signoff", "entrypoint": "dpf/design.py \u00b7 methodologies/ \u00b7 .agents/skills/goldfish-verify/", "command": "dpf check --all --gate G1"}, "is_atomic": false, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": [{"uid": "DPF-03-01", "label": "TDD & Methodology Resolver", "description": "Recommends direct vs Kimball modelling and surfaces source connectivity constraints early.", "node_type": "agent", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-03", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-03", "label": "3. Design (Gate G1)"}], "details": {"purpose": "Technical design resolver that evaluates BRD history and shared-dimension signals, checks source capture modes in registry/source_systems.yaml, and drafts tdd/spec.md, semantics.md, and product.yaml.", "owner": "Data Architect", "status": "Implemented in DPF v0.3", "sla": "Interactive Design Session", "platform_service": "Gemini Platform Agent Skill (resolve-tdd) + dpf/methodology.py", "inputs": ["Approved BRD", "registry/source_systems.yaml", "methodologies/direct & kimball"], "outputs": ["tdd/spec.md, tdd/semantics.md, and products/\u003cid\u003e/product.yaml"], "business_rules": ["Unachievable source SLAs (such as inbound CDC on an outbound-only database) must be raised back to the business rather than silently downgraded."], "implementation": {"mode": "adk_agent", "summary": "Guided TDD resolution skill backed by deterministic methodology recommendation.", "provisioned_via": "skills/resolve-tdd/SKILL.md \u00b7 dpf/methodology.py", "runtime": "Gemini Platform / Coding Agent Skill + Python CLI", "trigger": "dpf tdd resolve \u003cproduct\u003e", "entrypoint": "skills/resolve-tdd/SKILL.md", "command": "dpf tdd resolve sales_performance"}, "agent_config": {"model": "gemini-2.5-pro", "hitl_mode": "Architect & Business Trade-Off Review", "skills": ["resolve-tdd", "design-bus-matrix"]}, "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "crud_entities": [], "dataset_overlays": []}, "children": []}, {"uid": "DPF-03-02", "label": "Gate G1 & AGF Privacy Engine", "description": "Enforces grain parity, SCD2 surrogate joins, Looker rules, and AGF C6/C10 privacy gates.", "node_type": "business_function", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-03", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-03", "label": "3. Design (Gate G1)"}], "details": {"purpose": "Deterministic design gate checking 100% requirement realisation, Kimball/direct pack rules, zero silent staging WHERE drops, Stephen Few zero-baseline charts, policy-tag coverage on AGF RESTRICTED columns, and zero RESTRICTED leaks on external BigQuery sharing ports.", "owner": "Data Platform Engineering", "status": "Implemented in DPF v0.3", "sla": "\u003c 2s Offline Verification", "platform_service": "DPF Design Gate (dpf/design.py, ADR-018, ADR-019)", "inputs": ["product.yaml, authored SQL bodies, tdd/spec.md, and registry overlays"], "outputs": ["Deterministic Gate G1 pass/fail verdict"], "business_rules": ["Any AGF C6 RESTRICTED column lacking a policy tag or exposed on a sharing_listing port fails Gate G1 immediately."], "implementation": {"mode": "cli_batch", "summary": "Core static verifier across SQL ASTs, schemas, LookML, and AGF governance bindings.", "provisioned_via": "dpf/design.py \u00b7 methodologies/*/rules/", "runtime": "Python CLI", "trigger": "dpf check \u003cproduct\u003e --gate G1", "entrypoint": "dpf/design.py", "command": "dpf check sales_performance --gate G1"}, "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": []}, {"uid": "DPF-03-03", "label": "Zero-Context Playback Critic", "description": "Audits product.yaml and SQL blind against semantics.md to catch conversational anchoring.", "node_type": "agent", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-03", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-03", "label": "3. Design (Gate G1)"}], "details": {"purpose": "Isolated zero-context subagent pass that reads only product.yaml and SQL bodies\u2014never the BRD or authoring chat\u2014to independently derive behaviour and diff it against semantics.md.", "owner": "Data Engineering Reviewer", "status": "Implemented in DPF v0.3", "sla": "\u003c 60s Blind Verification Pass", "platform_service": "Gemini Platform Subagent Skill (goldfish-verify)", "inputs": ["products/\u003cid\u003e/product.yaml", "products/\u003cid\u003e/sql/*.sql", "tdd/semantics.md"], "outputs": ["Semantic drift critique before business sign-off"], "business_rules": ["Runs in a fresh subagent context with zero memory of authoring compromises."], "implementation": {"mode": "adk_agent", "summary": "Zero-context subagent verification skill invoked prior to dpf signoff.", "provisioned_via": ".agents/skills/goldfish-verify/SKILL.md", "runtime": "Isolated Subagent on Gemini Platform", "trigger": "Pre-Signoff Gate G1 Review", "entrypoint": ".agents/skills/goldfish-verify/SKILL.md", "command": "dpf tdd playback sales_performance"}, "agent_config": {"model": "gemini-2.5-pro", "hitl_mode": "Pre-Signoff Drift Check", "skills": ["goldfish-verify"]}, "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "crud_entities": [], "dataset_overlays": []}, "children": []}, {"uid": "DPF-03-04", "label": "Playback Sign-Off Ledger", "description": "Persists SHA-256 semantic digest signatures in signoff.yaml to lock business meaning.", "node_type": "crud_module", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-03", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-03", "label": "3. Design (Gate G1)"}], "details": {"purpose": "Single-ledger persistence module recording the business owner's cryptographic signature over grain, history, filters, measures, and scenarios.", "owner": "Data Platform Governance", "status": "Implemented in DPF v0.3", "sla": "Immutable Git-Tracked Signature", "platform_service": "DPF Sign-Off Contract (signoff.v1)", "inputs": ["Computed SHA-256 semantic_digest", "Approver identity, role, and scenario list"], "outputs": ["openspec/specs/products/\u003cdomain\u003e/\u003cproduct\u003e/tdd/signoff.yaml"], "business_rules": ["Editing semantics.md, grain_columns, history_semantics, or LookML metric filters changes semantic_digest and automatically invalidates signoff.yaml."], "implementation": {"mode": "cli_batch", "summary": "CLI command writing schema-validated signoff.yaml bound to the current BRD version and semantic hash.", "provisioned_via": "dpf/cli.py \u00b7 contracts/signoff.v1.schema.json", "runtime": "Python CLI + Git", "trigger": "dpf signoff \u003cproduct\u003e --by \u003cname\u003e --role business_owner", "entrypoint": "openspec/specs/products/sales/sales-performance/tdd/signoff.yaml", "command": "dpf signoff sales_performance --by 'Sales Ops' --role business_owner"}, "crud_entities": [{"entity": "tdd_signoff_ledger (signoff.yaml)", "operations": "CRUD", "notes": "Primary owned ledger binding business approval to SHA-256 semantic_digest"}, {"entity": "product_manifest (product.yaml)", "operations": "R", "notes": "Read-only input used to compute canonical semantic_digest"}], "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "agent_config": {}, "dataset_overlays": []}, "children": []}, {"uid": "DPF-03-05", "label": "Business Playback Gate", "description": "Presents one-page plain-English semantics.md for business owner confirmation.", "node_type": "ui_workbench", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-03", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-03", "label": "3. Design (Gate G1)"}], "details": {"purpose": "Human Playback Sign-Off Gate where the business owner reads a jargon-free summary of inclusions, exclusions, history rules, privacy masking, and known source limitations.", "owner": "Named Business Owner", "status": "Implemented in DPF v0.3", "sla": "Human Gate G1 Sign-Off", "platform_service": "DPF Plain-English Playback (semantics.md & playback.md)", "inputs": ["Generated playback.md and authored semantics.md"], "outputs": ["Authorised business sign-off unlocking Step 4 (Build)"], "business_rules": ["Business owners never review SQL or YAML; they sign plain-English behaviour backed by a machine-checked digest."], "implementation": {"mode": "chat_ui", "summary": "One-page business playback document reviewed and signed before pipeline generation.", "provisioned_via": "dpf tdd playback \u003cproduct\u003e", "runtime": "Human Review & CLI Sign-Off", "trigger": "Gate G1 Design Completion", "entrypoint": "openspec/specs/products/sales/sales-performance/tdd/semantics.md", "command": "dpf tdd playback sales_performance"}, "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": []}]}, {"uid": "DPF-04", "label": "4. Build (Gates G2-G3)", "description": "Composes stage skills and compiles deterministic SQL, Terraform, Catalog, and LookML.", "node_type": "capability", "is_atomic": false, "abs_depth": 1, "parent_uid": "DPF-00", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}], "details": {"purpose": "Stage 4 pillar composing the typed skill DAG (Gate G2) and deterministically compiling one product manifest into synchronised Dataform/dbt, Terraform, Knowledge Catalog, and Looker artefacts (Gate G3).", "owner": "Data Engineering", "status": "Implemented", "sla": "Full Multi-Plane Compile \u003c 3s", "platform_service": "DPF Multi-Plane Compiler (dpf/compose.py & dpf/generate/)", "inputs": ["Signed product.yaml, authored SQL bodies, engine adapters, and methodology templates"], "outputs": ["Byte-identical generated/\u003cproduct\u003e/ bundle verified against tests/golden/\u003cproduct\u003e/"], "business_rules": ["Every generated artefact is stamped in MANIFEST.json with a SHA-256 build_digest.", "Two consecutive in-memory builds must be 100% byte-identical (zero nondeterministic timestamps or unordered sets)."], "delivery_unit": "Composite Stage Pillar (5 sub-modules)", "implementation": {"mode": "multi_stack", "summary": "Offline deterministic compiler emitting Dataform/dbt SQL, Terraform HCL, LookML views/dashboards, GEMINI.md agent guardrails, and 7 ADG-00 Knowledge Catalog aspects.", "provisioned_via": "dpf/compose.py \u00b7 dpf/generate/*.py \u00b7 engines/", "runtime": "Python Offline Compiler + Dataform/dbt/Terraform Toolchains", "trigger": "dpf compose / dpf generate / Pull Request CI", "entrypoint": "dpf/compose.py \u00b7 dpf/generate/", "command": "dpf generate --all --check --no-write"}, "is_atomic": false, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": [{"uid": "DPF-04-01", "label": "Gate G2 Pipeline Composer", "description": "Selects stage skills and type-checks contract handoffs and engine support across the DAG.", "node_type": "business_function", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-04", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-04", "label": "4. Build (Gates G2-G3)"}], "details": {"purpose": "Deterministic DAG composer matching source capture modes, layer roles, quality gates, and output ports to registered skills and verifying every input/output JSON Schema handoff.", "owner": "Data Platform Engineering", "status": "Implemented in DPF v0.3", "sla": "\u003c 1s DAG Composition", "platform_service": "DPF Composer (dpf/compose.py)", "inputs": ["product.yaml", "skills/*/SKILL.md", "engines/*/adapter.yaml", "acceptance.yaml"], "outputs": ["dag.json, dag.md, and verified AX-to-AT acceptance coverage"], "business_rules": ["Fails immediately if a model requests a role or streaming/batch engine combination not implemented by an adapter."], "implementation": {"mode": "cli_batch", "summary": "Static skill selector and contract type-checker.", "provisioned_via": "dpf/compose.py \u00b7 skills/compose-pipeline/", "runtime": "Python CLI", "trigger": "dpf compose \u003cproduct\u003e / dpf check --gate G2", "entrypoint": "dpf/compose.py", "command": "dpf compose sales_performance --no-write"}, "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": []}, {"uid": "DPF-04-02", "label": "Bounded Dataform SQL Agent", "description": "Assists messy source SQL wrangling inside deterministic GEMINI.md guardrails.", "node_type": "agent", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-04", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-04", "label": "4. Build (Gates G2-G3)"}], "details": {"purpose": "Tier-3 leaf worker integration (ADR-017) allowing Google Cloud's native Dataform Data Engineering Agent to assist with source SQL cleansing while keeping grain, quarantine, and release schedules locked by DPF.", "owner": "Data Engineering", "status": "Implemented in DPF v0.3", "sla": "Interactive Authoring Leaf Worker", "platform_service": "BigQuery Dataform Agent on Gemini Platform (ADR-017)", "inputs": ["Generated dataform/GEMINI.md guardrails and raw source schemas"], "outputs": ["Authored staging/gold SQL bodies compliant with engine-neutral ref/var rules"], "business_rules": ["Governed Dataform builds disable unreviewed console auto-releases so all changes pass Gate G1 and Gate G3."], "implementation": {"mode": "adk_agent", "summary": "Emits deterministic dataform/GEMINI.md context and disables unmanaged hourly releases.", "provisioned_via": "dpf/generate/dataform.py (ADR-017)", "runtime": "Dataform Agent on Gemini Platform", "trigger": "Developer SQL Authoring or Troubleshooting", "entrypoint": "dpf/generate/dataform.py", "command": "dpf generate sales_performance"}, "agent_config": {"model": "gemini-2.5-pro", "hitl_mode": "Bounded by GEMINI.md + Golden Copy PR", "skills": ["render-engine-artefacts"]}, "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "crud_entities": [], "dataset_overlays": []}, "children": []}, {"uid": "DPF-04-03", "label": "Gate G3 Multi-Plane Compiler", "description": "Compiles Dataform/dbt SQL, Terraform IAM, LookML, and 7 ADG-00 Catalog aspects.", "node_type": "business_function", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-04", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-04", "label": "4. Build (Gates G2-G3)"}], "details": {"purpose": "Single-manifest deterministic compiler rendering SQLX/SQL models, SCD2 history & point-in-time joins, Terraform datasets/policy tags/BigQuery sharing/quality scans, LookML Explores & Stephen Few dashboards, and catalog-registration.json.", "owner": "Data Platform Engineering", "status": "Implemented in DPF v0.3", "sla": "\u003c 3s Deterministic Multi-Plane Render", "platform_service": "DPF Generators (dataform.py, dbt.py, terraform.py, lookml.py, docs.py)", "inputs": ["Composed RenderPlan, ProductGraph, and signed product.yaml"], "outputs": ["50-110 deterministic files stamped in MANIFEST.json"], "business_rules": ["Validates every emitted JSON contract against Draft 2020-12 JSON Schemas and checks full R -\u003e D -\u003e Artefact -\u003e Test traceability."], "implementation": {"mode": "cli_batch", "summary": "Pure-Python deterministic multi-plane code generator.", "provisioned_via": "dpf/generate/", "runtime": "Python CLI + CI Toolchain Validation (Terraform, Dataform, dbt)", "trigger": "dpf generate \u003cproduct\u003e / dpf check --gate G3", "entrypoint": "dpf/generate/__init__.py", "command": "dpf check --all --gate G3"}, "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": []}, {"uid": "DPF-04-04", "label": "Watermark Control Ledger", "description": "Maintains atomic high-watermark and batch manifest rows in dpf_watermark_log.", "node_type": "crud_module", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-04", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-04", "label": "4. Build (Gates G2-G3)"}], "details": {"purpose": "Single-table operational control ledger provisioned by Terraform to track high-watermarks, lookback windows, row counts, and load status per source entity.", "owner": "Data Platform Operations", "status": "Implemented in DPF v0.3", "sla": "Transactional Per-Batch Commit", "platform_service": "BigQuery Control Dataset (dpf_control.dpf_watermark_log)", "inputs": ["Completed outbound source extraction batches"], "outputs": ["Atomic watermark checkpoint row advancing the next incremental extract window"], "business_rules": ["Raw rows and the watermark control row commit together so failed loads never advance the watermark."], "implementation": {"mode": "terraform_iac", "summary": "Provisioned via generated Terraform control table resource and written atomically by the watermark extractor.", "provisioned_via": "dpf/generate/terraform.py", "runtime": "BigQuery Table + Outbound Extractor", "trigger": "Scheduled Incremental Source Extract", "entrypoint": "dpf/generate/terraform.py", "command": "terraform -chdir=tests/golden/sales_performance/terraform validate"}, "crud_entities": [{"entity": "dpf_control.dpf_watermark_log", "operations": "CRUD", "notes": "Primary owned control table storing per-entity high-watermark checkpoints"}], "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "agent_config": {}, "dataset_overlays": []}, "children": []}, {"uid": "DPF-04-05", "label": "Golden Copy PR Review", "description": "Surfaces byte-identical SQL, Terraform, and LookML diffs for engineer PR approval.", "node_type": "ui_workbench", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-04", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-04", "label": "4. Build (Gates G2-G3)"}], "details": {"purpose": "Human engineering gate in Git where reviewers inspect exact diffs across SQL, IAM masking, LookML, and Knowledge Catalog contracts before merge and release.", "owner": "Lead Data Engineer", "status": "Implemented in DPF v0.3", "sla": "Pull Request Review Gate", "platform_service": "GitHub Pull Request + CI Golden Copy Check", "inputs": ["Committed tests/golden/\u003cproduct\u003e/ snapshot vs fresh dpf generate build"], "outputs": ["Approved merge to main triggering controlled deployment"], "business_rules": ["CI blocks any pull request whose generated output drifts from tests/golden/ or fails real-tool compilation."], "implementation": {"mode": "chat_ui", "summary": "Standard Git diff review over committed golden snapshots backed by GitHub Actions.", "provisioned_via": ".github/workflows/ci.yml \u00b7 tests/golden/", "runtime": "GitHub Pull Request UI & Actions CI", "trigger": "git push / Pull Request", "entrypoint": "tests/golden/", "command": "dpf generate --all --check --no-write"}, "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": []}]}, {"uid": "DPF-05", "label": "5. Accept (Gate G4)", "description": "Runs live BigQuery assertions, captures human attestations, and publishes Catalog ports.", "node_type": "capability", "is_atomic": false, "abs_depth": 1, "parent_uid": "DPF-00", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}], "details": {"purpose": "Stage 5 pillar proving the deployed build on real cloud data: landing incremental extracts, quarantining bad rows, running digest-bound BigQuery SQL acceptance tests, recording Finance/domain human attestations, and registering published ports in BigQuery Knowledge Catalog.", "owner": "Data Engineering & Domain Stewards", "status": "Implemented & Sandbox-Verified", "sla": "100% Blocking Test & Attestation Pass Required Before Publish", "platform_service": "BigQuery, Dataform/dbt, Knowledge Catalog MCP & DPF Test Runner", "inputs": ["Deployed BigQuery datasets/models, test-spec.json, and domain reviewer checks"], "outputs": ["Digest-bound test-evidence.v1 records and published Knowledge Catalog Data Product"], "business_rules": ["Evidence recorded against an older build_digest is rejected as stale at Gate G4.", "Non-SQL business truths (such as general ledger reconciliation) require explicit human attestation before publication."], "delivery_unit": "Composite Stage Pillar (5 sub-modules)", "implementation": {"mode": "multi_stack", "summary": "Combines outbound extraction, staging reject quarantine, live BigQuery acceptance SQL execution, human CLI attestation, and Knowledge Catalog MCP registration.", "provisioned_via": "dpf/testing.py \u00b7 skills/publish-data-product/ \u00b7 skills/register-knowledge-catalog/", "runtime": "BigQuery + Python CLI + Knowledge Catalog MCP", "trigger": "dpf test run --live / dpf test attest / dpf check --gate accept", "entrypoint": "dpf/testing.py \u00b7 skills/register-knowledge-catalog/", "command": "dpf check sales_performance --gate accept"}, "is_atomic": false, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": [{"uid": "DPF-05-01", "label": "Outbound Watermark Extractor", "description": "Extracts incremental source rows with lookback safety into append-only raw BigQuery.", "node_type": "integration", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-05", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-05", "label": "5. Accept (Gate G4)"}], "details": {"purpose": "Tier-5 outbound source connector (ADR-015) for on-premises databases without inbound cloud routes, reading watermark windows with a configurable lookback overlap into raw BigQuery tables.", "owner": "Data Ingestion Engineering", "status": "Implemented in DPF v0.3", "sla": "Hourly or Scheduled Cron Cadence", "platform_service": "Cloud Run Jobs / On-Premises Runner -\u003e BigQuery Storage Write / Load", "inputs": ["On-premises RDBMS tables", "dpf_control.dpf_watermark_log"], "outputs": ["Append-only raw_\u003centity\u003e BigQuery rows + landing-manifest.v1"], "business_rules": ["Applies lookback_minutes behind the last watermark to capture late-committing transactions safely."], "implementation": {"mode": "cli_batch", "summary": "Outbound Python extractor carrying mandatory ADR-015 bespoke-code governance markers.", "provisioned_via": "examples/sales_performance/extract/extract_oracle.py (ADR-015)", "runtime": "Python Batch Job / Cloud Run Job", "trigger": "Cron Schedule (e.g. 0 * * * *)", "entrypoint": "examples/sales_performance/extract/extract_oracle.py", "command": "dpf lint"}, "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": []}, {"uid": "DPF-05-02", "label": "Quarantine Reject Ledger", "description": "Routes invalid staging rows to _rejects relations and blocks partial publication.", "node_type": "crud_module", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-05", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-05", "label": "5. Accept (Gate G4)"}], "details": {"purpose": "Single-relation staging quarantine gate separating unusable source rows with explicit rule failure reasons while halting downstream refreshes when gate_behaviour is block.", "owner": "Data Engineering & Source Stewards", "status": "Implemented in DPF v0.3", "sla": "Per-Run Row-Level Quarantine", "platform_service": "BigQuery Staging Dataset (\u003cmodel\u003e_rejects + Blocking Assertion)", "inputs": ["Deduplicated staging candidate rows and quality.rules (on_fail: quarantine)"], "outputs": ["\u003cmodel\u003e_rejects relation with failed rule IDs and blocking assertion status"], "business_rules": ["Top-level WHERE filters in staging SQL are blocked at G1 so bad rows are quarantined visibly rather than silently dropped."], "implementation": {"mode": "sql_pipeline", "summary": "Compiled automatically into Dataform SQLX or dbt staging wrappers and reject assertions.", "provisioned_via": "dpf/generate/plan.py \u00b7 skills/transform-raw-to-staging/", "runtime": "BigQuery via Dataform or dbt", "trigger": "Every Pipeline Schedule Run", "entrypoint": "skills/transform-raw-to-staging/SKILL.md", "command": "dpf eval --id reject-gate-required"}, "crud_entities": [{"entity": "stg_\u003cdomain\u003e.\u003cmodel\u003e_rejects", "operations": "CRUD", "notes": "Primary owned quarantine relation holding rejected source rows and failure rule IDs"}, {"entity": "raw_\u003csource\u003e.raw_\u003centity\u003e", "operations": "R", "notes": "Read-only append-only landed source relation"}], "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "agent_config": {}, "dataset_overlays": []}, "children": []}, {"uid": "DPF-05-03", "label": "Live Acceptance Test Runner", "description": "Executes automated BigQuery SQL assertions and static checks bound to build_digest.", "node_type": "business_function", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-05", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-05", "label": "5. Accept (Gate G4)"}], "details": {"purpose": "Gate G4 test runner executing grain uniqueness, SCD2 non-overlap, foreign-key integrity, LookML explore dry-runs, and business scenario SQL queries against the deployed sandbox or prod project.", "owner": "Data Engineering", "status": "Implemented in DPF v0.3", "sla": "\u003c 30s Live Sandbox Suite Execution", "platform_service": "DPF Test Harness (dpf/testing.py) + BigQuery", "inputs": ["Generated test-spec.json and live BigQuery datasets"], "outputs": ["Timestamped run-\u003cUTC\u003e.json evidence bound to artefact_digest"], "business_rules": ["Any mismatch between the deployed build_digest and recorded evidence fails Gate G4 automatically."], "implementation": {"mode": "cli_batch", "summary": "Executes SQL and static checks from test-spec.json and records schema-valid evidence.", "provisioned_via": "dpf/testing.py \u00b7 contracts/test-spec.v1.schema.json", "runtime": "Python CLI + BigQuery Client", "trigger": "dpf test run \u003cproduct\u003e --live", "entrypoint": "dpf/testing.py", "command": "dpf test plan sales_performance"}, "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": []}, {"uid": "DPF-05-04", "label": "Domain Attestation Gate", "description": "Records Finance and domain expert sign-offs on non-SQL business truths at Gate G4.", "node_type": "ui_workbench", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-05", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-05", "label": "5. Accept (Gate G4)"}], "details": {"purpose": "Human Outcome Attestation Gate capturing accountable domain verification (such as general ledger reconciliation or merchandising hierarchy sign-off) that SQL assertions alone cannot prove.", "owner": "Finance & Domain Business Reviewers", "status": "Implemented in DPF v0.3", "sla": "Pre-Publication Human Gate G4", "platform_service": "DPF Attestation CLI (dpf test attest)", "inputs": ["Sandbox acceptance outputs, AGF C12 GL reconciliation reports, and Looker views"], "outputs": ["Signed attestation evidence record unlocking publication"], "business_rules": ["Products remain provisional until every attestation case in acceptance.yaml passes for the current build_digest."], "implementation": {"mode": "chat_ui", "summary": "Records named human attestations and optional reconciliation links against the active build digest.", "provisioned_via": "dpf/testing.py \u00b7 contracts/test-evidence.v1.schema.json", "runtime": "Human Domain Review + CLI", "trigger": "dpf test attest \u003cproduct\u003e --case \u003cAT-n\u003e --by \u003cname\u003e", "entrypoint": "dpf/testing.py", "command": "dpf check sales_performance --gate accept"}, "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": []}, {"uid": "DPF-05-05", "label": "Knowledge Catalog Publisher", "description": "Registers published ports, glossary EntryLinks, and 7 ADG-00 aspects in Catalog.", "node_type": "agent", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-05", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-05", "label": "5. Accept (Gate G4)"}], "details": {"purpose": "Tier-1 MCP publication worker registering authoritative output ports, attaching Business Glossary terms, and writing all 7 canonical ADG-00 Single-Writer Aspects to BigQuery Knowledge Catalog.", "owner": "Data Platform & Stewardship", "status": "Implemented in DPF v0.3", "sla": "Immediate Post-G4 Publication", "platform_service": "BigQuery Knowledge Catalog MCP Server & BigQuery Sharing", "inputs": ["catalog-registration.json, data-product.json, and green Gate G4 evidence"], "outputs": ["Published Knowledge Catalog Data Product and Metadata Change Feed events for AGF"], "business_rules": ["Refuses to flip status to published without signed semantics and complete Gate G4 evidence."], "implementation": {"mode": "adk_agent", "summary": "Tier-1 MCP skill publishing catalog entries, aspects, and glossary links.", "provisioned_via": "skills/register-knowledge-catalog/ \u00b7 skills/publish-data-product/", "runtime": "Knowledge Catalog Managed MCP Server", "trigger": "Green Gate G4 (Accept)", "entrypoint": "skills/register-knowledge-catalog/SKILL.md", "command": "dpf generate sales_performance --no-write"}, "agent_config": {"model": "gemini-2.5-pro", "hitl_mode": "Gated on Green G4 Attestation", "skills": ["register-knowledge-catalog", "publish-data-product"]}, "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "crud_entities": [], "dataset_overlays": []}, "children": []}]}, {"uid": "DPF-06", "label": "6. Monitor (Day 2 Loop)", "description": "Evaluates business-calendar SLOs and AGF estate alerts to open traced change proposals.", "node_type": "capability", "is_atomic": false, "abs_depth": 1, "parent_uid": "DPF-00", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}], "details": {"purpose": "Stage 6 Day-2 operational pillar watching freshness, volume, quality scans, and AGF runtime drift strictly inside working-hour calendars and routing breaches into requirement-traced Change Proposals.", "owner": "Product Owner & Data Operations", "status": "Implemented", "sla": "15m Business-Hours Freshness Watch \u00b7 Zero Weekend False Alarms", "platform_service": "DPF Monitor (dpf/monitor.py), Cloud Monitoring & AGF Estate Feedback", "inputs": ["observability-policy.json, live BigQuery/AGF run-evidence.v1 telemetry"], "outputs": ["Targeted operational alerts and pre-populated openspec/changes/ delta proposals"], "business_rules": ["Freshness SLOs evaluate only inside the consuming team's business calendar (e.g. Mon-Fri 08:00-18:00 Australia/Perth).", "Every runtime breach maps directly back to the exact BRD requirement ID placed at risk."], "delivery_unit": "Composite Stage Pillar (4 sub-modules)", "implementation": {"mode": "multi_stack", "summary": "Evaluates runtime evidence against business-calendar SLOs and auto-scaffolds OpenSpec change proposals naming the breached requirement.", "provisioned_via": "dpf/monitor.py \u00b7 skills/monitor-data-product/", "runtime": "Scheduled CLI / Cloud Run Check + Git Change Loop", "trigger": "Scheduled 15m Watch or AGF Metadata Change Feed Alert", "entrypoint": "dpf/monitor.py \u00b7 skills/monitor-data-product/", "command": "dpf eval --id monitor-breach"}, "is_atomic": false, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": [{"uid": "DPF-06-01", "label": "Business-Calendar Monitor", "description": "Evaluates freshness, volume, and schema drift strictly during business working hours.", "node_type": "business_function", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-06", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-06", "label": "6. Monitor (Day 2 Loop)"}], "details": {"purpose": "Deterministic SLO evaluator comparing table build timestamps, row-volume bands, and schema drift events against the product's business calendar and runbook.", "owner": "Data Operations", "status": "Implemented in DPF v0.3", "sla": "Every 15m Inside Working Hours", "platform_service": "DPF Monitor Engine (dpf/monitor.py)", "inputs": ["observability-policy.json", "run-evidence.v1 payload"], "outputs": ["Requirement-traced SLO pass/breach verdict and runbook pointer"], "business_rules": ["Suppresses staleness noise outside declared working days/hours while immediately flagging breaking schema drift."], "implementation": {"mode": "cli_batch", "summary": "Calendar-aware Python SLO evaluator.", "provisioned_via": "dpf/monitor.py \u00b7 contracts/observability-policy.v1.schema.json", "runtime": "Python CLI / Scheduled Monitor", "trigger": "dpf monitor \u003cproduct\u003e --evidence \u003cfile\u003e", "entrypoint": "dpf/monitor.py", "command": "dpf eval --id monitor-breach"}, "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": []}, {"uid": "DPF-06-02", "label": "AGF & Catalog Breach Feed", "description": "Ingests AGF lineage, ledger, and Knowledge Catalog scan alerts as run-evidence.v1.", "node_type": "integration", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-06", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-06", "label": "6. Monitor (Day 2 Loop)"}], "details": {"purpose": "Symbiotic feedback connector (ADR-019) translating AGF ADG-02 OpenLineage drift, ADG-03 GL reconciliation variances, and Knowledge Catalog Auto-DQ failures into DPF run-evidence.v1 records.", "owner": "Enterprise Data Governance & Platform Ops", "status": "Implemented in DPF v0.3", "sla": "Event-Driven Breach Ingestion", "platform_service": "BigQuery Knowledge Catalog Scans & AGF Telemetry -\u003e DPF", "inputs": ["Knowledge Catalog DataScan results and AGF ADG-02/03/05 alerts"], "outputs": ["Standardised run-evidence.v1 JSON events"], "business_rules": ["Keeps DPF decoupled from runtime daemons via the versioned run-evidence.v1 schema."], "implementation": {"mode": "cloud_service", "summary": "Typed JSON contract bridging Knowledge Catalog and AGF runtime guardians back to DPF.", "provisioned_via": "contracts/run-evidence.v1.schema.json (ADR-019)", "runtime": "Event Adapter / CLI Feed", "trigger": "Runtime Drift, Quality Scan, or GL Variance Event", "entrypoint": "contracts/run-evidence.v1.schema.json", "command": "dpf validate"}, "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": []}, {"uid": "DPF-06-03", "label": "Build & Run Evidence Ledger", "description": "Stores immutable test, attestation, and runtime health evidence per build digest.", "node_type": "crud_module", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-06", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-06", "label": "6. Monitor (Day 2 Loop)"}], "details": {"purpose": "Single-ledger audit trail storing timestamped test-evidence.v1 and run-evidence.v1 records keyed by product_id and SHA-256 build_digest.", "owner": "Data Governance & Audit", "status": "Implemented in DPF v0.3", "sla": "Immutable Per-Build Audit Retention", "platform_service": "DPF Evidence Store (evidence/\u003cproduct\u003e/)", "inputs": ["Automated test runs, human attestations, and runtime monitor snapshots"], "outputs": ["Auditable evidence/\u003cproduct\u003e/run-*.json & attest-*.json files"], "business_rules": ["Append-only evidence files never overwrite prior runs; Gate G4 evaluates the latest result matching the active build_digest."], "implementation": {"mode": "cli_batch", "summary": "Append-only JSON evidence ledger validated against test-evidence.v1.", "provisioned_via": "dpf/testing.py \u00b7 evidence/", "runtime": "Git / Object Evidence Store", "trigger": "dpf test run / dpf test attest", "entrypoint": "evidence/sales_performance/", "command": "dpf trace sales_performance"}, "crud_entities": [{"entity": "evidence_ledger (evidence/\u003cproduct\u003e/*.json)", "operations": "CRUD", "notes": "Primary owned audit ledger of digest-bound test and attestation records"}, {"entity": "build_manifest (MANIFEST.json)", "operations": "R", "notes": "Read-only SHA-256 build_digest reference"}], "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "agent_config": {}, "dataset_overlays": []}, "children": []}, {"uid": "DPF-06-04", "label": "Change Proposal Workbench", "description": "Opens requirement-traced delta specs for human review when breaches or new needs arise.", "node_type": "ui_workbench", "is_atomic": true, "abs_depth": 2, "parent_uid": "DPF-06", "ancestors": [{"uid": "DPF-00", "label": "Data Product Framework"}, {"uid": "DPF-06", "label": "6. Monitor (Day 2 Loop)"}], "details": {"purpose": "Human Change Proposal Gate closing the Day-2 loop: drafts pre-populated ADDED/MODIFIED/REMOVED delta specs under openspec/changes/ naming the affected BRD requirement.", "owner": "Business Owner & Product Engineer", "status": "Implemented in DPF v0.3", "sla": "Hours-to-Outcome Fast-Track Loop", "platform_service": "DPF Change Proposal Generator (dpf monitor --open-change)", "inputs": ["Detected runtime SLO/AGF breach or new stakeholder metric request"], "outputs": ["openspec/changes/\u003cchange-id\u003e/ proposal ready to re-run Gates G0-G4"], "business_rules": ["Every Day-2 change flows through the exact same human-gated digest and golden-copy checks in hours rather than ad-hoc hotfixes."], "implementation": {"mode": "chat_ui", "summary": "Scaffolds structured change proposals linking operational alerts straight back to business requirements.", "provisioned_via": "dpf/monitor.py \u00b7 openspec/changes/", "runtime": "CLI + Pull Request Review", "trigger": "dpf monitor \u003cproduct\u003e --evidence \u003cfile\u003e --open-change", "entrypoint": "openspec/changes/README.md", "command": "dpf eval --id monitor-breach"}, "delivery_unit": "Atomic Delivery Unit (Sealed Module \u00b7 Cannot be decomposed further)", "is_atomic": true, "crud_entities": [], "agent_config": {}, "dataset_overlays": []}, "children": []}]}]}};
+const TYPE_META = {"capability": {"badge": "DOMAIN", "full_name": "Capability / Functional Domain", "accent": "#1A73E8", "badge_bg": "#E8F0FE", "badge_text": "#174EA6", "dark_badge_bg": "#1E3A8A", "dark_badge_text": "#93C5FD"}, "business_function": {"badge": "BIZ FN", "full_name": "Business Function Module", "accent": "#2563EB", "badge_bg": "#DBEAFE", "badge_text": "#1E40AF", "dark_badge_bg": "#1E3A8A", "dark_badge_text": "#BFDBFE"}, "crud_module": {"badge": "CRUD", "full_name": "CRUD / Data Persistence Module", "accent": "#059669", "badge_bg": "#D1FAE5", "badge_text": "#065F46", "dark_badge_bg": "#064E3B", "dark_badge_text": "#6EE7B7"}, "agent": {"badge": "AGENT", "full_name": "AI Agent / Autonomous Evaluator", "accent": "#7C3AED", "badge_bg": "#EDE9FE", "badge_text": "#5B21B6", "dark_badge_bg": "#4C1D95", "dark_badge_text": "#DDD6FE"}, "integration": {"badge": "INGEST", "full_name": "Integration / Ingestion Module", "accent": "#0891B2", "badge_bg": "#CFFAFE", "badge_text": "#155E75", "dark_badge_bg": "#164E63", "dark_badge_text": "#A5F3FC"}, "ui_workbench": {"badge": "UI / HITL", "full_name": "UI Dashboard / HITL Workbench", "accent": "#D97706", "badge_bg": "#FEF3C7", "badge_text": "#92400E", "dark_badge_bg": "#78350F", "dark_badge_text": "#FDE68A"}};
+const IMPL_META = {"terraform_iac": {"badge": "TERRAFORM", "full_name": "Terraform / Infrastructure-as-Code", "accent": "#0F766E", "badge_bg": "#CCFBF1", "badge_text": "#115E59", "dark_badge_bg": "#134E4A", "dark_badge_text": "#99F6E4"}, "cloud_service": {"badge": "CLOUD RUN", "full_name": "Event-Driven Service / REST API", "accent": "#2563EB", "badge_bg": "#DBEAFE", "badge_text": "#1E40AF", "dark_badge_bg": "#1E3A8A", "dark_badge_text": "#BFDBFE"}, "adk_agent": {"badge": "ADK AGENT", "full_name": "AI Agent (Gemini Platform ADK)", "accent": "#7C3AED", "badge_bg": "#EDE9FE", "badge_text": "#5B21B6", "dark_badge_bg": "#4C1D95", "dark_badge_text": "#DDD6FE"}, "cli_batch": {"badge": "CLI / CRON", "full_name": "CLI Command / Scheduled Batch Job", "accent": "#EA580C", "badge_bg": "#FFEDD5", "badge_text": "#9A3412", "dark_badge_bg": "#7C2D12", "dark_badge_text": "#FED7AA"}, "sql_pipeline": {"badge": "SQL / ELT", "full_name": "SQL / Dataform / Native Platform Rule", "accent": "#059669", "badge_bg": "#D1FAE5", "badge_text": "#065F46", "dark_badge_bg": "#064E3B", "dark_badge_text": "#6EE7B7"}, "chat_ui": {"badge": "CHAT / UI", "full_name": "Human UI / 1-Click Chat Card", "accent": "#D97706", "badge_bg": "#FEF3C7", "badge_text": "#92400E", "dark_badge_bg": "#78350F", "dark_badge_text": "#FDE68A"}, "multi_stack": {"badge": "MULTI-MODE", "full_name": "Multi-Module Pillar (IaC + Services + Agents + UI)", "accent": "#1A73E8", "badge_bg": "#E8F0FE", "badge_text": "#174EA6", "dark_badge_bg": "#1E3A8A", "dark_badge_text": "#93C5FD"}};
+let currentRootUid = "DPF-00";
+let selectedUid = "DPF-00";
+let currentMaxDepth = 99;
+const _initLensParam = (new URLSearchParams(window.location.search).get('lens') || '').toLowerCase();
+let currentLens = (_initLensParam === 'impl' || _initLensParam === 'implementation') ? 'impl' : 'type';
+const _initViewParam = (new URLSearchParams(window.location.search).get('view') || new URLSearchParams(window.location.search).get('layout') || '').toLowerCase();
+let currentLayout = (_initViewParam === 'matrix' || _initViewParam === 'tree' || _initViewParam === 'pillar') ? _initViewParam : "pillar";
+let lastDiagramLayout = "pillar";
+let activeTypeFilter = 'all';
+let activeImplFilter = 'all';
+let activeDatasetFilter = 'all';
+let searchQuery = '';
+let collapsedUids = new Set();
+const _initCardParam = (new URLSearchParams(window.location.search).get('card') || '').toLowerCase();
+let showDetailCard = !(_initCardParam === '0' || _initCardParam === 'hide' || _initCardParam === 'false');
+const DATASET_CATALOG = TREE_DATA.dataset_catalog || [];
+const DS_BY_ID = Object.fromEntries(DATASET_CATALOG.map(d => [d.id, d]));
+
+function isNodeAtomic(n) {
+  if (typeof n.is_atomic === 'boolean') return n.is_atomic;
+  if (n.details && typeof n.details.is_atomic === 'boolean') return n.details.is_atomic;
+  return !(n.children && n.children.length > 0);
+}
+
+function resolveImpl(n) {
+  const d = (n && n.details) || {};
+  const raw = (d.implementation && typeof d.implementation === 'object') ? d.implementation : {};
+  const atomic = isNodeAtomic(n || {});
+  const chCount = (n && n.children) ? n.children.length : 0;
+  const plat = d.platform_service || 'Google Cloud';
+  const platL = plat.toLowerCase();
+  const lblL = `${(n && n.label) || ''} ${(n && n.description) || ''}`.toLowerCase();
+  const ac = d.agent_config || {};
+  let defMode = 'cloud_service';
+  if (!atomic && (((n && n.abs_depth) || 0) <= 1 || chCount >= 3)) defMode = 'multi_stack';
+  else if (n && n.node_type === 'agent') defMode = 'adk_agent';
+  else if (n && n.node_type === 'ui_workbench') defMode = 'chat_ui';
+  else if (platL.includes('terraform') || platL.includes('org policy') || platL.includes('taxonomy')) defMode = 'terraform_iac';
+  else if (platL.includes('cli') || platL.includes('scheduler') || platL.includes('cron') || platL.includes('cloud run job') || lblL.includes('cli')) defMode = 'cli_batch';
+  else if (platL.includes('dataform') || platL.includes('sqlx') || platL.includes('auto-dq') || (n && n.node_type === 'crud_module' && platL.includes('bigquery') && !platL.includes('api') && !platL.includes('cloud run'))) defMode = 'sql_pipeline';
+
+  const mode = (raw.mode && IMPL_META[raw.mode]) ? raw.mode : defMode;
+  const meta = IMPL_META[mode] || IMPL_META.cloud_service;
+  return {
+    mode,
+    meta,
+    summary: raw.summary || `Implemented on ${plat} as ${meta.full_name}.`,
+    provisioned_via: raw.provisioned_via || (mode === 'terraform_iac' ? 'Terraform Infrastructure-as-Code' : 'Terraform IAM & Service Config'),
+    runtime: raw.runtime || (mode === 'adk_agent' ? (ac.model || `Gemini Platform ADK (${plat})`) : `${meta.full_name} (${plat})`),
+    trigger: raw.trigger || (mode === 'adk_agent' ? (ac.hitl_mode || 'Event-Driven / HITL') : 'Automated Event / Scheduled Trigger'),
+    entrypoint: raw.entrypoint || ((n && n.uid) ? n.uid.toLowerCase().replace(/-/g, '_') : ''),
+    command: raw.command || ''
+  };
+}
+
+const allNodes = [];
+const presentTypes = new Set();
+const presentImpls = new Set();
+function collectNodes(n, ancestors = []) {
+  const copy = { ...n, ancestors };
+  allNodes.push(copy);
+  presentTypes.add(n.node_type || 'business_function');
+  presentImpls.add(resolveImpl(n).mode);
+  (n.children || []).forEach(c => collectNodes(c, [...ancestors, { uid: n.uid, label: n.label }]));
+}
+collectNodes(TREE_DATA.root);
+
+const selLens = document.getElementById('sel-lens');
+if (selLens) {
+  selLens.value = currentLens;
+  selLens.addEventListener('change', () => {
+    currentLens = selLens.value;
+    activeTypeFilter = 'all';
+    activeImplFilter = 'all';
+    renderTypeChips();
+    render();
+  });
+}
+
+// Populate Root Selector
+const selRoot = document.getElementById('sel-root');
+allNodes.forEach(n => {
+  const opt = document.createElement('option');
+  opt.value = n.uid;
+  opt.textContent = `${n.uid} — ${n.label}`;
+  selRoot.appendChild(opt);
+});
+
+// Populate Node Type or Implementation Filter Chips
+const typeBar = document.getElementById('type-filter-bar');
+function renderTypeChips() {
+  typeBar.innerHTML = '';
+  const atomicCount = allNodes.filter(isNodeAtomic).length;
+
+  if (currentLens === 'impl') {
+    const allChip = document.createElement('button');
+    allChip.className = 'type-chip' + (activeImplFilter === 'all' ? ' active' : '');
+    allChip.textContent = `All Modes (${allNodes.length})`;
+    allChip.onclick = () => { activeImplFilter = 'all'; renderTypeChips(); render(); };
+    typeBar.appendChild(allChip);
+
+    const atomChip = document.createElement('button');
+    atomChip.className = 'type-chip' + (activeImplFilter === 'atomic' ? ' active' : '');
+    atomChip.innerHTML = `<span style="color:var(--accent);font-weight:700">◇</span>ATOMIC (${atomicCount})`;
+    atomChip.title = 'Filter to Atomic Delivery Units';
+    atomChip.onclick = () => {
+      activeImplFilter = (activeImplFilter === 'atomic') ? 'all' : 'atomic';
+      renderTypeChips();
+      render();
+    };
+    typeBar.appendChild(atomChip);
+
+    const implOrder = ['terraform_iac', 'cloud_service', 'adk_agent', 'cli_batch', 'sql_pipeline', 'chat_ui', 'multi_stack'];
+    implOrder.filter(k => presentImpls.has(k)).forEach(k => {
+      const meta = IMPL_META[k];
+      const count = allNodes.filter(n => resolveImpl(n).mode === k).length;
+      const chip = document.createElement('button');
+      chip.className = 'type-chip' + (activeImplFilter === k ? ' active' : '');
+      chip.innerHTML = `<span class="type-dot" style="background:${meta.accent}"></span>${meta.badge} (${count})`;
+      chip.title = meta.full_name;
+      chip.onclick = () => {
+        activeImplFilter = (activeImplFilter === k) ? 'all' : k;
+        renderTypeChips();
+        render();
+      };
+      typeBar.appendChild(chip);
+    });
+    return;
+  }
+
+  const allChip = document.createElement('button');
+  allChip.className = 'type-chip' + (activeTypeFilter === 'all' ? ' active' : '');
+  allChip.textContent = `All Types (${allNodes.length})`;
+  allChip.onclick = () => { activeTypeFilter = 'all'; renderTypeChips(); render(); };
+  typeBar.appendChild(allChip);
+
+  const atomChip = document.createElement('button');
+  atomChip.className = 'type-chip' + (activeTypeFilter === 'atomic' ? ' active' : '');
+  atomChip.innerHTML = `<span style="color:var(--accent);font-weight:700">◇</span>ATOMIC (${atomicCount})`;
+  atomChip.title = 'Filter to Atomic Delivery Units (lowest-level modules delivered as a single unit that cannot be decomposed further)';
+  atomChip.onclick = () => {
+    activeTypeFilter = (activeTypeFilter === 'atomic') ? 'all' : 'atomic';
+    renderTypeChips();
+    render();
+  };
+  typeBar.appendChild(atomChip);
+
+  Array.from(presentTypes).forEach(t => {
+    const meta = TYPE_META[t] || { badge: t.toUpperCase(), full_name: t, accent: '#64748B' };
+    const count = allNodes.filter(n => n.node_type === t).length;
+    const chip = document.createElement('button');
+    chip.className = 'type-chip' + (activeTypeFilter === t ? ' active' : '');
+    chip.innerHTML = `<span class="type-dot" style="background:${meta.accent}"></span>${meta.badge} (${count})`;
+    chip.title = meta.full_name;
+    chip.onclick = () => {
+      activeTypeFilter = (activeTypeFilter === t) ? 'all' : t;
+      renderTypeChips();
+      render();
+    };
+    typeBar.appendChild(chip);
+  });
+}
+renderTypeChips();
+
+const dsBarWrap = document.getElementById('ds-bar');
+const dsFilterBar = document.getElementById('ds-filter-bar');
+function nodeHasDataset(n, dsId) {
+  const ovs = (n.details && n.details.dataset_overlays) || [];
+  return ovs.some(o => o.ds_id === dsId);
+}
+function renderDatasetChips() {
+  if (!DATASET_CATALOG.length) {
+    dsBarWrap.style.display = 'none';
+    return;
+  }
+  dsBarWrap.style.display = 'flex';
+  dsFilterBar.innerHTML = '<span style="font-size:11px;font-weight:700;color:var(--subtle);margin-right:4px">DATASET OVERLAY:</span>';
+  const allBtn = document.createElement('button');
+  allBtn.className = 'ds-chip' + (activeDatasetFilter === 'all' ? ' active' : '');
+  allBtn.textContent = `All ${DATASET_CATALOG.length} Datasets (${allNodes.length})`;
+  allBtn.onclick = () => { activeDatasetFilter = 'all'; renderDatasetChips(); render(); };
+  dsFilterBar.appendChild(allBtn);
+  DATASET_CATALOG.forEach(d => {
+    const cnt = allNodes.filter(n => nodeHasDataset(n, d.id)).length;
+    const chip = document.createElement('button');
+    chip.className = 'ds-chip' + (activeDatasetFilter === d.id ? ' active' : '');
+    chip.innerHTML = `<span class="type-dot" style="background:${d.accent || '#2563EB'}"></span>${esc(d.id)} · ${esc(d.short || d.id)} (${cnt})`;
+    chip.title = `${d.bq_schema || d.id} — ${d.source_files || ''}`;
+    chip.onclick = () => {
+      activeDatasetFilter = (activeDatasetFilter === d.id) ? 'all' : d.id;
+      renderDatasetChips();
+      render();
+    };
+    dsFilterBar.appendChild(chip);
+  });
+}
+renderDatasetChips();
+
+const selDepth = document.getElementById('sel-depth');
+const selLayout = document.getElementById('sel-layout');
+selDepth.value = String(currentMaxDepth);
+selLayout.value = currentLayout;
+
+function applyDepthToCollapsed(maxD) {
+  collapsedUids.clear();
+  if (maxD >= 99) return;
+  const rawSub = findNode(TREE_DATA.root, currentRootUid) || TREE_DATA.root;
+  function mark(n, relD) {
+    if (!n) return;
+    const ch = n.children || [];
+    if (ch.length > 0 && relD >= maxD) {
+      collapsedUids.add(n.uid.toUpperCase());
+    }
+    ch.forEach(c => mark(c, relD + 1));
+  }
+  mark(rawSub, 0);
+}
+
+selRoot.addEventListener('change', () => {
+  currentRootUid = selRoot.value;
+  selectedUid = currentRootUid;
+  collapsedUids.clear();
+  render();
+});
+selDepth.addEventListener('change', () => {
+  currentMaxDepth = parseInt(selDepth.value, 10);
+  applyDepthToCollapsed(currentMaxDepth);
+  render();
+});
+document.getElementById('btn-collapse-sub').addEventListener('click', () => {
+  currentMaxDepth = 2;
+  selDepth.value = '2';
+  applyDepthToCollapsed(2);
+  render();
+});
+document.getElementById('btn-expand-all').addEventListener('click', () => {
+  currentMaxDepth = 99;
+  selDepth.value = '99';
+  collapsedUids.clear();
+  render();
+});
+function syncMatrixBtn() {
+  const mBtn = document.getElementById('btn-matrix');
+  if (selLayout && selLayout.value !== currentLayout) selLayout.value = currentLayout;
+  if (mBtn) {
+    const isMat = currentLayout === 'matrix';
+    mBtn.textContent = isMat ? 'Diagram (M)' : 'Matrix (M)';
+    mBtn.classList.toggle('btn-active-pill', isMat);
+  }
+}
+
+window.toggleMatrixView = function() {
+  if (currentLayout === 'matrix') {
+    currentLayout = lastDiagramLayout || 'pillar';
+  } else {
+    lastDiagramLayout = currentLayout;
+    currentLayout = 'matrix';
+  }
+  syncMatrixBtn();
+  render();
+};
+
+selLayout.addEventListener('change', () => {
+  currentLayout = selLayout.value;
+  if (currentLayout !== 'matrix') lastDiagramLayout = currentLayout;
+  syncMatrixBtn();
+  render();
+});
+document.getElementById('inp-search').addEventListener('input', (e) => {
+  searchQuery = e.target.value.trim().toLowerCase();
+  render();
+});
+document.getElementById('btn-reset').addEventListener('click', () => {
+  currentRootUid = TREE_DATA.root.uid;
+  selectedUid = currentRootUid;
+  currentMaxDepth = 99;
+  activeTypeFilter = 'all';
+  activeImplFilter = 'all';
+  activeDatasetFilter = 'all';
+  searchQuery = '';
+  collapsedUids.clear();
+  document.getElementById('inp-search').value = '';
+  selDepth.value = '99';
+  renderTypeChips();
+  renderDatasetChips();
+  render();
+});
+
+function syncCardVisibility() {
+  const grid = document.getElementById('workspace-grid');
+  const btn = document.getElementById('btn-toggle-card');
+  const floatBtn = document.getElementById('btn-floating-show-card');
+  if (grid) grid.classList.toggle('card-hidden', !showDetailCard);
+  if (btn) {
+    btn.textContent = showDetailCard ? 'Hide Card (D)' : 'Show Card (D)';
+    btn.classList.toggle('btn-active-pill', !showDetailCard);
+  }
+  if (floatBtn) {
+    floatBtn.textContent = `📋 ${selectedUid} · Show Spec Card (D)`;
+  }
+}
+
+window.toggleDetailCard = function(force) {
+  showDetailCard = typeof force === 'boolean' ? force : !showDetailCard;
+  syncCardVisibility();
+};
+
+function toggleTheme() {
+  const htmlEl = document.documentElement;
+  htmlEl.dataset.theme = htmlEl.dataset.theme === 'dark' ? 'light' : 'dark';
+  render();
+}
+document.getElementById('btn-matrix').addEventListener('click', () => toggleMatrixView());
+document.getElementById('btn-toggle-card').addEventListener('click', () => toggleDetailCard());
+document.getElementById('btn-theme').addEventListener('click', toggleTheme);
+window.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.key === 't' || e.key === 'T') toggleTheme();
+  if (e.key === 'd' || e.key === 'D') toggleDetailCard();
+  if (e.key === 'm' || e.key === 'M') toggleMatrixView();
+});
+
+function findNode(n, uid, ancestors = []) {
+  if (n.uid.toUpperCase() === uid.toUpperCase()) return { ...n, ancestors };
+  for (const c of (n.children || [])) {
+    const found = findNode(c, uid, [...ancestors, { uid: n.uid, label: n.label }]);
+    if (found) return found;
+  }
+  return null;
+}
+
+function pruneNode(n, relDepth) {
+  const rawChildren = n.children || [];
+  const totalChildren = rawChildren.length;
+  const isCollapsed = collapsedUids.has(n.uid.toUpperCase());
+  const children = (!isCollapsed && totalChildren > 0)
+    ? rawChildren.map(c => pruneNode(c, relDepth + 1))
+    : [];
+  const hiddenCount = isCollapsed ? totalChildren : 0;
+  return { ...n, rel_depth: relDepth, children, totalChildren, isCollapsed, hiddenCount };
+}
+
+window.toggleNodeCollapse = function(ev, uid) {
+  if (ev) ev.stopPropagation();
+  const key = uid.toUpperCase();
+  const targetNode = findNode(TREE_DATA.root, uid);
+  if (collapsedUids.has(key)) {
+    // Expanding (+): reveal ONLY the immediate layer below; keep direct children collapsed
+    collapsedUids.delete(key);
+    if (targetNode && targetNode.children) {
+      targetNode.children.forEach(c => {
+        if (c.children && c.children.length > 0) {
+          collapsedUids.add(c.uid.toUpperCase());
+        }
+      });
+    }
+  } else {
+    // Collapsing (−): collapse this node
+    collapsedUids.add(key);
+  }
+  selectedUid = uid;
+  render();
+};
+
+function wrapTwoLines(text, maxChars) {
+  const words = (text || '').trim().split(/\s+/);
+  if (!words.length) return [''];
+  const lines = [];
+  let curr = words[0];
+  for (let i = 1; i < words.length; i++) {
+    if (curr.length + 1 + words[i].length <= maxChars) curr += ' ' + words[i];
+    else { lines.push(curr); curr = words[i]; }
+  }
+  lines.push(curr);
+  if (lines.length > 2) {
+    let second = lines[1];
+    second = second.length > maxChars - 3 ? second.slice(0, maxChars - 3) + '...' : second + '...';
+    return [lines[0], second];
+  }
+  return lines;
+}
+
+function palette(relDepth, nodeType, isDark, nodeObj) {
+  let tm = TYPE_META[nodeType] || { badge: 'BIZ FN', accent: '#2563EB', badge_bg: '#DBEAFE', badge_text: '#1E40AF', dark_badge_bg: '#1E3A8A', dark_badge_text: '#BFDBFE' };
+  if (currentLens === 'impl' && nodeObj) {
+    tm = resolveImpl(nodeObj).meta;
+  }
+  if (relDepth === 0) {
+    return {
+      fill: '#0F172A', stroke: '#38BDF8', accent: currentLens === 'impl' ? tm.accent : '#38BDF8',
+      uidBg: '#1E293B', uidText: '#38BDF8', label: '#FFFFFF', desc: '#CBD5E1',
+      badge: tm.badge, badgeBg: '#1E293B', badgeText: currentLens === 'impl' ? '#38BDF8' : '#E2E8F0'
+    };
+  }
+  if (isDark) {
+    return {
+      fill: relDepth === 1 ? '#1E293B' : '#111827',
+      stroke: relDepth === 1 ? '#3B82F6' : '#334155',
+      accent: tm.accent,
+      uidBg: '#0F172A', uidText: '#93C5FD', label: '#F8FAFC', desc: '#94A3B8',
+      badge: tm.badge, badgeBg: tm.dark_badge_bg || '#1E3A8A', badgeText: tm.dark_badge_text || '#BFDBFE'
+    };
+  }
+  if (relDepth === 1) {
+    return {
+      fill: '#F8FAFC', stroke: '#1A73E8', accent: tm.accent,
+      uidBg: '#E8F0FE', uidText: '#174EA6', label: '#0F172A', desc: '#475569',
+      badge: tm.badge, badgeBg: tm.badge_bg, badgeText: tm.badge_text
+    };
+  }
+  return {
+    fill: '#FFFFFF', stroke: '#CBD5E1', accent: tm.accent,
+    uidBg: '#F1F5F9', uidText: '#0F172A', label: '#0F172A', desc: '#475569',
+    badge: tm.badge, badgeBg: tm.badge_bg, badgeText: tm.badge_text
+  };
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function renderDetailCard(uid) {
+  const node = findNode(TREE_DATA.root, uid) || findNode(TREE_DATA.root, currentRootUid);
+  if (!node) return;
+  const tm = TYPE_META[node.node_type] || { badge: 'MODULE', full_name: node.node_type, accent: '#2563EB', badge_bg: '#DBEAFE', badge_text: '#1E40AF' };
+  const d = node.details || {};
+  const trail = (node.ancestors || []).map(a => a.uid).concat([node.uid]).join(' ▸ ');
+
+  let typeSpecificHtml = '';
+  if (node.node_type === 'crud_module' && d.crud_entities && d.crud_entities.length) {
+    const rows = d.crud_entities.map(ent => {
+      const ops = (ent.operations || 'CRUD').toUpperCase();
+      const badges = ['C', 'R', 'U', 'D'].map(letter =>
+        ops.includes(letter)
+          ? `<span class="crud-op on-${letter}">${letter}</span>`
+          : `<span class="crud-op off">${letter}</span>`
+      ).join('');
+      return `<tr>
+        <td><strong>${esc(ent.entity)}</strong><br/><span style="font-size:11px;color:var(--subtle)">${esc(ent.notes || '')}</span></td>
+        <td style="white-space:nowrap">${badges}</td>
+      </tr>`;
+    }).join('');
+    typeSpecificHtml = `
+      <div class="detail-section">
+        <h3>CRUD Data Entities &amp; Operations</h3>
+        <table class="crud-table">
+          <thead><tr><th>Entity / Table</th><th>C · R · U · D</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  } else if (node.node_type === 'agent' && d.agent_config) {
+    const ac = d.agent_config;
+    const skills = (ac.skills || []).map(s => `<span class="skill-pill">${esc(s)}</span>`).join('');
+    typeSpecificHtml = `
+      <div class="detail-section">
+        <h3>AI Agent Configuration &amp; Autonomy</h3>
+        <div class="agent-box">
+          <div><strong>Runtime / Model:</strong> ${esc(ac.model || 'Gemini Platform ADK Agent')}</div>
+          <div><strong>Autonomy / HITL Mode:</strong> ${esc(ac.hitl_mode || 'Autonomous with 1-Click Steward Approval')}</div>
+          ${skills ? `<div><strong>Skills &amp; MCP Tools:</strong><br/>${skills}</div>` : ''}
+        </div>
+      </div>`;
+  }
+
+  const inputsHtml = (d.inputs || []).map(i => `<li>${esc(i)}</li>`).join('');
+  const outputsHtml = (d.outputs || []).map(o => `<li>${esc(o)}</li>`).join('');
+  const rulesHtml = (d.business_rules || []).map(r => `<li>${esc(r)}</li>`).join('');
+
+  const children = node.children || [];
+  const atomic = isNodeAtomic(node);
+  const atomicBadgeHtml = atomic
+    ? `<span class="ntype-badge" style="background:var(--surface-alt);border:1px solid var(--border);color:var(--muted)" title="Atomic Delivery Unit">◇ Atomic</span>`
+    : '';
+
+  let childrenHtml = '';
+  if (children.length) {
+    const items = children.map(c => {
+      const ctm = currentLens === 'impl'
+        ? resolveImpl(c).meta
+        : (TYPE_META[c.node_type] || { badge: 'FN', badge_bg: '#F1F5F9', badge_text: '#334155', accent: '#64748B' });
+      const cAtom = isNodeAtomic(c) ? `<span title="Atomic Delivery Unit" style="display:inline-block;color:${ctm.accent || '#64748B'};font-family:monospace;font-size:12px;margin-right:6px">◇</span>` : '';
+      return `<div class="child-item" onclick="selectNode('${esc(c.uid)}')">
+        <span><strong style="font-family:monospace">${esc(c.uid)}</strong> · ${esc(c.label)}</span>
+        <span>${cAtom}<span class="ntype-badge" style="background:${ctm.badge_bg};color:${ctm.badge_text};font-size:10px">${esc(ctm.badge)}</span></span>
+      </div>`;
+    }).join('');
+    childrenHtml = `
+      <div class="detail-section">
+        <h3>Direct Sub-Functions (${children.length})</h3>
+        <div class="child-pill-list">${items}</div>
+      </div>`;
+  }
+
+  const impl = resolveImpl(node);
+  const implMeta = impl.meta;
+  const implSectionHtml = `
+    <div class="detail-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
+        <h3 style="margin:0">How It's Built &amp; Run</h3>
+        <span class="ntype-badge" style="background:${implMeta.badge_bg};color:${implMeta.badge_text}" title="${esc(implMeta.full_name)}">${esc(implMeta.badge)} · ${esc(implMeta.full_name)}</span>
+      </div>
+      <div class="impl-box" style="border-left-color:${implMeta.accent}">
+        <p class="impl-summary">${esc(impl.summary)}</p>
+        <div class="impl-grid">
+          <div class="impl-cell">
+            <span>Day-0 Setup (Provisioned Via)</span>
+            <strong>${esc(impl.provisioned_via)}</strong>
+          </div>
+          <div class="impl-cell">
+            <span>Day-2 Runtime (Executes As)</span>
+            <strong>${esc(impl.runtime)}</strong>
+          </div>
+          <div class="impl-cell">
+            <span>How Triggered</span>
+            <strong>${esc(impl.trigger)}</strong>
+          </div>
+          <div class="impl-cell">
+            <span>Source / Entrypoint</span>
+            <strong style="font-family:'JetBrains Mono',monospace;font-size:10.8px">${esc(impl.entrypoint)}</strong>
+          </div>
+        </div>
+        ${impl.command ? `<div class="impl-cmd" title="Runnable CLI / Infrastructure Command">$ ${esc(impl.command)}</div>` : ''}
+      </div>
+    </div>`;
+
+  const isCurrentRoot = node.uid.toUpperCase() === currentRootUid.toUpperCase();
+  const focusBtnHtml = isCurrentRoot
+    ? (node.parent_uid
+        ? `<button class="btn-secondary" onclick="reroot('${esc(node.parent_uid)}')">↑ Climb to Parent (${esc(node.parent_uid)})</button>`
+        : `<button class="btn-secondary" disabled>Viewing Top-Level Root</button>`)
+    : `<button class="btn-primary" onclick="reroot('${esc(node.uid)}')">Focus Subtree Here (${esc(node.uid)})</button>`;
+  const isNodeCollapsed = collapsedUids.has(node.uid.toUpperCase());
+  const collapseBtnHtml = (children.length > 0)
+    ? `<button class="btn-secondary" onclick="toggleNodeCollapse(event, '${esc(node.uid)}')">${isNodeCollapsed ? `+ Expand Layer (${children.length})` : '− Collapse Layer'}</button>`
+    : '';
+
+  document.getElementById('detail-panel').innerHTML = `
+    <div class="detail-header">
+      <div class="detail-badges">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="uid-badge">${esc(node.uid)}</span>
+          ${atomicBadgeHtml}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="ntype-badge" style="background:${tm.badge_bg};color:${tm.badge_text}">${esc(tm.full_name)}</span>
+          <button class="btn-card-close" onclick="toggleDetailCard(false)" title="Hide Right-Hand Specification Card (Shortcut: D)">✕ Hide</button>
+        </div>
+      </div>
+      <h2 class="detail-title">${esc(node.label)}</h2>
+      <div class="detail-Path">Hierarchy: ${esc(trail)}</div>
+      <div class="detail-actions">
+        ${focusBtnHtml}
+        ${collapseBtnHtml}
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <h3>Functional Purpose &amp; Description</h3>
+      <p>${esc(d.purpose || node.description)}</p>
+    </div>
+
+    ${implSectionHtml}
+
+    <div class="meta-grid">
+      <div class="meta-item">
+        <span>Target Platform</span>
+        <strong>${esc(d.platform_service || 'Google Cloud')}</strong>
+      </div>
+      <div class="meta-item">
+        <span>Owner / SLA</span>
+        <strong>${esc(d.owner || 'Domain Lead')}</strong>
+      </div>
+    </div>
+
+    ${typeSpecificHtml}
+
+    ${(() => {
+      const ovs = d.dataset_overlays || [];
+      if (!ovs.length) return '';
+      const cards = ovs.map(ov => {
+        const dm = DS_BY_ID[ov.ds_id] || { id: ov.ds_id, accent: '#2563EB' };
+        return `<div class="ds-row-box" style="border-left-color:${dm.accent || '#2563EB'}">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:${dm.accent || '#2563EB'}">${esc(ov.ds_id)} · ${esc(ov.table || '')}</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--muted)">${esc(ov.role || 'DATA')}</span>
+          </div>
+          <div style="font-weight:600;color:var(--text)">Source: ${esc(ov.source_asset || '')}</div>
+          <div style="font-size:11.5px;color:var(--subtle)">${esc(ov.notes || '')}</div>
+        </div>`;
+      }).join('');
+      return `<div class="detail-section">
+        <h3>Overlaid Datasets &amp; Source Files (${ovs.length})</h3>
+        <div>${cards}</div>
+      </div>`;
+    })()}
+
+    <div class="detail-section">
+      <h3>Inputs &amp; Triggers</h3>
+      <ul class="detail-list">${inputsHtml}</ul>
+    </div>
+
+    <div class="detail-section">
+      <h3>Outputs &amp; State Changes</h3>
+      <ul class="detail-list">${outputsHtml}</ul>
+    </div>
+
+    <div class="detail-section">
+      <h3>Business Rules &amp; Validations</h3>
+      <ul class="detail-list">${rulesHtml}</ul>
+    </div>
+
+    ${childrenHtml}
+  `;
+}
+
+function render() {
+  const isDark = document.documentElement.dataset.theme === 'dark';
+  const rawSub = findNode(TREE_DATA.root, currentRootUid) || findNode(TREE_DATA.root, TREE_DATA.root.uid);
+  selRoot.value = rawSub.uid;
+  const sub = pruneNode(rawSub, 0);
+
+  document.getElementById('hdr-title').textContent =
+    `${TREE_DATA.capability_name} (Root: ${sub.uid})`;
+
+  // Update breadcrumbs
+  const crumbBar = document.getElementById('crumb-bar');
+  crumbBar.innerHTML = '';
+  (rawSub.ancestors || []).forEach(a => {
+    const btn = document.createElement('button');
+    btn.className = 'crumb';
+    btn.textContent = `${a.uid} ${a.label}`;
+    btn.onclick = () => { currentRootUid = a.uid; selectedUid = a.uid; render(); };
+    crumbBar.appendChild(btn);
+    const sep = document.createElement('span');
+    sep.textContent = '▸';
+    sep.style.color = '#94A3B8';
+    crumbBar.appendChild(sep);
+  });
+  const activeBtn = document.createElement('button');
+  activeBtn.className = 'crumb active';
+  activeBtn.textContent = `${sub.uid} ${sub.label}`;
+  crumbBar.appendChild(activeBtn);
+  syncMatrixBtn();
+
+  if (currentLayout === 'matrix') {
+    const flat = [];
+    function collectSub(n) {
+      flat.push(n);
+      (n.children || []).forEach(collectSub);
+    }
+    collectSub(sub);
+    let mappedCount = 0;
+    const rowsHtml = [];
+    flat.forEach(b => {
+      const bd = b.details || {};
+      const dso = bd.dataset_overlays || [];
+      const cruds = bd.crud_entities || [];
+      const isMapped = dso.length > 0 || cruds.length > 0;
+      if (isMapped) mappedCount++;
+
+      const atomic = isNodeAtomic(b);
+      const bImpl = resolveImpl(b);
+      const matchesType = currentLens === 'impl'
+        ? (activeImplFilter === 'all' || (activeImplFilter === 'atomic' ? atomic : bImpl.mode === activeImplFilter))
+        : (activeTypeFilter === 'all' || (activeTypeFilter === 'atomic' ? atomic : b.node_type === activeTypeFilter));
+      const matchesDataset = activeDatasetFilter === 'all' || nodeHasDataset(b, activeDatasetFilter);
+      const searchBlob = (JSON.stringify(dso) + ' ' + JSON.stringify(cruds) + ' ' + JSON.stringify(bImpl)).toLowerCase();
+      const matchesSearch = !searchQuery ||
+        b.uid.toLowerCase().includes(searchQuery) ||
+        b.label.toLowerCase().includes(searchQuery) ||
+        b.description.toLowerCase().includes(searchQuery) ||
+        searchBlob.includes(searchQuery);
+      if (!matchesType || !matchesDataset || !matchesSearch) return;
+
+      const tm = TYPE_META[b.node_type] || { badge: 'FN', badge_bg: '#DBEAFE', badge_text: '#1E40AF', accent: '#2563EB' };
+      const isSel = b.uid.toUpperCase() === selectedUid.toUpperCase();
+      const indentPx = b.rel_depth * 14;
+      const atomMark = atomic ? `<span title="Atomic Delivery Unit" style="color:${tm.accent};font-family:monospace;font-weight:700;margin-left:5px">◇</span>` : '';
+
+      let dsCol = '';
+      let srcCol = '';
+      if (dso.length > 0) {
+        dsCol = dso.map(x => `<div style="margin-bottom:4px"><span class="ds-mini-pill">${esc(x.ds_id || 'DS')}</span><strong style="font-family:'JetBrains Mono',monospace;font-size:11px">${esc(x.table || '')}</strong> <span style="font-size:10px;color:var(--subtle)">[${esc(x.role || 'DATA')}]</span></div>`).join('');
+        srcCol = dso.map(x => `<div style="margin-bottom:4px"><span style="font-weight:600">${esc(x.source_asset || '')}</span>${x.notes ? ` <span style="color:var(--subtle)">— ${esc(x.notes)}</span>` : ''}</div>`).join('');
+      } else if (cruds.length > 0) {
+        dsCol = cruds.map(c => `<div style="font-family:'JetBrains Mono',monospace;font-size:11px"><strong>${esc(c.entity)}</strong> (${esc(c.operations)})</div>`).join('');
+        srcCol = `<div><strong>Setup:</strong> ${esc(bImpl.provisioned_via)}</div><div style="color:var(--subtle)"><strong>Runtime:</strong> ${esc(bImpl.runtime)}</div>`;
+      } else {
+        dsCol = `<span style="color:var(--subtle)">Platform: ${esc(bd.platform_service || 'Google Cloud')}</span>`;
+        srcCol = `<div><strong>Setup:</strong> ${esc(bImpl.provisioned_via)}</div><div style="color:var(--subtle)"><strong>Runtime:</strong> ${esc(bImpl.runtime)}</div>`;
+      }
+
+      rowsHtml.push(`<tr class="matrix-row${isSel ? ' selected' : ''}" onclick="selectNode('${esc(b.uid)}')" ondblclick="currentLayout=lastDiagramLayout||'pillar';syncMatrixBtn();reroot('${esc(b.uid)}')">
+        <td style="white-space:nowrap;padding-left:${10 + indentPx}px"><span class="uid-badge" style="font-size:11px;padding:3px 7px">${esc(b.uid)}</span>${atomMark}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px">
+            <strong>${esc(b.label)}</strong>
+            <span class="ntype-badge" style="background:${tm.badge_bg};color:${tm.badge_text};font-size:9.5px;padding:2px 7px">${esc(tm.badge)}</span>
+            <span class="ntype-badge" style="background:${bImpl.meta.badge_bg};color:${bImpl.meta.badge_text};font-size:9.5px;padding:2px 7px" title="${esc(bImpl.meta.full_name)}">${esc(bImpl.meta.badge)}</span>
+          </div>
+          <div style="font-size:11.5px;color:var(--subtle)">${esc(b.description)}</div>
+        </td>
+        <td>${dsCol}</td>
+        <td style="font-size:11.5px">${srcCol}</td>
+      </tr>`);
+    });
+
+    const pct = flat.length ? Math.round((mappedCount / flat.length) * 100) : 100;
+    const matrixHtml = `
+      <div class="matrix-summary-bar">
+        <div><strong>Process ↔ Dataset Mapping Matrix:</strong> Showing <strong>${rowsHtml.length}</strong> of <strong>${flat.length}</strong> functions · <span style="color:#059669;font-weight:700">${mappedCount}/${flat.length} (${pct}%) Mapped</span></div>
+      </div>
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th style="width:155px">UID &amp; Level</th>
+            <th style="width:27%">Process Function &amp; Role</th>
+            <th style="width:31%">Associated Datasets &amp; BigQuery Tables</th>
+            <th>Raw Source Files / Provenance Notes</th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml.join('')}</tbody>
+      </table>`;
+    document.getElementById('svg-container').innerHTML = matrixHtml;
+    renderDetailCard(selectedUid);
+    syncCardVisibility();
+    return;
+  }
+
+  // Layout computation
+  const boxes = [];
+  const edges = [];
+  let canvasW = 880, canvasH = 400;
+
+  if (currentLayout === 'pillar') {
+    const marginX = 38, topY = 20, rootW = 450, rootH = 74, colBaseW = 398, cardH = 72, indentStep = 28, vGap = 16, colGap = 36, rootToL1 = 48;
+    function maxRelD(n) {
+      if (!n.children || !n.children.length) return n.rel_depth;
+      return Math.max(...n.children.map(maxRelD));
+    }
+    const extraLevels = Math.max(0, maxRelD(sub) - 1);
+    const colW = colBaseW + extraLevels * indentStep;
+    const l1 = sub.children || [];
+    const numCols = Math.max(1, l1.length);
+    const totalColsW = numCols * colW + (numCols - 1) * colGap;
+    canvasW = Math.max(rootW + 2 * marginX, totalColsW + 2 * marginX, 780);
+    const colsStartX = (canvasW - totalColsW) / 2;
+    const rootX = (canvasW - rootW) / 2;
+    boxes.push({ ...sub, x: rootX, y: topY, w: rootW, h: rootH });
+    const rootCx = rootX + rootW / 2;
+    const rootBy = topY + rootH;
+    const l1TopY = rootBy + rootToL1;
+    const busY = rootBy + rootToL1 / 2;
+    let maxBottom = rootBy;
+
+    if (l1.length > 0) {
+      edges.push({ x1: rootCx, y1: rootBy, x2: rootCx, y2: busY, color: '#64748B', w: 1.75 });
+      const xs = l1.map((_, idx) => colsStartX + idx * (colW + colGap) + colW / 2).concat([rootCx]);
+      const minX = Math.min(...xs), maxX = Math.max(...xs);
+      if (maxX > minX) edges.push({ x1: minX, y1: busY, x2: maxX, y2: busY, color: '#64748B', w: 1.75 });
+    }
+
+    l1.forEach((l1Node, idx) => {
+      const colX = colsStartX + idx * (colW + colGap);
+      boxes.push({ ...l1Node, x: colX, y: l1TopY, w: colW, h: cardH });
+      edges.push({ x1: colX + colW / 2, y1: busY, x2: colX + colW / 2, y2: l1TopY, color: '#64748B', w: 1.75 });
+      let currY = l1TopY + cardH;
+
+      function walkVertical(pNode, pX, pTop) {
+        const ch = pNode.children || [];
+        const spineX = pX - 14;
+        const pMidY = pTop + cardH / 2;
+        if (pNode.rel_depth === 1 && pNode.totalChildren > 0) {
+          edges.push({ x1: spineX, y1: pMidY, x2: pX, y2: pMidY, color: '#94A3B8', w: 1.5 });
+        }
+        if (!ch.length) return;
+        let lastMidY = pMidY;
+        ch.forEach(c => {
+          currY += vGap;
+          const cX = colX + (c.rel_depth - 1) * indentStep;
+          const cW = colW - (c.rel_depth - 1) * indentStep;
+          const cTop = currY;
+          boxes.push({ ...c, x: cX, y: cTop, w: cW, h: cardH });
+          const midY = cTop + cardH / 2;
+          lastMidY = Math.max(lastMidY, midY);
+          edges.push({ x1: spineX, y1: midY, x2: cX, y2: midY, color: '#94A3B8', w: 1.5 });
+          currY += cardH;
+          if (c.children && c.children.length) walkVertical(c, cX, cTop);
+        });
+        edges.push({ x1: spineX, y1: pMidY, x2: spineX, y2: lastMidY, color: '#94A3B8', w: 1.5 });
+      }
+      walkVertical(l1Node, colX, l1TopY);
+      maxBottom = Math.max(maxBottom, currY);
+    });
+    canvasH = maxBottom + 28;
+  } else {
+    const marginX = 32, topY = 20, leafW = 348, cardH = 72, hGap = 22, vGap = 46;
+    function measure(n) {
+      const ch = n.children || [];
+      if (!ch.length) { n._w = leafW; return leafW; }
+      const sum = ch.map(measure).reduce((a, b) => a + b, 0) + (ch.length - 1) * hGap;
+      n._w = Math.max(leafW, sum);
+      return n._w;
+    }
+    const totW = measure(sub);
+    canvasW = Math.max(780, totW + 2 * marginX);
+    let maxBottom = topY;
+    function place(n, leftX, y, pCx, pBy) {
+      const w = n.rel_depth === 0 ? 420 : leafW;
+      const x = leftX + (n._w - w) / 2;
+      boxes.push({ ...n, x, y, w, h: cardH });
+      const myBy = y + cardH;
+      const myCx = x + w / 2;
+      maxBottom = Math.max(maxBottom, myBy);
+      const ch = n.children || [];
+      if (ch.length) {
+        const busY = myBy + vGap / 2;
+        edges.push({ x1: myCx, y1: myBy, x2: myCx, y2: busY, color: '#64748B', w: 1.75 });
+        const chSum = ch.reduce((a, c) => a + c._w, 0) + (ch.length - 1) * hGap;
+        let cLeft = leftX + (n._w - chSum) / 2;
+        const cCenters = [];
+        ch.forEach(c => {
+          const cW = c._w;
+          const cBoxX = cLeft + (cW - leafW) / 2;
+          const cCx = cBoxX + leafW / 2;
+          cCenters.push(cCx);
+          edges.push({ x1: cCx, y1: busY, x2: cCx, y2: myBy + vGap, color: '#64748B', w: 1.75 });
+          place(c, cLeft, myBy + vGap, myCx, myBy);
+          cLeft += cW + hGap;
+        });
+        const allX = cCenters.concat([myCx]);
+        const minX = Math.min(...allX), maxX = Math.max(...allX);
+        if (maxX > minX) edges.push({ x1: minX, y1: busY, x2: maxX, y2: busY, color: '#64748B', w: 1.75 });
+      }
+    }
+    place(sub, (canvasW - totW) / 2, topY, null, null);
+    canvasH = maxBottom + 28;
+  }
+
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${Math.ceil(canvasW)} ${Math.ceil(canvasH)}" width="${Math.ceil(canvasW)}" height="${Math.ceil(canvasH)}">`;
+  edges.forEach(e => {
+    svg += `<line x1="${e.x1.toFixed(1)}" y1="${e.y1.toFixed(1)}" x2="${e.x2.toFixed(1)}" y2="${e.y2.toFixed(1)}" stroke="${e.color}" stroke-width="${e.w}"/>`;
+  });
+
+  boxes.forEach(b => {
+    const pal = palette(b.rel_depth, b.node_type, isDark, b);
+    const pillW = Math.max(54, b.uid.length * 7.4 + 12);
+    const pillX = b.x + 12;
+    const pillY = b.y + 11;
+
+    const badgeStr = pal.badge;
+    const badgeW = Math.max(44, badgeStr.length * 6.4 + 12);
+    const badgeX = b.x + b.w - badgeW - 10;
+
+    const atomic = isNodeAtomic(b);
+    const bImpl = resolveImpl(b);
+
+    const labelX = pillX + pillW + 8;
+    const availW = badgeX - labelX - 6;
+    const maxLabelChars = Math.max(15, Math.floor(availW / 6.3));
+    const labelStr = b.label.length > maxLabelChars ? b.label.slice(0, maxLabelChars - 1) + '…' : b.label;
+    const hasCollapseBtn = !atomic && b.totalChildren > 0;
+    const descRightPad = atomic ? 36 : 20;
+    const maxDescChars = Math.max(26, Math.floor((b.w - descRightPad) / 6.0));
+    const dLines = wrapTwoLines(b.description, maxDescChars);
+
+    const isSelected = b.uid.toUpperCase() === selectedUid.toUpperCase();
+    const matchesType = currentLens === 'impl'
+      ? (activeImplFilter === 'all' || (activeImplFilter === 'atomic' ? atomic : bImpl.mode === activeImplFilter))
+      : (activeTypeFilter === 'all' || (activeTypeFilter === 'atomic' ? atomic : b.node_type === activeTypeFilter));
+    const matchesDataset = activeDatasetFilter === 'all' || nodeHasDataset(b, activeDatasetFilter);
+    const dsSearchStr = (JSON.stringify((b.details && b.details.dataset_overlays) || []) + ' ' + JSON.stringify(bImpl)).toLowerCase();
+    const matchesSearch = !searchQuery ||
+      b.uid.toLowerCase().includes(searchQuery) ||
+      b.label.toLowerCase().includes(searchQuery) ||
+      b.description.toLowerCase().includes(searchQuery) ||
+      dsSearchStr.includes(searchQuery);
+    const dimmedClass = (!matchesType || !matchesDataset || !matchesSearch) ? ' dimmed' : '';
+    const selectedClass = isSelected ? ' selected' : '';
+
+    svg += `<g class="fd-node-group${selectedClass}${dimmedClass}" onclick="selectNode('${esc(b.uid)}')" ondblclick="reroot('${esc(b.uid)}')">`;
+    svg += `<rect class="main-box" x="${b.x.toFixed(1)}" y="${b.y.toFixed(1)}" width="${b.w.toFixed(1)}" height="${b.h.toFixed(1)}" rx="6" fill="${pal.fill}" stroke="${pal.stroke}" stroke-width="${b.rel_depth <= 1 ? 1.75 : 1.25}"/>`;
+    svg += `<rect x="${b.x.toFixed(1)}" y="${b.y.toFixed(1)}" width="5" height="${b.h.toFixed(1)}" rx="2.5" fill="${pal.accent}"/>`;
+    svg += `<rect x="${pillX.toFixed(1)}" y="${pillY.toFixed(1)}" width="${pillW.toFixed(1)}" height="20" rx="4" fill="${pal.uidBg}"/>`;
+    svg += `<text x="${(pillX + pillW / 2).toFixed(1)}" y="${(pillY + 14).toFixed(1)}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" font-weight="700" fill="${pal.uidText}">${esc(b.uid)}</text>`;
+    svg += `<rect x="${badgeX.toFixed(1)}" y="${(pillY + 1).toFixed(1)}" width="${badgeW.toFixed(1)}" height="18" rx="4" fill="${pal.badgeBg}"/>`;
+    svg += `<text x="${(badgeX + badgeW / 2).toFixed(1)}" y="${(pillY + 13).toFixed(1)}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" font-weight="700" fill="${pal.badgeText}">${esc(badgeStr)}</text>`;
+    svg += `<text x="${labelX.toFixed(1)}" y="${(pillY + 14.5).toFixed(1)}" font-size="12" font-weight="700" fill="${pal.label}">${esc(labelStr)}</text>`;
+    if (dLines.length === 1) {
+      svg += `<text x="${(b.x + 12).toFixed(1)}" y="${(b.y + 51).toFixed(1)}" font-size="11.2" fill="${pal.desc}">${esc(dLines[0])}</text>`;
+    } else {
+      svg += `<text x="${(b.x + 12).toFixed(1)}" y="${(b.y + 46).toFixed(1)}" font-size="10.8" fill="${pal.desc}">${esc(dLines[0])}</text>`;
+      svg += `<text x="${(b.x + 12).toFixed(1)}" y="${(b.y + 60).toFixed(1)}" font-size="10.8" fill="${pal.desc}">${esc(dLines[1])}</text>`;
+    }
+    if (atomic) {
+      const dCx = b.x + b.w - 14;
+      const dCy = b.y + b.h - 12;
+      const dR = 4.5;
+      const pts = `${dCx.toFixed(1)},${(dCy - dR).toFixed(1)} ${(dCx + dR).toFixed(1)},${dCy.toFixed(1)} ${dCx.toFixed(1)},${(dCy + dR).toFixed(1)} ${(dCx - dR).toFixed(1)},${dCy.toFixed(1)}`;
+      svg += `<g><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title><polygon points="${pts}" fill="none" stroke="${pal.accent}" stroke-width="1.5" opacity="0.85"/><circle cx="${dCx.toFixed(1)}" cy="${dCy.toFixed(1)}" r="1.2" fill="${pal.accent}" opacity="0.85"/></g>`;
+    } else if (hasCollapseBtn) {
+      const isCol = b.isCollapsed;
+      const btnText = isCol ? '+' : '−';
+      const r = 7.5;
+      let cx = b.x - 14;
+      let cy = b.y + b.h / 2;
+      if (currentLayout === 'pillar') {
+        if (b.rel_depth === 0) {
+          cx = b.x + b.w / 2;
+          cy = isCol ? (b.y + b.h) : (b.y + b.h + 24);
+        } else {
+          cx = b.x - 14;
+          cy = b.y + b.h / 2;
+        }
+      } else {
+        cx = b.x + b.w / 2;
+        cy = isCol ? (b.y + b.h) : (b.y + b.h + 23);
+      }
+      const btnBg = isCol ? '#DBEAFE' : (isDark ? '#1E293B' : '#E2E8F0');
+      const btnStroke = isCol ? '#2563EB' : (isDark ? '#94A3B8' : '#64748B');
+      const btnFg = isCol ? '#1E40AF' : (isDark ? '#F8FAFC' : '#0F172A');
+      const tipText = isCol
+        ? `Expand immediate layer below (${b.totalChildren} direct child modules)`
+        : `Collapse immediate layer below (${b.totalChildren} direct child modules)`;
+      svg += `<g class="fd-collapse-btn" onclick="toggleNodeCollapse(event, '${esc(b.uid)}')">`;
+      svg += `<title>${tipText}</title>`;
+      svg += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r}" fill="${btnBg}" stroke="${btnStroke}" stroke-width="1.4"/>`;
+      svg += `<text x="${cx.toFixed(1)}" y="${(cy + 3.8).toFixed(1)}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="700" fill="${btnFg}">${btnText}</text>`;
+      svg += `</g>`;
+    }
+    svg += `</g>`;
+  });
+  svg += `</svg>`;
+  document.getElementById('svg-container').innerHTML = svg;
+  renderDetailCard(selectedUid);
+  syncCardVisibility();
+}
+
+window.selectNode = function(uid) {
+  selectedUid = uid;
+  render();
+};
+
+window.reroot = function(uid) {
+  currentRootUid = uid;
+  selectedUid = uid;
+  render();
+};
+
+render();
+</script>
+</body>
+</html>

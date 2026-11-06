@@ -12,6 +12,7 @@ dpf eval --id grain-violation  # one or more by id
 
 | Eval | Command | Asserts |
 |---|---|---|
+| `agf-restricted-leak` | check G1 | When AGF (`ADG-00`) governance is enabled, a `RESTRICTED` column lacking a policy tag fails G1. |
 | `compose-selects-extract` | compose | Compose selects the outbound watermark extractor for an Oracle source captured by watermark. |
 | `fitness-warn` | check G1 | When the business says bad data must stop publication, a warn-only quality gate fails G1. |
 | `governance-gate` | check G1 | If the BRD restricts attributes, the design must protect them with policy tags or G1 fails. |
@@ -19,13 +20,19 @@ dpf eval --id grain-violation  # one or more by id
 | `history-semantics` | check G1 | A BRD asking for values as they were at the time cannot be resolved with current-only history. |
 | `idempotency` | generate | Generating twice gives byte-identical artefacts that match the golden copy. |
 | `incomplete-brd` | brd validate | A BRD missing its level-of-detail and history answers fails G0, and the gap register names the question. |
+| `lookml-broken-dashboard-field` | check G1 | A LookML dashboard tile referencing an undeclared field in its Explore fails G1. |
+| `lookml-pdt-without-adr` | check G1 | Enabling Looker PDTs (`allow_pdt: true`) without a product ADR deciding `semantic_layer` fails G1. |
+| `lookml-unpinned-bar-axis` | check G1 | A LookML bar or column chart tile with `y_axis_zero: false` violates Stephen Few zero-baseline rules and fails G1. |
 | `modelling-vocabulary` | check G0 | A BRD that uses modelling vocabulary (fact table, SCD) fails G0: design words belong in the TDD. |
 | `monitor-breach` | monitor | A freshness breach in business hours fails `dpf monitor` and opens an OpenSpec change quoting it. |
 | `no-methodology-envy` | check G1 | A direct-pack product that hand-rolls dimensional structures fails G1: adopt the Kimball pack instead. |
 | `orphan-design` | check G1 | A design element or TDD decision that cites no requirement (and no platform capability) fails G1. |
 | `port-without-model` | check G1 | An output port that exposes an undeclared model fails G1. |
+| `prototype-blocks-g1` | check G1 | A product with status prototype cannot pass G0 or G1 until promoted via `dpf proto promote`. |
 | `reject-gate-required` | check G4 | Without row quarantine there is no reject gate, and the static check for AX-12 fails. |
+| `reject-threshold-warns` | check G1 | When the BRD requires bad data to stop publication, a non-zero `max_reject_pct` emits a G1 warning. |
 | `signoff-invalidated` | check G1 | Editing `semantics.md` after sign-off invalidates the business signature until it is signed again. |
+| `staging-silent-where-drop` | check G1 | A top-level `WHERE` clause in a staging SQL body silently drops rows before quarantine and fails G1. |
 | `stale-evidence` | check G4 | Evidence recorded against an older build digest does not count at G4. |
 | `stale-tdd` | check G1 | Bumping the BRD version makes the TDD, the manifest and the sign-off stale, which blocks G1. |
 | `tool-tier` | lint | Bespoke code without an ADR, or a tier 4/5 skill doing what an MCP server covers, fails lint. |

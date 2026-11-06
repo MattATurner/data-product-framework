@@ -3,7 +3,14 @@ config {
   schema: dataform.projectConfig.vars.gold_dataset,
   description: "One row per customer order, with its lines nested.",
   tags: ["daily"],
-  dependencies: ["assert_stg_customers_grain", "assert_stg_customers_grain_not_null", "assert_stg_order_lines_grain", "assert_stg_order_lines_grain_not_null", "assert_stg_order_lines_no_rejects", "assert_stg_orders_grain", "assert_stg_orders_grain_not_null", "assert_stg_orders_no_rejects"]
+  dependencies: ["assert_stg_customers_grain", "assert_stg_customers_grain_not_null", "assert_stg_order_lines_grain", "assert_stg_order_lines_grain_not_null", "assert_stg_order_lines_no_rejects", "assert_stg_orders_grain", "assert_stg_orders_grain_not_null", "assert_stg_orders_no_rejects"],
+  bigquery: {
+    labels: {
+      dpf_product: "customer_orders",
+      dpf_layer: "gold",
+      dpf_status: "draft"
+    }
+  }
 }
 
 -- dpf: model=customer_orders layer=gold role=nested_view skill=direct/model-struct-shaping satisfies=R-1,R-2,R-3,R-4,R-5

@@ -22,7 +22,7 @@ MATERIALIZED = {"view": "view", "table": "table", "incremental": "incremental",
 
 def _ref(g: ProductGraph, name: str) -> str:
     node = g.get(name)
-    if node is not None and node.kind == "raw":
+    if node is not None and node.kind in ("raw", "upstream"):
         return f"{{{{ source('{node.source}', '{name}') }}}}"
     return f"{{{{ ref('{name}') }}}}"
 
@@ -97,11 +97,31 @@ def sources_yml(p: Product, g: ProductGraph, actions: list[Action]) -> str:
     for a in actions:
         if a.kind == "declaration":
             by_source.setdefault(g.nodes[a.name].source, []).append(a)
-    doc = {"version": 2, "sources": [
-        {"name": src, "description": f"Raw, append-only landing of source system {src}.",
-         "schema": "{{ var('raw_dataset') }}",
-         "tables": [{"name": a.name, "description": a.description} for a in acts]}
-        for src, acts in by_source.items()]}
+    sources_list = []
+    for src, acts in by_source.items():
+        first_node = g.nodes[acts[0].name]
+        if first_node.kind == "upstream":
+            s_obj: dict = {"name": src, "description": f"Upstream foundation {src}."}
+            if acts[0].database:
+                s_obj["database"] = acts[0].database
+            s_obj["schema"] = acts[0].schema_literal or "{{ var('raw_dataset') }}"
+            s_obj["tables"] = [
+                {
+                    "name": a.name,
+                    **({"identifier": a.phys_name} if a.phys_name and a.phys_name != a.name else {}),
+                    "description": a.description,
+                }
+                for a in acts
+            ]
+            sources_list.append(s_obj)
+        else:
+            sources_list.append({
+                "name": src,
+                "description": f"Raw, append-only landing of source system {src}.",
+                "schema": "{{ var('raw_dataset') }}",
+                "tables": [{"name": a.name, "description": a.description} for a in acts],
+            })
+    doc = {"version": 2, "sources": sources_list}
     return marker({"product": p.id, "implements": "land-immutable-raw"}, "#") + "\n" + \
         yaml.safe_dump(doc, sort_keys=False, allow_unicode=True, width=1000)
 

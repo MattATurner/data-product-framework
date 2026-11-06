@@ -34,9 +34,9 @@ variable "dataform_git_commitish" {
 }
 
 variable "dataform_release_schedule" {
-  description = "Cron for automatic release compilation. Empty: no automatic release, so each deploy compiles and releases (required for a Dataform-hosted repository with strict act-as checks)."
+  description = "Cron for automatic release compilation. Defaults to empty on governed products so unreviewed Dataform workspace edits cannot auto-release (ADR-017), and hourly on prototypes."
   type        = string
-  default     = "0 * * * *"
+  default     = ""
 }
 
 variable "dataform_service_account" {

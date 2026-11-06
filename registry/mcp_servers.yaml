@@ -40,11 +40,35 @@ servers:
       for source-system inspection during the TDD feasibility pass. Interactive queries,
       not scheduled bulk extraction.
 
+  - id: looker-mcp
+    tier: 2
+    kind: self_hosted_mcp
+    covers: [looker_explore_inspection, looker_query, looker_dashboard_prototyping, looker_health_check]
+    docs: https://github.com/googleapis/genai-toolbox
+    notes: >
+      MCP Toolbox for Looker (get_models, get_explores, query, make_dashboard, health_pulse,
+      health_analyze). Bounded leaf worker per ADR-018: use for semantic discovery, interactive
+      dashboard prototyping imported via dpf proto import-looker, and live G4 query checks.
+      Never use to replace deterministic LookML artefact_generation.
+
   - id: conversational-analytics-api
     tier: 3
     kind: managed_agent
     covers: [natural_language_query, data_qa]
     notes: Use for natural-language access to a published product rather than a bespoke NL2SQL layer.
+
+  - id: data-engineering-agent-api
+    tier: 3
+    kind: managed_agent
+    covers: [sql_wrangling, pipeline_troubleshooting]
+    iam: [roles/dataform.codeEditor, roles/bigquery.jobUser, roles/cloudaicompanion.user]
+    docs: https://docs.cloud.google.com/gemini/data-agents/data-engineering-agent/api-overview
+    notes: >
+      Data Engineering Agent (geminidataanalytics.googleapis.com A2A API, BigQuery Studio and Data
+      Agent Kit). Bounded leaf worker per ADR-017: use for live-schema SQL wrangling into
+      products/<id>/sql/*.sql, sandbox exploration imported via dpf proto import-dataform, and
+      Dataform invocation failure diagnosis. Never use to replace deterministic artefact_generation
+      or mutate generated/ directly.
 
   - id: document-ai
     tier: 3
@@ -77,6 +101,11 @@ tools:
     tier: 4
     kind: managed_api
     covers: [alert_policy_management, log_metric_management]
+  - id: spectacles-cli
+    tier: 4
+    kind: cli
+    covers: [lookml_sql_validation, lookml_content_validation]
+    notes: Spectacles CLI for CI and G4 SQL/content validation against a Looker branch.
   - id: dpf-local
     tier: 4
     kind: cli
@@ -99,3 +128,5 @@ no_mcp_option_yet:
   - outbound_batch_extract
   - object_listing
   - dbt_build
+  - lookml_sql_validation
+  - lookml_content_validation

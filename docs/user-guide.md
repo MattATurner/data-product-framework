@@ -58,14 +58,14 @@ flowchart LR
 
 | Gate | Stage | Passes when | Command |
 |---|---|---|---|
-| **G0 · Define** | Define | The BRD answers every rubric question, is approved, and uses no modelling or technology words | `dpf brd validate <product>` (or `--gate define`) |
+| **G0 · Describe** | Describe *(Define)* | The BRD answers every rubric question, is approved, and uses no modelling or technology words | `dpf brd validate <product>` (or `--gate describe`) |
 | **G1 · Design** | Design | The TDD and manifest resolve every active requirement. Methodology, grain and history are justified. The business signature matches the current semantics | `dpf check <product> --gate G1` (or `--gate design`) |
-| **G2 · Compose** | Compose | Each pipeline stage selects exactly one skill and an implemented engine adapter. Every business scenario (AX) has an acceptance test (AT) | `dpf check <product> --gate G2` (or `--gate compose`) |
-| **G3 · Build** | Build | Generation is deterministic and matches the reviewed golden copy. Every requirement reaches a decision, a generated file and a test | `dpf check <product> --gate G3` (or `--gate build`) |
-| **G4 · Test** | Test | Every test case has passing evidence for the current build digest | `dpf check <product> --gate G4` (or `--gate test`) |
+| **G2 · Compose** | Build *(Compose)* | Each pipeline stage selects exactly one skill and an implemented engine adapter. Every business scenario (AX) has an acceptance test (AT) | `dpf check <product> --gate G2` (or `--gate compose`) |
+| **G3 · Build** | Build *(Generate)* | Generation is deterministic and matches the reviewed golden copy. Every requirement reaches a decision, a generated file and a test | `dpf check <product> --gate G3` (or `--gate build`) |
+| **G4 · Accept** | Accept *(Test)* | Every test case and human attestation has passing evidence for the current build digest | `dpf check <product> --gate G4` (or `--gate accept`) |
 | **Monitor** | Monitor | The deployed product meets its observability policy. A breach can open an OpenSpec change | `dpf monitor <product>` |
 
-Gates are cumulative: `--gate G3` (or `--gate build`) runs G0 to G3, and `--gate` accepts either the gate code (`G0`–`G4`) or the stage name (`define`, `design`, `compose`, `build`, `test`). At G3 and G4, `dpf check` also runs `dpf validate` and `dpf lint` first.
+Gates are cumulative: `--gate G3` (or `--gate build`) runs G0 to G3, and `--gate` accepts either the gate code (`G0`–`G4`) or the stage name (`describe`/`define`, `design`, `compose`, `build`, `accept`/`test`). At G3 and G4, `dpf check` also runs `dpf validate` and `dpf lint` first.
 
 ### Who uses DPF
 

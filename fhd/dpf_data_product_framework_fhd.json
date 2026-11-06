@@ -1,0 +1,1229 @@
+{
+  "acronym": "DPF",
+  "capability_name": "Data Product Framework",
+  "subtitle": "Specification-Driven Data Engineering Across 6 Human-Gated Steps on Google Cloud",
+  "tags": [
+    "Functional Decomposition",
+    "FHD",
+    "DPF",
+    "Data Product Framework",
+    "BigQuery",
+    "Knowledge Catalog",
+    "Dataform",
+    "Looker",
+    "Gemini Platform"
+  ],
+  "root": {
+    "uid": "DPF-00",
+    "label": "Data Product Framework",
+    "node_type": "capability",
+    "description": "Accelerates enterprise data products from candidate use case to governed outcome in 6 human-gated steps.",
+    "details": {
+      "purpose": "End-to-end build-time delivery framework pairing plain-English business specifications and reusable organisational context with deterministic multi-plane compilation (Dataform, dbt, Terraform, LookML, and BigQuery Knowledge Catalog) and symbiotic runtime integration with the Agentic Data Governance Framework (ADG-00).",
+      "owner": "Data Platform & Domain Product Engineering",
+      "status": "Production-Verified Reference Implementation",
+      "sla": "Offline Gates G0-G3 < 10s · Byte-Identical Deterministic Builds",
+      "platform_service": "Python CLI, BigQuery, Dataform, Looker, Knowledge Catalog & Gemini Platform",
+      "inputs": [
+        "Candidate two-page use-case forms and plain-English Business Requirement Documents (BRDs)",
+        "Organisational context registries (glossary.yaml, source_systems.yaml, foundations.yaml, platform-defaults.yaml)",
+        "Concise authored SQL bodies and runtime health or AGF governance feedback events"
+      ],
+      "outputs": [
+        "Deterministic Dataform or dbt projects, Terraform IAM/masking modules, and governed LookML Explores & Dashboards",
+        "Signed SHA-256 plain-English semantics playbacks and digest-bound test & human attestation evidence",
+        "BigQuery Knowledge Catalog registrations carrying all 7 canonical ADG-00 Single-Writer Aspect payloads"
+      ],
+      "business_rules": [
+        "Plain-English Boundary (Gate G0): Business requirements contain zero database or cloud modelling jargon.",
+        "Signed Semantics Invariant (Gate G1): Any change to grain, history, or metric definitions invalidates signoff.yaml until re-signed.",
+        "Deterministic Multi-Plane Build (Gate G3): Building the same manifest twice produces byte-identical SQL, Terraform, LookML, and Catalog artefacts.",
+        "Symbiotic Governance (ADR-019): DPF enforces compile-time privacy and residency rules and emits ADG-00 aspects to Knowledge Catalog rather than duplicating runtime estate daemons."
+      ],
+      "delivery_unit": "Composite Capability / Framework (6 chronological human-gated pillars)",
+      "implementation": {
+        "mode": "multi_stack",
+        "summary": "Runs as a zero-daemon Python CLI and Agent Skills suite in Git, compiling multi-plane Google Cloud artefacts offline and verifying live deployments in BigQuery and Knowledge Catalog.",
+        "provisioned_via": "dpf init <workspace> + Terraform generated modules",
+        "runtime": "Python 3.12 CLI, Agent Skills, Dataform/dbt, BigQuery & Looker",
+        "trigger": "Developer CLI · Pull Request CI · Scheduled Business-Hours Monitor",
+        "entrypoint": "dpf/cli.py · skills/ · contracts/ · methodologies/ · engines/",
+        "command": "dpf check --all --gate G3 && dpf eval"
+      }
+    },
+    "children": [
+      {
+        "uid": "DPF-01",
+        "label": "1. Discover & Prioritise",
+        "node_type": "capability",
+        "description": "Evaluates candidate business ideas and ranks Value vs Ease before engineering starts.",
+        "details": {
+          "purpose": "Stage 1 inception pillar ensuring teams invest engineering capacity only in concrete, business-sponsored use cases with honest source feasibility visibility.",
+          "owner": "Business Sponsor & Data Portfolio Panel",
+          "status": "Implemented",
+          "sla": "Single-Session Portfolio Scoring",
+          "platform_service": "DPF Define Templates & Agent Skills on Gemini Platform",
+          "inputs": [
+            "Two-page candidate use-case submission (1-use-case.pdf or YAML)"
+          ],
+          "outputs": [
+            "Readiness assessment report, 11-criterion scorecard, and Quick Win prioritisation matrix"
+          ],
+          "business_rules": [
+            "Candidate submissions must state the commercial decision, measurable value, and believed sources in plain language.",
+            "Readiness review assesses completeness without pre-scoring; the human panel owns final scoring at the Portfolio Gate."
+          ],
+          "delivery_unit": "Composite Stage Pillar (3 sub-modules)",
+          "implementation": {
+            "mode": "multi_stack",
+            "summary": "Combines an agentic readiness check skill with a weighted 11-criterion scoring rubric and fillable portfolio PDF forms.",
+            "provisioned_via": "dpf init (templates/define/ & .agents/skills/assess-use-case/)",
+            "runtime": "Agent Skill + Fillable PDF / YAML Scorecard",
+            "trigger": "New Use-Case Submission",
+            "entrypoint": "templates/define/ · templates/scoring.yaml · .agents/skills/assess-use-case/",
+            "command": "python3 templates/src/build_templates.py"
+          }
+        },
+        "children": [
+          {
+            "uid": "DPF-01-01",
+            "label": "Use-Case Readiness Agent",
+            "node_type": "agent",
+            "description": "Reviews candidate submissions against the 11-criterion evidence rubric before panel scoring.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Agentic inception reviewer that checks every section of a submitted 2-page use case for specificity, plain business language, and honest unknowns before the scoring panel meets.",
+              "owner": "Data Product Portfolio Lead",
+              "status": "Implemented in DPF v0.3",
+              "sla": "< 2m Automated Readiness Check",
+              "platform_service": "Gemini Platform Agent Skill (assess-use-case)",
+              "inputs": [
+                "Submitted 1-use-case.pdf or candidate YAML",
+                "templates/scoring.yaml rubric"
+              ],
+              "outputs": [
+                "Structured readiness verdict and pre-panel question list"
+              ],
+              "business_rules": [
+                "Never assigns numeric scores on behalf of the panel; flags vague value claims and hidden technical jargon."
+              ],
+              "implementation": {
+                "mode": "adk_agent",
+                "summary": "Agent skill invoked when a sponsor submits a candidate use case.",
+                "provisioned_via": "Copied via .agents/skills/assess-use-case/",
+                "runtime": "Gemini Platform / Coding Agent Skill",
+                "trigger": "On Candidate Use-Case Submission",
+                "entrypoint": ".agents/skills/assess-use-case/SKILL.md",
+                "command": "dpf check --gate describe"
+              },
+              "agent_config": {
+                "model": "gemini-2.5-pro",
+                "hitl_mode": "Advisory Pre-Gate Review",
+                "skills": [
+                  "assess-use-case"
+                ]
+              }
+            },
+            "children": []
+          },
+          {
+            "uid": "DPF-01-02",
+            "label": "11-Criterion Scoring Engine",
+            "node_type": "business_function",
+            "description": "Calculates weighted Value (3.05) and Ease (3.33) scores across eleven portfolio criteria.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Deterministic weighting rubric across Value (decision impact, strategic alignment, breadth) and Ease (source readiness, definition clarity, sponsorship).",
+              "owner": "Data Portfolio Office",
+              "status": "Implemented in DPF v0.3",
+              "sla": "Deterministic Instant Calculation",
+              "platform_service": "DPF Scoring Specification (templates/scoring.yaml)",
+              "inputs": [
+                "Panel criterion scores (1-5 scale) across 11 dimensions"
+              ],
+              "outputs": [
+                "Weighted Value score, Ease score, total points (/170), and quadrant placement"
+              ],
+              "business_rules": [
+                "Weights and anchors are version-controlled in templates/scoring.yaml so all domains are scored on identical terms."
+              ],
+              "implementation": {
+                "mode": "cli_batch",
+                "summary": "Declarative YAML rubric rendered into interactive fillable scorecards.",
+                "provisioned_via": "templates/scoring.yaml",
+                "runtime": "Python Template Builder & Scorecard Forms",
+                "trigger": "Prioritisation Panel Session",
+                "entrypoint": "templates/scoring.yaml",
+                "command": "python3 templates/src/build_templates.py"
+              }
+            },
+            "children": []
+          },
+          {
+            "uid": "DPF-01-03",
+            "label": "Portfolio Gate Workbench",
+            "node_type": "ui_workbench",
+            "description": "Presents the 2x2 Quick Win vs Strategic Bet matrix for human funding sign-off.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Human-in-the-loop portfolio gate where leadership compares scored candidates and selects funded Quick Wins and Strategic Bets.",
+              "owner": "Executive Sponsor & Domain Leads",
+              "status": "Implemented in DPF v0.3",
+              "sla": "Portfolio Cadence Gate",
+              "platform_service": "DPF Fillable Portfolio Matrix (2-scorecard.pdf & 3-prioritisation.pdf)",
+              "inputs": [
+                "Scored candidate use cases"
+              ],
+              "outputs": [
+                "Approved UC-<DOMAIN>-<NNN> charter authorised for Step 2 (Describe)"
+              ],
+              "business_rules": [
+                "No engineering design or pipeline work starts without Portfolio Gate selection or explicit prototype fast-path status."
+              ],
+              "implementation": {
+                "mode": "chat_ui",
+                "summary": "Fillable PDF scorecard and 2x2 portfolio matrix archived alongside product specs.",
+                "provisioned_via": "templates/define/2-scorecard.pdf · templates/define/3-prioritisation.pdf",
+                "runtime": "Human Portfolio Review",
+                "trigger": "Scheduled or Ad-Hoc Portfolio Gate",
+                "entrypoint": "templates/define/",
+                "command": "ls templates/define/"
+              }
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "uid": "DPF-02",
+        "label": "2. Describe (Gate G0)",
+        "node_type": "capability",
+        "description": "Captures structured plain-English business requirements and validates rubric completeness.",
+        "details": {
+          "purpose": "Stage 2 pillar turning a funded use case into an unambiguous, jargon-free Business Requirement Document (BRD) verified deterministically at Gate G0.",
+          "owner": "Business Owner & Business Analyst",
+          "status": "Implemented",
+          "sla": "Gate G0 Validation < 1s",
+          "platform_service": "DPF CLI (dpf brd validate) & Agent Skills",
+          "inputs": [
+            "Approved use case, registry/glossary.yaml, registry/brd-rubric.yaml, and registry/brd-vocabulary.yaml"
+          ],
+          "outputs": [
+            "Approved brd/spec.md + brd.yaml passing Gate G0 (or gap register of plain-English business questions)"
+          ],
+          "business_rules": [
+            "All 11 rubric groups (A-K) must be answered or explicitly deferred.",
+            "Modelling and cloud terms (fact table, SCD, partition, BigQuery) fail Gate G0 immediately."
+          ],
+          "delivery_unit": "Composite Stage Pillar (4 sub-modules)",
+          "implementation": {
+            "mode": "multi_stack",
+            "summary": "Pairs conversational BRD authoring and sandbox prototype import with deterministic Gate G0 rubric, glossary, and anti-jargon validation.",
+            "provisioned_via": "skills/author-brd/ + dpf/brd.py",
+            "runtime": "Python CLI & Agent Skill",
+            "trigger": "dpf brd validate <product> / dpf check --gate describe",
+            "entrypoint": "dpf/brd.py · skills/author-brd/ · skills/validate-brd/",
+            "command": "dpf check --all --gate describe"
+          }
+        },
+        "children": [
+          {
+            "uid": "DPF-02-01",
+            "label": "Plain-English BRD Author",
+            "node_type": "agent",
+            "description": "Interviews business stakeholders and drafts requirements strictly in commercial language.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Guided interview agent that translates stakeholder intent into Requirement/Scenario specs (spec.md) and structured answers (brd.yaml) without leaking technical design choices.",
+              "owner": "Business Analyst & Product Owner",
+              "status": "Implemented in DPF v0.3",
+              "sla": "Interactive 30-60m Authoring Session",
+              "platform_service": "Gemini Platform Agent Skill (author-brd)",
+              "inputs": [
+                "Approved use case",
+                "registry/brd-rubric.yaml",
+                "registry/glossary.yaml"
+              ],
+              "outputs": [
+                "openspec/specs/products/<domain>/<product>/brd/spec.md & brd.yaml"
+              ],
+              "business_rules": [
+                "Every metric and attribute must bind to an agreed term or alias in registry/glossary.yaml."
+              ],
+              "implementation": {
+                "mode": "adk_agent",
+                "summary": "Structured interview skill enforcing the 11-group business rubric.",
+                "provisioned_via": "skills/author-brd/SKILL.md",
+                "runtime": "Gemini Platform / Coding Agent Skill",
+                "trigger": "New Product Kickoff or Gap Register Resolution",
+                "entrypoint": "skills/author-brd/SKILL.md",
+                "command": "dpf brd gaps <product>"
+              },
+              "agent_config": {
+                "model": "gemini-2.5-pro",
+                "hitl_mode": "Co-Drafted with Business Owner",
+                "skills": [
+                  "author-brd",
+                  "validate-brd"
+                ]
+              }
+            },
+            "children": []
+          },
+          {
+            "uid": "DPF-02-02",
+            "label": "Gate G0 Rubric Validator",
+            "node_type": "business_function",
+            "description": "Verifies groups A-K completeness, glossary alignment, and zero technical jargon.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Deterministic Gate G0 checker verifying brd.v1 schema conformance, spec-to-YAML version parity, scenario coverage, glossary bindings, and banned technical vocabulary.",
+              "owner": "Data Platform Engineering",
+              "status": "Implemented in DPF v0.3",
+              "sla": "< 1s Offline Execution",
+              "platform_service": "DPF CLI (dpf/brd.py)",
+              "inputs": [
+                "brd/spec.md",
+                "brd/brd.yaml",
+                "registry/brd-rubric.yaml",
+                "registry/brd-vocabulary.yaml"
+              ],
+              "outputs": [
+                "Pass/Fail Gate G0 report and plain-English gaps.md question list"
+              ],
+              "business_rules": [
+                "Deferred requirements (**Status:** deferred) remain documented in spec.md without blocking v1 delivery."
+              ],
+              "implementation": {
+                "mode": "cli_batch",
+                "summary": "Deterministic Python validator invoked via CLI and CI.",
+                "provisioned_via": "dpf/brd.py · contracts/brd.v1.schema.json",
+                "runtime": "Python CLI",
+                "trigger": "dpf brd validate / dpf check --gate describe",
+                "entrypoint": "dpf/brd.py",
+                "command": "dpf brd validate sales_performance --no-write"
+              }
+            },
+            "children": []
+          },
+          {
+            "uid": "DPF-02-03",
+            "label": "Business Need Sign-Off",
+            "node_type": "ui_workbench",
+            "description": "Captures named business owner approval on the jargon-free requirement specification.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Human Business Need Gate ensuring the domain sponsor confirms the commercial rules, timeliness, privacy boundaries, and exceptions before technical design begins.",
+              "owner": "Named Business Owner",
+              "status": "Implemented in DPF v0.3",
+              "sla": "Human Gate Sign-Off",
+              "platform_service": "OpenSpec BRD Specification & Fillable 4-brd.pdf",
+              "inputs": [
+                "Validated brd/spec.md & brd/brd.yaml (zero G0 gaps)"
+              ],
+              "outputs": [
+                "Approved BRD version (e.g. BRD-SALES-002@1.2.0)"
+              ],
+              "business_rules": [
+                "Gate G0 stays red until approval.approved_by and approval.role are recorded by the business owner."
+              ],
+              "implementation": {
+                "mode": "chat_ui",
+                "summary": "Readable 4-page Markdown or PDF business specification signed by the business owner.",
+                "provisioned_via": "templates/define/4-brd.pdf · openspec/specs/products/",
+                "runtime": "Human Review & Git Approval",
+                "trigger": "Completion of Gate G0 Validation",
+                "entrypoint": "openspec/specs/products/sales/sales-performance/brd/spec.md",
+                "command": "dpf check sales_performance --gate describe"
+              }
+            },
+            "children": []
+          },
+          {
+            "uid": "DPF-02-04",
+            "label": "Prototype Sandbox Importer",
+            "node_type": "integration",
+            "description": "Imports existing Dataform or LookML repositories into fast-path prototype mode.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Reverse-onboarding adapter that ingests brownfield Dataform SQLX or Looker LookML projects (including shadow assets flagged by AGF ADG-05) into status: prototype manifests.",
+              "owner": "Data Engineering",
+              "status": "Implemented in DPF v0.3",
+              "sla": "< 5s Repository Import",
+              "platform_service": "DPF Prototype Fast-Path (ADR-016, ADR-017, ADR-018)",
+              "inputs": [
+                "Existing Dataform repository or LookML project directory"
+              ],
+              "outputs": [
+                "Scaffolded products/<id>/product.yaml in prototype mode ready for dpf proto promote"
+              ],
+              "business_rules": [
+                "Prototype products pass structural --gate proto checks immediately but cannot pass G1 until promoted with a signed BRD and TDD."
+              ],
+              "implementation": {
+                "mode": "cli_batch",
+                "summary": "CLI importers parsing SQLX config blocks and LookML views/explores/dashboards.",
+                "provisioned_via": "dpf/dataform_import.py · dpf/looker_import.py",
+                "runtime": "Python CLI",
+                "trigger": "dpf proto import-dataform / dpf proto import-looker",
+                "entrypoint": "dpf/dataform_import.py · dpf/looker_import.py",
+                "command": "dpf check <product> --gate proto"
+              }
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "uid": "DPF-03",
+        "label": "3. Design (Gate G1)",
+        "node_type": "capability",
+        "description": "Resolves grain, history, methodology, Looker safety, and AGF privacy rules with playback sign-off.",
+        "details": {
+          "purpose": "Stage 3 pillar translating the approved BRD into a justified technical design (TDD + product.yaml), verifying source feasibility and AGF C6/C10 rules, and binding business sign-off to a SHA-256 semantic digest.",
+          "owner": "Lead Data Architect & Business Owner",
+          "status": "Implemented",
+          "sla": "Gate G1 Verification < 2s",
+          "platform_service": "DPF Design Engine (dpf/design.py), Methodology Packs & Goldfish Verifier",
+          "inputs": [
+            "Approved BRD, registry/source_systems.yaml, registry/foundations.yaml, methodologies/"
+          ],
+          "outputs": [
+            "Validated tdd/spec.md, product.yaml, plain-English semantics.md, and signed signoff.yaml"
+          ],
+          "business_rules": [
+            "Every requirement must be realised by a design element, and every design element must cite a requirement or platform capability (zero orphans).",
+            "Departures from default direct methodology or Looker no-PDT rules require an Architecture Decision Record (ADR)."
+          ],
+          "delivery_unit": "Composite Stage Pillar (5 sub-modules)",
+          "implementation": {
+            "mode": "multi_stack",
+            "summary": "Combines methodology recommendation, deterministic Gate G1 + AGF C6/C10 checks, zero-context blind playback verification, and SHA-256 semantic digest signing.",
+            "provisioned_via": "dpf/design.py · dpf/methodology.py · skills/resolve-tdd/",
+            "runtime": "Python CLI & Zero-Context Subagent Verifier",
+            "trigger": "dpf tdd resolve / dpf check --gate G1 / dpf signoff",
+            "entrypoint": "dpf/design.py · methodologies/ · .agents/skills/goldfish-verify/",
+            "command": "dpf check --all --gate G1"
+          }
+        },
+        "children": [
+          {
+            "uid": "DPF-03-01",
+            "label": "TDD & Methodology Resolver",
+            "node_type": "agent",
+            "description": "Recommends direct vs Kimball modelling and surfaces source connectivity constraints early.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Technical design resolver that evaluates BRD history and shared-dimension signals, checks source capture modes in registry/source_systems.yaml, and drafts tdd/spec.md, semantics.md, and product.yaml.",
+              "owner": "Data Architect",
+              "status": "Implemented in DPF v0.3",
+              "sla": "Interactive Design Session",
+              "platform_service": "Gemini Platform Agent Skill (resolve-tdd) + dpf/methodology.py",
+              "inputs": [
+                "Approved BRD",
+                "registry/source_systems.yaml",
+                "methodologies/direct & kimball"
+              ],
+              "outputs": [
+                "tdd/spec.md, tdd/semantics.md, and products/<id>/product.yaml"
+              ],
+              "business_rules": [
+                "Unachievable source SLAs (such as inbound CDC on an outbound-only database) must be raised back to the business rather than silently downgraded."
+              ],
+              "implementation": {
+                "mode": "adk_agent",
+                "summary": "Guided TDD resolution skill backed by deterministic methodology recommendation.",
+                "provisioned_via": "skills/resolve-tdd/SKILL.md · dpf/methodology.py",
+                "runtime": "Gemini Platform / Coding Agent Skill + Python CLI",
+                "trigger": "dpf tdd resolve <product>",
+                "entrypoint": "skills/resolve-tdd/SKILL.md",
+                "command": "dpf tdd resolve sales_performance"
+              },
+              "agent_config": {
+                "model": "gemini-2.5-pro",
+                "hitl_mode": "Architect & Business Trade-Off Review",
+                "skills": [
+                  "resolve-tdd",
+                  "design-bus-matrix"
+                ]
+              }
+            },
+            "children": []
+          },
+          {
+            "uid": "DPF-03-02",
+            "label": "Gate G1 & AGF Privacy Engine",
+            "node_type": "business_function",
+            "description": "Enforces grain parity, SCD2 surrogate joins, Looker rules, and AGF C6/C10 privacy gates.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Deterministic design gate checking 100% requirement realisation, Kimball/direct pack rules, zero silent staging WHERE drops, Stephen Few zero-baseline charts, policy-tag coverage on AGF RESTRICTED columns, and zero RESTRICTED leaks on external BigQuery sharing ports.",
+              "owner": "Data Platform Engineering",
+              "status": "Implemented in DPF v0.3",
+              "sla": "< 2s Offline Verification",
+              "platform_service": "DPF Design Gate (dpf/design.py, ADR-018, ADR-019)",
+              "inputs": [
+                "product.yaml, authored SQL bodies, tdd/spec.md, and registry overlays"
+              ],
+              "outputs": [
+                "Deterministic Gate G1 pass/fail verdict"
+              ],
+              "business_rules": [
+                "Any AGF C6 RESTRICTED column lacking a policy tag or exposed on a sharing_listing port fails Gate G1 immediately."
+              ],
+              "implementation": {
+                "mode": "cli_batch",
+                "summary": "Core static verifier across SQL ASTs, schemas, LookML, and AGF governance bindings.",
+                "provisioned_via": "dpf/design.py · methodologies/*/rules/",
+                "runtime": "Python CLI",
+                "trigger": "dpf check <product> --gate G1",
+                "entrypoint": "dpf/design.py",
+                "command": "dpf check sales_performance --gate G1"
+              }
+            },
+            "children": []
+          },
+          {
+            "uid": "DPF-03-03",
+            "label": "Zero-Context Playback Critic",
+            "node_type": "agent",
+            "description": "Audits product.yaml and SQL blind against semantics.md to catch conversational anchoring.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Isolated zero-context subagent pass that reads only product.yaml and SQL bodies—never the BRD or authoring chat—to independently derive behaviour and diff it against semantics.md.",
+              "owner": "Data Engineering Reviewer",
+              "status": "Implemented in DPF v0.3",
+              "sla": "< 60s Blind Verification Pass",
+              "platform_service": "Gemini Platform Subagent Skill (goldfish-verify)",
+              "inputs": [
+                "products/<id>/product.yaml",
+                "products/<id>/sql/*.sql",
+                "tdd/semantics.md"
+              ],
+              "outputs": [
+                "Semantic drift critique before business sign-off"
+              ],
+              "business_rules": [
+                "Runs in a fresh subagent context with zero memory of authoring compromises."
+              ],
+              "implementation": {
+                "mode": "adk_agent",
+                "summary": "Zero-context subagent verification skill invoked prior to dpf signoff.",
+                "provisioned_via": ".agents/skills/goldfish-verify/SKILL.md",
+                "runtime": "Isolated Subagent on Gemini Platform",
+                "trigger": "Pre-Signoff Gate G1 Review",
+                "entrypoint": ".agents/skills/goldfish-verify/SKILL.md",
+                "command": "dpf tdd playback sales_performance"
+              },
+              "agent_config": {
+                "model": "gemini-2.5-pro",
+                "hitl_mode": "Pre-Signoff Drift Check",
+                "skills": [
+                  "goldfish-verify"
+                ]
+              }
+            },
+            "children": []
+          },
+          {
+            "uid": "DPF-03-04",
+            "label": "Playback Sign-Off Ledger",
+            "node_type": "crud_module",
+            "description": "Persists SHA-256 semantic digest signatures in signoff.yaml to lock business meaning.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Single-ledger persistence module recording the business owner's cryptographic signature over grain, history, filters, measures, and scenarios.",
+              "owner": "Data Platform Governance",
+              "status": "Implemented in DPF v0.3",
+              "sla": "Immutable Git-Tracked Signature",
+              "platform_service": "DPF Sign-Off Contract (signoff.v1)",
+              "inputs": [
+                "Computed SHA-256 semantic_digest",
+                "Approver identity, role, and scenario list"
+              ],
+              "outputs": [
+                "openspec/specs/products/<domain>/<product>/tdd/signoff.yaml"
+              ],
+              "business_rules": [
+                "Editing semantics.md, grain_columns, history_semantics, or LookML metric filters changes semantic_digest and automatically invalidates signoff.yaml."
+              ],
+              "implementation": {
+                "mode": "cli_batch",
+                "summary": "CLI command writing schema-validated signoff.yaml bound to the current BRD version and semantic hash.",
+                "provisioned_via": "dpf/cli.py · contracts/signoff.v1.schema.json",
+                "runtime": "Python CLI + Git",
+                "trigger": "dpf signoff <product> --by <name> --role business_owner",
+                "entrypoint": "openspec/specs/products/sales/sales-performance/tdd/signoff.yaml",
+                "command": "dpf signoff sales_performance --by 'Sales Ops' --role business_owner"
+              },
+              "crud_entities": [
+                {
+                  "entity": "tdd_signoff_ledger (signoff.yaml)",
+                  "operations": "CRUD",
+                  "notes": "Primary owned ledger binding business approval to SHA-256 semantic_digest"
+                },
+                {
+                  "entity": "product_manifest (product.yaml)",
+                  "operations": "R",
+                  "notes": "Read-only input used to compute canonical semantic_digest"
+                }
+              ]
+            },
+            "children": []
+          },
+          {
+            "uid": "DPF-03-05",
+            "label": "Business Playback Gate",
+            "node_type": "ui_workbench",
+            "description": "Presents one-page plain-English semantics.md for business owner confirmation.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Human Playback Sign-Off Gate where the business owner reads a jargon-free summary of inclusions, exclusions, history rules, privacy masking, and known source limitations.",
+              "owner": "Named Business Owner",
+              "status": "Implemented in DPF v0.3",
+              "sla": "Human Gate G1 Sign-Off",
+              "platform_service": "DPF Plain-English Playback (semantics.md & playback.md)",
+              "inputs": [
+                "Generated playback.md and authored semantics.md"
+              ],
+              "outputs": [
+                "Authorised business sign-off unlocking Step 4 (Build)"
+              ],
+              "business_rules": [
+                "Business owners never review SQL or YAML; they sign plain-English behaviour backed by a machine-checked digest."
+              ],
+              "implementation": {
+                "mode": "chat_ui",
+                "summary": "One-page business playback document reviewed and signed before pipeline generation.",
+                "provisioned_via": "dpf tdd playback <product>",
+                "runtime": "Human Review & CLI Sign-Off",
+                "trigger": "Gate G1 Design Completion",
+                "entrypoint": "openspec/specs/products/sales/sales-performance/tdd/semantics.md",
+                "command": "dpf tdd playback sales_performance"
+              }
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "uid": "DPF-04",
+        "label": "4. Build (Gates G2-G3)",
+        "node_type": "capability",
+        "description": "Composes stage skills and compiles deterministic SQL, Terraform, Catalog, and LookML.",
+        "details": {
+          "purpose": "Stage 4 pillar composing the typed skill DAG (Gate G2) and deterministically compiling one product manifest into synchronised Dataform/dbt, Terraform, Knowledge Catalog, and Looker artefacts (Gate G3).",
+          "owner": "Data Engineering",
+          "status": "Implemented",
+          "sla": "Full Multi-Plane Compile < 3s",
+          "platform_service": "DPF Multi-Plane Compiler (dpf/compose.py & dpf/generate/)",
+          "inputs": [
+            "Signed product.yaml, authored SQL bodies, engine adapters, and methodology templates"
+          ],
+          "outputs": [
+            "Byte-identical generated/<product>/ bundle verified against tests/golden/<product>/"
+          ],
+          "business_rules": [
+            "Every generated artefact is stamped in MANIFEST.json with a SHA-256 build_digest.",
+            "Two consecutive in-memory builds must be 100% byte-identical (zero nondeterministic timestamps or unordered sets)."
+          ],
+          "delivery_unit": "Composite Stage Pillar (5 sub-modules)",
+          "implementation": {
+            "mode": "multi_stack",
+            "summary": "Offline deterministic compiler emitting Dataform/dbt SQL, Terraform HCL, LookML views/dashboards, GEMINI.md agent guardrails, and 7 ADG-00 Knowledge Catalog aspects.",
+            "provisioned_via": "dpf/compose.py · dpf/generate/*.py · engines/",
+            "runtime": "Python Offline Compiler + Dataform/dbt/Terraform Toolchains",
+            "trigger": "dpf compose / dpf generate / Pull Request CI",
+            "entrypoint": "dpf/compose.py · dpf/generate/",
+            "command": "dpf generate --all --check --no-write"
+          }
+        },
+        "children": [
+          {
+            "uid": "DPF-04-01",
+            "label": "Gate G2 Pipeline Composer",
+            "node_type": "business_function",
+            "description": "Selects stage skills and type-checks contract handoffs and engine support across the DAG.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Deterministic DAG composer matching source capture modes, layer roles, quality gates, and output ports to registered skills and verifying every input/output JSON Schema handoff.",
+              "owner": "Data Platform Engineering",
+              "status": "Implemented in DPF v0.3",
+              "sla": "< 1s DAG Composition",
+              "platform_service": "DPF Composer (dpf/compose.py)",
+              "inputs": [
+                "product.yaml",
+                "skills/*/SKILL.md",
+                "engines/*/adapter.yaml",
+                "acceptance.yaml"
+              ],
+              "outputs": [
+                "dag.json, dag.md, and verified AX-to-AT acceptance coverage"
+              ],
+              "business_rules": [
+                "Fails immediately if a model requests a role or streaming/batch engine combination not implemented by an adapter."
+              ],
+              "implementation": {
+                "mode": "cli_batch",
+                "summary": "Static skill selector and contract type-checker.",
+                "provisioned_via": "dpf/compose.py · skills/compose-pipeline/",
+                "runtime": "Python CLI",
+                "trigger": "dpf compose <product> / dpf check --gate G2",
+                "entrypoint": "dpf/compose.py",
+                "command": "dpf compose sales_performance --no-write"
+              }
+            },
+            "children": []
+          },
+          {
+            "uid": "DPF-04-02",
+            "label": "Bounded Dataform SQL Agent",
+            "node_type": "agent",
+            "description": "Assists messy source SQL wrangling inside deterministic GEMINI.md guardrails.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Tier-3 leaf worker integration (ADR-017) allowing Google Cloud's native Dataform Data Engineering Agent to assist with source SQL cleansing while keeping grain, quarantine, and release schedules locked by DPF.",
+              "owner": "Data Engineering",
+              "status": "Implemented in DPF v0.3",
+              "sla": "Interactive Authoring Leaf Worker",
+              "platform_service": "BigQuery Dataform Agent on Gemini Platform (ADR-017)",
+              "inputs": [
+                "Generated dataform/GEMINI.md guardrails and raw source schemas"
+              ],
+              "outputs": [
+                "Authored staging/gold SQL bodies compliant with engine-neutral ref/var rules"
+              ],
+              "business_rules": [
+                "Governed Dataform builds disable unreviewed console auto-releases so all changes pass Gate G1 and Gate G3."
+              ],
+              "implementation": {
+                "mode": "adk_agent",
+                "summary": "Emits deterministic dataform/GEMINI.md context and disables unmanaged hourly releases.",
+                "provisioned_via": "dpf/generate/dataform.py (ADR-017)",
+                "runtime": "Dataform Agent on Gemini Platform",
+                "trigger": "Developer SQL Authoring or Troubleshooting",
+                "entrypoint": "dpf/generate/dataform.py",
+                "command": "dpf generate sales_performance"
+              },
+              "agent_config": {
+                "model": "gemini-2.5-pro",
+                "hitl_mode": "Bounded by GEMINI.md + Golden Copy PR",
+                "skills": [
+                  "render-engine-artefacts"
+                ]
+              }
+            },
+            "children": []
+          },
+          {
+            "uid": "DPF-04-03",
+            "label": "Gate G3 Multi-Plane Compiler",
+            "node_type": "business_function",
+            "description": "Compiles Dataform/dbt SQL, Terraform IAM, LookML, and 7 ADG-00 Catalog aspects.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Single-manifest deterministic compiler rendering SQLX/SQL models, SCD2 history & point-in-time joins, Terraform datasets/policy tags/BigQuery sharing/quality scans, LookML Explores & Stephen Few dashboards, and catalog-registration.json.",
+              "owner": "Data Platform Engineering",
+              "status": "Implemented in DPF v0.3",
+              "sla": "< 3s Deterministic Multi-Plane Render",
+              "platform_service": "DPF Generators (dataform.py, dbt.py, terraform.py, lookml.py, docs.py)",
+              "inputs": [
+                "Composed RenderPlan, ProductGraph, and signed product.yaml"
+              ],
+              "outputs": [
+                "50-110 deterministic files stamped in MANIFEST.json"
+              ],
+              "business_rules": [
+                "Validates every emitted JSON contract against Draft 2020-12 JSON Schemas and checks full R -> D -> Artefact -> Test traceability."
+              ],
+              "implementation": {
+                "mode": "cli_batch",
+                "summary": "Pure-Python deterministic multi-plane code generator.",
+                "provisioned_via": "dpf/generate/",
+                "runtime": "Python CLI + CI Toolchain Validation (Terraform, Dataform, dbt)",
+                "trigger": "dpf generate <product> / dpf check --gate G3",
+                "entrypoint": "dpf/generate/__init__.py",
+                "command": "dpf check --all --gate G3"
+              }
+            },
+            "children": []
+          },
+          {
+            "uid": "DPF-04-04",
+            "label": "Watermark Control Ledger",
+            "node_type": "crud_module",
+            "description": "Maintains atomic high-watermark and batch manifest rows in dpf_watermark_log.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Single-table operational control ledger provisioned by Terraform to track high-watermarks, lookback windows, row counts, and load status per source entity.",
+              "owner": "Data Platform Operations",
+              "status": "Implemented in DPF v0.3",
+              "sla": "Transactional Per-Batch Commit",
+              "platform_service": "BigQuery Control Dataset (dpf_control.dpf_watermark_log)",
+              "inputs": [
+                "Completed outbound source extraction batches"
+              ],
+              "outputs": [
+                "Atomic watermark checkpoint row advancing the next incremental extract window"
+              ],
+              "business_rules": [
+                "Raw rows and the watermark control row commit together so failed loads never advance the watermark."
+              ],
+              "implementation": {
+                "mode": "terraform_iac",
+                "summary": "Provisioned via generated Terraform control table resource and written atomically by the watermark extractor.",
+                "provisioned_via": "dpf/generate/terraform.py",
+                "runtime": "BigQuery Table + Outbound Extractor",
+                "trigger": "Scheduled Incremental Source Extract",
+                "entrypoint": "dpf/generate/terraform.py",
+                "command": "terraform -chdir=tests/golden/sales_performance/terraform validate"
+              },
+              "crud_entities": [
+                {
+                  "entity": "dpf_control.dpf_watermark_log",
+                  "operations": "CRUD",
+                  "notes": "Primary owned control table storing per-entity high-watermark checkpoints"
+                }
+              ]
+            },
+            "children": []
+          },
+          {
+            "uid": "DPF-04-05",
+            "label": "Golden Copy PR Review",
+            "node_type": "ui_workbench",
+            "description": "Surfaces byte-identical SQL, Terraform, and LookML diffs for engineer PR approval.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Human engineering gate in Git where reviewers inspect exact diffs across SQL, IAM masking, LookML, and Knowledge Catalog contracts before merge and release.",
+              "owner": "Lead Data Engineer",
+              "status": "Implemented in DPF v0.3",
+              "sla": "Pull Request Review Gate",
+              "platform_service": "GitHub Pull Request + CI Golden Copy Check",
+              "inputs": [
+                "Committed tests/golden/<product>/ snapshot vs fresh dpf generate build"
+              ],
+              "outputs": [
+                "Approved merge to main triggering controlled deployment"
+              ],
+              "business_rules": [
+                "CI blocks any pull request whose generated output drifts from tests/golden/ or fails real-tool compilation."
+              ],
+              "implementation": {
+                "mode": "chat_ui",
+                "summary": "Standard Git diff review over committed golden snapshots backed by GitHub Actions.",
+                "provisioned_via": ".github/workflows/ci.yml · tests/golden/",
+                "runtime": "GitHub Pull Request UI & Actions CI",
+                "trigger": "git push / Pull Request",
+                "entrypoint": "tests/golden/",
+                "command": "dpf generate --all --check --no-write"
+              }
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "uid": "DPF-05",
+        "label": "5. Accept (Gate G4)",
+        "node_type": "capability",
+        "description": "Runs live BigQuery assertions, captures human attestations, and publishes Catalog ports.",
+        "details": {
+          "purpose": "Stage 5 pillar proving the deployed build on real cloud data: landing incremental extracts, quarantining bad rows, running digest-bound BigQuery SQL acceptance tests, recording Finance/domain human attestations, and registering published ports in BigQuery Knowledge Catalog.",
+          "owner": "Data Engineering & Domain Stewards",
+          "status": "Implemented & Sandbox-Verified",
+          "sla": "100% Blocking Test & Attestation Pass Required Before Publish",
+          "platform_service": "BigQuery, Dataform/dbt, Knowledge Catalog MCP & DPF Test Runner",
+          "inputs": [
+            "Deployed BigQuery datasets/models, test-spec.json, and domain reviewer checks"
+          ],
+          "outputs": [
+            "Digest-bound test-evidence.v1 records and published Knowledge Catalog Data Product"
+          ],
+          "business_rules": [
+            "Evidence recorded against an older build_digest is rejected as stale at Gate G4.",
+            "Non-SQL business truths (such as general ledger reconciliation) require explicit human attestation before publication."
+          ],
+          "delivery_unit": "Composite Stage Pillar (5 sub-modules)",
+          "implementation": {
+            "mode": "multi_stack",
+            "summary": "Combines outbound extraction, staging reject quarantine, live BigQuery acceptance SQL execution, human CLI attestation, and Knowledge Catalog MCP registration.",
+            "provisioned_via": "dpf/testing.py · skills/publish-data-product/ · skills/register-knowledge-catalog/",
+            "runtime": "BigQuery + Python CLI + Knowledge Catalog MCP",
+            "trigger": "dpf test run --live / dpf test attest / dpf check --gate accept",
+            "entrypoint": "dpf/testing.py · skills/register-knowledge-catalog/",
+            "command": "dpf check sales_performance --gate accept"
+          }
+        },
+        "children": [
+          {
+            "uid": "DPF-05-01",
+            "label": "Outbound Watermark Extractor",
+            "node_type": "integration",
+            "description": "Extracts incremental source rows with lookback safety into append-only raw BigQuery.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Tier-5 outbound source connector (ADR-015) for on-premises databases without inbound cloud routes, reading watermark windows with a configurable lookback overlap into raw BigQuery tables.",
+              "owner": "Data Ingestion Engineering",
+              "status": "Implemented in DPF v0.3",
+              "sla": "Hourly or Scheduled Cron Cadence",
+              "platform_service": "Cloud Run Jobs / On-Premises Runner -> BigQuery Storage Write / Load",
+              "inputs": [
+                "On-premises RDBMS tables",
+                "dpf_control.dpf_watermark_log"
+              ],
+              "outputs": [
+                "Append-only raw_<entity> BigQuery rows + landing-manifest.v1"
+              ],
+              "business_rules": [
+                "Applies lookback_minutes behind the last watermark to capture late-committing transactions safely."
+              ],
+              "implementation": {
+                "mode": "cli_batch",
+                "summary": "Outbound Python extractor carrying mandatory ADR-015 bespoke-code governance markers.",
+                "provisioned_via": "examples/sales_performance/extract/extract_oracle.py (ADR-015)",
+                "runtime": "Python Batch Job / Cloud Run Job",
+                "trigger": "Cron Schedule (e.g. 0 * * * *)",
+                "entrypoint": "examples/sales_performance/extract/extract_oracle.py",
+                "command": "dpf lint"
+              }
+            },
+            "children": []
+          },
+          {
+            "uid": "DPF-05-02",
+            "label": "Quarantine Reject Ledger",
+            "node_type": "crud_module",
+            "description": "Routes invalid staging rows to _rejects relations and blocks partial publication.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Single-relation staging quarantine gate separating unusable source rows with explicit rule failure reasons while halting downstream refreshes when gate_behaviour is block.",
+              "owner": "Data Engineering & Source Stewards",
+              "status": "Implemented in DPF v0.3",
+              "sla": "Per-Run Row-Level Quarantine",
+              "platform_service": "BigQuery Staging Dataset (<model>_rejects + Blocking Assertion)",
+              "inputs": [
+                "Deduplicated staging candidate rows and quality.rules (on_fail: quarantine)"
+              ],
+              "outputs": [
+                "<model>_rejects relation with failed rule IDs and blocking assertion status"
+              ],
+              "business_rules": [
+                "Top-level WHERE filters in staging SQL are blocked at G1 so bad rows are quarantined visibly rather than silently dropped."
+              ],
+              "implementation": {
+                "mode": "sql_pipeline",
+                "summary": "Compiled automatically into Dataform SQLX or dbt staging wrappers and reject assertions.",
+                "provisioned_via": "dpf/generate/plan.py · skills/transform-raw-to-staging/",
+                "runtime": "BigQuery via Dataform or dbt",
+                "trigger": "Every Pipeline Schedule Run",
+                "entrypoint": "skills/transform-raw-to-staging/SKILL.md",
+                "command": "dpf eval --id reject-gate-required"
+              },
+              "crud_entities": [
+                {
+                  "entity": "stg_<domain>.<model>_rejects",
+                  "operations": "CRUD",
+                  "notes": "Primary owned quarantine relation holding rejected source rows and failure rule IDs"
+                },
+                {
+                  "entity": "raw_<source>.raw_<entity>",
+                  "operations": "R",
+                  "notes": "Read-only append-only landed source relation"
+                }
+              ]
+            },
+            "children": []
+          },
+          {
+            "uid": "DPF-05-03",
+            "label": "Live Acceptance Test Runner",
+            "node_type": "business_function",
+            "description": "Executes automated BigQuery SQL assertions and static checks bound to build_digest.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Gate G4 test runner executing grain uniqueness, SCD2 non-overlap, foreign-key integrity, LookML explore dry-runs, and business scenario SQL queries against the deployed sandbox or prod project.",
+              "owner": "Data Engineering",
+              "status": "Implemented in DPF v0.3",
+              "sla": "< 30s Live Sandbox Suite Execution",
+              "platform_service": "DPF Test Harness (dpf/testing.py) + BigQuery",
+              "inputs": [
+                "Generated test-spec.json and live BigQuery datasets"
+              ],
+              "outputs": [
+                "Timestamped run-<UTC>.json evidence bound to artefact_digest"
+              ],
+              "business_rules": [
+                "Any mismatch between the deployed build_digest and recorded evidence fails Gate G4 automatically."
+              ],
+              "implementation": {
+                "mode": "cli_batch",
+                "summary": "Executes SQL and static checks from test-spec.json and records schema-valid evidence.",
+                "provisioned_via": "dpf/testing.py · contracts/test-spec.v1.schema.json",
+                "runtime": "Python CLI + BigQuery Client",
+                "trigger": "dpf test run <product> --live",
+                "entrypoint": "dpf/testing.py",
+                "command": "dpf test plan sales_performance"
+              }
+            },
+            "children": []
+          },
+          {
+            "uid": "DPF-05-04",
+            "label": "Domain Attestation Gate",
+            "node_type": "ui_workbench",
+            "description": "Records Finance and domain expert sign-offs on non-SQL business truths at Gate G4.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Human Outcome Attestation Gate capturing accountable domain verification (such as general ledger reconciliation or merchandising hierarchy sign-off) that SQL assertions alone cannot prove.",
+              "owner": "Finance & Domain Business Reviewers",
+              "status": "Implemented in DPF v0.3",
+              "sla": "Pre-Publication Human Gate G4",
+              "platform_service": "DPF Attestation CLI (dpf test attest)",
+              "inputs": [
+                "Sandbox acceptance outputs, AGF C12 GL reconciliation reports, and Looker views"
+              ],
+              "outputs": [
+                "Signed attestation evidence record unlocking publication"
+              ],
+              "business_rules": [
+                "Products remain provisional until every attestation case in acceptance.yaml passes for the current build_digest."
+              ],
+              "implementation": {
+                "mode": "chat_ui",
+                "summary": "Records named human attestations and optional reconciliation links against the active build digest.",
+                "provisioned_via": "dpf/testing.py · contracts/test-evidence.v1.schema.json",
+                "runtime": "Human Domain Review + CLI",
+                "trigger": "dpf test attest <product> --case <AT-n> --by <name>",
+                "entrypoint": "dpf/testing.py",
+                "command": "dpf check sales_performance --gate accept"
+              }
+            },
+            "children": []
+          },
+          {
+            "uid": "DPF-05-05",
+            "label": "Knowledge Catalog Publisher",
+            "node_type": "agent",
+            "description": "Registers published ports, glossary EntryLinks, and 7 ADG-00 aspects in Catalog.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Tier-1 MCP publication worker registering authoritative output ports, attaching Business Glossary terms, and writing all 7 canonical ADG-00 Single-Writer Aspects to BigQuery Knowledge Catalog.",
+              "owner": "Data Platform & Stewardship",
+              "status": "Implemented in DPF v0.3",
+              "sla": "Immediate Post-G4 Publication",
+              "platform_service": "BigQuery Knowledge Catalog MCP Server & BigQuery Sharing",
+              "inputs": [
+                "catalog-registration.json, data-product.json, and green Gate G4 evidence"
+              ],
+              "outputs": [
+                "Published Knowledge Catalog Data Product and Metadata Change Feed events for AGF"
+              ],
+              "business_rules": [
+                "Refuses to flip status to published without signed semantics and complete Gate G4 evidence."
+              ],
+              "implementation": {
+                "mode": "adk_agent",
+                "summary": "Tier-1 MCP skill publishing catalog entries, aspects, and glossary links.",
+                "provisioned_via": "skills/register-knowledge-catalog/ · skills/publish-data-product/",
+                "runtime": "Knowledge Catalog Managed MCP Server",
+                "trigger": "Green Gate G4 (Accept)",
+                "entrypoint": "skills/register-knowledge-catalog/SKILL.md",
+                "command": "dpf generate sales_performance --no-write"
+              },
+              "agent_config": {
+                "model": "gemini-2.5-pro",
+                "hitl_mode": "Gated on Green G4 Attestation",
+                "skills": [
+                  "register-knowledge-catalog",
+                  "publish-data-product"
+                ]
+              }
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "uid": "DPF-06",
+        "label": "6. Monitor (Day 2 Loop)",
+        "node_type": "capability",
+        "description": "Evaluates business-calendar SLOs and AGF estate alerts to open traced change proposals.",
+        "details": {
+          "purpose": "Stage 6 Day-2 operational pillar watching freshness, volume, quality scans, and AGF runtime drift strictly inside working-hour calendars and routing breaches into requirement-traced Change Proposals.",
+          "owner": "Product Owner & Data Operations",
+          "status": "Implemented",
+          "sla": "15m Business-Hours Freshness Watch · Zero Weekend False Alarms",
+          "platform_service": "DPF Monitor (dpf/monitor.py), Cloud Monitoring & AGF Estate Feedback",
+          "inputs": [
+            "observability-policy.json, live BigQuery/AGF run-evidence.v1 telemetry"
+          ],
+          "outputs": [
+            "Targeted operational alerts and pre-populated openspec/changes/ delta proposals"
+          ],
+          "business_rules": [
+            "Freshness SLOs evaluate only inside the consuming team's business calendar (e.g. Mon-Fri 08:00-18:00 Australia/Perth).",
+            "Every runtime breach maps directly back to the exact BRD requirement ID placed at risk."
+          ],
+          "delivery_unit": "Composite Stage Pillar (4 sub-modules)",
+          "implementation": {
+            "mode": "multi_stack",
+            "summary": "Evaluates runtime evidence against business-calendar SLOs and auto-scaffolds OpenSpec change proposals naming the breached requirement.",
+            "provisioned_via": "dpf/monitor.py · skills/monitor-data-product/",
+            "runtime": "Scheduled CLI / Cloud Run Check + Git Change Loop",
+            "trigger": "Scheduled 15m Watch or AGF Metadata Change Feed Alert",
+            "entrypoint": "dpf/monitor.py · skills/monitor-data-product/",
+            "command": "dpf eval --id monitor-breach"
+          }
+        },
+        "children": [
+          {
+            "uid": "DPF-06-01",
+            "label": "Business-Calendar Monitor",
+            "node_type": "business_function",
+            "description": "Evaluates freshness, volume, and schema drift strictly during business working hours.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Deterministic SLO evaluator comparing table build timestamps, row-volume bands, and schema drift events against the product's business calendar and runbook.",
+              "owner": "Data Operations",
+              "status": "Implemented in DPF v0.3",
+              "sla": "Every 15m Inside Working Hours",
+              "platform_service": "DPF Monitor Engine (dpf/monitor.py)",
+              "inputs": [
+                "observability-policy.json",
+                "run-evidence.v1 payload"
+              ],
+              "outputs": [
+                "Requirement-traced SLO pass/breach verdict and runbook pointer"
+              ],
+              "business_rules": [
+                "Suppresses staleness noise outside declared working days/hours while immediately flagging breaking schema drift."
+              ],
+              "implementation": {
+                "mode": "cli_batch",
+                "summary": "Calendar-aware Python SLO evaluator.",
+                "provisioned_via": "dpf/monitor.py · contracts/observability-policy.v1.schema.json",
+                "runtime": "Python CLI / Scheduled Monitor",
+                "trigger": "dpf monitor <product> --evidence <file>",
+                "entrypoint": "dpf/monitor.py",
+                "command": "dpf eval --id monitor-breach"
+              }
+            },
+            "children": []
+          },
+          {
+            "uid": "DPF-06-02",
+            "label": "AGF & Catalog Breach Feed",
+            "node_type": "integration",
+            "description": "Ingests AGF lineage, ledger, and Knowledge Catalog scan alerts as run-evidence.v1.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Symbiotic feedback connector (ADR-019) translating AGF ADG-02 OpenLineage drift, ADG-03 GL reconciliation variances, and Knowledge Catalog Auto-DQ failures into DPF run-evidence.v1 records.",
+              "owner": "Enterprise Data Governance & Platform Ops",
+              "status": "Implemented in DPF v0.3",
+              "sla": "Event-Driven Breach Ingestion",
+              "platform_service": "BigQuery Knowledge Catalog Scans & AGF Telemetry -> DPF",
+              "inputs": [
+                "Knowledge Catalog DataScan results and AGF ADG-02/03/05 alerts"
+              ],
+              "outputs": [
+                "Standardised run-evidence.v1 JSON events"
+              ],
+              "business_rules": [
+                "Keeps DPF decoupled from runtime daemons via the versioned run-evidence.v1 schema."
+              ],
+              "implementation": {
+                "mode": "cloud_service",
+                "summary": "Typed JSON contract bridging Knowledge Catalog and AGF runtime guardians back to DPF.",
+                "provisioned_via": "contracts/run-evidence.v1.schema.json (ADR-019)",
+                "runtime": "Event Adapter / CLI Feed",
+                "trigger": "Runtime Drift, Quality Scan, or GL Variance Event",
+                "entrypoint": "contracts/run-evidence.v1.schema.json",
+                "command": "dpf validate"
+              }
+            },
+            "children": []
+          },
+          {
+            "uid": "DPF-06-03",
+            "label": "Build & Run Evidence Ledger",
+            "node_type": "crud_module",
+            "description": "Stores immutable test, attestation, and runtime health evidence per build digest.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Single-ledger audit trail storing timestamped test-evidence.v1 and run-evidence.v1 records keyed by product_id and SHA-256 build_digest.",
+              "owner": "Data Governance & Audit",
+              "status": "Implemented in DPF v0.3",
+              "sla": "Immutable Per-Build Audit Retention",
+              "platform_service": "DPF Evidence Store (evidence/<product>/)",
+              "inputs": [
+                "Automated test runs, human attestations, and runtime monitor snapshots"
+              ],
+              "outputs": [
+                "Auditable evidence/<product>/run-*.json & attest-*.json files"
+              ],
+              "business_rules": [
+                "Append-only evidence files never overwrite prior runs; Gate G4 evaluates the latest result matching the active build_digest."
+              ],
+              "implementation": {
+                "mode": "cli_batch",
+                "summary": "Append-only JSON evidence ledger validated against test-evidence.v1.",
+                "provisioned_via": "dpf/testing.py · evidence/",
+                "runtime": "Git / Object Evidence Store",
+                "trigger": "dpf test run / dpf test attest",
+                "entrypoint": "evidence/sales_performance/",
+                "command": "dpf trace sales_performance"
+              },
+              "crud_entities": [
+                {
+                  "entity": "evidence_ledger (evidence/<product>/*.json)",
+                  "operations": "CRUD",
+                  "notes": "Primary owned audit ledger of digest-bound test and attestation records"
+                },
+                {
+                  "entity": "build_manifest (MANIFEST.json)",
+                  "operations": "R",
+                  "notes": "Read-only SHA-256 build_digest reference"
+                }
+              ]
+            },
+            "children": []
+          },
+          {
+            "uid": "DPF-06-04",
+            "label": "Change Proposal Workbench",
+            "node_type": "ui_workbench",
+            "description": "Opens requirement-traced delta specs for human review when breaches or new needs arise.",
+            "is_atomic": true,
+            "details": {
+              "purpose": "Human Change Proposal Gate closing the Day-2 loop: drafts pre-populated ADDED/MODIFIED/REMOVED delta specs under openspec/changes/ naming the affected BRD requirement.",
+              "owner": "Business Owner & Product Engineer",
+              "status": "Implemented in DPF v0.3",
+              "sla": "Hours-to-Outcome Fast-Track Loop",
+              "platform_service": "DPF Change Proposal Generator (dpf monitor --open-change)",
+              "inputs": [
+                "Detected runtime SLO/AGF breach or new stakeholder metric request"
+              ],
+              "outputs": [
+                "openspec/changes/<change-id>/ proposal ready to re-run Gates G0-G4"
+              ],
+              "business_rules": [
+                "Every Day-2 change flows through the exact same human-gated digest and golden-copy checks in hours rather than ad-hoc hotfixes."
+              ],
+              "implementation": {
+                "mode": "chat_ui",
+                "summary": "Scaffolds structured change proposals linking operational alerts straight back to business requirements.",
+                "provisioned_via": "dpf/monitor.py · openspec/changes/",
+                "runtime": "CLI + Pull Request Review",
+                "trigger": "dpf monitor <product> --evidence <file> --open-change",
+                "entrypoint": "openspec/changes/README.md",
+                "command": "dpf eval --id monitor-breach"
+              }
+            },
+            "children": []
+          }
+        ]
+      }
+    ]
+  }
+}

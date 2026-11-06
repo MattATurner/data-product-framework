@@ -28,3 +28,7 @@ records a choice dpf can check, `decides` (for example `methodology` or `capture
 | [ADR-013](ADR-013-grain-derived-then-confirmed.md) | Grain is derived, then confirmed | accepted |
 | [ADR-014](ADR-014-materialisation-strategy.md) | Materialisation strategy | accepted |
 | [ADR-015](ADR-015-outbound-watermark-extractor.md) | Outbound-only watermark extractor | accepted |
+| [ADR-016](ADR-016-prototype-fast-path-and-safeguards.md) | Prototype fast-path, environment overrides, and stateful safeguards | accepted |
+| [ADR-017](ADR-017-engine-native-agents.md) | Engine-native agents as bounded leaf workers | accepted |
+| [ADR-018](ADR-018-looker-semantic-and-presentation-plane.md) | Looker semantic and presentation plane, and decoupled foundation products | accepted |
+| [ADR-019](ADR-019-symbiotic-agentic-governance-framework.md) | Symbiotic integration with the Agentic Data Governance Framework (ADG-00) | accepted |

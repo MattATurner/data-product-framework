@@ -1,4 +1,4 @@
-"""Versioned BI Semantic Layer generator (semantic-layer.v1): Cube, MetricFlow, AtScale, and OSI."""
+"""Versioned BI Semantic Layer generator (semantic-layer.v1): Cube, MetricFlow, AtScale, OSI, and LookML."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ import yaml
 
 from dpf.core import Product
 from dpf.graph import ProductGraph
+from dpf.generate import lookml
 from dpf.generate.docs import dumps, table_ref
 from dpf.generate.render import is_timestamp, marker
 
@@ -23,6 +24,34 @@ def _is_time_col(col: str, m: dict | None = None) -> bool:
     return is_timestamp(col) or col.endswith("_date") or col == "calendar_date"
 
 
+def _bq_to_sem_type(col: str, bq_type: str | None, m: dict | None = None) -> str:
+    if bq_type:
+        u = bq_type.upper()
+        if u in ("DATE", "DATETIME", "TIMESTAMP"):
+            return "time"
+        if u in ("BOOL", "BOOLEAN"):
+            return "boolean"
+        if u in ("INT64", "INTEGER", "FLOAT64", "FLOAT", "NUMERIC", "BIGNUMERIC"):
+            return "number"
+    if _is_time_col(col, m):
+        return "time"
+    if col.startswith("is_") or col.startswith("has_"):
+        return "boolean"
+    return "string"
+
+
+def _glossary_index(p: Product) -> dict[str, str]:
+    idx: dict[str, str] = {}
+    for t in p.registry.glossary_terms:
+        defn = (t.get("definition") or "").strip()
+        if not defn:
+            continue
+        idx[t["id"]] = defn
+        for alias in t.get("aliases") or []:
+            idx.setdefault(alias.lower().replace(" ", "_"), defn)
+    return idx
+
+
 def build_semantic_spec(p: Product, g: ProductGraph, digest: str, targets_override: list[str] | None = None) -> dict | None:
     man = p.manifest
     sl_cfg = man.get("semantic_layer") or {}
@@ -30,54 +59,104 @@ def build_semantic_spec(p: Product, g: ProductGraph, digest: str, targets_overri
     if not targets:
         return None
 
+    glossary = _glossary_index(p)
+    local_pts = (man.get("governance") or {}).get("policy_tags") or []
     cubes: list[dict] = []
     metrics: list[dict] = []
     explicit_metrics = list(sl_cfg.get("metrics") or [])
 
-    for name in [x for x in g.topo() if g.nodes[x].kind == "model"]:
-        n = g.nodes[name]
-        if n.layer == "staging" or n.role == "ml_model":
-            continue
+    for n in g.semantic_nodes:
+        name = n.name
         m = n.model
         attrs = m.get("attributes") or {}
         grain = list(m.get("grain_columns") or [])
+        sk = m.get("surrogate_key")
         tref = table_ref(p, g, name)
+        col_meta = {c["name"]: c for c in (m.get("columns") or []) if isinstance(c, dict) and c.get("name")}
         dims: list[dict] = []
+        seen_dims: set[str] = set()
         measures: list[dict] = []
         joins: list[dict] = []
 
+        def add_dim(col: str, dtype: str | None = None, pk: bool = False, hidden: bool = False) -> None:
+            if not col or col in seen_dims:
+                return
+            seen_dims.add(col)
+            cinfo = col_meta.get(col) or {}
+            resolved_type = dtype or _bq_to_sem_type(col, cinfo.get("type"), m)
+            d_obj: dict = {"name": col, "sql": col, "type": resolved_type}
+            if pk:
+                d_obj["primary_key"] = True
+            if hidden:
+                d_obj["hidden"] = True
+            desc = cinfo.get("description") or glossary.get(col)
+            if desc:
+                d_obj["description"] = desc
+            dims.append(d_obj)
+
+        if sk:
+            add_dim(sk, dtype="number", pk=True, hidden=True)
         for col in grain:
-            dims.append({
-                "name": col,
-                "sql": col,
-                "type": "time" if _is_time_col(col, m) else "string",
-                "primary_key": True,
-            })
+            add_dim(col, pk=(not sk and len(grain) == 1))
 
         if n.role == "dimension":
             for col in list(attrs.get("tracked") or []) + list(attrs.get("current") or []):
-                if col not in grain:
-                    dims.append({"name": col, "sql": col, "type": "time" if _is_time_col(col, m) else "string"})
+                add_dim(col)
+            for col in col_meta:
+                add_dim(col)
+            if int(attrs.get("scd_type", 1) or 1) == 2 or m.get("history_semantics") == "scd2":
+                add_dim("valid_from", dtype="time")
+                add_dim("valid_to", dtype="time")
+                add_dim("is_current", dtype="boolean")
+                add_dim("version_no", dtype="number")
         elif n.role == "fact":
+            for ref in list(attrs.get("dim_refs") or []):
+                dim_node = g.get(ref.get("dimension") or "")
+                if dim_node is None:
+                    continue
+                if dim_node.role == "calendar":
+                    add_dim("date_key", dtype="number", hidden=True)
+                    if ref.get("from"):
+                        add_dim(ref["from"], dtype="time")
+                    joins.append({
+                        "to": dim_node.name,
+                        "relationship": "many_to_one",
+                        "on": f"{name}.date_key = {dim_node.name}.date_key",
+                    })
+                else:
+                    d_sk = dim_node.model.get("surrogate_key")
+                    if d_sk:
+                        add_dim(d_sk, dtype="number", hidden=True)
+                    if ref.get("natural_key"):
+                        add_dim(ref["natural_key"])
+                    join_key = d_sk or ref.get("natural_key")
+                    joins.append({
+                        "to": dim_node.name,
+                        "relationship": "many_to_one",
+                        "on": f"{name}.{join_key} = {dim_node.name}.{join_key}",
+                    })
             ev_date = attrs.get("event_date")
-            if ev_date and ev_date not in grain:
-                dims.append({"name": ev_date, "sql": ev_date, "type": "time"})
+            if ev_date:
+                add_dim(ev_date, dtype="time")
             for col in list(attrs.get("degenerate") or []):
-                if col not in grain:
-                    dims.append({"name": col, "sql": col, "type": "string"})
+                add_dim(col)
             for f in list(attrs.get("flags") or []):
-                fname = f.get("name")
-                if fname and fname not in grain:
-                    dims.append({"name": fname, "sql": fname, "type": "boolean"})
+                if f.get("name"):
+                    add_dim(f["name"], dtype="boolean")
+            measure_names = {ms["name"] for ms in (attrs.get("measures") or [])}
+            for col in col_meta:
+                if col not in measure_names:
+                    add_dim(col)
             for ms in list(attrs.get("measures") or []):
                 mname = ms["name"]
                 mtype = MEASURE_TYPE.get(ms.get("additivity", "additive"), "sum")
+                desc = glossary.get(mname) or f"{mname} ({ms.get('additivity', 'additive')}) on {name}"
                 measures.append({
                     "name": mname,
                     "sql": mname,
                     "type": mtype,
                     "additivity": ms.get("additivity", "additive"),
-                    "description": f"{mname} ({ms.get('additivity', 'additive')}) on {name}",
+                    "description": desc,
                 })
                 if not any(em.get("name") == mname for em in explicit_metrics):
                     metrics.append({
@@ -88,32 +167,22 @@ def build_semantic_spec(p: Product, g: ProductGraph, digest: str, targets_overri
                         "measure": mname,
                         "time_grain": ["day", "week", "month", "quarter", "year"],
                     })
-            for ref in list(attrs.get("dim_refs") or []):
-                dim_node = g.get(ref.get("dimension") or "")
-                if dim_node is None:
-                    continue
-                if dim_node.role == "calendar":
-                    joins.append({
-                        "to": dim_node.name,
-                        "relationship": "many_to_one",
-                        "on": f"{name}.date_key = {dim_node.name}.date_key",
-                    })
-                else:
-                    sk = dim_node.model.get("surrogate_key") or ref.get("natural_key")
-                    joins.append({
-                        "to": dim_node.name,
-                        "relationship": "many_to_one",
-                        "on": f"{name}.{sk} = {dim_node.name}.{sk}",
-                    })
         else:
-            out_cols = g.output_columns(name) or []
+            out_cols = g.output_columns(name) or list(col_meta)
+            attr_measures = {ms["name"]: ms for ms in (attrs.get("measures") or [])}
             for col in out_cols:
-                if col not in grain:
-                    dims.append({
-                        "name": col,
-                        "sql": col,
-                        "type": "time" if _is_time_col(col, m) else "string",
-                    })
+                if col not in attr_measures:
+                    dtype = "number" if n.role == "calendar" and col in ("date_key", "year", "quarter", "month", "day_of_week") else None
+                    add_dim(col, dtype=dtype)
+            for mname, ms in attr_measures.items():
+                mtype = MEASURE_TYPE.get(ms.get("additivity", "additive"), "sum")
+                measures.append({
+                    "name": mname,
+                    "sql": mname,
+                    "type": mtype,
+                    "additivity": ms.get("additivity", "additive"),
+                    "description": glossary.get(mname) or f"{mname} ({ms.get('additivity', 'additive')}) on {name}",
+                })
             measures.append({
                 "name": "row_count",
                 "sql": grain[0] if grain else "*",
@@ -122,7 +191,8 @@ def build_semantic_spec(p: Product, g: ProductGraph, digest: str, targets_overri
                 "description": f"Row count of {name} at declared grain",
             })
 
-        cubes.append({
+        pts = list(m.get("_policy_tags") or [pt for pt in local_pts if pt.get("model") == name])
+        cube_obj: dict = {
             "name": name,
             "model": name,
             "table_ref": tref,
@@ -131,22 +201,37 @@ def build_semantic_spec(p: Product, g: ProductGraph, digest: str, targets_overri
             "dimensions": dims,
             "measures": measures,
             "joins": joins,
-        })
+        }
+        if sk:
+            cube_obj["surrogate_key"] = sk
+        if m.get("partition_by"):
+            cube_obj["partition_by"] = m["partition_by"]
+        if m.get("history_semantics"):
+            cube_obj["history_semantics"] = m["history_semantics"]
+        elif n.role == "dimension" and int(attrs.get("scd_type", 1) or 1) == 2:
+            cube_obj["history_semantics"] = "scd2"
+        if pts:
+            cube_obj["policy_tags"] = pts
+        cubes.append(cube_obj)
 
     for em in explicit_metrics:
-        metrics.append(dict(em))
+        em_copy = dict(em)
+        if not em_copy.get("description") and em_copy.get("name") in glossary:
+            em_copy["description"] = glossary[em_copy["name"]]
+        metrics.append(em_copy)
         target_cube = next((c for c in cubes if c["model"] == em.get("model")), None)
-        if target_cube and em.get("measure"):
-            if not any(ms["name"] == em["measure"] for ms in target_cube["measures"]):
+        if target_cube:
+            mname = em["name"]
+            if not any(ms["name"] == mname for ms in target_cube["measures"]):
                 target_cube["measures"].append({
-                    "name": em["measure"],
-                    "sql": em.get("expr") or em["measure"],
+                    "name": mname,
+                    "sql": em.get("expr") or em.get("measure") or mname,
                     "type": "sum" if em.get("type", "simple") == "simple" else "number",
-                    "additivity": "additive",
-                    "description": em.get("description") or em.get("label") or em["name"],
+                    "additivity": "additive" if em.get("type", "simple") == "simple" else "non_additive",
+                    "description": em_copy.get("description") or em.get("label") or mname,
                 })
 
-    spec = {
+    spec: dict = {
         "product_id": p.id,
         "version": str(man.get("version", "0.1.0")),
         "artefact_digest": digest,
@@ -154,6 +239,9 @@ def build_semantic_spec(p: Product, g: ProductGraph, digest: str, targets_overri
         "cubes": cubes,
         "metrics": metrics,
     }
+    for extra_key in ("looker", "explores", "dashboards", "files"):
+        if sl_cfg.get(extra_key) is not None:
+            spec[extra_key] = sl_cfg[extra_key]
     if sl_cfg.get("brd_requirement_id"):
         spec["brd_requirement_id"] = list(sl_cfg["brd_requirement_id"])
     return spec
@@ -317,13 +405,19 @@ TARGET_RENDERERS = {
 }
 
 
-def render(p: Product, g: ProductGraph, digest: str, targets_override: list[str] | None = None) -> dict[str, str]:
+def render(p: Product, g: ProductGraph, digest: str, targets_override: list[str] | None = None) -> tuple[dict[str, str], list[str]]:
     spec = build_semantic_spec(p, g, digest, targets_override)
     if spec is None:
-        return {}
+        return {}, []
     files: dict[str, str] = {"semantic-layer.json": dumps(spec)}
+    problems: list[str] = []
     for t in spec["targets"]:
-        fn = TARGET_RENDERERS.get(t)
-        if fn:
-            files.update(fn(p, spec))
-    return files
+        if t == "lookml":
+            lfiles = lookml.render(p, spec, g)
+            files.update(lfiles)
+            problems += lookml.validate_lookml_files(lfiles, spec)
+        else:
+            fn = TARGET_RENDERERS.get(t)
+            if fn:
+                files.update(fn(p, spec))
+    return files, problems

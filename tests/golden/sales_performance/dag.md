@@ -21,17 +21,21 @@ flowchart LR
   n14["test<br/>trace-coverage"]
   n15["assemble<br/>assemble-data-product"]
   n16["render<br/>render-engine-artefacts"]
-  n17["orchestrate<br/>orchestrate-pipeline"]
-  n18["publish<br/>publish-data-product"]
-  n19["register<br/>register-knowledge-catalog"]
-  n20["monitor<br/>monitor-data-product"]
-  n15 -->|data-product.v1| n18
+  n17["render<br/>render-lookml-artefacts"]
+  n18["orchestrate<br/>orchestrate-pipeline"]
+  n19["publish<br/>publish-data-product"]
+  n20["register<br/>register-knowledge-catalog"]
+  n21["monitor<br/>monitor-data-product"]
   n15 -->|data-product.v1| n19
+  n15 -->|data-product.v1| n20
   n10 -->|semantic-model.v1| n16
+  n10 -->|semantic-model.v1| n17
   n10 -->|semantic-model.v1| n13
   n9 -->|semantic-model.v1| n16
+  n9 -->|semantic-model.v1| n17
   n9 -->|semantic-model.v1| n13
   n11 -->|semantic-model.v1| n16
+  n11 -->|semantic-model.v1| n17
   n11 -->|semantic-model.v1| n13
   n0 -->|landing-manifest.v1| n1
   n12 -->|quality-policy.v1| n16
@@ -41,23 +45,27 @@ flowchart LR
   n5 -->|semantic-model.v1| n11
   n5 -->|semantic-model.v1| n8
   n5 -->|semantic-model.v1| n16
+  n5 -->|semantic-model.v1| n17
   n5 -->|semantic-model.v1| n13
   n7 -->|semantic-model.v1| n10
   n7 -->|semantic-model.v1| n9
   n7 -->|semantic-model.v1| n11
   n7 -->|semantic-model.v1| n8
   n7 -->|semantic-model.v1| n16
+  n7 -->|semantic-model.v1| n17
   n7 -->|semantic-model.v1| n13
   n6 -->|semantic-model.v1| n10
   n6 -->|semantic-model.v1| n9
   n6 -->|semantic-model.v1| n11
   n6 -->|semantic-model.v1| n8
   n6 -->|semantic-model.v1| n16
+  n6 -->|semantic-model.v1| n17
   n6 -->|semantic-model.v1| n13
   n8 -->|semantic-model.v1| n10
   n8 -->|semantic-model.v1| n9
   n8 -->|semantic-model.v1| n11
   n8 -->|semantic-model.v1| n16
+  n8 -->|semantic-model.v1| n17
   n8 -->|semantic-model.v1| n13
   n1 -->|raw-table.v1| n2
   n1 -->|raw-table.v1| n4
@@ -91,6 +99,7 @@ flowchart LR
 | test | sales_performance | `trace-coverage` | dpf-local (4) | product-manifest.v1, test-spec.v1, test-evidence.v1 | trace-matrix.v1 |
 | assemble | sales_performance | `assemble-data-product` | dpf-local (4) | product-manifest.v1, signoff.v1 | data-product.v1 |
 | render | sales_performance | `render-engine-artefacts` | dpf-local (4) | semantic-model.v1, staging-model.v1, quality-policy.v1, test-spec.v1 | — |
+| render | sales_performance | `render-lookml-artefacts` | dpf-local (4) | semantic-model.v1, product-manifest.v1 | semantic-layer.v1 |
 | orchestrate | sales_performance | `orchestrate-pipeline` | terraform (4) | product-manifest.v1 | — |
 | publish | sales_performance | `publish-data-product` | terraform (4) | data-product.v1, test-evidence.v1 | — |
 | register | sales_performance | `register-knowledge-catalog` | knowledge-catalog-mcp (1) | data-product.v1 | catalog-registration.v1 |

@@ -1,0 +1,14 @@
+id: staging-silent-where-drop
+asserts: A top-level WHERE clause in a staging SQL body silently drops rows before quarantine and fails G1.
+mutate:
+  - append:
+      file: products/sales_performance/sql/stg_order_lines.sql
+      text: "\nWHERE l.quantity > 0\n"
+run:
+  command: check
+  product: sales_performance
+  gate: G1
+expect:
+  outcome: fail
+  messages:
+    - "stg_order_lines: top-level WHERE in a staging body silently drops rows before quarantine"

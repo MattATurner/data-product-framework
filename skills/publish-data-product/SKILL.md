@@ -22,13 +22,18 @@ metadata:
     gcp:
     - BigQuery
     - BigQuery sharing
+    - Looker
 ---
 
 # Publish the data product
 
 1. `dpf check <product> --gate G4` must pass.
 2. Apply the generated Terraform module: datasets, grants, policy tags, sharing listing.
-3. Tag the product version.
+3. When the product exposes `looker_explore` (`access: looker_model_set`) or `looker_dashboard`
+   (`access: looker_folder_grant`) ports, push `generated/<product>/semantic_layer/lookml/` to
+   the Looker Git repository and deploy the tagged commit to Looker production after Spectacles
+   SQL/content validation passes.
+4. Tag the product version.
 
 ## Version rules
 

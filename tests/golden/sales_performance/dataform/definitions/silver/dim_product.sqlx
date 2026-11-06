@@ -3,7 +3,14 @@ config {
   schema: dataform.projectConfig.vars.silver_dataset,
   description: "One row per product per validity period.",
   tags: ["hourly", "monthly"],
-  dependencies: ["assert_stg_products_grain", "assert_stg_products_grain_not_null"]
+  dependencies: ["assert_stg_products_grain", "assert_stg_products_grain_not_null"],
+  bigquery: {
+    labels: {
+      dpf_product: "sales_performance",
+      dpf_layer: "silver",
+      dpf_status: "draft"
+    }
+  }
 }
 
 -- dpf: model=dim_product layer=silver role=dimension skill=kimball/model-scd satisfies=R-6

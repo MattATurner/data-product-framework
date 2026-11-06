@@ -68,6 +68,21 @@ def build_test_spec(p: Product, g: ProductGraph, digest: str) -> dict:
         kw.setdefault("satisfies", [])
         cases.append({k: v for k, v in kw.items() if v is not None})
 
+    for u in g.upstream_nodes:
+        um = u.model
+        ureqs = list(um.get("brd_requirement_id") or [])
+        ugrain = list(um.get("grain_columns") or [])
+        if ugrain:
+            add(id=f"grain:{u.name}", kind="grain", method="automated", severity="block", model=u.name,
+                description=f"{u.name}: {um.get('grain_statement') or u.name} — no duplicates on ({', '.join(ugrain)})",
+                sql=(f"SELECT {_cols(ugrain)}, COUNT(*) AS rows_per_grain\nFROM {{{{ ref('{u.name}') }}}}\n"
+                     f"GROUP BY {_cols(ugrain)}\nHAVING COUNT(*) > 1"),
+                satisfies=ureqs, implements=PLATFORM)
+            add(id=f"grain_not_null:{u.name}", kind="grain", method="automated", severity="block", model=u.name,
+                description=f"{u.name}: grain columns are never null",
+                sql=f"SELECT *\nFROM {{{{ ref('{u.name}') }}}}\nWHERE " + " OR ".join(f"{c} IS NULL" for c in ugrain),
+                satisfies=ureqs, implements=PLATFORM)
+
     for name in [n for n in g.topo() if g.nodes[n].kind == "model"]:
         n = g.nodes[name]
         m = n.model
@@ -197,6 +212,23 @@ def build_test_spec(p: Product, g: ProductGraph, digest: str) -> dict:
         add(id=f"quality:{r['id']}", kind="quality", method="automated", severity=r.get("severity", "block"),
             model=r["model"], description=f"{r['id']}: {r['type']} on {r.get('column') or ', '.join(r.get('columns') or [])}",
             sql=sql, satisfies=list(r.get("brd_requirement_id") or []), implements=r.get("implements"))
+
+    sl = man.get("semantic_layer") or {}
+    if "lookml" in (sl.get("targets") or []):
+        for e in sl.get("explores") or []:
+            ereqs = list(e.get("brd_requirement_id") or sl.get("brd_requirement_id") or [])
+            add(id=f"lookml_explore:{e['name']}", kind="static", method="static", severity="block",
+                check="lookml_explore", element=f"explore:{e['name']}",
+                description=(f"explore {e['name']}: every joined view declares primary_key, joins use surrogate keys "
+                             "and zero PDTs exist"),
+                satisfies=ereqs, implements=PLATFORM)
+        for d in sl.get("dashboards") or []:
+            dreqs = list(d.get("brd_requirement_id") or sl.get("brd_requirement_id") or [])
+            add(id=f"lookml_dashboard:{d['name']}", kind="static", method="static", severity="block",
+                check="lookml_dashboard", element=f"dashboard:{d['name']}",
+                description=(f"dashboard {d['name']}: valid LookML YAML, Stephen Few chart types and resolved "
+                             "Explore fields"),
+                satisfies=dreqs, implements=PLATFORM)
 
     ax_owner = p.scenario_ids
     for t in (p.acceptance or {}).get("tests", []) or []:

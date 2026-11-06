@@ -1,0 +1,848 @@
+{
+  "product_id": "sales_performance",
+  "version": "1.2.0",
+  "artefact_digest": "sha256:30628057e48a3d2cc3c9f24c11061b7b34a2282505592c7ad6393e8d24a5f758",
+  "targets": [
+    "lookml"
+  ],
+  "cubes": [
+    {
+      "name": "dim_customer",
+      "model": "dim_customer",
+      "table_ref": "data-product-framework.slv_sales.dim_customer",
+      "description": "one row per customer per validity period",
+      "grain_columns": [
+        "customer_id",
+        "valid_from"
+      ],
+      "dimensions": [
+        {
+          "name": "sk_customer",
+          "sql": "sk_customer",
+          "type": "number",
+          "primary_key": true,
+          "hidden": true
+        },
+        {
+          "name": "customer_id",
+          "sql": "customer_id",
+          "type": "string"
+        },
+        {
+          "name": "valid_from",
+          "sql": "valid_from",
+          "type": "string"
+        },
+        {
+          "name": "customer_segment",
+          "sql": "customer_segment",
+          "type": "string",
+          "description": "Commercial segment a customer belongs to (for example SMB or Enterprise)."
+        },
+        {
+          "name": "region",
+          "sql": "region",
+          "type": "string",
+          "description": "Sales region of the customer (Australian state or territory code)."
+        },
+        {
+          "name": "customer_name",
+          "sql": "customer_name",
+          "type": "string",
+          "description": "A party that places orders, identified by its customer number and name."
+        },
+        {
+          "name": "customer_email",
+          "sql": "customer_email",
+          "type": "string"
+        },
+        {
+          "name": "customer_phone",
+          "sql": "customer_phone",
+          "type": "string"
+        },
+        {
+          "name": "valid_to",
+          "sql": "valid_to",
+          "type": "time"
+        },
+        {
+          "name": "is_current",
+          "sql": "is_current",
+          "type": "boolean"
+        },
+        {
+          "name": "version_no",
+          "sql": "version_no",
+          "type": "number"
+        }
+      ],
+      "measures": [],
+      "joins": [],
+      "surrogate_key": "sk_customer",
+      "history_semantics": "point_in_time",
+      "policy_tags": [
+        {
+          "id": "PT-1",
+          "model": "dim_customer",
+          "columns": [
+            "customer_email",
+            "customer_phone"
+          ],
+          "tag": "pii_contact",
+          "masking": "always_null",
+          "masked_readers": [
+            "analyst_group"
+          ],
+          "fine_grained_readers": [
+            "contact_reader_group"
+          ],
+          "brd_requirement_id": [
+            "R-12"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "dim_date",
+      "model": "dim_date",
+      "table_ref": "data-product-framework.slv_sales.dim_date",
+      "description": "one row per calendar day",
+      "grain_columns": [
+        "date_key"
+      ],
+      "dimensions": [
+        {
+          "name": "date_key",
+          "sql": "date_key",
+          "type": "string",
+          "primary_key": true
+        },
+        {
+          "name": "calendar_date",
+          "sql": "calendar_date",
+          "type": "time"
+        },
+        {
+          "name": "year",
+          "sql": "year",
+          "type": "number"
+        },
+        {
+          "name": "quarter",
+          "sql": "quarter",
+          "type": "number"
+        },
+        {
+          "name": "year_quarter",
+          "sql": "year_quarter",
+          "type": "string"
+        },
+        {
+          "name": "month",
+          "sql": "month",
+          "type": "number",
+          "description": "Calendar month of the order date, written YYYY-MM."
+        },
+        {
+          "name": "year_month",
+          "sql": "year_month",
+          "type": "string",
+          "description": "Calendar month of the order date, written YYYY-MM."
+        },
+        {
+          "name": "month_name",
+          "sql": "month_name",
+          "type": "string"
+        },
+        {
+          "name": "day_of_week",
+          "sql": "day_of_week",
+          "type": "number"
+        },
+        {
+          "name": "day_name",
+          "sql": "day_name",
+          "type": "string"
+        },
+        {
+          "name": "is_weekend",
+          "sql": "is_weekend",
+          "type": "boolean"
+        }
+      ],
+      "measures": [
+        {
+          "name": "row_count",
+          "sql": "date_key",
+          "type": "count",
+          "additivity": "additive",
+          "description": "Row count of dim_date at declared grain"
+        }
+      ],
+      "joins": [],
+      "history_semantics": "current_only"
+    },
+    {
+      "name": "dim_product",
+      "model": "dim_product",
+      "table_ref": "data-product-framework.slv_sales.dim_product",
+      "description": "one row per product per validity period",
+      "grain_columns": [
+        "product_id",
+        "valid_from"
+      ],
+      "dimensions": [
+        {
+          "name": "sk_product",
+          "sql": "sk_product",
+          "type": "number",
+          "primary_key": true,
+          "hidden": true
+        },
+        {
+          "name": "product_id",
+          "sql": "product_id",
+          "type": "string"
+        },
+        {
+          "name": "valid_from",
+          "sql": "valid_from",
+          "type": "string"
+        },
+        {
+          "name": "product_category",
+          "sql": "product_category",
+          "type": "string",
+          "description": "Category in the Merchandising product range to which a product belongs."
+        },
+        {
+          "name": "product_name",
+          "sql": "product_name",
+          "type": "string"
+        },
+        {
+          "name": "valid_to",
+          "sql": "valid_to",
+          "type": "time"
+        },
+        {
+          "name": "is_current",
+          "sql": "is_current",
+          "type": "boolean"
+        },
+        {
+          "name": "version_no",
+          "sql": "version_no",
+          "type": "number"
+        }
+      ],
+      "measures": [],
+      "joins": [],
+      "surrogate_key": "sk_product",
+      "history_semantics": "point_in_time"
+    },
+    {
+      "name": "fct_order_line",
+      "model": "fct_order_line",
+      "table_ref": "data-product-framework.slv_sales.fct_order_line",
+      "description": "one row per order line at its latest amended values",
+      "grain_columns": [
+        "order_id",
+        "order_line_no"
+      ],
+      "dimensions": [
+        {
+          "name": "order_id",
+          "sql": "order_id",
+          "type": "string"
+        },
+        {
+          "name": "order_line_no",
+          "sql": "order_line_no",
+          "type": "string"
+        },
+        {
+          "name": "sk_customer",
+          "sql": "sk_customer",
+          "type": "number",
+          "hidden": true
+        },
+        {
+          "name": "customer_id",
+          "sql": "customer_id",
+          "type": "string"
+        },
+        {
+          "name": "sk_product",
+          "sql": "sk_product",
+          "type": "number",
+          "hidden": true
+        },
+        {
+          "name": "product_id",
+          "sql": "product_id",
+          "type": "string"
+        },
+        {
+          "name": "date_key",
+          "sql": "date_key",
+          "type": "number",
+          "hidden": true
+        },
+        {
+          "name": "order_date",
+          "sql": "order_date",
+          "type": "time",
+          "description": "Date the order was placed."
+        },
+        {
+          "name": "order_status",
+          "sql": "order_status",
+          "type": "string",
+          "description": "Lifecycle state of an order - placed, fulfilled or cancelled."
+        },
+        {
+          "name": "source_modified_ts",
+          "sql": "source_modified_ts",
+          "type": "time"
+        },
+        {
+          "name": "is_cancelled",
+          "sql": "is_cancelled",
+          "type": "boolean"
+        }
+      ],
+      "measures": [
+        {
+          "name": "quantity",
+          "sql": "quantity",
+          "type": "sum",
+          "additivity": "additive",
+          "description": "Number of units on order lines that are not cancelled."
+        },
+        {
+          "name": "gross_amount",
+          "sql": "gross_amount",
+          "type": "sum",
+          "additivity": "additive",
+          "description": "gross_amount (additive) on fct_order_line"
+        },
+        {
+          "name": "discount_amount",
+          "sql": "discount_amount",
+          "type": "sum",
+          "additivity": "additive",
+          "description": "discount_amount (additive) on fct_order_line"
+        },
+        {
+          "name": "net_amount",
+          "sql": "net_amount",
+          "type": "sum",
+          "additivity": "additive",
+          "description": "Gross amount less discount, excluding tax, for order lines that are not cancelled."
+        },
+        {
+          "name": "net_sales",
+          "sql": "net_amount",
+          "type": "sum",
+          "additivity": "additive",
+          "description": "Net sales in AUD excluding tax and cancelled order lines."
+        },
+        {
+          "name": "units_sold",
+          "sql": "quantity",
+          "type": "sum",
+          "additivity": "additive",
+          "description": "Total units sold excluding cancelled order lines."
+        }
+      ],
+      "joins": [
+        {
+          "to": "dim_customer",
+          "relationship": "many_to_one",
+          "on": "fct_order_line.sk_customer = dim_customer.sk_customer"
+        },
+        {
+          "to": "dim_product",
+          "relationship": "many_to_one",
+          "on": "fct_order_line.sk_product = dim_product.sk_product"
+        },
+        {
+          "to": "dim_date",
+          "relationship": "many_to_one",
+          "on": "fct_order_line.date_key = dim_date.date_key"
+        }
+      ],
+      "partition_by": "order_date",
+      "history_semantics": "current_only"
+    },
+    {
+      "name": "sales_order_line_detail",
+      "model": "sales_order_line_detail",
+      "table_ref": "data-product-framework.gold_sales.sales_order_line_detail",
+      "description": "one row per order line at its latest amended values",
+      "grain_columns": [
+        "order_id",
+        "order_line_no"
+      ],
+      "dimensions": [
+        {
+          "name": "order_id",
+          "sql": "order_id",
+          "type": "string"
+        },
+        {
+          "name": "order_line_no",
+          "sql": "order_line_no",
+          "type": "string"
+        },
+        {
+          "name": "order_date",
+          "sql": "order_date",
+          "type": "time",
+          "description": "Date the order was placed."
+        },
+        {
+          "name": "year_month",
+          "sql": "year_month",
+          "type": "string",
+          "description": "Calendar month of the order date, written YYYY-MM."
+        },
+        {
+          "name": "customer_id",
+          "sql": "customer_id",
+          "type": "string"
+        },
+        {
+          "name": "customer_name",
+          "sql": "customer_name",
+          "type": "string",
+          "description": "A party that places orders, identified by its customer number and name."
+        },
+        {
+          "name": "customer_segment",
+          "sql": "customer_segment",
+          "type": "string",
+          "description": "Commercial segment a customer belongs to (for example SMB or Enterprise)."
+        },
+        {
+          "name": "region",
+          "sql": "region",
+          "type": "string",
+          "description": "Sales region of the customer (Australian state or territory code)."
+        },
+        {
+          "name": "product_id",
+          "sql": "product_id",
+          "type": "string"
+        },
+        {
+          "name": "product_name",
+          "sql": "product_name",
+          "type": "string"
+        },
+        {
+          "name": "product_category",
+          "sql": "product_category",
+          "type": "string",
+          "description": "Category in the Merchandising product range to which a product belongs."
+        },
+        {
+          "name": "order_status",
+          "sql": "order_status",
+          "type": "string",
+          "description": "Lifecycle state of an order - placed, fulfilled or cancelled."
+        },
+        {
+          "name": "is_cancelled",
+          "sql": "is_cancelled",
+          "type": "boolean"
+        },
+        {
+          "name": "quantity",
+          "sql": "quantity",
+          "type": "string",
+          "description": "Number of units on order lines that are not cancelled."
+        },
+        {
+          "name": "gross_amount",
+          "sql": "gross_amount",
+          "type": "string"
+        },
+        {
+          "name": "discount_amount",
+          "sql": "discount_amount",
+          "type": "string"
+        },
+        {
+          "name": "net_amount",
+          "sql": "net_amount",
+          "type": "string",
+          "description": "Gross amount less discount, excluding tax, for order lines that are not cancelled."
+        },
+        {
+          "name": "counted_net_amount",
+          "sql": "counted_net_amount",
+          "type": "string"
+        }
+      ],
+      "measures": [
+        {
+          "name": "row_count",
+          "sql": "order_id",
+          "type": "count",
+          "additivity": "additive",
+          "description": "Row count of sales_order_line_detail at declared grain"
+        }
+      ],
+      "joins": [],
+      "history_semantics": "point_in_time"
+    },
+    {
+      "name": "sales_performance_monthly",
+      "model": "sales_performance_monthly",
+      "table_ref": "data-product-framework.gold_sales.sales_performance_monthly",
+      "description": "one row per month per customer segment per product category per region",
+      "grain_columns": [
+        "year_month",
+        "customer_segment",
+        "product_category",
+        "region"
+      ],
+      "dimensions": [
+        {
+          "name": "year_month",
+          "sql": "year_month",
+          "type": "string",
+          "description": "Calendar month of the order date, written YYYY-MM."
+        },
+        {
+          "name": "customer_segment",
+          "sql": "customer_segment",
+          "type": "string",
+          "description": "Commercial segment a customer belongs to (for example SMB or Enterprise)."
+        },
+        {
+          "name": "product_category",
+          "sql": "product_category",
+          "type": "string",
+          "description": "Category in the Merchandising product range to which a product belongs."
+        },
+        {
+          "name": "region",
+          "sql": "region",
+          "type": "string",
+          "description": "Sales region of the customer (Australian state or territory code)."
+        },
+        {
+          "name": "net_sales",
+          "sql": "net_sales",
+          "type": "string",
+          "description": "Gross amount less discount, excluding tax, for order lines that are not cancelled."
+        },
+        {
+          "name": "units_sold",
+          "sql": "units_sold",
+          "type": "string",
+          "description": "Number of units on order lines that are not cancelled."
+        },
+        {
+          "name": "order_line_count",
+          "sql": "order_line_count",
+          "type": "string"
+        }
+      ],
+      "measures": [
+        {
+          "name": "row_count",
+          "sql": "year_month",
+          "type": "count",
+          "additivity": "additive",
+          "description": "Row count of sales_performance_monthly at declared grain"
+        }
+      ],
+      "joins": [],
+      "history_semantics": "point_in_time"
+    },
+    {
+      "name": "sales_performance_partner_extract",
+      "model": "sales_performance_partner_extract",
+      "table_ref": "data-product-framework.share_sales_partner.sales_performance_partner_extract",
+      "description": "one row per closed month per product category per region",
+      "grain_columns": [
+        "year_month",
+        "product_category",
+        "region"
+      ],
+      "dimensions": [
+        {
+          "name": "year_month",
+          "sql": "year_month",
+          "type": "string",
+          "description": "Calendar month of the order date, written YYYY-MM."
+        },
+        {
+          "name": "product_category",
+          "sql": "product_category",
+          "type": "string",
+          "description": "Category in the Merchandising product range to which a product belongs."
+        },
+        {
+          "name": "region",
+          "sql": "region",
+          "type": "string",
+          "description": "Sales region of the customer (Australian state or territory code)."
+        },
+        {
+          "name": "net_sales",
+          "sql": "net_sales",
+          "type": "string",
+          "description": "Gross amount less discount, excluding tax, for order lines that are not cancelled."
+        },
+        {
+          "name": "units_sold",
+          "sql": "units_sold",
+          "type": "string",
+          "description": "Number of units on order lines that are not cancelled."
+        }
+      ],
+      "measures": [
+        {
+          "name": "row_count",
+          "sql": "year_month",
+          "type": "count",
+          "additivity": "additive",
+          "description": "Row count of sales_performance_partner_extract at declared grain"
+        }
+      ],
+      "joins": [],
+      "history_semantics": "point_in_time"
+    }
+  ],
+  "metrics": [
+    {
+      "name": "quantity",
+      "label": "Quantity",
+      "type": "simple",
+      "model": "fct_order_line",
+      "measure": "quantity",
+      "time_grain": [
+        "day",
+        "week",
+        "month",
+        "quarter",
+        "year"
+      ]
+    },
+    {
+      "name": "gross_amount",
+      "label": "Gross Amount",
+      "type": "simple",
+      "model": "fct_order_line",
+      "measure": "gross_amount",
+      "time_grain": [
+        "day",
+        "week",
+        "month",
+        "quarter",
+        "year"
+      ]
+    },
+    {
+      "name": "discount_amount",
+      "label": "Discount Amount",
+      "type": "simple",
+      "model": "fct_order_line",
+      "measure": "discount_amount",
+      "time_grain": [
+        "day",
+        "week",
+        "month",
+        "quarter",
+        "year"
+      ]
+    },
+    {
+      "name": "net_amount",
+      "label": "Net Amount",
+      "type": "simple",
+      "model": "fct_order_line",
+      "measure": "net_amount",
+      "time_grain": [
+        "day",
+        "week",
+        "month",
+        "quarter",
+        "year"
+      ]
+    },
+    {
+      "name": "net_sales",
+      "label": "Net Sales (AUD)",
+      "type": "simple",
+      "model": "fct_order_line",
+      "expr": "net_amount",
+      "filter": "is_cancelled = FALSE",
+      "description": "Net sales in AUD excluding tax and cancelled order lines."
+    },
+    {
+      "name": "units_sold",
+      "label": "Units Sold",
+      "type": "simple",
+      "model": "fct_order_line",
+      "expr": "quantity",
+      "filter": "is_cancelled = FALSE",
+      "description": "Total units sold excluding cancelled order lines."
+    }
+  ],
+  "looker": {
+    "connection": "bigquery_sales",
+    "project_name": "sales_performance",
+    "auth_mode": "oauth",
+    "datagroup_max_cache_age": "90 minutes"
+  },
+  "explores": [
+    {
+      "name": "order_lines",
+      "from": "fct_order_line",
+      "label": "Sales Performance — Order Lines",
+      "description": "Order-line sales joined to point-in-time customer segment, product category and calendar.",
+      "joins": "auto",
+      "always_filter_partition": true,
+      "partition_default_filter": "90 days",
+      "aggregate_tables": [
+        "sales_performance_monthly"
+      ],
+      "brd_requirement_id": [
+        "R-1",
+        "R-2",
+        "R-4",
+        "R-6",
+        "R-7",
+        "R-8",
+        "R-12"
+      ]
+    }
+  ],
+  "dashboards": [
+    {
+      "name": "executive_sales_pulse",
+      "title": "Executive Sales Performance",
+      "description": "Stephen Few operational summary of net sales, units sold and order-line detail.",
+      "explore": "order_lines",
+      "brd_requirement_id": [
+        "R-1",
+        "R-2",
+        "R-7"
+      ],
+      "filters": [
+        {
+          "name": "order_date",
+          "title": "Order Date",
+          "field": "fct_order_line.order_date",
+          "type": "date_filter",
+          "default_value": "90 days"
+        },
+        {
+          "name": "region",
+          "title": "Region",
+          "field": "dim_customer.region"
+        },
+        {
+          "name": "customer_segment",
+          "title": "Customer Segment",
+          "field": "dim_customer.customer_segment"
+        },
+        {
+          "name": "product_category",
+          "title": "Product Category",
+          "field": "dim_product.product_category"
+        }
+      ],
+      "tiles": [
+        {
+          "name": "kpi_net_sales",
+          "title": "Net Sales (AUD)",
+          "kind": "kpi",
+          "measures": [
+            "fct_order_line.net_sales"
+          ]
+        },
+        {
+          "name": "kpi_units_sold",
+          "title": "Units Sold",
+          "kind": "kpi",
+          "measures": [
+            "fct_order_line.units_sold"
+          ]
+        },
+        {
+          "name": "kpi_order_lines",
+          "title": "Order Lines",
+          "kind": "kpi",
+          "measures": [
+            "fct_order_line.count"
+          ]
+        },
+        {
+          "name": "monthly_net_sales_trend",
+          "title": "Monthly Net Sales Trend",
+          "kind": "time_series",
+          "dimensions": [
+            "dim_date.year_month"
+          ],
+          "measures": [
+            "fct_order_line.net_sales"
+          ],
+          "sorts": [
+            "dim_date.year_month asc"
+          ]
+        },
+        {
+          "name": "net_sales_by_region",
+          "title": "Net Sales by Region",
+          "kind": "ranked_bar",
+          "dimensions": [
+            "dim_customer.region"
+          ],
+          "measures": [
+            "fct_order_line.net_sales"
+          ],
+          "y_axis_zero": true
+        },
+        {
+          "name": "net_sales_by_category",
+          "title": "Net Sales by Product Category",
+          "kind": "ranked_bar",
+          "dimensions": [
+            "dim_product.product_category"
+          ],
+          "measures": [
+            "fct_order_line.net_sales"
+          ],
+          "y_axis_zero": true
+        },
+        {
+          "name": "order_line_drill_detail",
+          "title": "Order Line Drill-Down Detail",
+          "kind": "table",
+          "dimensions": [
+            "fct_order_line.order_id",
+            "fct_order_line.order_line_no",
+            "fct_order_line.order_date",
+            "dim_customer.customer_name",
+            "dim_customer.customer_segment",
+            "dim_product.product_category",
+            "fct_order_line.order_status"
+          ],
+          "measures": [
+            "fct_order_line.net_sales",
+            "fct_order_line.units_sold"
+          ],
+          "limit": 100
+        }
+      ]
+    }
+  ]
+}

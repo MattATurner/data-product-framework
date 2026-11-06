@@ -23,7 +23,7 @@ SOURCE_STAGES = {"extract", "land"}
 MODEL_STAGES = {"stage", "integrate", "consume"}
 # Contracts that are authored, or observed at run time, rather than produced by a build node.
 INPUT_CONTRACTS = {"brd.v1", "product-manifest.v1", "signoff.v1", "acceptance.v1", "source-binding.v1",
-                   "observability-policy.v1", "run-evidence.v1", "test-evidence.v1"}
+                   "foundation-binding.v1", "observability-policy.v1", "run-evidence.v1", "test-evidence.v1"}
 
 
 @dataclass
@@ -54,10 +54,17 @@ def matches(selects_when: dict | None, ctx: dict) -> bool:
     for key, want in (selects_when or {}).items():
         have = _lookup(ctx, key)
         if isinstance(want, list):
-            if have not in want:
+            if isinstance(have, list):
+                if not any(x in want for x in have):
+                    return False
+            elif have not in want:
                 return False
-        elif have != want:
-            return False
+        else:
+            if isinstance(have, list):
+                if want not in have:
+                    return False
+            elif have != want:
+                return False
     return True
 
 
@@ -104,6 +111,20 @@ class Composer:
                                              {"entities": src.get("entities"), "capture_mode": src.get("capture_mode")}))
             self._edge(f"extract:{src['system_id']}", f"land:{src['system_id']}", "landing-manifest.v1")
 
+        # -- upstream-scoped (decoupled / hybrid consumption products)
+        for up in man.get("upstream", []) or []:
+            ctx = {"product": man, "upstream": up}
+            inst = up.get("product") or up.get("foundation") or "upstream"
+            cands = [s for s in skills.values() if s.get("stage") == "integrate" and s.get("scope") == "upstream"
+                     and matches(s.get("selects_when"), ctx)]
+            if len(cands) != 1:
+                self.fail(f"integrate:upstream_{inst}: "
+                          f"{'no skill matches' if not cands else 'ambiguous: ' + ', '.join(c.id for c in cands)}")
+                continue
+            models_list = up.get("models") or [t.get("name") for t in (up.get("tables") or [])]
+            self.nodes.append(skill_node(cands[0], "integrate", "upstream", f"upstream_{inst}",
+                                         {"upstream": inst, "models": models_list}))
+
         # -- model-scoped
         stage_of = (p.registry.defaults.get("layer_stages") or {"staging": "stage", "silver": "integrate", "gold": "consume"})
         for n in self.g.models:
@@ -136,6 +157,8 @@ class Composer:
                     continue
                 if src.kind == "raw":
                     producer_id, contract = f"land:{src.source}", "raw-table.v1"
+                elif src.kind == "upstream":
+                    producer_id, contract = f"integrate:upstream_{src.source}", src.emits
                 else:
                     producer_id, contract = f"{stage_of.get(src.layer)}:{src.name}", src.emits
                 if contract not in consumer.consumes:
@@ -145,11 +168,16 @@ class Composer:
 
         # -- product-scoped
         produced = {c for nd in self.nodes for c in nd.produces}
+        has_staging = any(n.layer == "staging" for n in self.g.models)
         for stage in STAGES:
             if stage in SOURCE_STAGES or stage in MODEL_STAGES:
                 continue
+            if stage == "orchestrate" and not self.g.models and not man.get("orchestration"):
+                continue
             cands = [s for s in skills.values() if s.get("stage") == stage and s.get("scope", "product") == "product"
                      and matches(s.get("selects_when"), {"product": man})]
+            if stage == "render" and not self.g.models:
+                cands = [s for s in cands if s.id != "render-engine-artefacts"]
             if not cands:
                 self.fail(f"{stage}: no skill is available for this stage")
                 continue
@@ -160,6 +188,8 @@ class Composer:
         for nd in [x for x in self.nodes if x.scope == "product"]:
             for c in nd.consumes:
                 if c in INPUT_CONTRACTS:
+                    continue
+                if c == "staging-model.v1" and man.get("upstream") and not has_staging:
                     continue
                 producers = [x for x in self.nodes if c in x.produces and STAGES.index(x.stage) <= STAGES.index(nd.stage)]
                 if not producers:
@@ -263,7 +293,8 @@ def check_acceptance(p: Product, report: Report) -> bool:
             report.fail(f"{t['id']} verifies {', '.join(unknown)}, which the BRD does not define")
             ok = False
         verified |= {a for a in t["verifies"] if a in known}
-        if t.get("model") and t["model"] not in {m["name"] for _, m in p.models()}:
+        known_models = {m["name"] for _, m in p.models()} | {n.name for n in ProductGraph(p).upstream_nodes}
+        if t.get("model") and t["model"] not in known_models:
             report.fail(f"{t['id']} targets model '{t['model']}', which is not declared")
             ok = False
     missing = sorted(set(known) - verified, key=lambda x: int(x.split("-")[1]))
