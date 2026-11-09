@@ -106,7 +106,7 @@ Gates are cumulative: `--gate G3` (or `--gate build`) runs G0 to G3, and `--gate
 | Acceptance mapping | Maps each `AX-n` to an acceptance test (`AT-n`): automated SQL, a static check or an attestation | `products/<id>/acceptance.yaml` |
 | Grain | What one row means (grain statement) and the columns that make a row unique (grain columns) | manifest, TDD |
 | History semantics | How attribute changes behave: `current_only` (latest values) or `point_in_time` (values at the event date) | manifest |
-| Methodology pack | A modelling style with roles, rules and skills: [`direct`](../methodologies/direct/METHODOLOGY.md) (default: stage, type and expose business views/tables directly with declared grain—no star-schema split) or [`kimball`](../methodologies/kimball/METHODOLOGY.md) (conformed dimensions and facts) | `methodologies/` |
+| Methodology pack | A modelling style with roles, rules and skills: [`direct`](../framework/methodologies/direct/METHODOLOGY.md) (default: stage, type and expose business views/tables directly with declared grain—no star-schema split) or [`kimball`](../framework/methodologies/kimball/METHODOLOGY.md) (conformed dimensions and facts) | `framework/methodologies/` |
 | Engine adapter | Declares which roles an engine implements. Dataform and dbt are implemented; Dataflow and Spark are planned | `engines/` |
 | Skill | One unit of work for one pipeline stage, selected by its `selects_when` conditions | `skills/`, `methodologies/*/skills/` |
 | Tool tier | How a skill does its work, from 1 (managed remote MCP server) to 5 (bespoke code, needs an ADR) | `registry/mcp_servers.yaml` |
@@ -1009,16 +1009,16 @@ The `fixture:` key says how to seed the build before the live run.
 
 ### 6.7 Templates for the Define and Design stages
 
-`templates/` holds a template for every document from a candidate use case to G1. Read
-[`templates/README.md`](../templates/README.md) for the detail.
+`framework/templates/` holds a template for every document from a candidate use case to G1. Read
+[`framework/templates/README.md`](../framework/templates/README.md) for the detail.
 
 | Stage | Template | Use it to | Worked example |
 |---|---|---|---|
-| Define 1 | [`define/1-use-case.pdf`](../templates/define/1-use-case.pdf) | describe one candidate use case | [UC-SALES-001](../examples/sales_performance/define/use-case.pdf) |
-| Define 2 | [`define/2-scorecard.pdf`](../templates/define/2-scorecard.pdf) | score up to five use cases for value and ease | [UC-SALES-001](../examples/sales_performance/define/scorecard.pdf); [seed portfolio](../examples/use-case-portfolio/scorecard.pdf) |
-| Define 3 | [`define/3-prioritisation.pdf`](../templates/define/3-prioritisation.pdf) | place them on the matrix and record a signed decision | [UC-SALES-001](../examples/sales_performance/define/prioritisation.pdf); [seed portfolio](../examples/use-case-portfolio/prioritisation.pdf) |
-| Define 4 | [`define/4a-brd.pdf`](../templates/define/4a-brd.pdf) or [`define/4b-prd.pdf`](../templates/define/4b-prd.pdf) | write the business or product requirements | [BRD-SALES-002](../examples/sales_performance/define/brd.pdf) (no PRD example yet) |
-| Design | [`design/tdd-spec.md`](../templates/design/tdd-spec.md), [`semantics.md`](../templates/design/semantics.md), [`product.yaml`](../templates/design/product.yaml), [`adr.md`](../templates/design/adr.md) | write the documents that G1 checks | [TDD-SALES-002](../openspec/specs/products/sales/sales-performance/tdd/spec.md), [`semantics.md`](../openspec/specs/products/sales/sales-performance/tdd/semantics.md), [`product.yaml`](../products/sales_performance/product.yaml), [ADRs](../products/sales_performance/adr/) |
+| Define 1 | [`define/1-use-case.pdf`](../framework/templates/define/1-use-case.pdf) | describe one candidate use case | [UC-SALES-001](../examples/sales_performance/define/use-case.pdf) |
+| Define 2 | [`define/2-scorecard.pdf`](../framework/templates/define/2-scorecard.pdf) | score up to five use cases for value and ease | [UC-SALES-001](../examples/sales_performance/define/scorecard.pdf); [seed portfolio](../examples/use-case-portfolio/scorecard.pdf) |
+| Define 3 | [`define/3-prioritisation.pdf`](../framework/templates/define/3-prioritisation.pdf) | place them on the matrix and record a signed decision | [UC-SALES-001](../examples/sales_performance/define/prioritisation.pdf); [seed portfolio](../examples/use-case-portfolio/prioritisation.pdf) |
+| Define 4 | [`define/4a-brd.pdf`](../framework/templates/define/4a-brd.pdf) or [`define/4b-prd.pdf`](../framework/templates/define/4b-prd.pdf) | write the business or product requirements | [BRD-SALES-002](../examples/sales_performance/define/brd.pdf) (no PRD example yet) |
+| Design | [`design/tdd-spec.md`](../framework/templates/design/tdd-spec.md), [`semantics.md`](../framework/templates/design/semantics.md), [`product.yaml`](../framework/templates/design/product.yaml), [`adr.md`](../framework/templates/design/adr.md) | write the documents that G1 checks | [TDD-SALES-002](../openspec/specs/products/sales/sales-performance/tdd/spec.md), [`semantics.md`](../openspec/specs/products/sales/sales-performance/tdd/semantics.md), [`product.yaml`](../products/sales_performance/product.yaml), [ADRs](../products/sales_performance/adr/) |
 
 The Define templates are fillable PDFs written in business language. `dpf` does not read
 them and no gate checks them. In the framework repository, the `assess-use-case` agent skill
@@ -1632,5 +1632,5 @@ every push (the `artefacts` job). The sandbox rows come from the deployment on 5
 | [RUNBOOK.md](../examples/sales_performance/RUNBOOK.md) | deploy and operate the example |
 | [local-source-connectivity.md](local-source-connectivity.md) | connect an on-premises source |
 | [data-product-framework-plan.md](data-product-framework-plan.md) | the design narrative |
-| [adr/README.md](../adr/README.md) | platform decisions |
+| [docs/adr/README.md](adr/README.md) | platform decisions |
 | [tests/evals/README.md](../tests/evals/README.md), [tests/golden/README.md](../tests/golden/README.md) | evals and golden copies |

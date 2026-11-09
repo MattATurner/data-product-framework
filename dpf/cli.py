@@ -351,7 +351,7 @@ def cmd_proto(ws, args, report):
             }
             write_text(brd_dir / "brd.yaml", yaml.safe_dump(brd_doc, sort_keys=False))
         if not (tdd_dir / "spec.md").exists():
-            tdd_tmpl = ws.root / "templates/design/tdd-spec.md"
+            tdd_tmpl = ws.templates_dir / "design/tdd-spec.md"
             tdd_txt = (tdd_tmpl.read_text(encoding="utf-8")
                        .replace("{Product name}", pid)
                        .replace("{product name}", pid)
@@ -361,7 +361,7 @@ def cmd_proto(ws, args, report):
                        .replace("{domain}", domain)) if tdd_tmpl.exists() else f"# {pid} — Technical Design\n\n## Purpose\n\n**TDD:** {man['tdd_id']} · **Satisfies:** {man['satisfies']}\n"
             write_text(tdd_dir / "spec.md", tdd_txt)
         if not (tdd_dir / "playback.md").exists():
-            sem_tmpl = ws.root / "templates/design/semantics.md"
+            sem_tmpl = ws.templates_dir / "design/semantics.md"
             pb_txt = (sem_tmpl.read_text(encoding="utf-8")
                       .replace("{Product name}", pid)
                       .replace("{product}", pid)

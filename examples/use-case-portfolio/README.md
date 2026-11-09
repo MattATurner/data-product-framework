@@ -1,7 +1,7 @@
 # Worked example: the seed use-case portfolio
 
 The three use cases from the seed use-case template, scored with
-[`templates/scoring.yaml`](../../templates/scoring.yaml) and placed on the prioritisation
+[`framework/templates/scoring.yaml`](../../framework/templates/scoring.yaml) and placed on the prioritisation
 matrix. This example shows the Define stage, steps 2 and 3.
 
 | File | What it is |
@@ -37,4 +37,4 @@ printed 98 for UC-1, but its rows add up to 101. The scorecard notes this.
 
 ## Rebuild
 
-Edit `portfolio.yaml` and run `make templates`. See [`templates/README.md`](../../templates/README.md).
+Edit `portfolio.yaml` and run `make templates`. See [`framework/templates/README.md`](../../framework/templates/README.md).

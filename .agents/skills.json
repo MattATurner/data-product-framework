@@ -1,7 +1,7 @@
 {
   "entries": [
     {
-      "path": "skills",
+      "path": "framework/skills",
       "include_only": [
         "author-brd",
         "validate-brd",
@@ -16,7 +16,7 @@
       ]
     },
     {
-      "path": "methodologies/kimball/skills",
+      "path": "framework/methodologies/kimball/skills",
       "include_only": ["design-bus-matrix"]
     }
   ]

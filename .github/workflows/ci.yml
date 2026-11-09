@@ -30,9 +30,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install pinned dependencies (requirements/dev.txt, hash-checked) and dpf
+      - name: Install pinned dependencies (.github/requirements/dev.txt, hash-checked) and dpf
         run: |
-          pip install --require-hashes -r requirements/dev.txt
+          pip install --require-hashes -r .github/requirements/dev.txt
           pip install --no-deps -e .
       - name: Framework validation, lint and gates G0-G3 for every product
         run: dpf check --all --gate G3
@@ -58,8 +58,8 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.9.8"
-      - name: Install pinned dbt toolchain (requirements/dbt.txt, hash-checked)
-        run: pip install --require-hashes -r requirements/dbt.txt
+      - name: Install pinned dbt toolchain (.github/requirements/dbt.txt, hash-checked)
+        run: pip install --require-hashes -r .github/requirements/dbt.txt
       - name: Terraform fmt and validate (golden copies)
         run: |
           for d in tests/golden/*/terraform; do
@@ -73,7 +73,7 @@ jobs:
           w=examples/sales_performance/terraform
           [ -d "$w" ] || exit 0
           python -m venv .dpf-venv
-          .dpf-venv/bin/pip install --require-hashes -r requirements/dev.txt
+          .dpf-venv/bin/pip install --require-hashes -r .github/requirements/dev.txt
           .dpf-venv/bin/pip install --no-deps -e .
           .dpf-venv/bin/dpf generate sales_performance
           terraform -chdir="$w" fmt -check -diff

@@ -33,8 +33,8 @@ from pathlib import Path
 import yaml
 
 SKILL = Path(__file__).resolve().parent.parent
-FORM = "templates/src/use-case.form.yaml"
-SCORING = "templates/scoring.yaml"
+FORM = "framework/templates/src/use-case.form.yaml"
+SCORING = "framework/templates/scoring.yaml"
 VOCABULARY = "registry/brd-vocabulary.yaml"
 EVIDENCE_MAP = SKILL / "references" / "evidence-map.yaml"
 

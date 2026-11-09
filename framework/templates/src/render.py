@@ -22,10 +22,10 @@ from pathlib import Path
 
 import yaml
 
-ROOT = Path(__file__).resolve().parents[2]
-SRC = ROOT / "templates" / "src"
-OUT = ROOT / "templates" / "define"
-SCORING = ROOT / "templates" / "scoring.yaml"
+ROOT = Path(__file__).resolve().parents[3]
+SRC = ROOT / "framework" / "templates" / "src"
+OUT = ROOT / "framework" / "templates" / "define"
+SCORING = ROOT / "framework" / "templates" / "scoring.yaml"
 PORTFOLIO_EXAMPLE = ROOT / "examples" / "use-case-portfolio"
 SALES_EXAMPLE = ROOT / "examples" / "sales_performance" / "define"
 SALES_BRD = ROOT / "openspec" / "specs" / "products" / "sales" / "sales-performance" / "brd"

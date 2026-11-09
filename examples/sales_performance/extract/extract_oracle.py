@@ -453,8 +453,9 @@ def find_contracts_dir() -> Path | None:
         return path if (path / MANIFEST_SCHEMA).is_file() else None
     here = Path(__file__).resolve().parent
     for directory in (here, *here.parents):
-        if (directory / "contracts" / MANIFEST_SCHEMA).is_file():
-            return directory / "contracts"
+        for rel in ("framework/contracts", "contracts"):
+            if (directory / rel / MANIFEST_SCHEMA).is_file():
+                return directory / rel
     return None
 
 

@@ -22,9 +22,8 @@ CLOUD_IMPORT = re.compile(
     r"^\s*(?:from|import)\s+(google\.cloud|googleapiclient|oracledb|cx_Oracle|psycopg2?|pymysql|mysql\.connector|"
     r"pyodbc|pymssql|snowflake|boto3|azure|sqlalchemy|apache_beam|pyspark)\b", re.M)
 CODE_GLOBS = ("examples/**/*.py", "products/**/*.py")
-PROSE_GLOBS = ("*.md", "docs/**/*.md", "fhd/**/*.md", "openspec/**/*.md", "skills/**/*.md", "methodologies/**/*.md",
-               "engines/**/*.md", "adr/**/*.md", "products/**/*.md", "examples/**/*.md", "registry/**/*.yaml",
-               "openspec/**/*.yaml", "docs/**/*.html")
+PROSE_GLOBS = ("*.md", "docs/**/*.md", "framework/**/*.md", "openspec/**/*.md", "products/**/*.md",
+               "examples/**/*.md", "registry/**/*.yaml", "openspec/**/*.yaml", "docs/**/*.html")
 RETIRED = {  # retired product name -> current name (prose only)
     r"\bDataplex\b": "Knowledge Catalog",
     r"\bBigLake metastore\b": "Lakehouse runtime catalog",

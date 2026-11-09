@@ -252,11 +252,42 @@ class Workspace:
     def __init__(self, root: Path | str):
         self.root = Path(root).resolve()
 
+    def _dir(self, primary: str, fallback: str | None = None) -> Path:
+        p = self.root / primary
+        if p.exists() or not fallback:
+            return p
+        fb = self.root / fallback
+        return fb if fb.exists() else p
+
+    @property
+    def contracts_dir(self) -> Path:
+        return self._dir("framework/contracts", "contracts")
+
+    @property
+    def skills_dir(self) -> Path:
+        return self._dir("framework/skills", "skills")
+
+    @property
+    def methodologies_dir(self) -> Path:
+        return self._dir("framework/methodologies", "methodologies")
+
+    @property
+    def engines_dir(self) -> Path:
+        return self._dir("framework/engines", "engines")
+
+    @property
+    def templates_dir(self) -> Path:
+        return self._dir("framework/templates", "templates")
+
+    @property
+    def adr_dir(self) -> Path:
+        return self._dir("docs/adr", "adr")
+
     # -- contracts
     @cached_property
     def contracts(self) -> dict[str, dict]:
         out = {}
-        for p in sorted((self.root / "contracts").glob("*.schema.json")):
+        for p in sorted(self.contracts_dir.glob("*.schema.json")):
             out[p.name.removesuffix(".schema.json")] = json.loads(p.read_text(encoding="utf-8"))
         return out
 
@@ -283,7 +314,7 @@ class Workspace:
     @cached_property
     def skills(self) -> dict[str, Skill]:
         out: dict[str, Skill] = {}
-        paths = sorted(self.root.glob("skills/*/SKILL.md")) + sorted(self.root.glob("methodologies/*/skills/*/SKILL.md"))
+        paths = sorted(self.skills_dir.glob("*/SKILL.md")) + sorted(self.methodologies_dir.glob("*/skills/*/SKILL.md"))
         for p in paths:
             fm, body = front_matter(p)
             s = Skill(p, fm, body)
@@ -293,7 +324,7 @@ class Workspace:
     @cached_property
     def packs(self) -> dict[str, dict]:
         out = {}
-        for p in sorted(self.root.glob("methodologies/*/methodology.yaml")):
+        for p in sorted(self.methodologies_dir.glob("*/methodology.yaml")):
             d = load_yaml(p)
             d["_dir"] = p.parent
             out[d.get("id", p.parent.name)] = d
@@ -302,7 +333,7 @@ class Workspace:
     @cached_property
     def rules(self) -> dict[str, dict]:
         out = {}
-        for p in sorted(self.root.glob("methodologies/*/rules/*.yaml")):
+        for p in sorted(self.methodologies_dir.glob("*/rules/*.yaml")):
             d = load_yaml(p)
             d["_path"] = p
             out[d.get("id", p.stem)] = d
@@ -311,7 +342,7 @@ class Workspace:
     @cached_property
     def adapters(self) -> dict[str, dict]:
         out = {}
-        for p in sorted(self.root.glob("engines/*/adapter.yaml")):
+        for p in sorted(self.engines_dir.glob("*/adapter.yaml")):
             d = load_yaml(p)
             d["_dir"] = p.parent
             out[d.get("engine_id", p.parent.name)] = d
@@ -320,7 +351,7 @@ class Workspace:
     @cached_property
     def adrs(self) -> dict[str, Path]:
         out = {}
-        for p in sorted(self.root.glob("adr/ADR-*.md")) + sorted(self.root.glob("products/*/adr/ADR-*.md")):
+        for p in sorted(self.adr_dir.glob("ADR-*.md")) + sorted(self.root.glob("products/*/adr/ADR-*.md")):
             fm, _ = front_matter(p)
             m = re.match(r"^(ADR-[A-Z0-9-]+?)(?:-[a-z].*)?$", p.stem)
             adr_id = fm.get("id") or (m.group(1) if m else p.stem)
@@ -448,7 +479,11 @@ class Product:
 
     @property
     def evidence_dir(self) -> Path:
-        return self.ws.root / "evidence" / self.id
+        primary = self.ws.root / "evidence" / self.id
+        if primary.exists():
+            return primary
+        example_ev = self.ws.root / "examples/evidence" / self.id
+        return example_ev if example_ev.exists() else primary
 
     # -- requirement ids
     @cached_property

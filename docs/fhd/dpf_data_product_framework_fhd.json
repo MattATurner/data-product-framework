@@ -47,7 +47,7 @@
         "provisioned_via": "dpf init <workspace> + Terraform generated modules",
         "runtime": "Python 3.12 CLI, Agent Skills, Dataform/dbt, BigQuery & Looker",
         "trigger": "Developer CLI · Pull Request CI · Scheduled Business-Hours Monitor",
-        "entrypoint": "dpf/cli.py · skills/ · contracts/ · methodologies/ · engines/",
+        "entrypoint": "dpf/cli.py · framework/skills/ · framework/contracts/ · framework/methodologies/ · framework/engines/",
         "command": "dpf check --all --gate G3 && dpf eval"
       }
     },
@@ -77,11 +77,11 @@
           "implementation": {
             "mode": "multi_stack",
             "summary": "Combines an agentic readiness check skill with a weighted 11-criterion scoring rubric and fillable portfolio PDF forms.",
-            "provisioned_via": "dpf init (templates/define/ & .agents/skills/assess-use-case/)",
+            "provisioned_via": "dpf init (framework/templates/define/ & .agents/skills/assess-use-case/)",
             "runtime": "Agent Skill + Fillable PDF / YAML Scorecard",
             "trigger": "New Use-Case Submission",
-            "entrypoint": "templates/define/ · templates/scoring.yaml · .agents/skills/assess-use-case/",
-            "command": "python3 templates/src/build_templates.py"
+            "entrypoint": "framework/templates/define/ · framework/templates/scoring.yaml · .agents/skills/assess-use-case/",
+            "command": "python3 framework/templates/src/build_templates.py"
           }
         },
         "children": [
@@ -99,7 +99,7 @@
               "platform_service": "Gemini Platform Agent Skill (assess-use-case)",
               "inputs": [
                 "Submitted 1-use-case.pdf or candidate YAML",
-                "templates/scoring.yaml rubric"
+                "framework/templates/scoring.yaml rubric"
               ],
               "outputs": [
                 "Structured readiness verdict and pre-panel question list"
@@ -137,7 +137,7 @@
               "owner": "Data Portfolio Office",
               "status": "Implemented in DPF v0.3",
               "sla": "Deterministic Instant Calculation",
-              "platform_service": "DPF Scoring Specification (templates/scoring.yaml)",
+              "platform_service": "DPF Scoring Specification (framework/templates/scoring.yaml)",
               "inputs": [
                 "Panel criterion scores (1-5 scale) across 11 dimensions"
               ],
@@ -145,16 +145,16 @@
                 "Weighted Value score, Ease score, total points (/170), and quadrant placement"
               ],
               "business_rules": [
-                "Weights and anchors are version-controlled in templates/scoring.yaml so all domains are scored on identical terms."
+                "Weights and anchors are version-controlled in framework/templates/scoring.yaml so all domains are scored on identical terms."
               ],
               "implementation": {
                 "mode": "cli_batch",
                 "summary": "Declarative YAML rubric rendered into interactive fillable scorecards.",
-                "provisioned_via": "templates/scoring.yaml",
+                "provisioned_via": "framework/templates/scoring.yaml",
                 "runtime": "Python Template Builder & Scorecard Forms",
                 "trigger": "Prioritisation Panel Session",
-                "entrypoint": "templates/scoring.yaml",
-                "command": "python3 templates/src/build_templates.py"
+                "entrypoint": "framework/templates/scoring.yaml",
+                "command": "python3 framework/templates/src/build_templates.py"
               }
             },
             "children": []
@@ -183,11 +183,11 @@
               "implementation": {
                 "mode": "chat_ui",
                 "summary": "Fillable PDF scorecard and 2x2 portfolio matrix archived alongside product specs.",
-                "provisioned_via": "templates/define/2-scorecard.pdf · templates/define/3-prioritisation.pdf",
+                "provisioned_via": "framework/templates/define/2-scorecard.pdf · framework/templates/define/3-prioritisation.pdf",
                 "runtime": "Human Portfolio Review",
                 "trigger": "Scheduled or Ad-Hoc Portfolio Gate",
-                "entrypoint": "templates/define/",
-                "command": "ls templates/define/"
+                "entrypoint": "framework/templates/define/",
+                "command": "ls framework/templates/define/"
               }
             },
             "children": []
@@ -219,10 +219,10 @@
           "implementation": {
             "mode": "multi_stack",
             "summary": "Pairs conversational BRD authoring and sandbox prototype import with deterministic Gate G0 rubric, glossary, and anti-jargon validation.",
-            "provisioned_via": "skills/author-brd/ + dpf/brd.py",
+            "provisioned_via": "framework/skills/author-brd/ + dpf/brd.py",
             "runtime": "Python CLI & Agent Skill",
             "trigger": "dpf brd validate <product> / dpf check --gate describe",
-            "entrypoint": "dpf/brd.py · skills/author-brd/ · skills/validate-brd/",
+            "entrypoint": "dpf/brd.py · framework/skills/author-brd/ · framework/skills/validate-brd/",
             "command": "dpf check --all --gate describe"
           }
         },
@@ -253,10 +253,10 @@
               "implementation": {
                 "mode": "adk_agent",
                 "summary": "Structured interview skill enforcing the 11-group business rubric.",
-                "provisioned_via": "skills/author-brd/SKILL.md",
+                "provisioned_via": "framework/skills/author-brd/SKILL.md",
                 "runtime": "Gemini Platform / Coding Agent Skill",
                 "trigger": "New Product Kickoff or Gap Register Resolution",
-                "entrypoint": "skills/author-brd/SKILL.md",
+                "entrypoint": "framework/skills/author-brd/SKILL.md",
                 "command": "dpf brd gaps <product>"
               },
               "agent_config": {
@@ -297,7 +297,7 @@
               "implementation": {
                 "mode": "cli_batch",
                 "summary": "Deterministic Python validator invoked via CLI and CI.",
-                "provisioned_via": "dpf/brd.py · contracts/brd.v1.schema.json",
+                "provisioned_via": "dpf/brd.py · framework/contracts/brd.v1.schema.json",
                 "runtime": "Python CLI",
                 "trigger": "dpf brd validate / dpf check --gate describe",
                 "entrypoint": "dpf/brd.py",
@@ -330,7 +330,7 @@
               "implementation": {
                 "mode": "chat_ui",
                 "summary": "Readable 4-page Markdown or PDF business specification signed by the business owner.",
-                "provisioned_via": "templates/define/4-brd.pdf · openspec/specs/products/",
+                "provisioned_via": "framework/templates/define/4-brd.pdf · openspec/specs/products/",
                 "runtime": "Human Review & Git Approval",
                 "trigger": "Completion of Gate G0 Validation",
                 "entrypoint": "openspec/specs/products/sales/sales-performance/brd/spec.md",
@@ -386,7 +386,7 @@
           "sla": "Gate G1 Verification < 2s",
           "platform_service": "DPF Design Engine (dpf/design.py), Methodology Packs & Goldfish Verifier",
           "inputs": [
-            "Approved BRD, registry/source_systems.yaml, registry/foundations.yaml, methodologies/"
+            "Approved BRD, registry/source_systems.yaml, registry/foundations.yaml, framework/methodologies/"
           ],
           "outputs": [
             "Validated tdd/spec.md, product.yaml, plain-English semantics.md, and signed signoff.yaml"
@@ -399,10 +399,10 @@
           "implementation": {
             "mode": "multi_stack",
             "summary": "Combines methodology recommendation, deterministic Gate G1 + AGF C6/C10 checks, zero-context blind playback verification, and SHA-256 semantic digest signing.",
-            "provisioned_via": "dpf/design.py · dpf/methodology.py · skills/resolve-tdd/",
+            "provisioned_via": "dpf/design.py · dpf/methodology.py · framework/skills/resolve-tdd/",
             "runtime": "Python CLI & Zero-Context Subagent Verifier",
             "trigger": "dpf tdd resolve / dpf check --gate G1 / dpf signoff",
-            "entrypoint": "dpf/design.py · methodologies/ · .agents/skills/goldfish-verify/",
+            "entrypoint": "dpf/design.py · framework/methodologies/ · .agents/skills/goldfish-verify/",
             "command": "dpf check --all --gate G1"
           }
         },
@@ -422,7 +422,7 @@
               "inputs": [
                 "Approved BRD",
                 "registry/source_systems.yaml",
-                "methodologies/direct & kimball"
+                "framework/methodologies/direct & kimball"
               ],
               "outputs": [
                 "tdd/spec.md, tdd/semantics.md, and products/<id>/product.yaml"
@@ -433,10 +433,10 @@
               "implementation": {
                 "mode": "adk_agent",
                 "summary": "Guided TDD resolution skill backed by deterministic methodology recommendation.",
-                "provisioned_via": "skills/resolve-tdd/SKILL.md · dpf/methodology.py",
+                "provisioned_via": "framework/skills/resolve-tdd/SKILL.md · dpf/methodology.py",
                 "runtime": "Gemini Platform / Coding Agent Skill + Python CLI",
                 "trigger": "dpf tdd resolve <product>",
-                "entrypoint": "skills/resolve-tdd/SKILL.md",
+                "entrypoint": "framework/skills/resolve-tdd/SKILL.md",
                 "command": "dpf tdd resolve sales_performance"
               },
               "agent_config": {
@@ -474,7 +474,7 @@
               "implementation": {
                 "mode": "cli_batch",
                 "summary": "Core static verifier across SQL ASTs, schemas, LookML, and AGF governance bindings.",
-                "provisioned_via": "dpf/design.py · methodologies/*/rules/",
+                "provisioned_via": "dpf/design.py · framework/methodologies/*/rules/",
                 "runtime": "Python CLI",
                 "trigger": "dpf check <product> --gate G1",
                 "entrypoint": "dpf/design.py",
@@ -550,7 +550,7 @@
               "implementation": {
                 "mode": "cli_batch",
                 "summary": "CLI command writing schema-validated signoff.yaml bound to the current BRD version and semantic hash.",
-                "provisioned_via": "dpf/cli.py · contracts/signoff.v1.schema.json",
+                "provisioned_via": "dpf/cli.py · framework/contracts/signoff.v1.schema.json",
                 "runtime": "Python CLI + Git",
                 "trigger": "dpf signoff <product> --by <name> --role business_owner",
                 "entrypoint": "openspec/specs/products/sales/sales-performance/tdd/signoff.yaml",
@@ -631,7 +631,7 @@
           "implementation": {
             "mode": "multi_stack",
             "summary": "Offline deterministic compiler emitting Dataform/dbt SQL, Terraform HCL, LookML views/dashboards, GEMINI.md agent guardrails, and 7 ADG-00 Knowledge Catalog aspects.",
-            "provisioned_via": "dpf/compose.py · dpf/generate/*.py · engines/",
+            "provisioned_via": "dpf/compose.py · dpf/generate/*.py · framework/engines/",
             "runtime": "Python Offline Compiler + Dataform/dbt/Terraform Toolchains",
             "trigger": "dpf compose / dpf generate / Pull Request CI",
             "entrypoint": "dpf/compose.py · dpf/generate/",
@@ -653,8 +653,8 @@
               "platform_service": "DPF Composer (dpf/compose.py)",
               "inputs": [
                 "product.yaml",
-                "skills/*/SKILL.md",
-                "engines/*/adapter.yaml",
+                "framework/skills/*/SKILL.md",
+                "framework/engines/*/adapter.yaml",
                 "acceptance.yaml"
               ],
               "outputs": [
@@ -666,7 +666,7 @@
               "implementation": {
                 "mode": "cli_batch",
                 "summary": "Static skill selector and contract type-checker.",
-                "provisioned_via": "dpf/compose.py · skills/compose-pipeline/",
+                "provisioned_via": "dpf/compose.py · framework/skills/compose-pipeline/",
                 "runtime": "Python CLI",
                 "trigger": "dpf compose <product> / dpf check --gate G2",
                 "entrypoint": "dpf/compose.py",
@@ -848,10 +848,10 @@
           "implementation": {
             "mode": "multi_stack",
             "summary": "Combines outbound extraction, staging reject quarantine, live BigQuery acceptance SQL execution, human CLI attestation, and Knowledge Catalog MCP registration.",
-            "provisioned_via": "dpf/testing.py · skills/publish-data-product/ · skills/register-knowledge-catalog/",
+            "provisioned_via": "dpf/testing.py · framework/skills/publish-data-product/ · framework/skills/register-knowledge-catalog/",
             "runtime": "BigQuery + Python CLI + Knowledge Catalog MCP",
             "trigger": "dpf test run --live / dpf test attest / dpf check --gate accept",
-            "entrypoint": "dpf/testing.py · skills/register-knowledge-catalog/",
+            "entrypoint": "dpf/testing.py · framework/skills/register-knowledge-catalog/",
             "command": "dpf check sales_performance --gate accept"
           }
         },
@@ -914,10 +914,10 @@
               "implementation": {
                 "mode": "sql_pipeline",
                 "summary": "Compiled automatically into Dataform SQLX or dbt staging wrappers and reject assertions.",
-                "provisioned_via": "dpf/generate/plan.py · skills/transform-raw-to-staging/",
+                "provisioned_via": "dpf/generate/plan.py · framework/skills/transform-raw-to-staging/",
                 "runtime": "BigQuery via Dataform or dbt",
                 "trigger": "Every Pipeline Schedule Run",
-                "entrypoint": "skills/transform-raw-to-staging/SKILL.md",
+                "entrypoint": "framework/skills/transform-raw-to-staging/SKILL.md",
                 "command": "dpf eval --id reject-gate-required"
               },
               "crud_entities": [
@@ -959,7 +959,7 @@
               "implementation": {
                 "mode": "cli_batch",
                 "summary": "Executes SQL and static checks from test-spec.json and records schema-valid evidence.",
-                "provisioned_via": "dpf/testing.py · contracts/test-spec.v1.schema.json",
+                "provisioned_via": "dpf/testing.py · framework/contracts/test-spec.v1.schema.json",
                 "runtime": "Python CLI + BigQuery Client",
                 "trigger": "dpf test run <product> --live",
                 "entrypoint": "dpf/testing.py",
@@ -992,7 +992,7 @@
               "implementation": {
                 "mode": "chat_ui",
                 "summary": "Records named human attestations and optional reconciliation links against the active build digest.",
-                "provisioned_via": "dpf/testing.py · contracts/test-evidence.v1.schema.json",
+                "provisioned_via": "dpf/testing.py · framework/contracts/test-evidence.v1.schema.json",
                 "runtime": "Human Domain Review + CLI",
                 "trigger": "dpf test attest <product> --case <AT-n> --by <name>",
                 "entrypoint": "dpf/testing.py",
@@ -1025,10 +1025,10 @@
               "implementation": {
                 "mode": "adk_agent",
                 "summary": "Tier-1 MCP skill publishing catalog entries, aspects, and glossary links.",
-                "provisioned_via": "skills/register-knowledge-catalog/ · skills/publish-data-product/",
+                "provisioned_via": "framework/skills/register-knowledge-catalog/ · framework/skills/publish-data-product/",
                 "runtime": "Knowledge Catalog Managed MCP Server",
                 "trigger": "Green Gate G4 (Accept)",
-                "entrypoint": "skills/register-knowledge-catalog/SKILL.md",
+                "entrypoint": "framework/skills/register-knowledge-catalog/SKILL.md",
                 "command": "dpf generate sales_performance --no-write"
               },
               "agent_config": {
@@ -1069,10 +1069,10 @@
           "implementation": {
             "mode": "multi_stack",
             "summary": "Evaluates runtime evidence against business-calendar SLOs and auto-scaffolds OpenSpec change proposals naming the breached requirement.",
-            "provisioned_via": "dpf/monitor.py · skills/monitor-data-product/",
+            "provisioned_via": "dpf/monitor.py · framework/skills/monitor-data-product/",
             "runtime": "Scheduled CLI / Cloud Run Check + Git Change Loop",
             "trigger": "Scheduled 15m Watch or AGF Metadata Change Feed Alert",
-            "entrypoint": "dpf/monitor.py · skills/monitor-data-product/",
+            "entrypoint": "dpf/monitor.py · framework/skills/monitor-data-product/",
             "command": "dpf eval --id monitor-breach"
           }
         },
@@ -1102,7 +1102,7 @@
               "implementation": {
                 "mode": "cli_batch",
                 "summary": "Calendar-aware Python SLO evaluator.",
-                "provisioned_via": "dpf/monitor.py · contracts/observability-policy.v1.schema.json",
+                "provisioned_via": "dpf/monitor.py · framework/contracts/observability-policy.v1.schema.json",
                 "runtime": "Python CLI / Scheduled Monitor",
                 "trigger": "dpf monitor <product> --evidence <file>",
                 "entrypoint": "dpf/monitor.py",
@@ -1135,10 +1135,10 @@
               "implementation": {
                 "mode": "cloud_service",
                 "summary": "Typed JSON contract bridging Knowledge Catalog and AGF runtime guardians back to DPF.",
-                "provisioned_via": "contracts/run-evidence.v1.schema.json (ADR-019)",
+                "provisioned_via": "framework/contracts/run-evidence.v1.schema.json (ADR-019)",
                 "runtime": "Event Adapter / CLI Feed",
                 "trigger": "Runtime Drift, Quality Scan, or GL Variance Event",
-                "entrypoint": "contracts/run-evidence.v1.schema.json",
+                "entrypoint": "framework/contracts/run-evidence.v1.schema.json",
                 "command": "dpf validate"
               }
             },
@@ -1171,7 +1171,7 @@
                 "provisioned_via": "dpf/testing.py · evidence/",
                 "runtime": "Git / Object Evidence Store",
                 "trigger": "dpf test run / dpf test attest",
-                "entrypoint": "evidence/sales_performance/",
+                "entrypoint": "examples/evidence/sales_performance/",
                 "command": "dpf trace sales_performance"
               },
               "crud_entities": [

@@ -48,7 +48,7 @@ cases:
         - No evidence for "Supports corporate strategy" or "Defends against a threat".
 
   - id: blank-template
-    input: templates/define/1-use-case.pdf
+    input: framework/templates/define/1-use-case.pdf
     needs: pypdf
     mechanical:
       verdict: Not ready
@@ -57,5 +57,5 @@ cases:
 # Fill the blank form with the worked example's answers, read it back, and require the PDF
 # reader and the YAML reader to agree on every answer and every finding.
 pdf_round_trip:
-  template: templates/define/1-use-case.pdf
+  template: framework/templates/define/1-use-case.pdf
   answers: examples/sales_performance/define/use-case.yaml

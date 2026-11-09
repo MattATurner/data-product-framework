@@ -8,7 +8,7 @@ checks a machine gate at every stage and generates everything that can be genera
 
 The cycle runs across **six human-gated steps**. **Discover & Prioritise** starts before the
 BRD: the business describes each candidate use case, scores it for value and ease, and
-chooses what to build, with the [templates](templates/README.md). The `assess-use-case`
+chooses what to build, with the [templates](framework/templates/README.md). The `assess-use-case`
 agent skill checks each filled use case against its template before the panel scores it.
 **Describe** captures the funded need in plain business English, **Design** grounds it in
 organisational context and locks business playback sign-off to a semantic digest, **Build**
@@ -24,7 +24,7 @@ every artefact traces back to one of its requirements.
 
 | Step | Gate | Passes when | Command |
 |---|---|---|---|
-| **1. Discover & Prioritise** | Portfolio | Candidate use case is complete (`assess-use-case`) and scored for value and ease | [templates](templates/README.md) |
+| **1. Discover & Prioritise** | Portfolio | Candidate use case is complete (`assess-use-case`) and scored for value and ease | [templates](framework/templates/README.md) |
 | **2. Describe** | **G0** | The BRD answers the rubric, is approved, and uses no modelling vocabulary | `dpf brd validate <product>` (or `--gate describe`) |
 | **3. Design** | **G1** | The TDD and manifest resolve every active requirement; methodology, grain and history are justified; the business sign-off matches the semantic digest | `dpf check <product> --gate G1` (or `--gate design`) |
 | **4. Build** *(Compose)* | **G2** | Each stage selects a skill and an implemented engine adapter; every business scenario (AX) maps to an acceptance test (AT) | `dpf check <product> --gate G2` (or `--gate compose`) |
@@ -67,13 +67,13 @@ Design templates, with an empty registry and no example material.
 | Plane | Decides | Where |
 |---|---|---|
 | **Specs** | What the business needs (BRD) and how it is met (TDD, `semantics.md`, sign-off) | `openspec/specs/` |
-| **Templates** | Which use cases go ahead (scored and chosen before any BRD), and the starting shape of each Define and Design document | `templates/` |
+| **Templates** | Which use cases go ahead (scored and chosen before any BRD), and the starting shape of each Define and Design document | `framework/templates/` |
 | **Manifest** | The resolved design: sources, models, grain, history, quality, ports, schedules, governance, observability | `products/<id>/product.yaml` |
-| **Methodology** | What *shape* the data takes. Optional and pluggable: [`direct`](methodologies/direct/METHODOLOGY.md) (default: stage, type and expose business views/tables directly with declared grain—no star-schema ceremony) or [`kimball`](methodologies/kimball/METHODOLOGY.md) (conformed dimensions and facts) | `methodologies/` |
-| **Engine adapters** | What runs the transforms: Dataform and dbt implemented; Dataflow and Spark planned | `engines/` |
-| **Skills** | Composable units of work, selected per stage by `selects_when` | `skills/`, `methodologies/*/skills/` |
+| **Methodology** | What *shape* the data takes. Optional and pluggable: [`direct`](framework/methodologies/direct/METHODOLOGY.md) (default: stage, type and expose business views/tables directly with declared grain—no star-schema ceremony) or [`kimball`](framework/methodologies/kimball/METHODOLOGY.md) (conformed dimensions and facts) | `framework/methodologies/` |
+| **Engine adapters** | What runs the transforms: Dataform and dbt implemented; Dataflow and Spark planned | `framework/engines/` |
+| **Skills** | Composable units of work, selected per stage by `selects_when` | `framework/skills/`, `framework/methodologies/*/skills/` |
 | **Agent skills** | Which skills a coding agent loads: the 11 it runs itself, not the 15 pipeline steps that `dpf compose` and `dpf generate` handle. Also agent-only skills, such as `assess-use-case` (checks a use case before the panel scores it) and `goldfish-verify` (runs zero-context subagent semantic checks at G0, G1 and G3) | `.agents/` |
-| **Contracts** | 24 JSON Schemas for every handoff, from BRD to foundation bindings, semantic layers and run evidence | `contracts/` |
+| **Contracts** | 24 JSON Schemas for every handoff, from BRD to foundation bindings, semantic layers and run evidence | `framework/contracts/` |
 | **Generators** | Manifest + SQL bodies → Dataform or dbt, LookML views/explores/dashboards, Terraform, tests, docs | `dpf/generate/` |
 
 What one manifest generates, per product: the engine project (staging with quarantine
@@ -128,7 +128,7 @@ build digest binds test evidence to exactly this build.
   machine gates G0–G4.
 - **How does DPF integrate with Dataform's native Data Engineering Agent?** DPF keeps
   control-plane semantics, cross-plane orchestration and gate enforcement outside the engine,
-  treating Dataform's native agent as a bounded Tier 3 leaf worker ([ADR-017](adr/ADR-017-engine-native-agents.md))
+  treating Dataform's native agent as a bounded Tier 3 leaf worker ([ADR-017](docs/adr/ADR-017-engine-native-agents.md))
   for messy source SQL wrangling, runtime failure diagnosis and rapid prototyping
   (`dpf proto import-dataform <product> --from <dir>`). Every Dataform build emits a
   deterministic `dataform/GEMINI.md` guardrail file, attaches BigQuery table labels for
@@ -137,7 +137,7 @@ build digest binds test evidence to exactly this build.
 - **How does DPF govern Looker Explores and Dashboards — including when a Looker request
   arrives after the BigQuery foundation already exists?** LookML views, surrogate-key
   Explores, aggregate-awareness tables and Stephen Few `.dashboard.lookml` dashboards are
-  first-class governed artefacts ([ADR-018](adr/ADR-018-looker-semantic-and-presentation-plane.md)).
+  first-class governed artefacts ([ADR-018](docs/adr/ADR-018-looker-semantic-and-presentation-plane.md)).
   Products can be **coupled** (generating Dataform/dbt + LookML in one lifecycle, like
   `sales_performance`) or **decoupled** (`upstream:` binding an existing DPF product or a
   pre-existing BigQuery dataset from `registry/foundations.yaml` with zero `sources` or
@@ -148,7 +148,7 @@ build digest binds test evidence to exactly this build.
 - **How does DPF ensure enterprise governance (PII, data contracts, purpose-based access,
   retention) without reinventing a governance platform?** DPF acts as the deterministic
   build-time factory and integrates symbiotically with the Agentic Data Governance Framework
-  (`AGF` / `ADG-00`, [ADR-019](adr/ADR-019-symbiotic-agentic-governance-framework.md)) using
+  (`AGF` / `ADG-00`, [ADR-019](docs/adr/ADR-019-symbiotic-agentic-governance-framework.md)) using
   Knowledge Catalog as the shared contract bus. When `governance.agf.enabled: true` is set in
   `product.yaml`, G1 enforces compile-time policy-tag coverage on `RESTRICTED` columns
   (imported from `ADG-01` Sensitive Data Protection scans or restricted glossary terms),
@@ -160,8 +160,8 @@ build digest binds test evidence to exactly this build.
 
 | | Paths |
 |---|---|
-| **Template** (copied by `dpf init`) | `openspec/` config, schema, project context, agent rules, changes README and `specs/platform/`; `.agents/` (skill wiring, `assess-use-case`, `goldfish-verify`); `contracts/`, `methodologies/`, `engines/`, `skills/`, `registry/`, `adr/`, `dpf/`, `tools/dpf`, `requirements/`, `pyproject.toml`, `Makefile`, `.gitignore`, CI, contract tests, `docs/user-guide.md`, `templates/`, eval and golden READMEs |
-| **Example** (not copied) | `openspec/specs/products/`, `products/`, `examples/`, `tests/golden/*`, `evidence/`, `fhd/`, the plan, method diagram, presentation and README diagram in `docs/` |
+| **Template** (copied by `dpf init`) | `openspec/` config, schema, project context, agent rules, changes README and `specs/platform/`; `.agents/` (skill wiring, `assess-use-case`, `goldfish-verify`); `framework/` (`contracts/`, `methodologies/`, `engines/`, `skills/`, `templates/`); `registry/`, `docs/adr/`, `docs/user-guide.md`, `dpf/`, `pyproject.toml`, `Makefile`, `.gitignore`, `.github/` (CI + hash-locked requirements), contract tests, eval and golden READMEs |
+| **Example** (not copied) | `openspec/specs/products/`, `products/`, `examples/` (including sandbox `examples/evidence/`), `tests/golden/*`, `docs/fhd/`, and the plan, method diagram, presentation and README diagram in `docs/` |
 
 **`registry/` ships without project content by design**: the source-system, glossary,
 entity and conformance catalogues are empty, so a new project never inherits someone
@@ -193,7 +193,7 @@ moved to 1.1.0 with the reason recorded. See `examples/sales_performance/RUNBOOK
 
 **Status of the examples:** G0–G3 pass for both. `sales_performance` was deployed to a
 sandbox project on 5 October 2026: 41 of its 43 test cases pass for build
-`sha256:fd95e365e03e…` (evidence in `evidence/sales_performance/`). G4 still fails on AT-5
+`sha256:fd95e365e03e…` (evidence in `examples/evidence/sales_performance/`). G4 still fails on AT-5
 and AT-8, which need a person from Finance and from Merchandising to attest. `customer_orders`
 has not been deployed, so G4 fails with 14 missing results. The sign-offs in
 `tdd/signoff.yaml` are example signatures ("Sales Operations (example)"), not real approvals.
@@ -215,43 +215,39 @@ offline checks cannot see, now fixed; see section 15 of the [user guide](docs/us
 | | |
 |---|---|
 | **User guide** | [`docs/user-guide.md`](docs/user-guide.md) |
-| **Define and Design templates** | [`templates/README.md`](templates/README.md): use case, scorecard, prioritisation, BRD or PRD (fillable PDFs); TDD, semantics, manifest and ADR (Markdown and YAML) |
+| **Define and Design templates** | [`framework/templates/README.md`](framework/templates/README.md): use case, scorecard, prioritisation, BRD or PRD (fillable PDFs); TDD, semantics, manifest and ADR (Markdown and YAML) |
 | **Define worked examples** (filled PDFs) | UC-SALES-001: [use case](examples/sales_performance/define/use-case.pdf), [scorecard](examples/sales_performance/define/scorecard.pdf), [prioritisation](examples/sales_performance/define/prioritisation.pdf), [BRD](examples/sales_performance/define/brd.pdf). The seed's three use cases: [scorecard](examples/use-case-portfolio/scorecard.pdf), [prioritisation](examples/use-case-portfolio/prioritisation.pdf) |
 | **Presentation** | [`docs/presentation/index.html`](docs/presentation/index.html) (open from disk) |
 | Method diagram (interactive, offline) | [`docs/index.html`](docs/index.html), generated from the plan by `cd docs && python3 build_method_diagram.py` |
 | Design narrative | [`docs/data-product-framework-plan.md`](docs/data-product-framework-plan.md) |
 | Connecting an on-premises source | [`docs/local-source-connectivity.md`](docs/local-source-connectivity.md) |
 | Agent rules | [`openspec/AGENTS.md`](openspec/AGENTS.md) |
-| Functional Hierarchy (`DPF-00`) | [`fhd/DPF_Functional_Hierarchy_Dictionary.md`](fhd/DPF_Functional_Hierarchy_Dictionary.md), [`fhd/dpf-data-product-framework-fhd.html`](fhd/dpf-data-product-framework-fhd.html) (open from disk), or live [FHD Server (`?cap=DPF`)](https://fhd-server-ttw6mmyb7a-uc.a.run.app/fhd-server?cap=DPF) |
-| Decisions | [`adr/`](adr/README.md) |
+| Functional Hierarchy (`DPF-00`) | [`docs/fhd/DPF_Functional_Hierarchy_Dictionary.md`](docs/fhd/DPF_Functional_Hierarchy_Dictionary.md), [`docs/fhd/dpf-data-product-framework-fhd.html`](docs/fhd/dpf-data-product-framework-fhd.html) (open from disk), or live [FHD Server (`?cap=DPF`)](https://fhd-server-ttw6mmyb7a-uc.a.run.app/fhd-server?cap=DPF) |
+| Decisions | [`docs/adr/`](docs/adr/README.md) |
 
 ## Repository structure & `DPF-00` capability map
 
-Top-level directories follow the native conventions of **Python packaging** (`dpf/`, `pyproject.toml`), **[OpenSpec](https://openspec.dev)** (`openspec/`), and **Agent Skills** (`skills/`, `.agents/`) so standard CLI and CI toolchains work out of the box, while [`fhd/`](fhd/DPF_Functional_Hierarchy_Dictionary.md) decomposes the framework left-to-right across the six human-gated capabilities (`DPF-01`–`DPF-06`) and maps every leaf module (`?lens=impl`) back to its repository entrypoint:
+The root is organised into **eight visible directories** (plus `.agents/` and `.github/`), cleanly separating **how the framework runs** (`dpf/`, `framework/`), **what product teams author** (`openspec/`, `registry/`, `products/`), and **worked examples, documentation & verification** (`examples/`, `docs/`, `tests/`). [`docs/fhd/`](docs/fhd/DPF_Functional_Hierarchy_Dictionary.md) decomposes DPF left-to-right across the six human-gated steps (`DPF-01`–`DPF-06`) and maps every leaf capability (`?lens=impl`) directly to its repository entrypoint:
 
 ```
-1. Product authoring, organisational context & runtime evidence
-   templates/       [DPF-01..03] Define-stage forms (fillable PDFs, scoring.yaml) & Design templates
-   openspec/        [DPF-02..06] project context, `data-product` schema, platform + BRD/TDD specs, changes/
-   registry/        [DPF-02..03] organisational context: platform defaults, glossary, sources, MCP catalogue
-   products/        [DPF-03..04] resolved product manifests (`product.yaml`), custom `sql/`, `acceptance.yaml`
-   examples/        [DPF-01..05] worked overlay, Oracle extractor, seed fixtures, Terraform wrapper, runbook
-   generated/       [DPF-04]     deterministic multi-plane build output (gitignored; regenerate at will)
-   evidence/        [DPF-05..06] digest-bound test, attestation & runtime monitor evidence per product
-
-2. Pluggable planes, contracts & agent skills (cross-cutting)
-   contracts/       [All stages] 24 versioned Draft 2020-12 JSON Schemas for every stage & AGF handoff
-   methodologies/   [DPF-03..04] pluggable modelling packs (`direct` default, `kimball`): roles, rules, skills
-   engines/         [DPF-04]     execution adapters (`dataform`, `dbt` implemented; `dataflow`, `spark` planned)
-   skills/          [DPF-02..06] composable platform & pipeline stage skills (Agent Skills format)
-   .agents/         [DPF-01..04] coding-agent skill wiring (`skills.json`), `assess-use-case`, `goldfish-verify`
-   adr/             [All stages] Architecture Decision Records (ADR-001 through ADR-019)
-
-3. Compiler CLI, verification & capability documentation
-   dpf/             [DPF-02..06] Python CLI: gates G0–G4, compose, `generate/`, trace, testing, monitor, lint
-   tools/dpf        [CLI]        zero-install wrapper to run `dpf` directly from a repository checkout
-   tests/           [DPF-04..06] unit tests, contract checks, `golden/` snapshots, 26 behavioural `evals/`
-   fhd/             [DPF-00]     6-pillar Functional Hierarchy Diagram, dictionary & interactive HTML/SVG
-   docs/            [Docs]       user guide, slide deck, design narrative, method diagram, lifecycle SVG
-   requirements/    [CI]         hash-locked Python dependency pins (`dev.txt`, `dbt.txt`, `templates.txt`)
+data-product-framework/
+├── dpf/                     [DPF-02..06] Python CLI & multi-plane compiler (`dpf` / `python -m dpf`)
+├── framework/               [All stages] Declarative framework packs & starter templates:
+│   ├── contracts/                        24 Draft 2020-12 JSON Schemas for every stage & AGF handoff
+│   ├── engines/                          execution adapters (`dataform`, `dbt`; `dataflow`, `spark` planned)
+│   ├── methodologies/                    modelling packs (`direct` default, `kimball`), rules & pack skills
+│   ├── skills/                           composable platform & pipeline stage skills (Agent Skills format)
+│   └── templates/                        Define-stage fillable PDF scorecards & Design starter scaffolds
+│
+├── openspec/                [DPF-02..06] Specifications: platform specs, BRDs, TDDs & `changes/` (OpenSpec CLI)
+├── registry/                [DPF-02..03] Organisational context: defaults, glossary, sources, foundations, MCP
+├── products/                [DPF-03..04] Resolved product manifests (`product.yaml`), custom `sql/`, acceptance
+│
+├── examples/                [DPF-01..05] Worked overlay, Oracle extractor, seeds, wrapper & sandbox `evidence/`
+├── docs/                    [Docs]       User guide, `adr/` (ADR-001..019), `fhd/` (DPF-00), deck & diagrams
+├── tests/                   [DPF-04..06] Unit tests, contract checks, `golden/` snapshots & 26 `evals/`
+│
+├── .agents/                 [DPF-01..04] Coding-agent skill wiring (`skills.json`), `assess-use-case`, `goldfish-verify`
+└── .github/                 [CI]         GitHub Actions workflows & hash-locked Python pins (`requirements/`)
 ```
+*(Running `dpf generate` and `dpf test run` in a workspace creates gitignored `generated/` and `evidence/` on demand.)*

@@ -11,14 +11,13 @@ from dpf.core import Report, Workspace
 # registry overlay, generated output and evidence are never copied.
 TEMPLATE_PATHS = [
     "openspec/config.yaml", "openspec/schemas", "openspec/project.md", "openspec/AGENTS.md",
-    "openspec/changes/README.md", "openspec/specs/platform", "contracts", "methodologies", "engines",
-    "skills", ".agents", "registry", "adr", "dpf", "tools/dpf", "pyproject.toml", "requirements", "Makefile",
-    ".gitignore", ".github/workflows/ci.yml", "tests/contracts", "tests/evals/README.md", "tests/golden/README.md",
-    "docs/user-guide.md", "templates",
+    "openspec/changes/README.md", "openspec/specs/platform", "framework", ".agents", "registry", "docs/adr",
+    "docs/user-guide.md", "dpf", "pyproject.toml", ".github/requirements", "Makefile", ".gitignore",
+    ".github/workflows/ci.yml", "tests/contracts", "tests/evals/README.md", "tests/golden/README.md",
 ]
-EMPTY_DIRS = ["openspec/specs/products", "openspec/changes", "products", "generated", "evidence", "tests/golden"]
+EMPTY_DIRS = ["openspec/specs/products", "openspec/changes", "products", "tests/golden"]
 EXCLUDED = ["openspec/specs/products/*", "products/*", "examples/", "generated/", "evidence/", "tests/golden/*",
-            "fhd/", "docs/presentation/", "docs/index.html", "docs/data-product-framework-plan.md"]
+            "docs/fhd/", "docs/presentation/", "docs/index.html", "docs/data-product-framework-plan.md"]
 IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store")
 
 
@@ -52,12 +51,12 @@ def init(ws: Workspace, target: Path, report: Report) -> int:
         "1. Set `gcp_project`, `region` and `business_timezone` in `registry/platform-defaults.yaml`.\n"
         "2. Add source systems to `registry/source_systems.yaml` and agreed terms to `registry/glossary.yaml`.\n"
         "3. With the business, describe, score and choose the use case, then write a BRD or a PRD\n"
-        "   (`templates/define/`, see `templates/README.md`).\n"
-        "4. Record the BRD in business language (`skills/author-brd`):\n"
+        "   (`framework/templates/define/`, see `framework/templates/README.md`).\n"
+        "4. Record the BRD in business language (`framework/skills/author-brd`):\n"
         "   `openspec/specs/products/<domain>/<product>/brd/spec.md` and `brd.yaml`.\n"
         "5. `dpf brd validate <product>` until G0 passes.\n"
         "6. `dpf tdd resolve <product>`; write the TDD spec, `semantics.md` and `products/<product>/product.yaml`\n"
-        "   from `templates/design/`.\n"
+        "   from `framework/templates/design/`.\n"
         "7. The business owner reads `semantics.md`; record it with `dpf signoff <product> --by <name> --role business_owner`.\n"
         "8. `dpf check <product> --gate G2`, then `dpf generate <product>` and `dpf check <product> --gate G3`.\n"
         "9. Deploy, `dpf test run <product> --live`, attest, and `dpf check <product> --gate G4`.\n\n"

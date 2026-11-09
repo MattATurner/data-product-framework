@@ -24,15 +24,15 @@ flowchart LR
 
 | Stage | Step | Template | Filled in by | Result | Worked example |
 |---|---|---|---|---|---|
-| Define | 1 | [`define/1-use-case.pdf`](define/1-use-case.pdf) | business sponsor | one candidate use case, described | [UC-SALES-001](../examples/sales_performance/define/use-case.pdf) |
-| Define | 2 | [`define/2-scorecard.pdf`](define/2-scorecard.pdf) | scoring panel | value and ease scores for up to five use cases | [UC-SALES-001](../examples/sales_performance/define/scorecard.pdf); [seed portfolio](../examples/use-case-portfolio/scorecard.pdf) |
-| Define | 3 | [`define/3-prioritisation.pdf`](define/3-prioritisation.pdf) | decision forum | the matrix and a signed decision for each use case | [UC-SALES-001](../examples/sales_performance/define/prioritisation.pdf); [seed portfolio](../examples/use-case-portfolio/prioritisation.pdf) |
-| Define | 4a | [`define/4a-brd.pdf`](define/4a-brd.pdf) | business owner | business requirements, or ... | [BRD-SALES-002](../examples/sales_performance/define/brd.pdf) |
+| Define | 1 | [`define/1-use-case.pdf`](define/1-use-case.pdf) | business sponsor | one candidate use case, described | [UC-SALES-001](../../examples/sales_performance/define/use-case.pdf) |
+| Define | 2 | [`define/2-scorecard.pdf`](define/2-scorecard.pdf) | scoring panel | value and ease scores for up to five use cases | [UC-SALES-001](../../examples/sales_performance/define/scorecard.pdf); [seed portfolio](../../examples/use-case-portfolio/scorecard.pdf) |
+| Define | 3 | [`define/3-prioritisation.pdf`](define/3-prioritisation.pdf) | decision forum | the matrix and a signed decision for each use case | [UC-SALES-001](../../examples/sales_performance/define/prioritisation.pdf); [seed portfolio](../../examples/use-case-portfolio/prioritisation.pdf) |
+| Define | 4a | [`define/4a-brd.pdf`](define/4a-brd.pdf) | business owner | business requirements, or ... | [BRD-SALES-002](../../examples/sales_performance/define/brd.pdf) |
 | Define | 4b | [`define/4b-prd.pdf`](define/4b-prd.pdf) | product manager | ... product requirements, with the same rubric | none yet |
-| Design | 5 | [`design/tdd-spec.md`](design/tdd-spec.md) | data engineer | the technical design: one decision for each design area | [TDD-SALES-002](../openspec/specs/products/sales/sales-performance/tdd/spec.md) |
-| Design | 5 | [`design/semantics.md`](design/semantics.md) | data engineer; signed by the business owner | the design played back in business language | [sales-performance](../openspec/specs/products/sales/sales-performance/tdd/semantics.md) |
-| Design | 5 | [`design/product.yaml`](design/product.yaml) | data engineer | the resolved design (contract `product-manifest.v1`) | [sales_performance](../products/sales_performance/product.yaml) |
-| Design | 5 | [`design/adr.md`](design/adr.md) | data engineer | a record of each departure from a platform default | [ADR-SALES-002-01](../products/sales_performance/adr/ADR-SALES-002-01-kimball-in-silver.md), [ADR-SALES-002-02](../products/sales_performance/adr/ADR-SALES-002-02-watermark-not-cdc.md) |
+| Design | 5 | [`design/tdd-spec.md`](design/tdd-spec.md) | data engineer | the technical design: one decision for each design area | [TDD-SALES-002](../../openspec/specs/products/sales/sales-performance/tdd/spec.md) |
+| Design | 5 | [`design/semantics.md`](design/semantics.md) | data engineer; signed by the business owner | the design played back in business language | [sales-performance](../../openspec/specs/products/sales/sales-performance/tdd/semantics.md) |
+| Design | 5 | [`design/product.yaml`](design/product.yaml) | data engineer | the resolved design (contract `product-manifest.v1`) | [sales_performance](../../products/sales_performance/product.yaml) |
+| Design | 5 | [`design/adr.md`](design/adr.md) | data engineer | a record of each departure from a platform default | [ADR-SALES-002-01](../../products/sales_performance/adr/ADR-SALES-002-01-kimball-in-silver.md), [ADR-SALES-002-02](../../products/sales_performance/adr/ADR-SALES-002-02-watermark-not-cdc.md) |
 
 Each PDF opens with a "How to fill this in" box and ends with the next step. The Design
 templates carry their guidance in comments, which you delete when you finish. Placeholders
@@ -131,7 +131,7 @@ The Design templates show where each rule applies. In summary, G1 passes when:
 - the business owner has signed `semantics.md` with `dpf signoff`, and the signature covers
   every acceptance example (AX-n).
 
-See section 6 of the [user guide](../docs/user-guide.md) for each document in detail.
+See section 6 of the [user guide](../../docs/user-guide.md) for each document in detail.
 
 ## What dpf checks
 
@@ -141,7 +141,7 @@ them into place: the TDD and `semantics.md` at G1, `product.yaml` by `dpf valida
 G1, and ADRs by `dpf validate`.
 
 In the framework repository, the `assess-use-case` agent skill
-([`.agents/skills/assess-use-case/`](../.agents/skills/assess-use-case/SKILL.md)) checks a
+([`.agents/skills/assess-use-case/`](../../.agents/skills/assess-use-case/SKILL.md)) checks a
 filled use case (step 1, the PDF or a YAML copy) against this template before the panel
 scores it. It reports a verdict (ready for scoring, ready with fixes, or not ready), each gap
 as a question for the sponsor, and the answers a scorer would rely on for each criterion in
@@ -151,13 +151,13 @@ as a question for the sponsor, and the answers a scorer would rely on for each c
 
 | Example | Shows |
 |---|---|
-| [`examples/use-case-portfolio/`](../examples/use-case-portfolio/README.md) | the seed template's three use cases, scored and placed on the matrix |
-| [`examples/sales_performance/define/`](../examples/sales_performance/define/README.md) | one use case, UC-SALES-001, traced to BRD-SALES-002 and TDD-SALES-002 |
+| [`examples/use-case-portfolio/`](../../examples/use-case-portfolio/README.md) | the seed template's three use cases, scored and placed on the matrix |
+| [`examples/sales_performance/define/`](../../examples/sales_performance/define/README.md) | one use case, UC-SALES-001, traced to BRD-SALES-002 and TDD-SALES-002 |
 
 ## Rebuild the PDFs
 
 ```bash
-pip install --require-hashes -r requirements/templates.txt
+pip install --require-hashes -r .github/requirements/templates.txt
 make templates
 ```
 

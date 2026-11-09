@@ -6,7 +6,8 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-SCHEMAS = sorted((ROOT / "contracts").glob("*.schema.json"))
+CONTRACTS_DIR = ROOT / "framework" / "contracts" if (ROOT / "framework" / "contracts").exists() else ROOT / "contracts"
+SCHEMAS = sorted(CONTRACTS_DIR.glob("*.schema.json"))
 # Contracts that describe design elements must carry the universal traceability field.
 TRACEABLE = ["catalog-registration.v1", "data-product.v1", "foundation-binding.v1", "landing-manifest.v1",
              "quality-policy.v1", "raw-table.v1", "semantic-layer.v1", "semantic-model.v1",
@@ -14,7 +15,7 @@ TRACEABLE = ["catalog-registration.v1", "data-product.v1", "foundation-binding.v
 
 
 def load(name: str) -> dict:
-    return json.loads((ROOT / "contracts" / f"{name}.schema.json").read_text(encoding="utf-8"))
+    return json.loads((CONTRACTS_DIR / f"{name}.schema.json").read_text(encoding="utf-8"))
 
 
 def test_registry_is_complete():

@@ -55,4 +55,4 @@ finds goes back to the business as a change to the BRD, never as a quiet comprom
 
 ## Rebuild
 
-Edit the YAML files and run `make templates`. See [`templates/README.md`](../../../templates/README.md).
+Edit the YAML files and run `make templates`. See [`framework/templates/README.md`](../../../framework/templates/README.md).

@@ -822,7 +822,13 @@ def test_dpf_init_copies_agents_skills(tmp_path):
     assert (dest / ".agents/skills.json").exists()
     assert (dest / ".agents/skills/goldfish-verify/SKILL.md").exists()
     assert (dest / ".agents/skills/assess-use-case/SKILL.md").exists()
+    assert (dest / "framework/contracts/product-manifest.v1.schema.json").exists()
+    assert (dest / "framework/templates/define/1-use-case.pdf").exists()
+    assert (dest / "docs/adr/ADR-019-symbiotic-agentic-governance-framework.md").exists()
     assert not (dest / "products/sales_performance").exists()
+    assert not (dest / "docs/fhd").exists()
+    assert main(["validate", "--quiet", "--root", str(dest)]) == 0
+    assert main(["lint", "--quiet", "--root", str(dest)]) == 0
 
 
 def test_lookml_coupled_hub_spoke_auth_and_env_retargeting(tmp_path):

@@ -20,7 +20,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 MODULE_PATH = ROOT / "examples" / "sales_performance" / "extract" / "extract_oracle.py"
-CONTRACTS = ROOT / "contracts"
+CONTRACTS = ROOT / "framework" / "contracts"
 UTC = timezone.utc
 MARKER = "# dpf: skill=extract-rdbms-watermark tier=5 adr=ADR-015 requirements=R-10"
 

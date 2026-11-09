@@ -2,7 +2,7 @@ id: unimplemented-adapter
 asserts: A model whose engine adapter is only planned fails compose.
 mutate:
 - set:
-    file: engines/dataform/adapter.yaml
+    file: framework/engines/dataform/adapter.yaml
     path: status
     value: planned
 run:
