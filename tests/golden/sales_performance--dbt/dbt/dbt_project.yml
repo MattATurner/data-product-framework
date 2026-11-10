@@ -14,7 +14,7 @@ test-paths:
 macro-paths:
 - macros
 vars:
-  raw_dataset: raw_ora_local
+  raw_dataset: raw_pg_local
   staging_dataset: stg_sales
   silver_dataset: slv_sales
   gold_dataset: gold_sales

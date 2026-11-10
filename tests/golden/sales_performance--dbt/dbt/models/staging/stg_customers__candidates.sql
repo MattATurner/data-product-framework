@@ -6,16 +6,16 @@
 -- dpf: model=stg_customers layer=staging role=staging skill=transform-raw-to-staging satisfies=R-4 implements=conform-staging part=candidates
 WITH typed AS (
   SELECT
-    CAST(CUST_ID AS STRING)             AS customer_id,
-    CAST(CUST_NAME AS STRING)           AS customer_name,
-    UPPER(CAST(SEGMENT_CD AS STRING))   AS customer_segment,
-    UPPER(CAST(REGION_CD AS STRING))    AS region,
-    CAST(EMAIL AS STRING)               AS customer_email,
-    CAST(PHONE AS STRING)               AS customer_phone,
-    CAST(LAST_MODIFIED_TS AS TIMESTAMP) AS source_modified_ts,
+    CAST(cust_id AS STRING)             AS customer_id,
+    CAST(cust_name AS STRING)           AS customer_name,
+    UPPER(CAST(segment_cd AS STRING))   AS customer_segment,
+    UPPER(CAST(region_cd AS STRING))    AS region,
+    CAST(email AS STRING)               AS customer_email,
+    CAST(phone AS STRING)               AS customer_phone,
+    CAST(last_modified_ts AS TIMESTAMP) AS source_modified_ts,
     _ingest_ts,
     _batch_id
-  FROM {{ source('ora_local', 'raw_customers') }}
+  FROM {{ source('pg_local', 'raw_customers') }}
 )
 SELECT
   typed.*,

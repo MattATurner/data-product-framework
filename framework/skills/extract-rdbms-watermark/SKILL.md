@@ -36,7 +36,7 @@ metadata:
 Bespoke code (tool tier 5), justified by **ADR-015**: the source sits behind NAT with no
 inbound route, so no managed service can connect to it; an outbound-only job running next
 to the database is the only option. Reference implementation:
-`examples/sales_performance/extract/extract_oracle.py`.
+`examples/sales_performance/extract/extract_postgres.py`.
 
 ## Behaviour
 

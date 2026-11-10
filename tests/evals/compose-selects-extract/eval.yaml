@@ -1,10 +1,10 @@
 id: compose-selects-extract
-asserts: Compose selects the outbound watermark extractor for an Oracle source captured by watermark.
+asserts: Compose selects the outbound watermark extractor for a PostgreSQL source captured by watermark.
 run:
   command: compose
   product: sales_performance
 expect:
   outcome: pass
   dag_node:
-    id: extract:ora_local
+    id: extract:pg_local
     skill: extract-rdbms-watermark

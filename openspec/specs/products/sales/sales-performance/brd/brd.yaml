@@ -118,7 +118,7 @@ fitness:
   satisfies: [R-11]
 
 sources_believed:
-  - system: ora_local
+  - system: pg_local
     holds: orders, order lines, customers, products, sales reps
     authority: system of record for sales
 

@@ -18,7 +18,7 @@ tests/evals/<id>/eval.yaml:
       messages: ["substring of a FAIL line"]  # each must appear in a failure (or `level: warn`)
       absent: ["substring that must not appear in any failure"]
       files: ["openspec/changes/monitor-*/proposal.md"]   # globs that must exist afterwards
-      dag_node: {id: "extract:ora_local", skill: extract-rdbms-watermark}
+      dag_node: {id: "extract:pg_local", skill: extract-rdbms-watermark}
 
 Evals run on every change to skills, packs, generators or the model behind an agent: they
 are the regression suite for the framework's judgement, not just its code.

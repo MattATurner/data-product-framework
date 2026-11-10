@@ -2,13 +2,13 @@
 -- the natural key, the quarantine rules and the history view used by dim_customer.
 -- Engine-neutral: {{ ref('...') }} and {{ var('...') }} are rendered per engine.
 SELECT
-  CAST(CUST_ID AS STRING)             AS customer_id,
-  CAST(CUST_NAME AS STRING)           AS customer_name,
-  UPPER(CAST(SEGMENT_CD AS STRING))   AS customer_segment,
-  UPPER(CAST(REGION_CD AS STRING))    AS region,
-  CAST(EMAIL AS STRING)               AS customer_email,
-  CAST(PHONE AS STRING)               AS customer_phone,
-  CAST(LAST_MODIFIED_TS AS TIMESTAMP) AS source_modified_ts,
+  CAST(cust_id AS STRING)             AS customer_id,
+  CAST(cust_name AS STRING)           AS customer_name,
+  UPPER(CAST(segment_cd AS STRING))   AS customer_segment,
+  UPPER(CAST(region_cd AS STRING))    AS region,
+  CAST(email AS STRING)               AS customer_email,
+  CAST(phone AS STRING)               AS customer_phone,
+  CAST(last_modified_ts AS TIMESTAMP) AS source_modified_ts,
   _ingest_ts,
   _batch_id
 FROM {{ ref('raw_customers') }}

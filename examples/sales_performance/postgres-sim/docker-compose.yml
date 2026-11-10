@@ -1,0 +1,26 @@
+# Permissive open-source PostgreSQL 16 OLTP simulator (~85 MB image, ~40 MB RAM, ~1.5s boot).
+# Works out of the box in Google Cloud Shell, macOS (Apple Silicon & Intel), and Linux.
+
+services:
+  pg_local:
+    image: postgres:16-alpine
+    container_name: dpf-pg-onprem-sim
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${PGDATABASE:-sales_erp}
+      POSTGRES_USER: ${PGUSER:-sales_app}
+      POSTGRES_PASSWORD: ${PGPASSWORD:-sales_demo_pw}
+      TZ: UTC
+    ports:
+      - "127.0.0.1:${PGPORT:-5432}:5432"
+    volumes:
+      - pg_sales_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-sales_app} -d $${POSTGRES_DB:-sales_erp}"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+volumes:
+  pg_sales_data:

@@ -18,7 +18,7 @@ clean and `dpf init` never copies example data.
 
 | File | Provides |
 |---|---|
-| `source_systems.yaml` | `example_files` (object drop) and `ora_local` (on-premises Oracle), with supported capture modes |
+| `source_systems.yaml` | `example_files` (object drop) and `pg_local` (on-premises PostgreSQL 16), with supported capture modes |
 | `entities.yaml` | order, order line, customer, product |
 | `conformance.yaml` | `dim_customer`, `dim_product`, `dim_date` owned by the sales domain |
 | `glossary.yaml` | every figure and attribute named in the two BRDs |

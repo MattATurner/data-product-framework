@@ -29,7 +29,7 @@ Live interactive FHD viewer: [DPF-00 on FHD Server](https://fhd-server-ttw6mmyb7
 | DPF-04-04 | Watermark Control Ledger | crud_module | terraform_iac | `dpf/generate/terraform.py` | Maintains atomic high-watermark and batch manifest rows in dpf_watermark_log. |
 | DPF-04-05 | Golden Copy PR Review | ui_workbench | chat_ui | `tests/golden/` | Surfaces byte-identical SQL, Terraform, and LookML diffs for engineer PR approval. |
 | DPF-05 | 5. Accept (Gate G4) | capability | multi_stack | `dpf/testing.py · framework/skills/register-knowledge-catalog/` | Runs live BigQuery assertions, captures human attestations, and publishes Catalog ports. |
-| DPF-05-01 | Outbound Watermark Extractor | integration | cli_batch | `examples/sales_performance/extract/extract_oracle.py` | Extracts incremental source rows with lookback safety into append-only raw BigQuery. |
+| DPF-05-01 | Outbound Watermark Extractor | integration | cli_batch | `examples/sales_performance/extract/extract_postgres.py` | Extracts incremental source rows with lookback safety into append-only raw BigQuery. |
 | DPF-05-02 | Quarantine Reject Ledger | crud_module | sql_pipeline | `framework/skills/transform-raw-to-staging/SKILL.md` | Routes invalid staging rows to _rejects relations and blocks partial publication. |
 | DPF-05-03 | Live Acceptance Test Runner | business_function | cli_batch | `dpf/testing.py` | Executes automated BigQuery SQL assertions and static checks bound to build_digest. |
 | DPF-05-04 | Domain Attestation Gate | ui_workbench | chat_ui | `dpf/testing.py` | Records Finance and domain expert sign-offs on non-SQL business truths at Gate G4. |

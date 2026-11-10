@@ -1,17 +1,19 @@
 # Watermark extract configuration (skill extract-rdbms-watermark, ADR-015).
-# Capture mode is 'watermark' because the source is unreachable from GCP (TDD D-10).
+# Capture mode is 'watermark' (15-min schedule + 15-min lookback) because the source
+# PostgreSQL database sits behind corporate NAT with no inbound route from GCP (TDD D-10).
 
 source:
-  system_id: ora_local
-  jdbc_url: jdbc:oracle:thin:@//localhost:1521/XEPDB1
-  dsn: localhost:1521/XEPDB1        # python-oracledb thin mode
-  user_env: ORACLE_USER
-  password_env: ORACLE_PASSWORD
+  system_id: pg_local
+  jdbc_url: jdbc:postgresql://localhost:5432/sales_erp
+  dsn: host=localhost port=5432 dbname=sales_erp     # overridable via PG_DSN or --dsn
+  dsn_env: PG_DSN
+  user_env: PGUSER
+  password_env: PGPASSWORD
 
 target:
   project: data-product-framework
   location: us-central1
-  raw_dataset: raw_ora_local
+  raw_dataset: raw_pg_local
   control_dataset: dpf_control
 
 # Re-read window for transactions that commit after a run has already read past them.
@@ -25,18 +27,18 @@ load_table_ttl_hours: 24
 
 entities:
   - name: orders
-    source_table: SALES.ORDERS
-    watermark_column: LAST_MODIFIED_TS
-    natural_key: [ORDER_ID]
+    source_table: sales.orders
+    watermark_column: last_modified_ts
+    natural_key: [order_id]
   - name: order_lines
-    source_table: SALES.ORDER_LINES
-    watermark_column: LAST_MODIFIED_TS
-    natural_key: [ORDER_ID, LINE_NO]
+    source_table: sales.order_lines
+    watermark_column: last_modified_ts
+    natural_key: [order_id, line_no]
   - name: customers
-    source_table: SALES.CUSTOMERS
-    watermark_column: LAST_MODIFIED_TS
-    natural_key: [CUST_ID]
+    source_table: sales.customers
+    watermark_column: last_modified_ts
+    natural_key: [cust_id]
   - name: products
-    source_table: SALES.PRODUCTS
-    watermark_column: LAST_MODIFIED_TS
-    natural_key: [PROD_ID]
+    source_table: sales.products
+    watermark_column: last_modified_ts
+    natural_key: [prod_id]

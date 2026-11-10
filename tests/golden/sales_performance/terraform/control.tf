@@ -1,4 +1,4 @@
-# dpf: element=source:ora_local satisfies=R-10 implements=land-immutable-raw
+# dpf: element=source:pg_local satisfies=R-10 implements=land-immutable-raw
 resource "google_bigquery_table" "extract_watermark" {
   project             = var.project_id
   dataset_id          = google_bigquery_dataset.control.dataset_id
@@ -18,7 +18,7 @@ resource "google_bigquery_table" "extract_watermark" {
   }
 }
 
-# dpf: element=source:ora_local satisfies=R-10 implements=land-immutable-raw
+# dpf: element=source:pg_local satisfies=R-10 implements=land-immutable-raw
 resource "google_bigquery_table" "landing_manifest" {
   project             = var.project_id
   dataset_id          = google_bigquery_dataset.control.dataset_id
@@ -45,7 +45,7 @@ resource "google_bigquery_table" "landing_manifest" {
   }
 }
 
-# dpf: element=source:ora_local satisfies=R-10 implements=land-immutable-raw
+# dpf: element=source:pg_local satisfies=R-10 implements=land-immutable-raw
 resource "google_bigquery_table" "schema_registry" {
   project             = var.project_id
   dataset_id          = google_bigquery_dataset.control.dataset_id

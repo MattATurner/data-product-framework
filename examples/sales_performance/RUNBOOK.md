@@ -1,6 +1,6 @@
 # Runbook — sales_performance
 
-Local Oracle to BigQuery in `data-product-framework` / `us-central1`.
+On-premises PostgreSQL 16 (`pg_local`) to BigQuery (`us-central1`) via 15-minute outbound watermark extraction.
 
 | | |
 |---|---|
@@ -85,7 +85,7 @@ The PATCH prints the release configuration. Without `gitCommitish` it fails with
 
 ## 2. Data in — pick one
 
-### Option A: seed fixtures (no Oracle needed)
+### Option A: seed fixtures (no database needed)
 
 Start here. It proves the whole chain and exercises the automated acceptance tests.
 
@@ -126,14 +126,31 @@ evidence (step 4): the next run quarantines the line and the reject gate stops p
 With the fixed seed dates, the order reaches gold only on a full refresh, as above.
 Section 6, "Pipeline failed", shows what both did in the sandbox.
 
-### Option B: the real Oracle
+### Option B: Live PostgreSQL 16 OLTP simulator (`postgres-sim/demo_ctl.sh`)
+
+Start the permissive open-source PostgreSQL 16 (`postgres:16-alpine`) simulator via Docker (Cloud Shell / laptop), GCE (`--target gce`), or zero-Docker SQLite WAL (`--target sqlite`), and walk through all 5 transactional story beats:
 
 ```bash
-pip install oracledb google-cloud-bigquery pyyaml jsonschema
-export ORACLE_USER=... ORACLE_PASSWORD=...
+cd examples/sales_performance/postgres-sim
+./demo_ctl.sh start                            # starts postgres:16-alpine (or --target gce / sqlite)
+./demo_ctl.sh step 1a --extract                # baseline + SO-1001 line 2 initial version
+./demo_ctl.sh step 1b --extract                # first OLTP amendment on SO-1001 line 2
+./demo_ctl.sh step 1c --extract                # final OLTP amendment (qty -> 6, net -> 810.00)
+./demo_ctl.sh step 2  --extract                # C-001 -> ENTERPRISE, P-200 -> WIDGETS + SO-1004
+./demo_ctl.sh step 3  --extract                # late commit 6m behind watermark (rescued by 15m lookback)
+./demo_ctl.sh step 4  --extract                # SO-1005 with cust_id=NULL -> QR-1 quarantine blocks gold
+./demo_ctl.sh step 5  --extract                # source fixes SO-1005 -> clears quarantine, unblocks gold
+./demo_ctl.sh stop                             # cleanly stops DB (powers off GCE VM -> $0 compute)
+```
+
+Or run `extract_postgres.py` directly against any PostgreSQL DSN:
+
+```bash
+pip install "psycopg[binary]" google-cloud-bigquery pyyaml jsonschema
+export PGUSER=sales_app PGPASSWORD=sales_demo_pw
 cd examples/sales_performance/extract
-python3 extract_oracle.py --dry-run     # reads Oracle only; prints the manifests
-python3 extract_oracle.py               # all entities
+python3 extract_postgres.py --dry-run          # reads PostgreSQL only; prints manifests
+python3 extract_postgres.py                    # all entities
 ```
 
 Outbound only (ADR-015). Each batch commits raw rows, watermark and landing manifest in one
@@ -236,7 +253,7 @@ downstream changed.
 
 1. Read `changes` in the alert's log entry and agree the change with the source owner.
 2. If a type changed, migrate `raw_<entity>` (and the staging body if a column moved).
-3. Accept the new schema: `python3 extract_oracle.py <entity> --accept-schema`.
+3. Accept the new schema: `python3 extract_postgres.py <entity> --accept-schema`.
 4. The next run re-reads the held rows from the unchanged watermark.
 
 Additive drift (a new column, INT64 widening to NUMERIC) lands normally and is recorded in

@@ -1,10 +1,10 @@
-# Oracle watermark extract
+# PostgreSQL watermark extract
 
-`extract_oracle.py` appends changed rows from the local Oracle source (`ora_local`) to
-BigQuery `raw_ora_local.raw_<entity>` every hour (TDD D-10, BRD R-10). It implements skill
+`extract_postgres.py` appends changed rows from the on-premises PostgreSQL source (`pg_local`) to
+BigQuery `raw_pg_local.raw_<entity>` every 15 minutes (TDD D-10, BRD R-10). It implements skill
 `extract-rdbms-watermark` as bespoke code (tool tier 5). **ADR-015** records why: Google
-Cloud has no inbound route to the database, so managed pull tools cannot reach it. The
-script runs beside the database and makes outbound HTTPS calls only.
+Cloud has no inbound route to the database, so managed pull tools (Datastream) cannot reach it.
+The script runs beside the database and makes outbound HTTPS calls only.
 
 ## Delivery semantics
 
@@ -15,12 +15,12 @@ script runs beside the database and makes outbound HTTPS calls only.
 - Each batch loads into `raw_<entity>__load_<batch>` (explicit schema, 24 h expiry). Then
   ONE transaction inserts raw rows, watermark and manifest, with row counts checked by
   `ASSERT` before `COMMIT`. A failed run commits nothing; the next run re-reads the window.
-- Watermarks keep microsecond precision (ISO 8601, UTC). Zone-less Oracle `TIMESTAMP`s are
-  taken as UTC; `TIMESTAMP WITH TIME ZONE` columns are read as UTC instants (`SYS_EXTRACT_UTC`).
+- Watermarks keep microsecond precision (ISO 8601, UTC). Session `TIME ZONE` is pinned to `UTC`
+  so `TIMESTAMPTZ` and `TIMESTAMP` columns resolve deterministically.
 
 ## Schema drift
 
-Types come from the Oracle cursor, never autodetect. Each batch is compared with the last
+Types come from the PostgreSQL cursor, never autodetect. Each batch is compared with the last
 accepted schema in `schema_registry` (or, if that is empty, with the existing raw table).
 
 | Drift | Example | What happens |
@@ -29,7 +29,7 @@ accepted schema in `schema_registry` (or, if that is empty, with the existing ra
 | breaking | removed column; other type change | Rows go to `raw_<entity>__quarantine` (lineage + JSON payload), watermark held, alert, exit 1 |
 
 To resolve breaking drift: agree the change, migrate `raw_<entity>` if a type changed, then
-run `extract_oracle.py <entity> --accept-schema`. The next run re-reads the held rows.
+run `extract_postgres.py <entity> --accept-schema`. The next run re-reads the held rows.
 
 ## Control tables (`dpf_control`, created if missing)
 
@@ -40,10 +40,14 @@ run `extract_oracle.py <entity> --accept-schema`. The next run re-reads the held
 ## Run
 
 ```bash
-pip install oracledb google-cloud-bigquery pyyaml jsonschema   # jsonschema is optional
-export ORACLE_USER=... ORACLE_PASSWORD=...    # names set in config.yaml; BigQuery uses ADC
-python3 extract_oracle.py --dry-run           # reads Oracle only; prints manifests
-python3 extract_oracle.py [entity] [--config path/to/config.yaml]
+# PostgreSQL 16 (Docker, GCE appliance, or AlloyDB Omni / Express):
+pip install "psycopg[binary]" google-cloud-bigquery pyyaml jsonschema
+export PGUSER=sales_app PGPASSWORD=sales_demo_pw
+python3 extract_postgres.py --dry-run           # reads PostgreSQL only; prints manifests
+python3 extract_postgres.py [entity] [--config path/to/config.yaml]
+
+# Zero-Docker follow-along mode (uses Python stdlib sqlite3 in WAL mode):
+python3 extract_postgres.py --dsn sqlite:///../postgres-sim/sales_erp.sqlite --dry-run
 ```
 
 Outside this repository, set `DPF_CONTRACTS_DIR` so manifests are checked against the contract.
@@ -58,8 +62,5 @@ log-based metric named `dpf_<product>_<alert>` with an alert policy that links t
 |---|---|---|---|---|
 | `schema_drift_breaking` | a batch was quarantined, watermark held | `source_system`, `entity`, `batch_id`, `changes` | `dpf_sales_performance_schema_drift_breaking` | [`#schema-drift`](../RUNBOOK.md#schema-drift) |
 | `extract_failed` | a step failed and nothing was committed | `stage`, `error` | `dpf_sales_performance_extract_failed` | [`#extract-failed`](../RUNBOOK.md#extract-failed) |
-
-Set the Terraform variable `extractor_log_resource_type` to the monitored resource the logs
-arrive under (`generic_node` for an agent beside the database, `cloud_run_job`, ...).
 
 Exit codes: 0 success or no new rows; 1 any failure or breaking drift; 2 config or usage error.

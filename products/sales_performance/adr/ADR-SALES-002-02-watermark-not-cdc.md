@@ -12,11 +12,11 @@ decides: capture
 
 ## Context
 
-The database is behind corporate NAT with no inbound route, and ARCHIVELOG and supplemental logging are not enabled, so a managed CDC stream cannot reach it. The business accepted hourly freshness (BRD 1.1.0).
+The on-premises PostgreSQL database sits behind corporate NAT with no inbound route from Google Cloud, and `wal_level = logical` / logical replication slots are not enabled, so a managed CDC stream (Datastream) cannot reach it. The business accepted intraday freshness (BRD 1.1.0).
 
 ## Decision
 
-ora_local is captured by hourly watermark extraction with a 15-minute lookback, not by change data capture.
+`pg_local` is captured by outbound 15-minute watermark extraction (`*/15 * * * *`) with a 15-minute lookback window, not by change data capture.
 
 ## Consequences
 

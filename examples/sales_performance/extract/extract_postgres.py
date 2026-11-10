@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 # dpf: skill=extract-rdbms-watermark tier=5 adr=ADR-015 requirements=R-10
-"""Watermark extract: local Oracle -> BigQuery raw, outbound only.
+"""Watermark extract: on-premises PostgreSQL -> BigQuery raw, outbound only.
 
 Implements skill `extract-rdbms-watermark` at tool tier 5 (bespoke code) for BRD
-R-10. ADR-015 records why: the source has no inbound route from Google Cloud, so
-managed pull tools cannot reach it. This outbound-only extractor runs beside the
-database and pushes to BigQuery over HTTPS.
+R-10. ADR-015 records why: the source sits behind corporate NAT with no inbound route
+from Google Cloud, so managed pull tools (Datastream) cannot reach it. This outbound-only
+extractor runs beside the database and pushes to BigQuery over HTTPS.
 
-    pip install oracledb google-cloud-bigquery pyyaml   # jsonschema: optional
-    export ORACLE_USER=... ORACLE_PASSWORD=...
-    python3 extract_oracle.py                    # all entities
-    python3 extract_oracle.py customers          # one entity
-    python3 extract_oracle.py --dry-run          # read Oracle only, print manifests
-    python3 extract_oracle.py --config my.yaml   # default: config.yaml beside this file
-    python3 extract_oracle.py orders --accept-schema   # after resolving breaking drift
+    pip install "psycopg[binary]" google-cloud-bigquery pyyaml   # jsonschema: optional
+    export PGUSER=sales_app PGPASSWORD=...
+    python3 extract_postgres.py                    # all entities
+    python3 extract_postgres.py customers          # one entity
+    python3 extract_postgres.py --dry-run          # read PostgreSQL only, print manifests
+    python3 extract_postgres.py --dsn sqlite:///demo.db --dry-run   # zero-Docker mode
+    python3 extract_postgres.py --config my.yaml   # default: config.yaml beside this file
+    python3 extract_postgres.py orders --accept-schema   # after resolving breaking drift
 
 Guarantees (platform capability specs land-immutable-raw, extract-incremental-capture):
   * raw is append-only; every row carries the lineage columns
@@ -24,9 +25,9 @@ Guarantees (platform capability specs land-immutable-raw, extract-incremental-ca
   * the predicate `watermark_column > watermark - lookback_minutes` re-reads late
     commits: at-least-once landing in raw, exactly-once after staging dedupe on
     natural key + source change timestamp
-  * watermarks keep microsecond precision (ISO 8601, UTC); zone-less TIMESTAMPs
-    are taken as UTC and TIMESTAMP WITH TIME ZONE columns are read as UTC instants
-  * schemas come from the Oracle cursor, never autodetect; drift is classified
+  * watermarks keep microsecond precision (ISO 8601, UTC); session TIME ZONE is
+    pinned to UTC so TIMESTAMPTZ and TIMESTAMP columns resolve deterministically
+  * schemas come from the database cursor, never autodetect; drift is classified
     against <control>.schema_registry. Additive drift lands; breaking drift
     quarantines the batch, holds the watermark and raises `schema_drift_breaking`
   * logs are single-line JSON for Cloud Logging; failures carry `dpf_alert`
@@ -143,54 +144,81 @@ def extraction_since(watermark_iso: str | None, lookback_minutes: float) -> date
 
 # --------------------------------------------------------------------------- types
 
-_FLOAT_TYPES = {"BINARY_FLOAT", "BINARY_DOUBLE", "FLOAT", "REAL", "DOUBLE_PRECISION"}
-_NUMBER_TYPES = {"NUMBER", "NUMERIC", "DECIMAL", "DEC", "INTEGER", "INT", "SMALLINT"}
-_INT_TYPES = {"BINARY_INTEGER", "PLS_INTEGER"}
-_BYTES_TYPES = {"RAW", "LONG_RAW", "BLOB"}
+# PostgreSQL built-in pg_type OIDs reported by psycopg / libpq in cursor.description[i][1]
+_PG_OID_MAP: dict[int, str] = {
+    16: "BOOL",          # bool
+    17: "BYTES",         # bytea
+    20: "INT64",         # int8 / bigint
+    21: "INT64",         # int2 / smallint
+    23: "INT64",         # int4 / integer
+    26: "INT64",         # oid
+    700: "FLOAT64",      # float4 / real
+    701: "FLOAT64",      # float8 / double precision
+    1082: "DATE",        # date
+    1114: "DATETIME",    # timestamp without time zone
+    1184: "TIMESTAMP",   # timestamp with time zone (timestamptz)
+    114: "JSON",         # json
+    3802: "JSON",        # jsonb
+    1700: "NUMERIC",     # numeric / decimal (refined by precision & scale)
+}
+
+_FLOAT_TYPES = {"FLOAT", "FLOAT4", "FLOAT8", "REAL", "DOUBLE", "DOUBLE_PRECISION", "BINARY_FLOAT", "BINARY_DOUBLE"}
+_NUMBER_TYPES = {"NUMERIC", "DECIMAL", "DEC", "NUMBER"}
+_INT_TYPES = {"INT", "INT2", "INT4", "INT8", "INTEGER", "BIGINT", "SMALLINT", "SERIAL", "BIGSERIAL"}
+_BYTES_TYPES = {"BYTEA", "BLOB", "RAW", "VARBINARY"}
 _BQ_LEGACY = {"INTEGER": "INT64", "FLOAT": "FLOAT64", "BOOLEAN": "BOOL", "RECORD": "STRUCT"}
 
 
-def _oracle_type_key(name: str) -> str:
+def _pg_type_key(name: str) -> str:
     key = re.sub(r"\([^)]*\)", "", str(name).upper()).strip()
-    if key.startswith("DB_TYPE_"):
-        key = key[len("DB_TYPE_"):]
     return re.sub(r"\s+", "_", key)
 
 
-def bq_type_for(oracle_type_name: str, precision: int | None = None,
+def bq_type_for(pg_type: int | str, precision: int | None = None,
                 scale: int | None = None) -> str:
-    """Map an Oracle type (dictionary name or python-oracledb DB_TYPE_*) to BigQuery.
+    """Map a PostgreSQL OID or SQL type name to its exact BigQuery type.
 
-    NUMBER(p, s) is INT64 when s == 0 and p <= 18, NUMERIC inside NUMERIC's range
-    (<= 29 integer digits, s <= 9) and for unconstrained NUMBER, and BIGNUMERIC
-    beyond that, so no declared value is rounded or rejected.
+    NUMERIC(p, s) is INT64 when s == 0 and 1 <= p <= 18, NUMERIC inside BigQuery
+    NUMERIC's range (<= 29 integer digits, s <= 9) and for unconstrained NUMERIC,
+    and BIGNUMERIC beyond that, so no declared value is rounded or rejected.
     """
-    t = _oracle_type_key(oracle_type_name)
+    if isinstance(pg_type, int) and not isinstance(pg_type, bool):
+        mapped = _PG_OID_MAP.get(pg_type)
+        if mapped == "NUMERIC":
+            return _bq_number(precision or 0, 0 if scale is None else scale)
+        if mapped:
+            return mapped
+    t = _pg_type_key(str(pg_type))
+    if t.isdigit() and int(t) in _PG_OID_MAP:
+        mapped = _PG_OID_MAP[int(t)]
+        return _bq_number(precision or 0, 0 if scale is None else scale) if mapped == "NUMERIC" else mapped
     if t in _FLOAT_TYPES:
         return "FLOAT64"
-    if t in _NUMBER_TYPES:
-        return _bq_number(precision or 0, 0 if scale is None else scale)
     if t in _INT_TYPES:
         return "INT64"
+    if t in _NUMBER_TYPES:
+        return _bq_number(precision or 0, 0 if scale is None else scale)
+    if t in ("TIMESTAMPTZ", "TIMESTAMP_WITH_TIME_ZONE", "TIMESTAMP_TZ"):
+        return "TIMESTAMP"
+    if t in ("TIMESTAMP", "TIMESTAMP_WITHOUT_TIME_ZONE", "DATETIME"):
+        return "DATETIME"
     if t == "DATE":
-        return "DATETIME"          # Oracle DATE has a time of day and no zone
-    if t.startswith("TIMESTAMP"):
-        return "TIMESTAMP"         # with or without (local) time zone
+        return "DATE"
     if t in _BYTES_TYPES:
         return "BYTES"
     if t in ("BOOLEAN", "BOOL"):
         return "BOOL"
-    if t == "JSON":
+    if t in ("JSON", "JSONB"):
         return "JSON"
-    return "STRING"                # VARCHAR2, CHAR, CLOB, NCHAR, ... and unknown types
+    return "STRING"                # TEXT, VARCHAR, CHAR, UUID, ... and unknown types
 
 
 def _bq_number(precision: int, scale: int) -> str:
-    if precision <= 0:             # unconstrained NUMBER
+    if precision <= 0:             # unconstrained NUMERIC
         return "NUMERIC"
-    if scale == -127:              # FLOAT(b): binary precision, floating point
+    if scale == -127:              # binary float fallback
         return "FLOAT64"
-    if scale <= 0:                 # integers; a negative scale rounds left of the point
+    if scale <= 0:                 # exact integers
         digits = precision - scale
         if digits <= 18:
             return "INT64"
@@ -218,13 +246,15 @@ def source_schema(description: Sequence[Sequence[Any]]) -> dict[str, str]:
     seen = {c.lower() for c in LINEAGE}
     for col in description:
         name, type_code, precision, scale = col[0], col[1], col[4], col[5]
-        type_name = getattr(type_code, "name", None) or str(type_code)
+        raw_type = type_code if isinstance(type_code, int) and not isinstance(type_code, bool) else (
+            getattr(type_code, "name", None) or str(type_code)
+        )
         column = bq_column_name(name)
         if column.lower() in seen:
             raise ValueError(f"source column {name!r} collides with another column "
                              "or a lineage column")
         seen.add(column.lower())
-        schema[column] = bq_type_for(type_name, precision, scale)
+        schema[column] = bq_type_for(raw_type, precision, scale)
     return schema
 
 
@@ -728,8 +758,10 @@ def _query(bq, sql: str, params: Sequence[tuple[str, str, Any]] = (),
             query_params.append(bigquery.ArrayQueryParameter(name, typ[6:-1], value))
         else:
             query_params.append(bigquery.ScalarQueryParameter(name, typ, value))
+    extra_kw = {"job_retry": None} if job_id is not None else {}
     job = bq.query(sql, job_id=job_id,
-                   job_config=bigquery.QueryJobConfig(query_parameters=query_params))
+                   job_config=bigquery.QueryJobConfig(query_parameters=query_params),
+                   **extra_kw)
     return job.result()
 
 
@@ -824,7 +856,7 @@ def quarantine_batch(bq, t: Target, batch: Batch) -> None:
     drop_table(bq, load_ref, entity=batch.entity, batch_id=batch.batch_id)
 
 
-# --------------------------------------------------------------------------- Oracle I/O
+# --------------------------------------------------------------------------- PostgreSQL & SQLite WAL I/O
 
 def _env(name: str) -> str:
     value = os.environ.get(name)
@@ -833,54 +865,121 @@ def _env(name: str) -> str:
     return value
 
 
-def oracle_connect(cfg: Mapping[str, Any]):
-    import oracledb
+def _parse_declared_sql_type(decl: str) -> tuple[str, int | None, int | None]:
+    """Parse SQLite / SQL declared column type e.g. 'NUMERIC(12, 2)' -> ('NUMERIC', 12, 2)."""
+    raw = (decl or "TEXT").strip().upper()
+    m = re.match(r"^([A-Z0-9_ ]+?)\s*\(\s*(\d+)\s*(?:,\s*(-?\d+)\s*)?\)$", raw)
+    if not m:
+        return raw, None, None
+    tname = m.group(1).strip()
+    prec = int(m.group(2))
+    scale = int(m.group(3)) if m.group(3) is not None else 0
+    return tname, prec, scale
+
+
+class SQLiteCompatConnection:
+    """Zero-Docker stdlib sqlite3 WAL wrapper exposing the exact DB-API surface as PostgreSQL."""
+
+    is_sqlite = True
+
+    def __init__(self, db_path: str):
+        import sqlite3
+        self._raw = sqlite3.connect(db_path)
+        self._raw.execute("PRAGMA journal_mode=WAL")
+
+    @staticmethod
+    def _table_name(qualified: str) -> str:
+        return qualified.split(".", 1)[-1]
+
+    def table_description(self, qualified_table: str) -> list[tuple]:
+        tbl = self._table_name(qualified_table)
+        cur = self._raw.execute(f'PRAGMA table_info("{tbl}")')
+        cols = cur.fetchall()
+        if not cols:
+            raise RuntimeError(f"table {qualified_table!r} does not exist in SQLite database")
+        desc = []
+        for _, col_name, decl_type, _, _, _ in cols:
+            tname, prec, scale = _parse_declared_sql_type(decl_type)
+            desc.append((col_name, tname, None, None, prec, scale, True))
+        return desc
+
+    def fetch_since(self, qualified_table: str, wm: str, since: datetime) -> tuple[list, list]:
+        tbl = self._table_name(qualified_table)
+        desc = self.table_description(qualified_table)
+        since_iso = iso_utc(since)
+        cur = self._raw.execute(
+            f'SELECT * FROM "{tbl}" WHERE "{wm}" > ? ORDER BY "{wm}"',
+            (since_iso,),
+        )
+        raw_rows = cur.fetchall()
+        coerced = []
+        for row in raw_rows:
+            out_row = []
+            for val, col_desc in zip(row, desc):
+                if val is None:
+                    out_row.append(None)
+                    continue
+                bqt = bq_type_for(col_desc[1], col_desc[4], col_desc[5])
+                if bqt == "TIMESTAMP":
+                    out_row.append(parse_ts(val))
+                elif bqt == "DATETIME":
+                    dt = parse_ts(val) if isinstance(val, str) and ("T" in val or "+" in val or val.endswith("Z")) else (
+                        datetime.fromisoformat(str(val)) if not isinstance(val, datetime) else val
+                    )
+                    out_row.append(dt.replace(tzinfo=None))
+                elif bqt in ("NUMERIC", "BIGNUMERIC"):
+                    out_row.append(Decimal(str(val)))
+                else:
+                    out_row.append(val)
+            coerced.append(tuple(out_row))
+        return coerced, desc
+
+    def close(self) -> None:
+        self._raw.close()
+
+
+def pg_connect(cfg: Mapping[str, Any]):
+    """Connect to PostgreSQL via psycopg (or zero-Docker SQLite WAL when dsn starts with sqlite:)."""
     src = cfg["source"]
-    oracledb.defaults.fetch_decimals = True        # NUMBER -> Decimal, never float
-    oracledb.defaults.fetch_lobs = False           # CLOB/BLOB -> str/bytes
-    conn = oracledb.connect(user=_env(src["user_env"]),
-                            password=_env(src["password_env"]), dsn=src["dsn"])
-    with conn.cursor() as cur:                     # zone-less timestamps are UTC
-        cur.execute("ALTER SESSION SET TIME_ZONE = 'UTC'")
+    dsn = os.environ.get(src.get("dsn_env", "PG_DSN")) or src["dsn"]
+    if str(dsn).startswith("sqlite:"):
+        db_path = re.sub(r"^sqlite:(?:///)?", "", str(dsn))
+        if not db_path:
+            db_path = ":memory:"
+        elif str(dsn).startswith("sqlite:////"):
+            db_path = "/" + db_path.lstrip("/")
+        return SQLiteCompatConnection(db_path)
+
+    user = _env(src["user_env"])
+    password = _env(src["password_env"])
+    try:
+        import psycopg
+        conn = psycopg.connect(dsn, user=user, password=password)
+    except ImportError:
+        import psycopg2
+        conn = psycopg2.connect(dsn, user=user, password=password)
+    with conn.cursor() as cur:
+        cur.execute("SET TIME ZONE 'UTC'")
     return conn
 
 
-def select_list(description: Sequence[Sequence[Any]]) -> str:
-    """`*`, or an explicit list when a column is TIMESTAMP WITH TIME ZONE.
-
-    python-oracledb returns those values as naive wall-clock times in their own
-    offset (thin mode rejects named zones); read as UTC they could move the
-    watermark past rows not yet extracted. SYS_EXTRACT_UTC returns the UTC instant.
-    The BigQuery type (TIMESTAMP) and the schema fingerprint stay the same.
-    """
-    items, convert = [], False
-    for col in description:
-        quoted = '"' + str(col[0]).replace('"', '""') + '"'
-        type_name = getattr(col[1], "name", None) or str(col[1])
-        if _oracle_type_key(type_name) in ("TIMESTAMP_TZ", "TIMESTAMP_WITH_TIME_ZONE"):
-            items.append(f"SYS_EXTRACT_UTC({quoted}) AS {quoted}")
-            convert = True
-        else:
-            items.append(quoted)
-    return ", ".join(items) if convert else "*"
-
-
 def fetch(conn, entity: Mapping[str, Any], since: datetime) -> tuple[list, list]:
-    """Rows with watermark_column > since, and the cursor description."""
-    import oracledb
+    """Rows with watermark_column > since (UTC), and the cursor description."""
     table, wm = entity["source_table"], entity["watermark_column"]
-    columns = select_list(describe(conn, entity))
-    sql = f"SELECT {columns} FROM {table} WHERE {wm} > :since ORDER BY {wm}"
+    if getattr(conn, "is_sqlite", False):
+        return conn.fetch_since(table, wm, since)
+    sql = f"SELECT * FROM {table} WHERE {wm} > %s ORDER BY {wm}"
     with conn.cursor() as cur:
         cur.arraysize = 5000
-        cur.setinputsizes(since=oracledb.DB_TYPE_TIMESTAMP)   # keep fractional seconds
-        cur.execute(sql, since=since.astimezone(UTC).replace(tzinfo=None))
+        cur.execute(sql, (since.astimezone(UTC),))
         description = list(cur.description)
         rows = cur.fetchall()
     return rows, description
 
 
 def describe(conn, entity: Mapping[str, Any]) -> list:
+    if getattr(conn, "is_sqlite", False):
+        return conn.table_description(entity["source_table"])
     with conn.cursor() as cur:
         cur.execute(f"SELECT * FROM {entity['source_table']} WHERE 1 = 0")
         return list(cur.description)
@@ -889,8 +988,8 @@ def describe(conn, entity: Mapping[str, Any]) -> list:
 # --------------------------------------------------------------------------- config
 
 _ENTITY_RE = re.compile(r"^[a-z][a-z0-9_]*$")
-_ORACLE_TABLE_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_$#]*(\.[A-Za-z][A-Za-z0-9_$#]*)?$")
-_ORACLE_COLUMN_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_$#]*$")
+_PG_TABLE_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$")
+_PG_COLUMN_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 _DATASET_RE = re.compile(r"^[A-Za-z0-9_]+$")
 _PROJECT_RE = re.compile(r"^[a-z0-9][a-z0-9.:-]*$")
 
@@ -903,7 +1002,9 @@ def validate_config(cfg: dict) -> dict:
     """Apply defaults; reject configs that would build unsafe SQL or table names."""
     problems = []
     src, tgt = cfg.get("source") or {}, cfg.get("target") or {}
-    for key in ("system_id", "dsn", "user_env", "password_env"):
+    dsn = str(src.get("dsn") or "")
+    req_keys = ("system_id", "dsn") if dsn.startswith("sqlite:") else ("system_id", "dsn", "user_env", "password_env")
+    for key in req_keys:
         if not src.get(key):
             problems.append(f"source.{key} is required")
     for key in ("project", "location", "raw_dataset", "control_dataset"):
@@ -912,7 +1013,7 @@ def validate_config(cfg: dict) -> dict:
     if tgt.get("project") and not _PROJECT_RE.match(str(tgt["project"])):
         problems.append("target.project is not a valid project id")
     for key in ("raw_dataset", "control_dataset"):
-        if tgt.get(key) and not _DATASET_RE.match(str(tgt[key])):
+        if tgt.get("raw_dataset" if key == "raw_dataset" else "control_dataset") and not _DATASET_RE.match(str(tgt[key])):
             problems.append(f"target.{key} is not a valid dataset id")
     cfg.setdefault("lookback_minutes", DEFAULT_LOOKBACK_MINUTES)
     cfg.setdefault("load_table_ttl_hours", DEFAULT_LOAD_TABLE_TTL_HOURS)
@@ -932,13 +1033,13 @@ def validate_config(cfg: dict) -> dict:
         elif name in names:
             problems.append(f"{where}.name {name!r} is duplicated")
         names.add(name)
-        if not _ORACLE_TABLE_RE.match(str(e.get("source_table", ""))):
-            problems.append(f"{where}.source_table must be a plain Oracle [SCHEMA.]TABLE")
-        if not _ORACLE_COLUMN_RE.match(str(e.get("watermark_column", ""))):
-            problems.append(f"{where}.watermark_column must be a plain Oracle column")
+        if not _PG_TABLE_RE.match(str(e.get("source_table", ""))):
+            problems.append(f"{where}.source_table must be a plain PostgreSQL [schema.]table")
+        if not _PG_COLUMN_RE.match(str(e.get("watermark_column", ""))):
+            problems.append(f"{where}.watermark_column must be a plain PostgreSQL column")
         key = e.get("natural_key") or []
-        if not key or not all(_ORACLE_COLUMN_RE.match(str(k)) for k in key):
-            problems.append(f"{where}.natural_key must list plain Oracle columns")
+        if not key or not all(_PG_COLUMN_RE.match(str(k)) for k in key):
+            problems.append(f"{where}.natural_key must list plain PostgreSQL columns")
         if "lookback_minutes" in e and not _non_negative(e["lookback_minutes"]):
             problems.append(f"{where}.lookback_minutes must be a number >= 0")
     if problems:
@@ -1093,8 +1194,8 @@ def run(cfg: Mapping[str, Any], only: str | None = None, dry: bool = False) -> i
             ctx.bq = bq_client(ctx.target)
             stage = "ensure_control_tables"
             ensure_control_tables(ctx.bq, ctx.target)
-        stage = "connect_oracle"
-        ctx.conn = oracle_connect(cfg)
+        stage = "connect_postgres"
+        ctx.conn = pg_connect(cfg)
     except Exception as exc:
         alert("extract_failed", f"{stage} failed: {exc}", source_system=source_system,
               entity=only, batch_id=None, stage=stage, error=str(exc),
@@ -1133,7 +1234,7 @@ def accept_schema(cfg: Mapping[str, Any], entity_name: str, dry: bool = False) -
         return 2
     stage = "describe"
     try:
-        conn = oracle_connect(cfg)
+        conn = pg_connect(cfg)
         try:
             source = source_schema(describe(conn, entity))
         finally:
@@ -1165,18 +1266,28 @@ def accept_schema(cfg: Mapping[str, Any], entity_name: str, dry: bool = False) -
 
 def main(argv: Sequence[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
-        description="Oracle -> BigQuery raw watermark extract (skill extract-rdbms-watermark).")
+        description="PostgreSQL -> BigQuery raw watermark extract (skill extract-rdbms-watermark).")
     ap.add_argument("entity", nargs="?", help="extract only this entity (default: all)")
     ap.add_argument("--dry-run", action="store_true",
-                    help="read Oracle only; write nothing to Google Cloud; "
+                    help="read PostgreSQL only; write nothing to Google Cloud; "
                          "print manifests as JSON lines")
     ap.add_argument("--config", default=str(DEFAULT_CONFIG),
                     help="config file (default: config.yaml beside this script)")
+    ap.add_argument("--dsn", default=None,
+                    help="optional DSN override (e.g. host=localhost port=5432 dbname=sales_erp or sqlite:///demo.db)")
+    ap.add_argument("--project", default=None,
+                    help="optional GCP target project override")
     ap.add_argument("--accept-schema", action="store_true",
                     help="record ENTITY's current source schema as accepted, then exit")
     args = ap.parse_args(argv)
     try:
-        cfg = load_config(args.config)
+        import yaml
+        raw_cfg = yaml.safe_load(Path(args.config).read_text()) or {}
+        if args.dsn:
+            raw_cfg.setdefault("source", {})["dsn"] = args.dsn
+        if args.project:
+            raw_cfg.setdefault("target", {})["project"] = args.project
+        cfg = validate_config(raw_cfg)
     except Exception as exc:
         alert("extract_failed", f"config: {exc}", source_system=None, entity=args.entity,
               batch_id=None, stage="config", error=str(exc), error_type=type(exc).__name__)

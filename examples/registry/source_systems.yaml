@@ -16,9 +16,9 @@ systems:
       mcp_server: null            # object listings need no MCP server
       tier: 4
 
-  - system_id: ora_local
-    label: Oracle (on-premises, developer workstation)
-    engine: oracle
+  - system_id: pg_local
+    label: PostgreSQL 16 (on-premises ERP behind corporate NAT)
+    engine: postgres
     authority: system of record for the reference implementation
     entities: [orders, order_lines, customers, products, sales_reps]
 
@@ -28,16 +28,16 @@ systems:
     connectivity:
       inbound_from_gcp: false
       outbound_to_gcp: true
-      jdbc_url: jdbc:oracle:thin:@//localhost:1521/XEPDB1
+      jdbc_url: jdbc:postgresql://localhost:5432/sales_erp
       secret_ref: null            # local credentials; never commit them
 
     capture:
-      supported_now: [watermark]         # pull-based, runs where the database is reachable
-      requires_connectivity: [cdc]       # Datastream needs a route in - see the doc
+      supported_now: [watermark]         # outbound 15-min watermark extract next to the DB
+      requires_connectivity: [cdc]       # Datastream needs an inbound route + logical WAL
       cdc_prerequisites:
-        - ARCHIVELOG mode enabled
-        - supplemental logging enabled on captured tables
-        - LogMiner privileges granted to the capture user
+        - wal_level = logical enabled in postgresql.conf
+        - logical replication publication and slot created for captured tables
+        - REPLICATION privilege granted to the capture user
 
     inspection:
       mcp_server: mcp-toolbox-databases  # tier 2 - runs locally against the JDBC URL

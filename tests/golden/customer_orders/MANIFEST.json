@@ -2,9 +2,9 @@
   "product_id": "customer_orders",
   "engine": "dataform",
   "dpf_version": "0.3.0",
-  "build_digest": "sha256:6024a602278fcf1ae4a370eb9528c019dca735d083ca699f75c2367f93eb2890",
+  "build_digest": "sha256:4835dfc422c73281ba4611eca9a543f22e927a42821cfd55b7971ffe3d6547d6",
   "files": {
-    "README.md": "sha256:06e9f4efc71c331408da95d30b8bc4c791c4a51be1385dea81d57d3496b30f44",
+    "README.md": "sha256:a7b7311abcb6f108ac33df461f28ba472442b4a3acab150ea140776c22e097f0",
     "catalog-registration.json": "sha256:b627fa534b47635439a48fcb255a504480fd4ac5c38870caed2409535dc8155f",
     "dag.json": "sha256:cba1fb8061594c22b5ad6bbb083a359ef136b571e314363387c3f26cece74b7a",
     "dag.md": "sha256:891358ecc18a30513e76268f83d1b538f4696303738acdb4897969d35d5dc593",
@@ -55,6 +55,6 @@
     "terraform/outputs.tf": "sha256:f9264136c0cb89d8484dcca55a72635b44ad240e61689111de97ba4f78da8983",
     "terraform/variables.tf": "sha256:b043e84ac5d6450ee4c49084a5e67ac04bf0c0061d2a355fccd5b527886d7284",
     "terraform/versions.tf": "sha256:9f235306521de3fd81e20671419ebfbed11f9303b26f5229c0cd31edcd898357",
-    "test-spec.json": "sha256:116ef25aa4dd3b894d0aacf3b1fa4a3d299cde5021a941caf57f4de5b0c14fea"
+    "test-spec.json": "sha256:029b65d02a5eaaca11dc385b3bb3760d580b405e64ff52a063852747ff18cbec"
   }
 }

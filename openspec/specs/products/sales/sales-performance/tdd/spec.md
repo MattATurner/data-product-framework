@@ -115,12 +115,12 @@ correction window.
 - **WHEN** the fact is rebuilt incrementally
 - **THEN** that sale's partition SHALL NOT be rewritten
 
-### Requirement: Hourly watermark capture
+### Requirement: Outbound 15-minute watermark capture
 **Decision:** D-10 · **Satisfies:** R-10 · **ADR:** ADR-SALES-002-02
 
-Extraction from `ora_local` SHALL use watermark capture on an hourly schedule with a
-15-minute lookback, because the database has no inbound route from Google Cloud (see
-Feasibility). Rows read twice SHALL be removed by staging deduplication.
+Extraction from `pg_local` SHALL use outbound watermark capture on a 15-minute schedule (`*/15 * * * *`)
+with a 15-minute lookback, because the PostgreSQL database sits behind corporate NAT with no inbound
+route from Google Cloud (see Feasibility). Rows read twice SHALL be removed by staging deduplication.
 
 #### Scenario: Late-committing transaction
 - **GIVEN** a row committed with a change time just before the last watermark
@@ -249,15 +249,15 @@ Had any of these been absent, `direct` would have been correct and cheaper.
 
 ## Feasibility finding — raised against the BRD
 
-Source inspected via `mcp-toolbox-databases` (tier 2), running locally against the Oracle
+Source inspected via `mcp-toolbox-databases` (tier 2), running locally against the PostgreSQL
 JDBC URL.
 
 | Check | Finding |
 |---|---|
 | `order_id, order_line_no` uniqueness | Confirmed unique |
-| Change timestamp available | `last_modified_ts` present, suitable for watermarking |
+| Change timestamp available | `last_modified_ts` (`TIMESTAMPTZ`) present, suitable for watermarking |
 | Customer segment history at source | Not captured; the source holds current segment only |
-| Continuous capture (CDC) feasible | No. The database is behind corporate NAT with no inbound route, and ARCHIVELOG and supplemental logging are not enabled |
+| Continuous capture (CDC) feasible | No. The PostgreSQL database sits behind corporate NAT with no inbound route, and `wal_level = logical` and replication slots are not enabled |
 
 Two consequences, both handled as business issues rather than quiet engineering compromises:
 

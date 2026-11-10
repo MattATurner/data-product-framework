@@ -866,11 +866,11 @@
               "purpose": "Tier-5 outbound source connector (ADR-015) for on-premises databases without inbound cloud routes, reading watermark windows with a configurable lookback overlap into raw BigQuery tables.",
               "owner": "Data Ingestion Engineering",
               "status": "Implemented in DPF v0.3",
-              "sla": "Hourly or Scheduled Cron Cadence",
-              "platform_service": "Cloud Run Jobs / On-Premises Runner -> BigQuery Storage Write / Load",
+              "sla": "15-Minute or Scheduled Cron Cadence",
+              "platform_service": "Start/Stop GCE Appliance or On-Premises Runner -> BigQuery Load + Transaction",
               "inputs": [
-                "On-premises RDBMS tables",
-                "dpf_control.dpf_watermark_log"
+                "On-premises PostgreSQL / RDBMS tables",
+                "dpf_control.extract_watermark"
               ],
               "outputs": [
                 "Append-only raw_<entity> BigQuery rows + landing-manifest.v1"
@@ -880,11 +880,11 @@
               ],
               "implementation": {
                 "mode": "cli_batch",
-                "summary": "Outbound Python extractor carrying mandatory ADR-015 bespoke-code governance markers.",
-                "provisioned_via": "examples/sales_performance/extract/extract_oracle.py (ADR-015)",
-                "runtime": "Python Batch Job / Cloud Run Job",
-                "trigger": "Cron Schedule (e.g. 0 * * * *)",
-                "entrypoint": "examples/sales_performance/extract/extract_oracle.py",
+                "summary": "Outbound Python extractor carrying mandatory ADR-015 bespoke-code governance markers, paired with a start/stop PostgreSQL 16 OLTP simulator.",
+                "provisioned_via": "examples/sales_performance/extract/extract_postgres.py (ADR-015)",
+                "runtime": "Python Batch Job / Start-Stop GCE Appliance / Docker",
+                "trigger": "Cron / Systemd Schedule (e.g. */15 * * * *)",
+                "entrypoint": "examples/sales_performance/extract/extract_postgres.py",
                 "command": "dpf lint"
               }
             },

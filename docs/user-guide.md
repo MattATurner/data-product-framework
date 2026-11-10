@@ -277,7 +277,7 @@ example: one object-store source, `direct` only, and current state only.
 | Item | `sales_performance` |
 |---|---|
 | BRD | BRD-SALES-002 @ 1.2.0: 13 requirements, 14 acceptance scenarios |
-| Source | on-premises Oracle `ora_local`, read hourly by an outbound watermark extractor (ADR-015, tool tier 5) |
+| Source | on-premises PostgreSQL 16 `pg_local`, read every 15 minutes by an outbound watermark extractor (ADR-015, tool tier 5) |
 | Silver layer | `kimball`: `dim_customer` and `dim_product` (Type 2), `dim_date`, `fct_order_line` |
 | Gold layer | `direct`: `sales_performance_monthly` (table), `sales_order_line_detail` (view), `sales_performance_partner_extract` (table in the share dataset) |
 | Bad data | QR-1 (no customer) and QR-2 (negative quantity) quarantine rows and stop publication (R-11) |
@@ -545,7 +545,7 @@ terraform init && terraform apply                  # before the first extract
    repository compiles the default branch every hour. A Dataform-hosted repository rejects
    automatic release under strict act-as checks: set `dataform_release_schedule = ""` and
    run the two API calls in runbook step 1 after every push.
-3. Load data: the seed fixtures, or the extractor against the real Oracle source.
+3. Load data: the seed fixtures, or the start/stop PostgreSQL 16 simulator (`postgres-sim/demo_ctl.sh`) and outbound extractor.
 4. Build with a full refresh. The seed dates are fixed (March to June 2026), and an
    incremental run restates only the last 90 days of `fct_order_line`.
 5. Run `terraform apply` again. The two quality scans need their tables, so the first apply
@@ -1258,7 +1258,7 @@ Never delete an assertion to get a refresh through.
 
 ### The example extractor
 
-[extract_oracle.py](../examples/sales_performance/extract/extract_oracle.py) runs beside the
+[extract_postgres.py](../examples/sales_performance/extract/extract_postgres.py) runs beside the
 database and makes outbound HTTPS calls only (ADR-015). It lands rows at least once in raw;
 staging deduplication makes them count once. Each batch commits raw rows, the watermark and the
 landing manifest in one BigQuery transaction, so a failed run commits nothing. Exit codes: `0`

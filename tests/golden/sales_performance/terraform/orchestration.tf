@@ -14,7 +14,7 @@ resource "google_dataform_repository_release_config" "product" {
     default_location = var.region
     assertion_schema = "dpf_assertions"
     vars = {
-      raw_dataset            = "raw_ora_local"
+      raw_dataset            = "raw_pg_local"
       staging_dataset        = "stg_sales"
       silver_dataset         = "slv_sales"
       gold_dataset           = "gold_sales"

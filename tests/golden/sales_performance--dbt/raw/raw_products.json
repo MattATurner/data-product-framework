@@ -1,5 +1,5 @@
 {
-  "table_ref": "data-product-framework.raw_ora_local.raw_products",
+  "table_ref": "data-product-framework.raw_pg_local.raw_products",
   "is_append_only": true,
   "storage_format": "bigquery_native",
   "partition_spec": "DATE(_ingest_ts)",

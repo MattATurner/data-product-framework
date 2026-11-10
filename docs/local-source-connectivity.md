@@ -1,7 +1,8 @@
 # Connecting a local source to Google Cloud
 
-Written for the reference implementation, whose Oracle instance runs on a developer
-workstation. The principle generalises to any source behind a corporate network.
+Written for the reference implementation, whose PostgreSQL 16 instance sits behind corporate
+NAT without an inbound route from Google Cloud. The principle generalises to any source
+behind a corporate network.
 
 ## The constraint
 
@@ -37,8 +38,8 @@ method to reach the database through that bastion.
 - Gives genuine CDC, including deletes.
 - The tunnel is a long-lived process on a workstation — fine for a demo, unsuitable as a
   dependency for anything that must keep running.
-- Still requires the Oracle CDC prerequisites: ARCHIVELOG mode, supplemental logging,
-  LogMiner privileges.
+- Still requires the PostgreSQL CDC prerequisites: `wal_level = logical`, logical replication
+  publication/slot, and `REPLICATION` privileges.
 
 ### C. VPN or Cloud Interconnect
 
@@ -46,8 +47,9 @@ The production answer. Out of proportion for a proof.
 
 ## Recommended sequence
 
-1. **Prove the framework with option A.** Watermark batch from the local Oracle. Every
-   gate, every contract, every skill exercised, with no network dependency.
+1. **Prove the framework with option A.** Watermark batch from the on-premises PostgreSQL
+   source (`pg_local`). Every gate, every contract, every skill exercised, with no inbound
+   network dependency.
 2. **Add CDC later via option B**, if and only if the business requirement needs it.
 
 ## How the framework should record this

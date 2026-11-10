@@ -94,7 +94,7 @@ resource "google_logging_metric" "schema_drift_breaking" {
   project     = var.project_id
   name        = "dpf_sales_performance_schema_drift_breaking"
   description = "sales_performance: breaking schema drift quarantined a batch. Runbook: examples/sales_performance/RUNBOOK.md#schema-drift"
-  filter      = "jsonPayload.dpf_alert=\"schema_drift_breaking\" AND jsonPayload.source_system=(\"ora_local\")"
+  filter      = "jsonPayload.dpf_alert=\"schema_drift_breaking\" AND jsonPayload.source_system=(\"pg_local\")"
   metric_descriptor {
     metric_kind = "DELTA"
     value_type  = "INT64"
@@ -125,12 +125,12 @@ resource "google_monitoring_alert_policy" "schema_drift_breaking" {
   }
 }
 
-# dpf: element=source:ora_local satisfies=R-10
+# dpf: element=source:pg_local satisfies=R-10
 resource "google_logging_metric" "extract_failed" {
   project     = var.project_id
   name        = "dpf_sales_performance_extract_failed"
   description = "sales_performance: an extract failed and committed nothing. Runbook: examples/sales_performance/RUNBOOK.md#extract-failed"
-  filter      = "jsonPayload.dpf_alert=\"extract_failed\" AND jsonPayload.source_system=(\"ora_local\")"
+  filter      = "jsonPayload.dpf_alert=\"extract_failed\" AND jsonPayload.source_system=(\"pg_local\")"
   metric_descriptor {
     metric_kind = "DELTA"
     value_type  = "INT64"

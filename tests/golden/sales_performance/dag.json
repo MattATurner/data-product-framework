@@ -54,10 +54,10 @@
   ],
   "nodes": [
     {
-      "id": "extract:ora_local",
+      "id": "extract:pg_local",
       "stage": "extract",
       "scope": "source",
-      "instance": "ora_local",
+      "instance": "pg_local",
       "skill": "extract-rdbms-watermark",
       "tool": "bespoke-code",
       "tier": 5,
@@ -80,10 +80,10 @@
       }
     },
     {
-      "id": "land:ora_local",
+      "id": "land:pg_local",
       "stage": "land",
       "scope": "source",
-      "instance": "ora_local",
+      "instance": "pg_local",
       "skill": "load-bq-raw-table",
       "tool": "dpf-local",
       "tier": 4,
@@ -558,8 +558,8 @@
       "contract": "semantic-model.v1"
     },
     {
-      "from": "extract:ora_local",
-      "to": "land:ora_local",
+      "from": "extract:pg_local",
+      "to": "land:pg_local",
       "contract": "landing-manifest.v1"
     },
     {
@@ -708,17 +708,17 @@
       "contract": "semantic-model.v1"
     },
     {
-      "from": "land:ora_local",
+      "from": "land:pg_local",
       "to": "stage:stg_customers",
       "contract": "raw-table.v1"
     },
     {
-      "from": "land:ora_local",
+      "from": "land:pg_local",
       "to": "stage:stg_order_lines",
       "contract": "raw-table.v1"
     },
     {
-      "from": "land:ora_local",
+      "from": "land:pg_local",
       "to": "stage:stg_products",
       "contract": "raw-table.v1"
     },

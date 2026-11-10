@@ -28,9 +28,9 @@ lines never reach the fact.
     AX-7   product P-200 is GADGETS in March, WIDGETS from 1 June     (phases 1 + 2)
     AX-12  order SO-1005 has no customer: quarantined with a reason   (phase 3; corrected in phase 4)
 
-Tables are created with explicit schemas that match what extract_oracle.py derives from
-the Oracle cursor (NUMBER(p,0) -> INT64, NUMBER -> NUMERIC, DATE -> DATETIME,
-TIMESTAMP -> TIMESTAMP) plus the same lineage columns and `_source_pk_hash` rule.
+Tables are created with explicit schemas that match what extract_postgres.py derives from
+the PostgreSQL cursor (INTEGER -> INT64, NUMERIC(12,2) -> NUMERIC, TIMESTAMP -> DATETIME,
+TIMESTAMPTZ -> TIMESTAMP) plus the same lineage columns and `_source_pk_hash` rule.
 """
 from __future__ import annotations
 
@@ -48,15 +48,15 @@ LINEAGE = [("_ingest_ts", "TIMESTAMP"), ("_batch_id", "STRING"), ("_source_syste
 
 # entity -> (columns with BigQuery types, natural key)
 SCHEMA = {
-    "customers": ([("CUST_ID", "STRING"), ("CUST_NAME", "STRING"), ("SEGMENT_CD", "STRING"), ("REGION_CD", "STRING"),
-                   ("EMAIL", "STRING"), ("PHONE", "STRING"), ("LAST_MODIFIED_TS", "TIMESTAMP")], ["CUST_ID"]),
-    "products": ([("PROD_ID", "STRING"), ("PROD_NAME", "STRING"), ("CATEGORY_CD", "STRING"),
-                  ("LAST_MODIFIED_TS", "TIMESTAMP")], ["PROD_ID"]),
-    "orders": ([("ORDER_ID", "STRING"), ("CUST_ID", "STRING"), ("ORDER_DT", "DATETIME"), ("STATUS_CD", "STRING"),
-                ("LAST_MODIFIED_TS", "TIMESTAMP")], ["ORDER_ID"]),
-    "order_lines": ([("ORDER_ID", "STRING"), ("LINE_NO", "INT64"), ("PROD_ID", "STRING"), ("QTY", "NUMERIC"),
-                     ("GROSS_AMT", "NUMERIC"), ("DISCOUNT_AMT", "NUMERIC"), ("LAST_MODIFIED_TS", "TIMESTAMP")],
-                    ["ORDER_ID", "LINE_NO"]),
+    "customers": ([("cust_id", "STRING"), ("cust_name", "STRING"), ("segment_cd", "STRING"), ("region_cd", "STRING"),
+                   ("email", "STRING"), ("phone", "STRING"), ("last_modified_ts", "TIMESTAMP")], ["cust_id"]),
+    "products": ([("prod_id", "STRING"), ("prod_name", "STRING"), ("category_cd", "STRING"),
+                  ("last_modified_ts", "TIMESTAMP")], ["prod_id"]),
+    "orders": ([("order_id", "STRING"), ("cust_id", "STRING"), ("order_dt", "DATETIME"), ("status_cd", "STRING"),
+                ("last_modified_ts", "TIMESTAMP")], ["order_id"]),
+    "order_lines": ([("order_id", "STRING"), ("line_no", "INT64"), ("prod_id", "STRING"), ("qty", "NUMERIC"),
+                     ("gross_amt", "NUMERIC"), ("discount_amt", "NUMERIC"), ("last_modified_ts", "TIMESTAMP")],
+                    ["order_id", "line_no"]),
 }
 
 PHASES = {
@@ -149,7 +149,7 @@ def rows_for(name: str, phase: int) -> list[dict]:
     for r in PHASES[phase][name]:
         rec = dict(zip(names, r))
         pk = "|".join("" if rec[k] is None else str(rec[k]) for k in nk)
-        rec |= {"_ingest_ts": NOW, "_batch_id": f"seed-p{phase}-{name}", "_source_system": "ora_local",
+        rec |= {"_ingest_ts": NOW, "_batch_id": f"seed-p{phase}-{name}", "_source_system": "pg_local",
                 "_op": "upsert", "_source_pk_hash": hashlib.sha256(pk.encode("utf-8")).hexdigest()}
         out.append(rec)
     return out
@@ -160,7 +160,7 @@ def main() -> int:
     ap.add_argument("--phase", type=int, choices=sorted(PHASES), default=1)
     ap.add_argument("--load", action="store_true", help="append the phase to the raw tables in BigQuery")
     ap.add_argument("--project", default="data-product-framework")
-    ap.add_argument("--dataset", default="raw_ora_local")
+    ap.add_argument("--dataset", default="raw_pg_local")
     ap.add_argument("--location", default="us-central1")
     a = ap.parse_args()
 

@@ -176,7 +176,7 @@ and vocabulary (`brd-rubric.yaml`, `brd-vocabulary.yaml`) and the MCP catalogue
 | | `customer_orders` | `sales_performance` |
 |---|---|---|
 | Path | `direct` | Kimball silver, `direct` gold |
-| Source | object-store CSV | on-premises Oracle, outbound watermark extract (ADR-015) |
+| Source | object-store CSV | on-premises PostgreSQL 16 (`pg_local`), 15-min outbound watermark extract (ADR-015) |
 | Define | none | UC-SALES-001: use case, scorecard (a quick win), prioritisation and BRD as filled PDFs |
 | BRD | BRD-SALES-001 @ 1.1.0 | BRD-SALES-002 @ 1.2.0 |
 | Shows | the minimum: every gate, no modelling ceremony | Type 2 history, quarantine + reject gate (R-11), masking (R-12), partner sharing (R-13), LookML Explore + dashboard (ADR-018), monitoring |
@@ -243,7 +243,7 @@ data-product-framework/
 ├── registry/                [DPF-02..03] Organisational context: defaults, glossary, sources, foundations, MCP
 ├── products/                [DPF-03..04] Resolved product manifests (`product.yaml`), custom `sql/`, acceptance
 │
-├── examples/                [DPF-01..05] Worked overlay, Oracle extractor, seeds, wrapper & sandbox `evidence/`
+├── examples/                [DPF-01..05] Worked overlay, PostgreSQL simulator & extractor, seeds & `evidence/`
 ├── docs/                    [Docs]       User guide, `adr/` (ADR-001..019), `fhd/` (DPF-00), deck & diagrams
 ├── tests/                   [DPF-04..06] Unit tests, contract checks, `golden/` snapshots & 26 `evals/`
 │

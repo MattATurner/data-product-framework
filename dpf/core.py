@@ -662,6 +662,6 @@ def iter_elements(manifest: dict) -> Iterable[tuple[str, dict]]:
 def find_root(start: Path | None = None) -> Path:
     p = (start or Path.cwd()).resolve()
     for cand in [p, *p.parents]:
-        if (cand / "contracts").is_dir() and (cand / "openspec").is_dir():
+        if ((cand / "framework/contracts").is_dir() or (cand / "contracts").is_dir()) and (cand / "openspec").is_dir():
             return cand
     return Path(__file__).resolve().parent.parent

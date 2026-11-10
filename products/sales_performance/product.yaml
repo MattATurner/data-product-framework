@@ -22,21 +22,27 @@ deployment:
   gcp_project: data-product-framework
   region: us-central1
   datasets:
-    raw: raw_ora_local
+    raw: raw_pg_local
     staging: stg_sales
     silver: slv_sales
     gold: gold_sales
     share: share_sales_partner
     assertions: dpf_assertions
     control: dpf_control
+  environments:
+    test:
+      gcp_project: data-products-deploy
+      enforce_policy_tags: false
+      prevent_destroy: false
+      schedules_enabled: false
 
 sources:
-  - system_id: ora_local
-    engine: oracle
+  - system_id: pg_local
+    engine: postgres
     capture_mode: watermark          # constrained by source reachability (D-10, ADR-SALES-002-02)
     watermark_column: last_modified_ts
     lookback_minutes: 15
-    schedule: "0 * * * *"
+    schedule: "*/15 * * * *"
     entities: [orders, order_lines, customers, products]
     inspection_mcp_server: mcp-toolbox-databases
     brd_requirement_id: [R-10]
