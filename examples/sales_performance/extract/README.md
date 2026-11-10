@@ -40,7 +40,7 @@ run `extract_postgres.py <entity> --accept-schema`. The next run re-reads the he
 ## Run
 
 ```bash
-# PostgreSQL 16 (Docker, GCE appliance, or AlloyDB Omni / Express):
+# PostgreSQL 16 (Docker, GCE appliance, or any PostgreSQL DSN):
 pip install "psycopg[binary]" google-cloud-bigquery pyyaml jsonschema
 export PGUSER=sales_app PGPASSWORD=sales_demo_pw
 python3 extract_postgres.py --dry-run           # reads PostgreSQL only; prints manifests
