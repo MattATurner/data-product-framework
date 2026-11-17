@@ -35,6 +35,8 @@ compile time.
 
 ## Decision
 
+![How the Data Product Framework (DPF) and Agentic Governance (AGF) Work Together](../images/dpf-agf-symbiosis.svg)
+
 1. **Symbiotic separation of planes (Build-Time Factory vs. Run-Time Estate Guardian).**
    `dpf` owns the build-time product lifecycle (`Discover & Prioritise -> Describe -> Design
    -> Build -> Accept -> Monitor`). `AGF` (`ADG-01` through `ADG-05` running on Gemini

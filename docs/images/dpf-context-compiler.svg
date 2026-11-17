@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="480" viewBox="0 0 1320 480">
+  <defs>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="114%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#0F172A" flood-opacity="0.05"/>
+    </filter>
+    <marker id="arrNavy" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#1E3A8A"/>
+    </marker>
+    <marker id="arrTeal" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#0F766E"/>
+    </marker>
+  </defs>
+
+  <!-- Canvas -->
+  <rect x="0" y="0" width="1320" height="480" rx="14" fill="#FAF9F6" stroke="#E2E8F0" stroke-width="1.5"/>
+
+  <!-- Header -->
+  <text x="40" y="38" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10.5" font-weight="800" letter-spacing="0.11em" fill="#1E3A8A">ARCHITECTURAL PRINCIPLE  ·  COMPILE ONCE ACROSS EVERY LAYER</text>
+  <text x="40" y="64" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="800" letter-spacing="-0.02em" fill="#0F172A">Plain-English Intent + Organisational Context &#8594; Four Synchronised Cloud Outcomes</text>
+
+  <!-- COLUMN 1: REUSABLE INPUTS (x=36..396, w=360) -->
+  <rect x="36" y="90" width="360" height="358" rx="14" fill="#F3F2EC" stroke="#D6D3C9" stroke-width="1.4"/>
+  <text x="58" y="118" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10.5" font-weight="800" letter-spacing="0.09em" fill="#57534E">1. BUSINESS INTENT &amp; ENTERPRISE CONTEXT</text>
+
+  
+  <g>
+    <rect x="56" y="136" width="320" height="88" rx="11" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4" filter="url(#shadow)"/>
+    <rect x="56" y="136" width="5" height="88" rx="2.5" fill="#D97706"/>
+    
+    <rect x="74" y="150" width="107" height="20" rx="5" fill="#FEF3C7"/>
+    <text x="127.5" y="164" text-anchor="middle" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="9.5" font-weight="800" letter-spacing="0.06em" fill="#92400E">PER PRODUCT</text>
+        
+    <text x="76" y="190" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="800" fill="#0F172A">Business Specification</text>
+    <text x="76" y="212" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="500" fill="#475569">Plain-English rules approved at Gate G0</text>
+  </g>
+
+  
+  <g>
+    <rect x="56" y="238" width="320" height="88" rx="11" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4" filter="url(#shadow)"/>
+    <rect x="56" y="238" width="5" height="88" rx="2.5" fill="#1E3A8A"/>
+    
+    <rect x="74" y="252" width="115" height="20" rx="5" fill="#DBEAFE"/>
+    <text x="131.5" y="266" text-anchor="middle" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="9.5" font-weight="800" letter-spacing="0.06em" fill="#1E40AF">ENCODED ONCE</text>
+        
+    <text x="76" y="292" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="800" fill="#0F172A">Organisational Context</text>
+    <text x="76" y="314" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="500" fill="#475569">Glossary, source limits &amp; arch patterns</text>
+  </g>
+
+  
+  <g>
+    <rect x="56" y="340" width="320" height="88" rx="11" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4" filter="url(#shadow)"/>
+    <rect x="56" y="340" width="5" height="88" rx="2.5" fill="#1E3A8A"/>
+    
+    <rect x="74" y="354" width="69" height="20" rx="5" fill="#DBEAFE"/>
+    <text x="108.5" y="368" text-anchor="middle" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="9.5" font-weight="800" letter-spacing="0.06em" fill="#1E40AF">REUSED</text>
+        
+    <text x="76" y="394" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="800" fill="#0F172A">Existing Foundations</text>
+    <text x="76" y="416" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="500" fill="#475569">Conformed dimensions, data &amp; semantics</text>
+  </g>
+
+
+  <!-- COLUMN 2: GROUNDED DESIGN & COMPILER (x=456..844, w=388) -->
+  <rect x="456" y="90" width="388" height="358" rx="14" fill="#EFF5FB" stroke="#BFDBFE" stroke-width="1.5"/>
+  <text x="478" y="118" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10.5" font-weight="800" letter-spacing="0.09em" fill="#1E3A8A">2. GROUNDED DESIGN &amp; COMPILATION</text>
+
+  <g>
+    <rect x="478" y="142" width="344" height="132" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4" filter="url(#shadow)"/>
+    <rect x="478" y="142" width="344" height="4" rx="2" fill="#1E3A8A"/>
+    <text x="498" y="174" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="800" fill="#0F172A">Grounded Design &amp; Playback</text>
+    <text x="498" y="198" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11.8" font-weight="500" fill="#475569">Maps BRD signals to service &amp; semantic patterns</text>
+    <rect x="498" y="218" width="264" height="34" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.1"/>
+    <text x="630" y="239" text-anchor="middle" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#1E293B">Design &amp; 1-Page Playback</text>
+    
+    <rect x="770" y="218" width="32" height="34" rx="8" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.2"/>
+    <circle cx="786" cy="230" r="4.2" fill="#B45309"/>
+    <path d="M 779 243.5 C 779 237.5, 793 237.5, 793 243.5 Z" fill="#B45309"/>
+    
+  </g>
+
+  <line x1="650" y1="274" x2="650" y2="302" stroke="#1E3A8A" stroke-width="2.4" marker-end="url(#arrNavy)"/>
+
+  <g>
+    <rect x="478" y="306" width="344" height="120" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4" filter="url(#shadow)"/>
+    <rect x="478" y="306" width="344" height="4" rx="2" fill="#0F766E"/>
+    <text x="498" y="338" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="800" fill="#0F172A">Deterministic Product Compiler</text>
+    <text x="498" y="362" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11.8" font-weight="500" fill="#475569">Compiles chosen patterns across all four layers</text>
+    <rect x="498" y="378" width="304" height="32" rx="8" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1.1"/>
+    <text x="650" y="399" text-anchor="middle" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#166534">Zero Drift Across Data, Security &amp; Semantics</text>
+  </g>
+
+  <!-- COLUMN 3: 4 SYNCHRONISED OUTCOMES (x=904..1284, w=380) -->
+  <rect x="904" y="90" width="380" height="358" rx="14" fill="#ECFDF5" stroke="#A7F3D0" stroke-width="1.5"/>
+  <text x="926" y="118" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10.5" font-weight="800" letter-spacing="0.09em" fill="#065F46">3. FOUR SYNCHRONISED OUTCOMES</text>
+
+  
+  <g>
+    <rect x="924" y="134" width="340" height="68" rx="11" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4" filter="url(#shadow)"/>
+    <rect x="924" y="134" width="5" height="68" rx="2.5" fill="#059669"/>
+    
+    <text x="944" y="170" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="800" fill="#0F172A">Acquire, Stage &amp; Transform</text>
+    <text x="944" y="194" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="500" fill="#475569">Quarantine gates, history, stream &amp; AI pipelines</text>
+  </g>
+
+  
+  <g>
+    <rect x="924" y="212" width="340" height="68" rx="11" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4" filter="url(#shadow)"/>
+    <rect x="924" y="212" width="5" height="68" rx="2.5" fill="#059669"/>
+    
+    <text x="944" y="248" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="800" fill="#0F172A">Access, Masking &amp; Sharing</text>
+    <text x="944" y="272" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="500" fill="#475569">Least-privilege access, PII masking &amp; share</text>
+  </g>
+
+  
+  <g>
+    <rect x="924" y="290" width="340" height="68" rx="11" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4" filter="url(#shadow)"/>
+    <rect x="924" y="290" width="5" height="68" rx="2.5" fill="#059669"/>
+    
+    <text x="944" y="326" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="800" fill="#0F172A">Catalog, Lineage &amp; Quality</text>
+    <text x="944" y="350" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="500" fill="#475569">Business glossary links &amp; quality gates</text>
+  </g>
+
+  
+  <g>
+    <rect x="924" y="368" width="340" height="68" rx="11" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4" filter="url(#shadow)"/>
+    <rect x="924" y="368" width="5" height="68" rx="2.5" fill="#059669"/>
+    
+    <text x="944" y="404" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="800" fill="#0F172A">Semantic Layer &amp; Consumption</text>
+    <text x="944" y="428" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="500" fill="#475569">Canonical metrics, BI, AI grounding &amp; APIs</text>
+  </g>
+
+
+  <!-- Connectors Column 1 -> Column 2 -->
+  <path d="M 376 180 L 424 180 L 424 208 L 474 208" fill="none" stroke="#1E3A8A" stroke-width="2.2" stroke-linejoin="round" marker-end="url(#arrNavy)"/>
+  <path d="M 376 282 L 424 282 L 424 208" fill="none" stroke="#1E3A8A" stroke-width="2.2" stroke-linejoin="round"/>
+  <path d="M 376 384 L 424 384 L 424 282" fill="none" stroke="#1E3A8A" stroke-width="2.2" stroke-linejoin="round"/>
+
+  <!-- Connectors Column 2 -> Column 3 -->
+  <path d="M 822 366 L 872 366 L 872 168 L 920 168" fill="none" stroke="#0F766E" stroke-width="2.2" stroke-linejoin="round" marker-end="url(#arrTeal)"/>
+  <path d="M 872 246 L 920 246" fill="none" stroke="#0F766E" stroke-width="2.2" stroke-linejoin="round" marker-end="url(#arrTeal)"/>
+  <path d="M 872 324 L 920 324" fill="none" stroke="#0F766E" stroke-width="2.2" stroke-linejoin="round" marker-end="url(#arrTeal)"/>
+  <path d="M 872 366 L 872 402 L 920 402" fill="none" stroke="#0F766E" stroke-width="2.2" stroke-linejoin="round" marker-end="url(#arrTeal)"/>
+</svg>

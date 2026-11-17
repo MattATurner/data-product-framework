@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="490" viewBox="0 0 1320 490">
+  <defs>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="114%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#0F172A" flood-opacity="0.05"/>
+    </filter>
+    <marker id="arrNavy" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#1E3A8A"/>
+    </marker>
+    <marker id="arrGreen" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#059669"/>
+    </marker>
+  </defs>
+
+  <!-- Canvas -->
+  <rect x="0" y="0" width="1320" height="490" rx="14" fill="#FAF9F6" stroke="#E2E8F0" stroke-width="1.5"/>
+
+  <!-- Header -->
+  <text x="40" y="38" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10.5" font-weight="800" letter-spacing="0.11em" fill="#1E3A8A">SYMBIOTIC GOVERNANCE  ·  TWO FRAMEWORKS, ONE CONTINUOUS LIFECYCLE</text>
+  <text x="40" y="64" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="800" letter-spacing="-0.02em" fill="#0F172A">How the Data Product Framework (DPF) and Agentic Governance (AGF) Work Together</text>
+
+  <!-- BOX 1: DATA PRODUCT FRAMEWORK (DPF) (x=36..532, w=496) -->
+  <rect x="36" y="92" width="496" height="364" rx="14" fill="#EFF5FB" stroke="#BFDBFE" stroke-width="1.5"/>
+  <text x="60" y="120" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="800" letter-spacing="0.08em" fill="#1E3A8A">DATA PRODUCT FRAMEWORK (DPF)</text>
+  <text x="60" y="140" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12.5" font-weight="600" fill="#475569">Build-Time Specification &amp; Product Delivery</text>
+
+  
+  <g>
+    <rect x="60" y="158" width="448" height="82" rx="11" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4" filter="url(#shadow)"/>
+    <rect x="60" y="158" width="5" height="82" rx="2.5" fill="#1E3A8A"/>
+    <text x="82" y="192" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15.5" font-weight="800" fill="#0F172A">Plain-English Business Intent</text>
+    <text x="82" y="216" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12.2" font-weight="500" fill="#475569">Captures commercial rules, ownership &amp; authorised purpose</text>
+  </g>
+
+  
+  <g>
+    <rect x="60" y="254" width="448" height="82" rx="11" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4" filter="url(#shadow)"/>
+    <rect x="60" y="254" width="5" height="82" rx="2.5" fill="#1E3A8A"/>
+    <text x="82" y="288" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15.5" font-weight="800" fill="#0F172A">Upfront Privacy &amp; Policy Design</text>
+    <text x="82" y="312" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12.2" font-weight="500" fill="#475569">Applies shared definitions, PII masking &amp; partner boundaries</text>
+  </g>
+
+  
+  <g>
+    <rect x="60" y="350" width="448" height="82" rx="11" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4" filter="url(#shadow)"/>
+    <rect x="60" y="350" width="5" height="82" rx="2.5" fill="#1E3A8A"/>
+    <text x="82" y="384" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15.5" font-weight="800" fill="#0F172A">Deterministic Product Compilation</text>
+    <text x="82" y="408" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12.2" font-weight="500" fill="#475569">Generates synchronised pipelines, security, catalog &amp; BI</text>
+  </g>
+
+
+  <!-- BOX 2: AGENTIC DATA GOVERNANCE FRAMEWORK (AGF) (x=788..1284, w=496) -->
+  <rect x="788" y="92" width="496" height="364" rx="14" fill="#ECFDF5" stroke="#A7F3D0" stroke-width="1.5"/>
+  <text x="812" y="120" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="800" letter-spacing="0.08em" fill="#065F46">AGENTIC DATA GOVERNANCE FRAMEWORK (AGF)</text>
+  <text x="812" y="140" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12.5" font-weight="600" fill="#475569">Run-Time Estate Protection &amp; Continuous Assurance</text>
+
+  
+  <g>
+    <rect x="812" y="158" width="448" height="82" rx="11" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4" filter="url(#shadow)"/>
+    <rect x="812" y="158" width="5" height="82" rx="2.5" fill="#059669"/>
+    <text x="834" y="192" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15.5" font-weight="800" fill="#0F172A">Birth Protection &amp; Live Lineage</text>
+    <text x="834" y="216" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12.2" font-weight="500" fill="#475569">Scans new data at arrival and verifies live pipeline behaviour</text>
+  </g>
+
+  
+  <g>
+    <rect x="812" y="254" width="448" height="82" rx="11" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4" filter="url(#shadow)"/>
+    <rect x="812" y="254" width="5" height="82" rx="2.5" fill="#059669"/>
+    <text x="834" y="288" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15.5" font-weight="800" fill="#0F172A">Purpose-Bound Access &amp; Ledger Truth</text>
+    <text x="834" y="312" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12.2" font-weight="500" fill="#475569">Brokers time-limited access and reconciles to Finance totals</text>
+  </g>
+
+  
+  <g>
+    <rect x="812" y="350" width="448" height="82" rx="11" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4" filter="url(#shadow)"/>
+    <rect x="812" y="350" width="5" height="82" rx="2.5" fill="#059669"/>
+    <text x="834" y="384" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15.5" font-weight="800" fill="#0F172A">Retention &amp; Shadow Asset Discovery</text>
+    <text x="834" y="408" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12.2" font-weight="500" fill="#475569">Enforces regulatory retirement and uncovers ungoverned data</text>
+  </g>
+
+
+  <!-- CENTER HANDSHAKE (x=532..788) — Unboxed title above line, action below line -->
+  <text x="660" y="207" text-anchor="middle" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="800" letter-spacing="0.07em" fill="#1E3A8A">PUBLISHED INTENT</text>
+  <line x1="532" y1="220" x2="782" y2="220" stroke="#1E3A8A" stroke-width="2.8" marker-end="url(#arrNavy)"/>
+  <text x="660" y="240" text-anchor="middle" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10.8" font-weight="600" fill="#475569">Ownership, privacy rules</text>
+  <text x="660" y="255" text-anchor="middle" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10.8" font-weight="600" fill="#475569">&amp; SLAs in shared catalog</text>
+
+  <text x="660" y="325" text-anchor="middle" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="800" letter-spacing="0.07em" fill="#059669">ESTATE FEEDBACK</text>
+  <line x1="788" y1="338" x2="538" y2="338" stroke="#059669" stroke-width="2.8" marker-end="url(#arrGreen)"/>
+  <text x="660" y="358" text-anchor="middle" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10.8" font-weight="600" fill="#475569">Live drift, new PII &amp; shadow</text>
+  <text x="660" y="373" text-anchor="middle" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10.8" font-weight="600" fill="#475569">assets routed for amendment</text>
+</svg>

@@ -4,7 +4,7 @@ A spec-driven, composable data engineering toolkit for building **data products*
 Google Cloud. Specs live in [OpenSpec](https://openspec.dev); a small Python CLI, `dpf`,
 checks a machine gate at every stage and generates everything that can be generated.
 
-![The data product cycle — 6 human-gated steps. 1. Discover & Prioritise (use case, readiness QA, score and choose) moves to 2. Describe (BRD or PRD rubric, rubric check, approve need), passes gate G0 to 3. Design (TDD and manifest, semantics.md playback, sign digest), G1 to 4. Build (compose skills at G2, multi-plane generate, golden copy PR), G3 to 5. Accept (deploy and run live, build digest proof, domain attest) and G4 to 6. Monitor (published product, working-hours watch, change loop). A breach or a new need opens an OpenSpec change, which passes the same gates again.](docs/images/dpf-lifecycle.svg)
+![Operating model — 6 human-gated steps. A one-time Opportunity Funnel enters Step 01 Prioritise (Funded Use-Case Brief), crosses the Portfolio Gate into the continuous product lifecycle: Step 02 Describe (Business Requirements Doc) -> G0 Validate Rubric -> Step 03 Design (Design & 1-Page Playback) -> G1 Verify Playback -> Step 04 Build (Compiled Pipelines & BI) -> G2–G3 Deterministic Build -> Step 05 Accept (Attested Live Data Product) -> G4 Published Live -> Step 06 Monitor & Evolve (Live SLA Status & Change Brief), with the Virtuous Loop returning amendments directly to Step 02.](docs/images/dpf-lifecycle.svg)
 
 The cycle runs across **six human-gated steps**. **Discover & Prioritise** starts before the
 BRD: the business describes each candidate use case, scores it for value and ease, and
@@ -63,6 +63,8 @@ Starting a new project: `dpf init ../my-workspace` copies the framework and the 
 Design templates, with an empty registry and no example material.
 
 ## How it fits together
+
+![Plain-English Intent + Organisational Context -> Four Synchronised Cloud Outcomes](docs/images/dpf-context-compiler.svg)
 
 | Plane | Decides | Where |
 |---|---|---|
@@ -156,6 +158,8 @@ build digest binds test evidence to exactly this build.
   deployment regions, and emits all seven canonical `ADG-00` Single-Writer Aspect payloads in
   `catalog-registration.json` for continuous run-time enforcement across `ADG-01`–`ADG-05`.
 
+  ![How the Data Product Framework (DPF) and Agentic Governance (AGF) Work Together](docs/images/dpf-agf-symbiosis.svg)
+
 ## Template or example?
 
 | | Paths |
@@ -214,6 +218,7 @@ offline checks cannot see, now fixed; see section 15 of the [user guide](docs/us
 
 | | |
 |---|---|
+| **Technical whitepaper** | [Specification-Driven Data Products on Google Cloud](https://presentation-server-ttw6mmyb7a-uc.a.run.app/p/dpf-whitepaper) |
 | **User guide** | [`docs/user-guide.md`](docs/user-guide.md) |
 | **Define and Design templates** | [`framework/templates/README.md`](framework/templates/README.md): use case, scorecard, prioritisation, BRD or PRD (fillable PDFs); TDD, semantics, manifest and ADR (Markdown and YAML) |
 | **Define worked examples** (filled PDFs) | UC-SALES-001: [use case](examples/sales_performance/define/use-case.pdf), [scorecard](examples/sales_performance/define/scorecard.pdf), [prioritisation](examples/sales_performance/define/prioritisation.pdf), [BRD](examples/sales_performance/define/brd.pdf). The seed's three use cases: [scorecard](examples/use-case-portfolio/scorecard.pdf), [prioritisation](examples/use-case-portfolio/prioritisation.pdf) |
