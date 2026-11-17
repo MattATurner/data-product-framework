@@ -129,41 +129,31 @@
     .is-dimmed { opacity: var(--dim-opacity, 0.22) !important; filter: grayscale(30%); }
     .is-spotlight { opacity: 1 !important; filter: none !important; transform: translateY(-2px); }
 
-    /* Top-Right Floating Palette Selector */
-    #palette-pill {
-      position: fixed; top: 14px; right: 16px; z-index: 95;
-      display: flex; align-items: center; gap: 6px; padding: 6px 10px;
-      border-radius: 999px; background: rgba(15, 23, 42, 0.84);
-      backdrop-filter: blur(10px); color: #F8FAFC; font-size: 11.5px;
-      opacity: 0.35; transition: opacity 0.2s ease;
-    }
-    #palette-pill:hover, body.show-chrome #palette-pill { opacity: 1; }
-    .p-dot {
-      width: 18px; height: 18px; border-radius: 999px;
-      border: 2px solid rgba(255,255,255,0.35); cursor: pointer;
-      transition: transform 0.15s ease, border-color 0.15s ease;
-    }
-    .p-dot.active { transform: scale(1.18); border-color: #FFFFFF; }
-
-    /* Auto-Hiding Bottom Chrome */
+    /* Auto-Hiding Bottom Chrome (Includes Colour Scheme & Paper Controls) */
     #chrome {
       position: fixed; left: 0; right: 0; bottom: 0; height: 48px; padding: 0 32px;
-      background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(10px); color: #F8FAFC;
+      background: rgba(15, 23, 42, 0.90); backdrop-filter: blur(10px); color: #F8FAFC;
       display: flex; align-items: center; justify-content: space-between; z-index: 90;
-      opacity: 0; transform: translateY(8px); pointer-events: none;
-      transition: opacity 0.25s ease, transform 0.25s ease; font-size: 12px;
+      opacity: 0; transform: translateY(10px); pointer-events: none;
+      transition: opacity 0.22s ease, transform 0.22s ease; font-size: 12px;
     }
     body.show-chrome #chrome { opacity: 1; transform: none; pointer-events: auto; }
-    #chrome button {
+    #chrome button.nav-btn {
       background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.18);
       color: #FFFFFF; padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;
     }
-    #chrome button:hover { background: rgba(255, 255, 255, 0.2); }
+    #chrome button.nav-btn:hover { background: rgba(255, 255, 255, 0.2); }
+    #chrome .p-dot {
+      width: 18px; height: 18px; padding: 0; border-radius: 999px;
+      border: 2px solid rgba(255,255,255,0.35); cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    #chrome .p-dot.active { transform: scale(1.18); border-color: #FFFFFF; }
 
     /* Top-Right Speaker Notes Popover */
     #notes {
       display: none; flex-direction: column; gap: 10px; position: fixed;
-      top: 56px; right: 20px; width: 410px; max-height: calc(100vh - 120px);
+      top: 24px; right: 24px; width: 410px; max-height: calc(100vh - 96px);
       overflow-y: auto; background: rgba(15, 23, 42, 0.96); color: #F8FAFC;
       border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 12px;
       padding: 18px 20px; z-index: 98; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
@@ -177,20 +167,7 @@
   <meta name="git-commit" content="7d4155b">
   <meta name="published-at" content="2026-11-17T10:15:01Z">
 </head>
-<body class="show-chrome">
-
-  <!-- Colour Scheme & Paper Selector -->
-  <div id="palette-pill" title="Select Colour Scheme (Keys 1-6) & Paper Surface (T)">
-    <span class="mono" style="margin-right:4px; font-size:10.5px; letter-spacing:0.06em;">SCHEME:</span>
-    <button class="p-dot active" data-p="google" onclick="setPalette('google')" title="1: Google Executive" style="background:conic-gradient(#4285F4 0 90deg,#EA4335 90deg 180deg,#FBBC04 180deg 270deg,#34A853 270deg 360deg)"></button>
-    <button class="p-dot" data-p="azure" onclick="setPalette('azure')" title="2: Maritime Azure" style="background:linear-gradient(135deg,#06213E 50%,#00A3E0 50%)"></button>
-    <button class="p-dot" data-p="emerald" onclick="setPalette('emerald')" title="3: Forest Emerald" style="background:linear-gradient(135deg,#072E26 50%,#00B87C 50%)"></button>
-    <button class="p-dot" data-p="crimson" onclick="setPalette('crimson')" title="4: Charcoal & Crimson" style="background:linear-gradient(135deg,#181E27 50%,#D92D20 50%)"></button>
-    <button class="p-dot" data-p="iris" onclick="setPalette('iris')" title="5: Midnight Iris" style="background:linear-gradient(135deg,#171336 50%,#7C3AED 50%)"></button>
-    <button class="p-dot" data-p="ochre" onclick="setPalette('ochre')" title="6: Nordic Ochre" style="background:linear-gradient(135deg,#182730 50%,#D97706 50%)"></button>
-    <span style="opacity:0.35; margin:0 2px;">|</span>
-    <button onclick="cycleSurface()" id="surf-label" style="background:none; border:none; color:#FFF; font-size:11px; cursor:pointer; font-weight:600;">White (T)</button>
-  </div>
+<body>
 
   <!-- Speaker Notes Card -->
   <div id="notes">
@@ -1038,17 +1015,27 @@
     </div>
   </div>
 
-  <!-- Bottom Auto-Hiding Navigation Chrome -->
+  <!-- Bottom Auto-Hiding Navigation & Scheme Chrome (Hidden unless hovering bottom 64px) -->
   <div id="chrome">
     <div style="display:flex; align-items:center; gap:8px;">
-      <button onclick="show(0,0)" title="Home">⌂</button>
-      <button onclick="prev()" title="Previous (Left Arrow)">← Prev</button>
-      <button onclick="next()" title="Next (Right Arrow / Space)">Next →</button>
+      <button class="nav-btn" onclick="show(0,0)" title="Home">⌂</button>
+      <button class="nav-btn" onclick="prev()" title="Previous (Left Arrow)">← Prev</button>
+      <button class="nav-btn" onclick="next()" title="Next (Right Arrow / Space)">Next →</button>
       <span id="ctr" class="mono" style="margin-left:8px; color:#CBD5E1;">Slide 1 / 12</span>
     </div>
+    <div style="display:flex; align-items:center; gap:7px;">
+      <span class="mono" style="font-size:10.5px; letter-spacing:0.06em; color:#94A3B8;">SCHEME:</span>
+      <button class="p-dot active" data-p="google" onclick="setPalette('google')" title="1: Google Executive" style="background:conic-gradient(#4285F4 0 90deg,#EA4335 90deg 180deg,#FBBC04 180deg 270deg,#34A853 270deg 360deg)"></button>
+      <button class="p-dot" data-p="azure" onclick="setPalette('azure')" title="2: Maritime Azure" style="background:linear-gradient(135deg,#06213E 50%,#00A3E0 50%)"></button>
+      <button class="p-dot" data-p="emerald" onclick="setPalette('emerald')" title="3: Forest Emerald" style="background:linear-gradient(135deg,#072E26 50%,#00B87C 50%)"></button>
+      <button class="p-dot" data-p="crimson" onclick="setPalette('crimson')" title="4: Charcoal & Crimson" style="background:linear-gradient(135deg,#181E27 50%,#D92D20 50%)"></button>
+      <button class="p-dot" data-p="iris" onclick="setPalette('iris')" title="5: Midnight Iris" style="background:linear-gradient(135deg,#171336 50%,#7C3AED 50%)"></button>
+      <button class="p-dot" data-p="ochre" onclick="setPalette('ochre')" title="6: Nordic Ochre" style="background:linear-gradient(135deg,#182730 50%,#D97706 50%)"></button>
+      <button class="nav-btn" onclick="cycleSurface()" id="surf-label" style="margin-left:4px;">White (T)</button>
+    </div>
     <div style="display:flex; align-items:center; gap:8px;">
-      <button onclick="toggleNotes()" title="Speaker Notes (N)">Notes (N)</button>
-      <button onclick="openPresenter()" title="Presenter View (P)">Presenter (P)</button>
+      <button class="nav-btn" onclick="toggleNotes()" title="Speaker Notes (N)">Notes (N)</button>
+      <button class="nav-btn" onclick="openPresenter()" title="Presenter View (P)">Presenter (P)</button>
     </div>
   </div>
 
@@ -1155,9 +1142,13 @@
     });
 
     window.addEventListener('mousemove', e => {
-      document.body.classList.add('show-chrome');
-      clearTimeout(chromeTimer);
-      if (e.clientY < window.innerHeight - 72) chromeTimer = setTimeout(() => document.body.classList.remove('show-chrome'), 2000);
+      if (e.clientY >= window.innerHeight - 64) {
+        clearTimeout(chromeTimer);
+        document.body.classList.add('show-chrome');
+      } else if (document.body.classList.contains('show-chrome')) {
+        clearTimeout(chromeTimer);
+        chromeTimer = setTimeout(() => document.body.classList.remove('show-chrome'), 350);
+      }
     });
 
     document.documentElement.setAttribute('data-palette', curPalette);
