@@ -1466,5 +1466,17 @@ def test_agf_symbiotic_governance_contracts_and_gates(tmp_path):
     assert any("AGF C6: external sharing_listing port 'sales_performance_partner_extract' exposes restricted column(s) customer_email" in m for m in msgs)
 
 
-
+def test_deployment_project_and_region_required_before_build(tmp_path):
+    _clone_workspace(tmp_path)
+    twin_ws = Workspace(tmp_path)
+    p = twin_ws.product("sales_performance")
+    for field in ("gcp_project", "region"):
+        p.manifest["deployment"][field] = "  "
+        assert twin_ws.validate(p.manifest, "product-manifest.v1") != []
+        b = build(p)
+        assert not b.ok
+        assert any(field in prob for prob in b.problems)
+        p.manifest["deployment"][field] = "us-central1" if field == "region" else "valid-gcp-project"
+    b_ok = build(p)
+    assert b_ok.ok, b_ok.problems
 

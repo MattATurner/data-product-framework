@@ -89,6 +89,12 @@ def build(p: Product, engine: str | None = None, env: str | None = None,
     """Render the whole build in memory. Never writes."""
     b = Build(product=p, engine=engine, env=env)
     q = retarget_env(p, env) if env else p
+    dep = q.manifest.get("deployment") or {}
+    missing_dep = [k for k in ("gcp_project", "region") if not isinstance(dep.get(k), str) or not dep.get(k, "").strip()]
+    if missing_dep:
+        b.ok = False
+        b.problems.append(f"deployment requires non-empty {', '.join(missing_dep)} before build")
+        return b
     q = retarget(q, engine) if engine and engine != declared_engine(q) else q
     r = Report(quiet=True, stream=io.StringIO())
     ok, dag = compose(q, r, write=False)

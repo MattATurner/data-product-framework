@@ -1,7 +1,7 @@
 {
   "product_id": "sales_performance",
   "version": "1.2.0",
-  "artefact_digest": "sha256:8627edf8939b49dc20dc834d3d5c517070ca39dd0de2b5dd88142157d44069b5",
+  "artefact_digest": "sha256:5bcf85b2db3cd0128048af4a4af7ae3803eb8dbaa4678f051ccb60953e90e3e8",
   "targets": [
     "lookml"
   ],

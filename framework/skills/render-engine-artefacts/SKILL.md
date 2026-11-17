@@ -36,6 +36,10 @@ dpf generate --all --check        # diff against tests/golden/ (CI)
 | `observability/` | observability policy and data quality scan specs |
 | `MANIFEST.json` | digest of every file plus the build digest evidence is bound to |
 
+## Pre-build check
+
+- Before generating or deploying artefacts, confirm with the user which **GCP project ID** (`deployment.gcp_project`) and **region** (`deployment.region`) the assets will be deployed to (in `product.yaml` or `--env <env>`). Both fields are required and must be non-empty before build (`dpf generate` and `dpf check` enforce this).
+
 Never edit `generated/` by hand. Change the manifest, SQL bodies or packs and regenerate.
 When `products/<product>/sql/*.sql` or `products/<product>/acceptance.yaml` changed, run Pass G3
 of `.agents/skills/goldfish-verify` in a fresh subagent before accepting `--update-golden` to

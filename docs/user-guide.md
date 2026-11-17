@@ -879,7 +879,7 @@ capability that requires it (`implements`). G1 fails an element that cites neith
 | `product_id`, `version`, `status`, `owner`, `steward`, `domain`, `classification` | identity and ownership. `status` is `draft`, `provisional`, `published` or `deprecated` | validate |
 | `registry_overlay` | an optional registry overlay folder | – |
 | `specs`, `brd_id`, `tdd_id`, `satisfies`, `adrs`, `acceptance` | links to the specs. `satisfies` must equal the current BRD id and version | G1 |
-| `deployment` | `gcp_project`, `region`, and one dataset per purpose: `raw`, `staging`, `silver`, `gold`, `share`, `assertions`, `control` | G3 |
+| `deployment` | non-empty `gcp_project`, `region` (confirmed before design/build), and one dataset per purpose: `raw`, `staging`, `silver`, `gold`, `share`, `assertions`, `control` | proto, G1, G3 |
 | `sources` | `system_id`, `engine`, `capture_mode`, watermark settings, `schedule`, `entities` | G1, G2 |
 | `layers.<layer>` | `methodology`, `engine`, `storage`, `models` for `raw`, `staging`, `silver`, `gold` | G1, G2 |
 | `output_ports` | `model`, `type`, `access` (`dataset_grant`, `authorized_view`, `sharing_listing`), `consumers`, `sharing` | G1 |

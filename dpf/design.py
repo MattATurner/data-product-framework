@@ -78,6 +78,7 @@ def check_prototype(p: Product, report: Report) -> None:
     _ports(p, g, report)
     _upstream(p, g, report)
     _semantic_layer(p, g, report)
+    _deployment(man, report)
     _references(p, g, report)
     _staging(p, g, report)
     _operability(p, g, report)
@@ -128,6 +129,7 @@ def check_design(p: Product, report: Report) -> None:
     _ports(p, g, report)
     _upstream(p, g, report)
     _semantic_layer(p, g, report)
+    _deployment(man, report)
     _references(p, g, report)
     _brd_derivations(p, g, report)
     _agf_governance(p, g, report)
@@ -536,6 +538,15 @@ def _semantic_layer(p: Product, g: ProductGraph, report: Report) -> None:
                             f"dashboard '{dname}' tile '{tid}': references raw non_additive measure '{mf}' directly; "
                             "define a derived or ratio metric instead"
                         )
+
+
+def _deployment(man: dict, report: Report) -> None:
+    """Verify deployment.gcp_project and deployment.region are non-empty before build."""
+    dep = man.get("deployment") or {}
+    for key in ("gcp_project", "region"):
+        val = dep.get(key)
+        if not isinstance(val, str) or not val.strip():
+            report.fail(f"deployment.{key} is required and must be a non-empty string before build")
 
 
 def _references(p: Product, g: ProductGraph, report: Report) -> None:

@@ -158,10 +158,16 @@
       "additionalProperties": false,
       "properties": {
         "gcp_project": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-z][a-z0-9-]+$",
+          "description": "Target GCP project ID where the data product assets are deployed."
         },
         "region": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-z][a-z0-9-]+$",
+          "description": "Target GCP region (or multi-region) where datasets, Dataform, and Terraform resources are deployed."
         },
         "datasets": {
           "type": "object",

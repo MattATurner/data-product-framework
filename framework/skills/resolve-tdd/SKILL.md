@@ -28,7 +28,8 @@ Roughly two thirds is mechanical; the rest is engineering judgement and gets an 
 
 ## Steps
 
-1. `dpf tdd resolve <product>` prints the derivations (`registry/brd-rubric.yaml`) and the
+1. Ask the user for the target **GCP project ID** (`deployment.gcp_project`) and **region** (`deployment.region`) where the product's assets will be deployed (never copy an example placeholder such as `data-product-framework` or `example-dpf-dev` for a real product).
+2. `dpf tdd resolve <product>` prints the derivations (`registry/brd-rubric.yaml`) and the
    methodology recommendation from the BRD signals.
 2. Select methodology per layer (default `direct`), then engine and storage. Record any
    departure from `registry/platform-defaults.yaml` in an ADR listed in `product.yaml`.
