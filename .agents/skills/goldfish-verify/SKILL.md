@@ -37,7 +37,7 @@ artefacts under test and **none** of the conversation that produced them.
 ## Hard isolation rules
 
 1. **Always use a fresh subagent.** Spawn a new subagent context (`invoke_subagent` in
-   Antigravity / Jetski—setting `Model: "flash"` where workspace subagent rules require it—or
+   Antigravity / Gemini CLI—setting `Model: "flash"` where workspace subagent rules require it—or
    `Task` in Claude Code). Never simulate a Goldfish inside the session that drafted the BRD,
    TDD, manifest or SQL; if the host cannot create fresh subagents, stop and report that
    stateless verification was skipped.

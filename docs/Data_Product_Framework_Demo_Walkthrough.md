@@ -233,9 +233,9 @@ Use these concise sequences at the podium when driving the demonstration live.
 
 ## Summary of Companion Demo Assets
 
-1. Executive Consultancy Slide Deck: Live on the Presentation Server at /p/dpf-consultancy-overview (and locally at docs/presentation/dpf-consultancy-overview.html).
+1. Executive Consultancy Slide Deck: Located at docs/presentation/dpf-consultancy-overview.html (or {presentation_server_url}/p/dpf-consultancy-overview when a Presentation Server URL is configured on first run in agent-config.json).
 
-2. Interactive Functional Hierarchy Diagram (DPF-00): Live on the FHD Server at /fhd-server?cap=DPF (toggle to the Implementation lens to inspect CLI entrypoints).
+2. Interactive Functional Hierarchy Diagram (DPF-00): Located at docs/fhd/dpf-data-product-framework-fhd.html (toggle to the Implementation lens to inspect CLI entrypoints).
 
 3. Filled Define-Stage PDF Forms: Located in examples/sales_performance/define (use-case.pdf, scorecard.pdf, prioritisation.pdf, and brd.pdf).
 

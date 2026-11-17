@@ -2,7 +2,7 @@
 
 Canonical 6-pillar functional decomposition (DPF-00) of the Data Product Framework, ordered left-to-right across the 6 human-gated steps and mapped directly to the repository paths that implement each capability.
 
-Live interactive FHD viewer: [DPF-00 on FHD Server](https://fhd-server-ttw6mmyb7a-uc.a.run.app/fhd-server?cap=DPF) (toggle to the Implementation lens `?lens=impl` to inspect entrypoints and CLI commands).
+Interactive FHD viewer: [`dpf-data-product-framework-fhd.html`](dpf-data-product-framework-fhd.html) (open from disk, or `{fhd_server_url}/fhd-server?cap=DPF` when `fhd_server_url` is configured in `agent-config.json`; toggle to the Implementation lens `?lens=impl` to inspect entrypoints and CLI commands).
 
 | UID | Capability / Module | Node Type | Impl Mode | Repository Entrypoint | One-Line Responsibility |
 | :--- | :--- | :---: | :---: | :--- | :--- |

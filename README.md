@@ -219,7 +219,7 @@ offline checks cannot see, now fixed; see section 15 of the [user guide](docs/us
 
 | | |
 |---|---|
-| **Technical whitepaper** | [Specification-Driven Data Products on Google Cloud](https://presentation-server-ttw6mmyb7a-uc.a.run.app/p/dpf-whitepaper) |
+| **Technical whitepaper** | [`docs/presentation/dpf-whitepaper.html`](docs/presentation/dpf-whitepaper.html) (open from disk, or `{presentation_server_url}/p/dpf-whitepaper` when configured in `agent-config.json`) |
 | **User guide** | [`docs/user-guide.md`](docs/user-guide.md) |
 | **Define and Design templates** | [`framework/templates/README.md`](framework/templates/README.md): use case, scorecard, prioritisation, BRD or PRD (fillable PDFs); TDD, semantics, manifest and ADR (Markdown and YAML) |
 | **Define worked examples** (filled PDFs) | UC-SALES-001: [use case](examples/sales_performance/define/use-case.pdf), [scorecard](examples/sales_performance/define/scorecard.pdf), [prioritisation](examples/sales_performance/define/prioritisation.pdf), [BRD](examples/sales_performance/define/brd.pdf). The seed's three use cases: [scorecard](examples/use-case-portfolio/scorecard.pdf), [prioritisation](examples/use-case-portfolio/prioritisation.pdf) |
@@ -228,7 +228,7 @@ offline checks cannot see, now fixed; see section 15 of the [user guide](docs/us
 | Design narrative | [`docs/data-product-framework-plan.md`](docs/data-product-framework-plan.md) |
 | Connecting an on-premises source | [`docs/local-source-connectivity.md`](docs/local-source-connectivity.md) |
 | Agent rules | [`openspec/AGENTS.md`](openspec/AGENTS.md) |
-| Functional Hierarchy (`DPF-00`) | [`docs/fhd/DPF_Functional_Hierarchy_Dictionary.md`](docs/fhd/DPF_Functional_Hierarchy_Dictionary.md), [`docs/fhd/dpf-data-product-framework-fhd.html`](docs/fhd/dpf-data-product-framework-fhd.html) (open from disk), or live [FHD Server (`?cap=DPF`)](https://fhd-server-ttw6mmyb7a-uc.a.run.app/fhd-server?cap=DPF) |
+| Functional Hierarchy (`DPF-00`) | [`docs/fhd/DPF_Functional_Hierarchy_Dictionary.md`](docs/fhd/DPF_Functional_Hierarchy_Dictionary.md) and [`docs/fhd/dpf-data-product-framework-fhd.html`](docs/fhd/dpf-data-product-framework-fhd.html) (open from disk) |
 | Decisions | [`docs/adr/`](docs/adr/README.md) |
 
 ## Repository structure & `DPF-00` capability map
