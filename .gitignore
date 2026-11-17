@@ -9,11 +9,12 @@ generated/**
 *.log
 examples/*/seed/out/
 
-# Terraform working state (the example wrapper is applied from a checkout)
+# Terraform working state (bootstrap and example wrappers are applied from a checkout)
 .terraform/
 *.tfstate
 *.tfstate.*
 terraform.tfvars
+tf-output.json
 # Provider locks: a lock made from a local plugin directory holds one platform's hash and
 # breaks `terraform init` elsewhere. Commit one only after `terraform providers lock`.
 .terraform.lock.hcl

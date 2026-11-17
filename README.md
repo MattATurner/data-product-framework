@@ -59,8 +59,9 @@ dpf eval                                    # 26 behavioural evals
 make ci                                     # what CI runs
 ```
 
-Starting a new project: `dpf init ../my-workspace` copies the framework and the Define and
-Design templates, with an empty registry and no example material.
+Starting a new project:
+- **GitHub Template + Layer-0 Terraform bootstrap (recommended)**: click **Use this template** on GitHub (see [`Using-This-Template.md`](Using-This-Template.md)), then run `source deploy.sh` (creates a new Google Cloud project, enables APIs, provisions service identities and Dataform/monitor service accounts via keyless impersonation, and hydrates `agent-config.json` + `registry/platform-defaults.yaml`), or `./deploy-use-existing-project-non-org-admin.sh --project-id <id>` to attach to an existing customer project. Pass `--clean-examples` (or `./clean-up.sh --strip-examples`) to strip worked examples for a blank customer repo.
+- **Local scaffold**: `dpf init ../my-workspace` copies the framework, Layer-0 bootstrap scripts, agent routing files (`AGENTS.md`), and the Define and Design templates into a fresh directory with no example material.
 
 ## How it fits together
 

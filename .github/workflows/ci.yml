@@ -60,6 +60,13 @@ jobs:
           terraform_version: "1.9.8"
       - name: Install pinned dbt toolchain (.github/requirements/dbt.txt, hash-checked)
         run: pip install --require-hashes -r .github/requirements/dbt.txt
+      - name: Terraform fmt and validate (Layer-0 bootstrap)
+        run: |
+          if [ -d "bootstrap/terraform" ]; then
+            terraform -chdir="bootstrap" fmt -check -recursive -diff
+            terraform -chdir="bootstrap/terraform" init -backend=false -input=false >/dev/null
+            terraform -chdir="bootstrap/terraform" validate
+          fi
       - name: Terraform fmt and validate (golden copies)
         run: |
           for d in tests/golden/*/terraform; do
@@ -68,13 +75,15 @@ jobs:
             terraform -chdir="$d" init -backend=false -input=false >/dev/null
             terraform -chdir="$d" validate
           done
+      - name: Set up dpf virtualenv for artefact checks
+        run: |
+          python -m venv .dpf-venv
+          .dpf-venv/bin/pip install --require-hashes -r .github/requirements/dev.txt
+          .dpf-venv/bin/pip install --no-deps -e .
       - name: Terraform validate (example wrapper around the freshly generated module)
         run: |
           w=examples/sales_performance/terraform
           [ -d "$w" ] || exit 0
-          python -m venv .dpf-venv
-          .dpf-venv/bin/pip install --require-hashes -r .github/requirements/dev.txt
-          .dpf-venv/bin/pip install --no-deps -e .
           .dpf-venv/bin/dpf generate sales_performance
           terraform -chdir="$w" fmt -check -diff
           terraform -chdir="$w" init -backend=false -input=false >/dev/null

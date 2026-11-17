@@ -1,0 +1,15 @@
+{
+  "description": "Auto-populated by deploy.sh after Layer-0 Terraform bootstrap. Read by coding agents and DPF scripts.",
+  "gcp_project_id": "{project_id}",
+  "gcp_project_number": "{project_number}",
+  "bigquery_region": "us-central1",
+  "knowledge_catalog_region": "us-central1",
+  "business_timezone": "Australia/Perth",
+  "deployment_service_account": "dpf-deployer@{project_id}.iam.gserviceaccount.com",
+  "dataform_service_account": "dataform-runner@{project_id}.iam.gserviceaccount.com",
+  "monitor_service_account": "dpf-monitor@{project_id}.iam.gserviceaccount.com",
+  "default_dataform_repository": "sales-performance",
+  "state_bucket": "{project_id}-dpf-state",
+  "presentation_server_url": "",
+  "fhd_server_url": ""
+}
