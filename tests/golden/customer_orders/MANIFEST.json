@@ -2,14 +2,14 @@
   "product_id": "customer_orders",
   "engine": "dataform",
   "dpf_version": "0.3.0",
-  "build_digest": "sha256:ea95f4f7c03b5a34ade725e5c17990606a9fe4aa688c25763575e5420324e234",
+  "build_digest": "sha256:51b951981cebe28fe84817d86cc9d50cf98622c6204fc29f9f5824da816d3c0c",
   "files": {
-    "README.md": "sha256:15a9e6e6e8b77ef31f45e7b1bb9e8625dc2fdcecc26b39d68810ae45cce005ae",
+    "README.md": "sha256:1ae7a87901524fcb23f43f809ea309beb4ca4ab201dda424fb5d413d36d4682d",
     "catalog-registration.json": "sha256:b330531c4586240fba6021e41106d2d785af09b2737a28c74b74a84c49076485",
     "dag.json": "sha256:cba1fb8061594c22b5ad6bbb083a359ef136b571e314363387c3f26cece74b7a",
     "dag.md": "sha256:891358ecc18a30513e76268f83d1b538f4696303738acdb4897969d35d5dc593",
     "data-product.json": "sha256:771b5034b6da06cf2fd30caf2d726d4d4800093abf295d1c6ecdadb4ce9b39e3",
-    "dataform/GEMINI.md": "sha256:71679880ed033f379afd4c1b0665b1037e4951654a5bc1799dfa6ca34d0d187f",
+    "dataform/GEMINI.md": "sha256:635c78a58609611a3b435b4e84f1d937e63990bdf7ca8d0efae49954417d570a",
     "dataform/definitions/assertions/acceptance_at_1.sqlx": "sha256:805303d9894efc2432e77e3b20aeb1ad1d3dace12ccaf83721c893e8849451de",
     "dataform/definitions/assertions/acceptance_at_2.sqlx": "sha256:23740aa739f28aa2fe27d89c43f3bc8548ce26c988ba3e4bcb942fe83eaf38f3",
     "dataform/definitions/assertions/acceptance_at_3.sqlx": "sha256:bb38d8d8fa73721f18d6b62993d0ee5db6685d49e2e43d8d08bf00b7bf0a4ae3",
@@ -55,6 +55,6 @@
     "terraform/outputs.tf": "sha256:f9264136c0cb89d8484dcca55a72635b44ad240e61689111de97ba4f78da8983",
     "terraform/variables.tf": "sha256:b043e84ac5d6450ee4c49084a5e67ac04bf0c0061d2a355fccd5b527886d7284",
     "terraform/versions.tf": "sha256:9f235306521de3fd81e20671419ebfbed11f9303b26f5229c0cd31edcd898357",
-    "test-spec.json": "sha256:feaf6dd6ba8d855a73ce3637b05a5da452780ca5895b22e2fd7ccfea36456bb5"
+    "test-spec.json": "sha256:19f5af04a8991e5379d1b44174a160103fb935ca3c13e8c8ba3f3fc1da74be54"
   }
 }

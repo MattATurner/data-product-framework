@@ -2,7 +2,7 @@
 #
 # Every resource is generated: run `dpf generate sales_performance` first, which writes the
 # module to generated/sales_performance/terraform/. This wrapper only configures providers
-# and passes inputs, so a change to the product is a change to products/sales_performance/,
+# and passes inputs, so a change to the product is a change to examples/sales_performance/,
 # never to Terraform written by hand.
 
 terraform {

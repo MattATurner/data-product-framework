@@ -3,7 +3,7 @@
 This directory is a **wrapper**. Every resource comes from the module that `dpf generate`
 writes to `generated/sales_performance/terraform/`; this root module only configures the
 `google` and `google-beta` providers and passes inputs. To change the infrastructure, change
-`products/sales_performance/product.yaml` (or a generator) and regenerate. Never edit the
+`examples/sales_performance/product.yaml` (or a generator) and regenerate. Never edit the
 generated files.
 
 ```bash

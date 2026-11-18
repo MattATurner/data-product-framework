@@ -333,7 +333,7 @@
                 "provisioned_via": "framework/templates/define/4-brd.pdf · openspec/specs/products/",
                 "runtime": "Human Review & Git Approval",
                 "trigger": "Completion of Gate G0 Validation",
-                "entrypoint": "openspec/specs/products/sales/sales-performance/brd/spec.md",
+                "entrypoint": "examples/sales_performance/specs/brd/spec.md",
                 "command": "dpf check sales_performance --gate describe"
               }
             },
@@ -553,7 +553,7 @@
                 "provisioned_via": "dpf/cli.py · framework/contracts/signoff.v1.schema.json",
                 "runtime": "Python CLI + Git",
                 "trigger": "dpf signoff <product> --by <name> --role business_owner",
-                "entrypoint": "openspec/specs/products/sales/sales-performance/tdd/signoff.yaml",
+                "entrypoint": "examples/sales_performance/specs/tdd/signoff.yaml",
                 "command": "dpf signoff sales_performance --by 'Sales Ops' --role business_owner"
               },
               "crud_entities": [
@@ -598,7 +598,7 @@
                 "provisioned_via": "dpf tdd playback <product>",
                 "runtime": "Human Review & CLI Sign-Off",
                 "trigger": "Gate G1 Design Completion",
-                "entrypoint": "openspec/specs/products/sales/sales-performance/tdd/semantics.md",
+                "entrypoint": "examples/sales_performance/specs/tdd/semantics.md",
                 "command": "dpf tdd playback sales_performance"
               }
             },
@@ -1171,7 +1171,7 @@
                 "provisioned_via": "dpf/testing.py · evidence/",
                 "runtime": "Git / Object Evidence Store",
                 "trigger": "dpf test run / dpf test attest",
-                "entrypoint": "examples/evidence/sales_performance/",
+                "entrypoint": "examples/sales_performance/evidence/",
                 "command": "dpf trace sales_performance"
               },
               "crud_entities": [

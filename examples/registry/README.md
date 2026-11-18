@@ -8,7 +8,7 @@ These files are the registry content the two worked examples need. You do **not*
 them. Each example product names this folder in its manifest:
 
 ```yaml
-# products/sales_performance/product.yaml
+# examples/sales_performance/product.yaml
 registry_overlay: examples/registry
 ```
 

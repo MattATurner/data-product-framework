@@ -51,7 +51,7 @@ tests/evals/<eval-id>/
 id: grain-violation
 asserts: When the manifest's grain drifts from the grain decided in the TDD, G1 fails; it never warns.
 mutate:                                   # applied in order to the temporary copy
-  - set: {file: products/sales_performance/product.yaml,
+  - set: {file: examples/sales_performance/product.yaml,
           path: "layers.silver.models[name=fct_order_line].grain_columns", value: [order_id]}
 run: {command: check, product: sales_performance, gate: G1}
 expect:

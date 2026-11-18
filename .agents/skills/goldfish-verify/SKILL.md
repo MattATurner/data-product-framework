@@ -56,10 +56,11 @@ Run after `dpf brd validate <product>` passes mechanically, when the BRD was co-
 edited in a multi-turn session.
 
 - **Goldfish may read:**
-  - `openspec/specs/products/<domain>/<product>/brd/spec.md` and `brd.yaml`
+  - `openspec/specs/products/<domain>/<product>/brd/spec.md` and `brd.yaml` (or
+    `examples/<product>/specs/brd/spec.md` and `brd.yaml` for worked examples)
   - `registry/brd-rubric.yaml`, `registry/brd-vocabulary.yaml` and `registry/glossary.yaml`
-    (plus any `registry_overlay` glossary)
-- **Goldfish must NOT read:** `tdd/`, `products/<product>/`, `examples/`, `generated/`, or
+    (plus any `registry_overlay` glossary such as `examples/registry/glossary.yaml`)
+- **Goldfish must NOT read:** `tdd/` (`specs/tdd/`), `product.yaml`, `sql/`, `generated/`, or
   chat history.
 - **Goldfish checks:**
   1. Figures or terms whose calculation, exclusion rule or denominator could mean two things to
@@ -80,13 +81,13 @@ running `dpf signoff`.
 
 - **Step 1 — Blind Goldfish reconstruction:**
   - **Goldfish may read ONLY:**
-    - `products/<product>/product.yaml`
-    - `products/<product>/sql/*.sql` (if any)
-    - `products/<product>/lookml/*.lookml` (if any)
+    - `products/<product>/product.yaml` (or `examples/<product>/product.yaml` for worked examples)
+    - `products/<product>/sql/*.sql` (or `examples/<product>/sql/*.sql`, if any)
+    - `products/<product>/lookml/*.lookml` (or `examples/<product>/lookml/*.lookml`, if any)
     - `registry/platform-defaults.yaml`, `registry/foundations.yaml` and `registry/glossary.yaml`
       (plus `registry_overlay`)
-  - **Goldfish must NOT read:** `openspec/specs/` (`brd/` and `tdd/`, including
-    `playback.md` / `semantics.md`), `products/<product>/acceptance.yaml`, or chat history.
+  - **Goldfish must NOT read:** `openspec/specs/` or `examples/<product>/specs/` (`brd/` and
+    `tdd/`, including `playback.md` / `semantics.md`), `acceptance.yaml`, or chat history.
   - **Prompt task:** Restate in plain business English (zero SQL, cloud or modelling jargon)
     what this data product actually delivers: one row per what, how historical changes and
     as-at joins behave (including start-of-day or go-live cut-offs), what gets quarantined or
@@ -111,11 +112,11 @@ whenever `products/<product>/sql/*.sql`, `products/<product>/acceptance.yaml` or
 changed.
 
 - **Goldfish may read ONLY:**
-  - `products/<product>/product.yaml` and `products/<product>/acceptance.yaml`
-  - `products/<product>/sql/*.sql`
-  - `generated/<product>/` (`dataform/` or `dbt/`, `terraform/`, `test-spec.json`)
-- **Goldfish must NOT read:** `openspec/specs/products/*/brd/`, `tests/golden/`, or chat
-  history.
+  - `products/<product>/product.yaml` and `acceptance.yaml` (or `examples/<product>/...`)
+  - `products/<product>/sql/*.sql` (or `examples/<product>/sql/*.sql`)
+  - `generated/<product>/` (`dataform/` or `dbt/`, `terraform/`, `semantic_layer/`, `test-spec.json`)
+- **Goldfish must NOT read:** `openspec/specs/products/*/brd/`, `examples/*/specs/brd/`,
+  `tests/golden/`, or chat history.
 - **Goldfish checks (offline blind spots `compile`, `parse` and `validate` miss):**
   1. **Dialect & execution traps:** `SELECT` alias collisions inside `GROUP BY` / `HAVING` /
      `QUALIFY` (such as aggregate-of-aggregate errors in BigQuery), unsafe casts, or timezone

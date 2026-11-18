@@ -1,8 +1,8 @@
 # product.yaml template · Design stage · Data Product Framework
 #
 # The resolved design (contract product-manifest.v1), written from the TDD. Save it as
-# products/<product_id>/product.yaml. Worked examples: products/customer_orders/product.yaml
-# (simple, direct only) and products/sales_performance/product.yaml (silver layer, history,
+# products/<product_id>/product.yaml. Worked examples: examples/customer_orders/product.yaml
+# (simple, direct only) and examples/sales_performance/product.yaml (silver layer, history,
 # masking and a sharing listing).
 #
 # Rules that G1 checks:

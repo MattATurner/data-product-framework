@@ -395,6 +395,13 @@ class Product:
         self.dir = path.parent
         self.active_env: str | None = None
 
+    @property
+    def rel_dir(self) -> str:
+        try:
+            return self.dir.relative_to(self.ws.root).as_posix()
+        except ValueError:
+            return f"products/{self.id}"
+
     @cached_property
     def manifest(self) -> dict:
         return load_yaml(self.path)

@@ -22,7 +22,7 @@ it needs bespoke code (tool tier 5). Then:
 
 A methodology departure needs `decides: methodology`, because G1 looks for it. Bespoke code
 must say why tiers 1 to 4 (MCP servers, managed agents and APIs, SDKs) do not work. The
-worked examples are in products/sales_performance/adr/.
+worked examples are in examples/sales_performance/adr/.
 
 Replace every {placeholder} below and every <placeholder> in the front matter. The front
 matter is YAML, where a value that starts with a brace is read as a mapping. Delete these

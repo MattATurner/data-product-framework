@@ -11,8 +11,8 @@ dpf generate sales_performance          # writes generated/sales_performance/dat
 |---|---|
 | `generated/sales_performance/dataform/` | the project to push to the Dataform repository (gitignored, regenerate at will) |
 | `tests/golden/sales_performance/dataform/` | the reviewed golden copy; `dpf generate --check` fails if a build differs |
-| `products/sales_performance/sql/` | the authored SQL bodies (business logic only, no config) |
-| `products/sales_performance/product.yaml` | grain, keys, history, quality rules, schedules, governance |
+| `examples/sales_performance/sql/` | the authored SQL bodies (business logic only, no config) |
+| `examples/sales_performance/product.yaml` | grain, keys, history, quality rules, schedules, governance |
 
 The generated project contains 4 raw declarations, 18 models and helper views (staging
 candidates, history and reject views; Type 2 dimensions; the transaction fact; gold views)

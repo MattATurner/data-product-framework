@@ -2,14 +2,14 @@
   "product_id": "sales_performance",
   "engine": "dataform",
   "dpf_version": "0.3.0",
-  "build_digest": "sha256:ce83868767b243cbff3e828cffbb5e85be235319c47c9cfe10cd320cef140a1e",
+  "build_digest": "sha256:0d3b3ae6553295570e9a41fdf5a4007138f10613a060390a4610098ab3b76b52",
   "files": {
-    "README.md": "sha256:8a181d3d3a0059fe5ff0218c884048b9a62e4f7373a8fcf7336d11f37e208223",
+    "README.md": "sha256:92180bfb3cce60727bc46d15c8c3014c01c72d6b2a635e97ad0548d9ddc384a4",
     "catalog-registration.json": "sha256:a627baca139da0b3dc4bd5baadfbece4cc1c5b686c9d3777c7a91e22780a096e",
     "dag.json": "sha256:34661bcb4f4b77c56546249ceca9593f2766e10abb25a07abf7664249cd3dd8b",
     "dag.md": "sha256:f90de2454556f048a595b718f739d4af3c69636594d5724e9e53d747d2135816",
     "data-product.json": "sha256:96498934bb569cf84e3164dc9a86a7c1b03cf53b75c76948c738a58e22c008c2",
-    "dataform/GEMINI.md": "sha256:e321a706721b11d4105f8a62be9430a914e6b14dd5cfc8b3ca8650716848f56f",
+    "dataform/GEMINI.md": "sha256:2af857ba76b067bfa8817446da1f60511f2d4bd47f8d115ca32299bac62f3e58",
     "dataform/definitions/assertions/acceptance_at_1.sqlx": "sha256:501a51ec11c43bbbe34b90e2f9e7484256923614c351bc00fb3b7101ab5ed1c3",
     "dataform/definitions/assertions/acceptance_at_2.sqlx": "sha256:df53824e1f65a66a7193282d31a29a240654c0459cd752a2e98cf03ffc029db3",
     "dataform/definitions/assertions/acceptance_at_3.sqlx": "sha256:124ff6365cc53d8f0afa7dc9f54a7f3b32828bcf8cfebd3c7999b4e0ff8a3973",
@@ -75,7 +75,7 @@
     "raw/raw_order_lines.json": "sha256:edcad9d7d88ec88580cf1d277083244880dd844257a2d99a71259a4a8edde5e4",
     "raw/raw_orders.json": "sha256:82052b76c93c5252e232692d12b366217854be216eaa154e61733ce694168e57",
     "raw/raw_products.json": "sha256:1f06e6eaa3845fb4caa661b18da9bc8dd886e73dd69809670f8ee47b97adb348",
-    "semantic-layer.json": "sha256:b40bdd8474ea8cd0929de3f670990ee6046131ed58970d38c71aace451544b63",
+    "semantic-layer.json": "sha256:b27fd406a896a6835c9c19c7e5041fa994b953942d2205fc4023a21e73fbb6ab",
     "semantic/dim_customer.json": "sha256:1b8b05e7e775955f5caf050791f99a7f7eef48733cf9f299ff7ff7444fadf21f",
     "semantic/dim_date.json": "sha256:32c9400e92da0471a4bb1db78a78183321158f2df1ae37960d199dad190a03a7",
     "semantic/dim_product.json": "sha256:edd13922e5a3c4ca1402671c4871c88bb8610d27fa8edbd88ad690b0d1b77dc4",
@@ -83,7 +83,7 @@
     "semantic/sales_order_line_detail.json": "sha256:9e5b9c9e147dcb08fb18d574f1e911853a4c54984847bafedbc3c027b5b02d5f",
     "semantic/sales_performance_monthly.json": "sha256:7783375d2d282bdf30ff24325c45e33cd65253b55018993d5d7527161c9af5ca",
     "semantic/sales_performance_partner_extract.json": "sha256:737218769cd0d1902286f455b035a454d4962667fe5a517aa382f857ff92756f",
-    "semantic_layer/lookml/GEMINI.md": "sha256:6a51a9cc7ba8fc33d08d0ccb84837eeda7072b66ed50a42e5184cfdab8be4f44",
+    "semantic_layer/lookml/GEMINI.md": "sha256:75c1e238f2962f9785961ac3cee8c16cba076ef832b3c184cf36e40f717e6359",
     "semantic_layer/lookml/dashboards/executive_sales_pulse.dashboard.lookml": "sha256:4745c0d052d1b32453b0b253fab7e6542531b568fa197cbddb88a751a1626e95",
     "semantic_layer/lookml/explores/order_lines.explore.lkml": "sha256:6b90b0fe7614a0be5e023651e4f15e9e44a9be20e3a3532081639aec4a34d6b9",
     "semantic_layer/lookml/manifest.lkml": "sha256:eed20eb1839cdbb7b4c288f8d4e80c802a6f306d90e7edca5bb2c9a3a372c088",
@@ -110,6 +110,6 @@
     "terraform/sharing.tf": "sha256:f9027b748f728ed073eb036136a335842eb6524fc6613d57789c2d1bbb102afd",
     "terraform/variables.tf": "sha256:e1acc68138ccaf0fd21c94ef2d0494632554568a559c31a4083d0061e7acbb53",
     "terraform/versions.tf": "sha256:f0454f82fdf69e5266369e722396c7c6740de3b316bc414d007528ba835685e6",
-    "test-spec.json": "sha256:36484a7ae123024893c498b92522dcaeb73e5a3ff4c138c09e1d78fa05562b2c"
+    "test-spec.json": "sha256:8fdc4c273832603f06a2238d3ab264d8b2a77eddebe5f7a381104e05b53ccfa7"
   }
 }

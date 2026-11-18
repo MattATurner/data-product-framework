@@ -6,7 +6,7 @@
 
 How the customer orders product is built. One source, one consumer group and current state
 only, so the design stays deliberately simple. The resolved design is
-`products/customer_orders/product.yaml`.
+`examples/customer_orders/product.yaml`.
 
 ## Requirements
 

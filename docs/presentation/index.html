@@ -918,29 +918,29 @@ a.badge-inline:hover { border-color: var(--primary); color: var(--primary); }
         <div class="icon blue"><svg class="ico"><use href="#i-doc"/></svg></div>
         <h3>Technical design</h3>
         <p class="p-lg">One decision for each design area, citing its requirements</p>
-        <div class="pills"><a class="badge-inline" href="https://github.com/MattATurner/data-product-framework/blob/main/templates/design/tdd-spec.md" target="_blank" rel="noopener" title="Open the blank template">tdd-spec.md</a></div>
-        <a class="ex" href="https://github.com/MattATurner/data-product-framework/blob/main/openspec/specs/products/sales/sales-performance/tdd/spec.md" target="_blank" rel="noopener" data-build="1"><span class="eyebrow">Worked example</span><span class="ex-t">TDD-SALES-002 &#8599;</span><span class="ex-d">18 decisions</span></a>
+        <div class="pills"><a class="badge-inline" href="https://github.com/MattATurner/data-product-framework/blob/main/framework/templates/design/tdd-spec.md" target="_blank" rel="noopener" title="Open the blank template">tdd-spec.md</a></div>
+        <a class="ex" href="https://github.com/MattATurner/data-product-framework/blob/main/examples/sales_performance/specs/tdd/spec.md" target="_blank" rel="noopener" data-build="1"><span class="eyebrow">Worked example</span><span class="ex-t">TDD-SALES-002 &#8599;</span><span class="ex-d">18 decisions</span></a>
       </div>
       <div class="card dz acc-green">
         <div class="icon green"><svg class="ico"><use href="#i-pen"/></svg></div>
         <h3>Business playback</h3>
         <p class="p-lg">The design in business words, signed by the business owner</p>
-        <div class="pills"><a class="badge-inline" href="https://github.com/MattATurner/data-product-framework/blob/main/templates/design/semantics.md" target="_blank" rel="noopener" title="Open the blank template">semantics.md</a></div>
-        <a class="ex" href="https://github.com/MattATurner/data-product-framework/blob/main/openspec/specs/products/sales/sales-performance/tdd/semantics.md" target="_blank" rel="noopener" data-build="1"><span class="eyebrow">Worked example</span><span class="ex-t">&ldquo;What you will receive&rdquo; &#8599;</span><span class="ex-d">Signed with dpf signoff</span></a>
+        <div class="pills"><a class="badge-inline" href="https://github.com/MattATurner/data-product-framework/blob/main/framework/templates/design/semantics.md" target="_blank" rel="noopener" title="Open the blank template">semantics.md</a></div>
+        <a class="ex" href="https://github.com/MattATurner/data-product-framework/blob/main/examples/sales_performance/specs/tdd/semantics.md" target="_blank" rel="noopener" data-build="1"><span class="eyebrow">Worked example</span><span class="ex-t">&ldquo;What you will receive&rdquo; &#8599;</span><span class="ex-d">Signed with dpf signoff</span></a>
       </div>
       <div class="card dz acc-yellow">
         <div class="icon yellow"><svg class="ico"><use href="#i-gear"/></svg></div>
         <h3>Manifest</h3>
         <p class="p-lg">The resolved design that generates the build</p>
-        <div class="pills"><a class="badge-inline" href="https://github.com/MattATurner/data-product-framework/blob/main/templates/design/product.yaml" target="_blank" rel="noopener" title="Open the blank template">product.yaml</a></div>
-        <a class="ex" href="https://github.com/MattATurner/data-product-framework/blob/main/products/sales_performance/product.yaml" target="_blank" rel="noopener" data-build="1"><span class="eyebrow">Worked example</span><span class="ex-t">sales_performance &#8599;</span><span class="ex-d">4 layers, 3 output ports</span></a>
+        <div class="pills"><a class="badge-inline" href="https://github.com/MattATurner/data-product-framework/blob/main/framework/templates/design/product.yaml" target="_blank" rel="noopener" title="Open the blank template">product.yaml</a></div>
+        <a class="ex" href="https://github.com/MattATurner/data-product-framework/blob/main/examples/sales_performance/product.yaml" target="_blank" rel="noopener" data-build="1"><span class="eyebrow">Worked example</span><span class="ex-t">sales_performance &#8599;</span><span class="ex-d">4 layers, 3 output ports</span></a>
       </div>
       <div class="card dz acc-red">
         <div class="icon red"><svg class="ico"><use href="#i-flag"/></svg></div>
         <h3>Decision record</h3>
         <p class="p-lg">Why the design leaves a platform default</p>
-        <div class="pills"><a class="badge-inline" href="https://github.com/MattATurner/data-product-framework/blob/main/templates/design/adr.md" target="_blank" rel="noopener" title="Open the blank template">adr.md</a></div>
-        <a class="ex" href="https://github.com/MattATurner/data-product-framework/tree/main/products/sales_performance/adr" target="_blank" rel="noopener" data-build="1"><span class="eyebrow">Worked example</span><span class="ex-t">2 product ADRs &#8599;</span><span class="ex-d">Kimball; watermark, not CDC</span></a>
+        <div class="pills"><a class="badge-inline" href="https://github.com/MattATurner/data-product-framework/blob/main/framework/templates/design/adr.md" target="_blank" rel="noopener" title="Open the blank template">adr.md</a></div>
+        <a class="ex" href="https://github.com/MattATurner/data-product-framework/tree/main/examples/sales_performance/adr" target="_blank" rel="noopener" data-build="1"><span class="eyebrow">Worked example</span><span class="ex-t">2 product ADRs &#8599;</span><span class="ex-d">Kimball; watermark, not CDC</span></a>
       </div>
     </div>
     <div class="callout ok" data-build="1"><strong>All 13 requirements covered:</strong> TDD-SALES-002 answers BRD-SALES-002 with 18 decisions.</div>
@@ -1063,7 +1063,7 @@ a.badge-inline:hover { border-color: var(--primary); color: var(--primary); }
       <div class="card manifest-card acc-blue">
         <div class="icon blue"><svg class="ico"><use href="#i-doc"/></svg></div>
         <h3 class="big">One manifest</h3>
-        <code class="path">products/sales_performance/product.yaml</code>
+        <code class="path">examples/sales_performance/product.yaml</code>
       </div>
       <svg class="fan-lines" viewBox="0 0 140 362" aria-hidden="true">
         <path data-build="1" d="M0 181 C 76 181, 64 40, 140 40"/>

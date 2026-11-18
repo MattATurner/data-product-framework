@@ -10,10 +10,10 @@ a design that passes G1.
 | 1 Use case | [`use-case.pdf`](use-case.pdf) | [`use-case.yaml`](use-case.yaml) |
 | 2 Scorecard | [`scorecard.pdf`](scorecard.pdf) | [`portfolio.yaml`](portfolio.yaml) |
 | 3 Prioritisation | [`prioritisation.pdf`](prioritisation.pdf) | [`portfolio.yaml`](portfolio.yaml) |
-| 4a BRD | [`brd.pdf`](brd.pdf) | BRD-SALES-002 1.2.0: [`spec.md`](../../../openspec/specs/products/sales/sales-performance/brd/spec.md) and [`brd.yaml`](../../../openspec/specs/products/sales/sales-performance/brd/brd.yaml) |
-| 5 TDD | TDD-SALES-002: [`spec.md`](../../../openspec/specs/products/sales/sales-performance/tdd/spec.md) | |
-| 5 Business playback | [`semantics.md`](../../../openspec/specs/products/sales/sales-performance/tdd/semantics.md), signed in [`signoff.yaml`](../../../openspec/specs/products/sales/sales-performance/tdd/signoff.yaml) | |
-| 5 Manifest and ADRs | [`product.yaml`](../../../products/sales_performance/product.yaml), [`adr/`](../../../products/sales_performance/adr/) | |
+| 4a BRD | [`brd.pdf`](brd.pdf) | BRD-SALES-002 1.2.0: [`spec.md`](../../../examples/sales_performance/specs/brd/spec.md) and [`brd.yaml`](../../../examples/sales_performance/specs/brd/brd.yaml) |
+| 5 TDD | TDD-SALES-002: [`spec.md`](../../../examples/sales_performance/specs/tdd/spec.md) | |
+| 5 Business playback | [`semantics.md`](../../../examples/sales_performance/specs/tdd/semantics.md), signed in [`signoff.yaml`](../../../examples/sales_performance/specs/tdd/signoff.yaml) | |
+| 5 Manifest and ADRs | [`product.yaml`](../../../examples/sales_performance/product.yaml), [`adr/`](../../../examples/sales_performance/adr/) | |
 
 The product came first. UC-SALES-001 was written afterwards to show the whole chain, so:
 

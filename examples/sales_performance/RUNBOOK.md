@@ -278,7 +278,7 @@ record them for someone else.
 
 Publishing is a release build like any other, because the status is part of the manifest
 and therefore of the build digest. Set `status: published` in
-`products/sales_performance/product.yaml`, regenerate (`make golden`) and deploy that build,
+`examples/sales_performance/product.yaml`, regenerate (`make golden`) and deploy that build,
 then run the automated tests and attestations against it. Grant access and register only
 when G4 passes for that digest. dpf never changes the status for you; while the BRD still
 carries open assumptions (ADR-009), the generated `data-product.json` reports `provisional`

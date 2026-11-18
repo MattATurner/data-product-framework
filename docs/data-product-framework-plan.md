@@ -787,7 +787,7 @@ Two rules worth locking early:
 
 ## 12. Worked example — `sales_performance`, end to end
 
-> As built, the example lives in `openspec/specs/products/sales/sales-performance/` and `products/sales_performance/`. The extract and cadence decisions in the tables below are the original plan; the built TDD decides watermark extraction (D-10) and hourly refresh (D-11).
+> As built, the example lives in `examples/sales_performance/specs/` and `examples/sales_performance/`. The extract and cadence decisions in the tables below are the original plan; the built TDD decides watermark extraction (D-10) and hourly refresh (D-11).
 
 ### 12.1 BRD spec — written by the business analyst
 

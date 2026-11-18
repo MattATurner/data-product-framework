@@ -6,7 +6,7 @@
 
 How the sales performance product is built: methodology per layer, grain, history, capture,
 engine, storage, quality, protection, sharing and service levels. Every decision cites the
-BRD requirements it satisfies. The resolved design is `products/sales_performance/product.yaml`.
+BRD requirements it satisfies. The resolved design is `examples/sales_performance/product.yaml`.
 
 ## Requirements
 

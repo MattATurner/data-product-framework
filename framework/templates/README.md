@@ -29,10 +29,10 @@ flowchart LR
 | Define | 3 | [`define/3-prioritisation.pdf`](define/3-prioritisation.pdf) | decision forum | the matrix and a signed decision for each use case | [UC-SALES-001](../../examples/sales_performance/define/prioritisation.pdf); [seed portfolio](../../examples/use-case-portfolio/prioritisation.pdf) |
 | Define | 4a | [`define/4a-brd.pdf`](define/4a-brd.pdf) | business owner | business requirements, or ... | [BRD-SALES-002](../../examples/sales_performance/define/brd.pdf) |
 | Define | 4b | [`define/4b-prd.pdf`](define/4b-prd.pdf) | product manager | ... product requirements, with the same rubric | none yet |
-| Design | 5 | [`design/tdd-spec.md`](design/tdd-spec.md) | data engineer | the technical design: one decision for each design area | [TDD-SALES-002](../../openspec/specs/products/sales/sales-performance/tdd/spec.md) |
-| Design | 5 | [`design/semantics.md`](design/semantics.md) | data engineer; signed by the business owner | the design played back in business language | [sales-performance](../../openspec/specs/products/sales/sales-performance/tdd/semantics.md) |
-| Design | 5 | [`design/product.yaml`](design/product.yaml) | data engineer | the resolved design (contract `product-manifest.v1`) | [sales_performance](../../products/sales_performance/product.yaml) |
-| Design | 5 | [`design/adr.md`](design/adr.md) | data engineer | a record of each departure from a platform default | [ADR-SALES-002-01](../../products/sales_performance/adr/ADR-SALES-002-01-kimball-in-silver.md), [ADR-SALES-002-02](../../products/sales_performance/adr/ADR-SALES-002-02-watermark-not-cdc.md) |
+| Design | 5 | [`design/tdd-spec.md`](design/tdd-spec.md) | data engineer | the technical design: one decision for each design area | [TDD-SALES-002](../../examples/sales_performance/specs/tdd/spec.md) |
+| Design | 5 | [`design/semantics.md`](design/semantics.md) | data engineer; signed by the business owner | the design played back in business language | [sales-performance](../../examples/sales_performance/specs/tdd/semantics.md) |
+| Design | 5 | [`design/product.yaml`](design/product.yaml) | data engineer | the resolved design (contract `product-manifest.v1`) | [sales_performance](../../examples/sales_performance/product.yaml) |
+| Design | 5 | [`design/adr.md`](design/adr.md) | data engineer | a record of each departure from a platform default | [ADR-SALES-002-01](../../examples/sales_performance/adr/ADR-SALES-002-01-kimball-in-silver.md), [ADR-SALES-002-02](../../examples/sales_performance/adr/ADR-SALES-002-02-watermark-not-cdc.md) |
 
 Each PDF opens with a "How to fill this in" box and ends with the next step. The Design
 templates carry their guidance in comments, which you delete when you finish. Placeholders
