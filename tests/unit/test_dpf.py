@@ -329,7 +329,7 @@ def test_deferred_requirement_passes_g0_and_is_excluded_from_g1(tmp_path):
         src = ROOT / rel
         if src.is_dir():
             shutil.copytree(src, tmp_path / rel, ignore=IGNORE)
-    spec_file = tmp_path / "openspec/specs/products/sales/customer-orders/brd/spec.md"
+    spec_file = tmp_path / "examples/customer_orders/specs/brd/spec.md"
     spec_file.write_text(
         spec_file.read_text(encoding="utf-8").replace(
             "## Scope",
@@ -703,7 +703,7 @@ def test_staging_anti_silent_drop_and_dataform_js_leakage(tmp_path):
     from dpf.design import check_design, check_prototype
 
     twin_ws = _clone_workspace(tmp_path)
-    stg_file = twin_ws.root / "products/customer_orders/sql/stg_orders.sql"
+    stg_file = twin_ws.root / "examples/customer_orders/sql/stg_orders.sql"
     orig_sql = stg_file.read_text(encoding="utf-8")
 
     # 1. Unmarked top-level WHERE fails G1
@@ -825,6 +825,7 @@ def test_dpf_init_copies_agents_skills(tmp_path):
     assert (dest / "framework/contracts/product-manifest.v1.schema.json").exists()
     assert (dest / "framework/templates/define/1-use-case.pdf").exists()
     assert (dest / "docs/adr/ADR-019-symbiotic-agentic-governance-framework.md").exists()
+    assert not (dest / "examples/sales_performance").exists()
     assert not (dest / "products/sales_performance").exists()
     assert not (dest / "docs/fhd").exists()
     assert main(["validate", "--quiet", "--root", str(dest)]) == 0
@@ -852,15 +853,43 @@ def test_lookml_coupled_hub_spoke_auth_and_env_retargeting(tmp_path):
     assert "dimension: _dpf_pk {" in fct_lkml
     assert "primary_key: yes" in fct_lkml
     assert 'filters: [is_cancelled: "no"]' in fct_lkml
+    assert "measure: order_line_count {" in fct_lkml
+    assert "dimension: order_line_no {\n    type: number" in fct_lkml
+
+    dim_c_lkml = b.files["semantic_layer/lookml/views/dim_customer.view.lkml"]
+    assert "dimension_group: valid_from {" in dim_c_lkml
+    assert "dimension_group: valid_to {" in dim_c_lkml
+    assert dim_c_lkml.count("datatype: timestamp") >= 2
+    assert "required_access_grants: [can_view_pii_contact]" in dim_c_lkml
+
+    gold_lkml = b.files["semantic_layer/lookml/views/sales_performance_monthly.view.lkml"]
+    assert "measure: net_sales {" in gold_lkml
+    assert "measure: units_sold {" in gold_lkml
+    assert "measure: order_line_count {" in gold_lkml
+
+    model_lkml = b.files["semantic_layer/lookml/sales_performance.model.lkml"]
+    assert "INFORMATION_SCHEMA.PARTITIONS" in model_lkml
+    assert "access_grant: can_view_pii_contact {" in model_lkml
 
     exp_lkml = b.files["semantic_layer/lookml/explores/order_lines.explore.lkml"]
     assert "sql_on: ${fct_order_line.sk_customer} = ${dim_customer.sk_customer} ;;" in exp_lkml
     assert "conditionally_filter: {" in exp_lkml
-    assert "aggregate_table: sales_performance_monthly {" in exp_lkml
+    assert "aggregate_table:" not in exp_lkml
 
     dash_lkml = b.files["semantic_layer/lookml/dashboards/executive_sales_pulse.dashboard.lookml"]
     assert "unpinAxis: false" in dash_lkml
     assert "order_date: fct_order_line.order_date" in dash_lkml
+    assert "fct_order_line.order_line_count" in dash_lkml
+    assert "fct_order_line.net_sales desc" in dash_lkml
+
+    # 1b. Opt-in aggregate_tables matches governed filtered measures cleanly
+    p.manifest["semantic_layer"]["explores"][0]["aggregate_tables"] = ["sales_performance_monthly"]
+    b_agg = build(p)
+    assert b_agg.ok, b_agg.problems
+    agg_exp = b_agg.files["semantic_layer/lookml/explores/order_lines.explore.lkml"]
+    assert "aggregate_table: sales_performance_monthly {" in agg_exp
+    assert "fct_order_line.order_line_count" in agg_exp
+    del p.manifest["semantic_layer"]["explores"][0]["aggregate_tables"]
 
     # 2. Hub-and-Spoke import_views_from emits local_dependency and +view refinements
     p.manifest["semantic_layer"]["looker"]["import_views_from"] = "sales_hub"
@@ -870,8 +899,12 @@ def test_lookml_coupled_hub_spoke_auth_and_env_retargeting(tmp_path):
     assert 'include: "//sales_hub/views/fct_order_line.view.lkml"' in b_hub.files["semantic_layer/lookml/views/fct_order_line.view.lkml"]
     assert "view: +fct_order_line {" in b_hub.files["semantic_layer/lookml/views/fct_order_line.view.lkml"]
 
-    # 3. service_account auth_mode emits LookML access_grant + required_access_grants + Terraform READER IAM
+    # 3. oauth auth_mode hides policy-tagged columns; service_account_var emits Terraform READER IAM
     del p.manifest["semantic_layer"]["looker"]["import_views_from"]
+    p.manifest["semantic_layer"]["looker"]["auth_mode"] = "oauth"
+    b_oauth = build(p)
+    assert b_oauth.ok, b_oauth.problems
+    assert "dimension: customer_email {\n    hidden: yes" in b_oauth.files["semantic_layer/lookml/views/dim_customer.view.lkml"]
     p.manifest["semantic_layer"]["looker"]["auth_mode"] = "service_account"
     p.manifest["semantic_layer"]["looker"]["service_account_var"] = "looker_sa_email"
     b_sa = build(p)
@@ -925,7 +958,7 @@ def test_decoupled_looker_product_mode_a_and_upstream_guards(tmp_path):
         "- **THEN** net sales and order counts reflect non-cancelled lines for that region\n",
         encoding="utf-8",
     )
-    co_brd = yaml.safe_load((root / "openspec/specs/products/sales/customer-orders/brd/brd.yaml").read_text(encoding="utf-8"))
+    co_brd = yaml.safe_load((root / "examples/customer_orders/specs/brd/brd.yaml").read_text(encoding="utf-8"))
     co_brd["product_id"] = "exec_looker_cockpit"
     co_brd["brd_id"] = "BRD-SALES-010"
     co_brd["version"] = "1.0.0"
@@ -1437,7 +1470,7 @@ def test_agf_symbiotic_governance_contracts_and_gates(tmp_path):
 
     # 2. Residency violation (C10), unknown CDE (DC-2), and external sharing leak (C6) fail G1
     twin_bad = _clone_workspace(tmp_path / "bad")
-    partner_sql = twin_bad.root / "products/sales_performance/sql/sales_performance_partner_extract.sql"
+    partner_sql = twin_bad.root / "examples/sales_performance/sql/sales_performance_partner_extract.sql"
     partner_sql.write_text(
         "SELECT d.year_month, p.product_category, c.region, MAX(c.customer_email) AS customer_email, "
         "SUM(f.net_amount) AS net_sales, SUM(f.quantity) AS units_sold "
@@ -1479,4 +1512,50 @@ def test_deployment_project_and_region_required_before_build(tmp_path):
         p.manifest["deployment"][field] = "us-central1" if field == "region" else "valid-gcp-project"
     b_ok = build(p)
     assert b_ok.ok, b_ok.problems
+
+
+def test_looker_deploy_parameterized_resolution(tmp_path, monkeypatch):
+    from dpf.looker_deploy import LookerCliRunner, resolve_looker_base_url, resolve_target_product
+
+    twin_ws = _clone_workspace(tmp_path)
+
+    # 1. --env retargets GCP_PROJECT in LookML manifest without mutating product.yaml
+    p_test = resolve_target_product(twin_ws, "sales_performance", env="test")
+    b_test = build(p_test)
+    assert 'value: "dpf-sales-test"' in b_test.files["semantic_layer/lookml/manifest.lkml"]
+
+    # 2. --project-id / DPF_GCP_PROJECT overrides target project dynamically
+    monkeypatch.setenv("DPF_GCP_PROJECT", "custom-tenant-proj")
+    p_dyn = resolve_target_product(twin_ws, "sales_performance", env="test")
+    b_dyn = build(p_dyn)
+    assert 'value: "custom-tenant-proj"' in b_dyn.files["semantic_layer/lookml/manifest.lkml"]
+    monkeypatch.delenv("DPF_GCP_PROJECT")
+
+    # 3. Looker host and CLI flags resolve from env / profile without hard-coding
+    monkeypatch.setenv("LOOKER_HOST", "tenant-example.looker.app")
+    assert resolve_looker_base_url() == "https://tenant-example.looker.app"
+    runner = LookerCliRunner("/usr/bin/looker-cli", profile="staging", port="443")
+    assert runner.base_flags() == ["--profile", "staging", "--host", "tenant-example.looker.app", "--port", "443"]
+
+
+def test_presentation_server_first_run_resolution(tmp_path, monkeypatch):
+    import json
+    from dpf.looker_cockpit import resolve_presentation_server_url
+
+    twin_ws = _clone_workspace(tmp_path)
+    monkeypatch.setenv("HOME", str(tmp_path / "fake_home"))
+    monkeypatch.delenv("DPF_PRESENTATION_SERVER_URL", raising=False)
+    monkeypatch.delenv("PRESENTATION_SERVER_URL", raising=False)
+
+    # Empty on fresh workspace without prompt
+    assert resolve_presentation_server_url(twin_ws, prompt_on_first_run=False) == ""
+
+    # First-run explicit URL persists into agent-config.json and user config
+    resolved = resolve_presentation_server_url(twin_ws, explicit_url="example-decks.a.run.app/")
+    assert resolved == "https://example-decks.a.run.app"
+    saved = json.loads((twin_ws.root / "registry/agent-config.json").read_text(encoding="utf-8"))
+    assert saved["presentation_server_url"] == "https://example-decks.a.run.app"
+    # Subsequent runs resolve from agent-config.json without needing flags
+    assert resolve_presentation_server_url(twin_ws, prompt_on_first_run=False) == "https://example-decks.a.run.app"
+
 

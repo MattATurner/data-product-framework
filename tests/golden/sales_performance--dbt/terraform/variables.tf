@@ -13,7 +13,7 @@ variable "region" {
 }
 
 variable "consumer_group" {
-  description = "Google group email: Sales leadership, Sales Operations and Finance."
+  description = "Google group email: Sales leadership, Sales Operations and Finance (customer contact details masked)."
   type        = string
 }
 

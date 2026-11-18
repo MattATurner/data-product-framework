@@ -31,7 +31,7 @@ deployment:
     control: dpf_control
   environments:
     test:
-      gcp_project: data-products-deploy
+      gcp_project: dpf-sales-test
       enforce_policy_tags: false
       prevent_destroy: false
       schedules_enabled: false
@@ -305,8 +305,8 @@ governance:
   access:
     - role: roles/bigquery.dataViewer
       principal_var: consumer_group
-      datasets: [gold]
-      description: Sales leadership, Sales Operations and Finance
+      datasets: [gold, silver]
+      description: Sales leadership, Sales Operations and Finance (customer contact details masked)
     - role: roles/bigquery.dataViewer
       principal_var: analyst_group
       datasets: [gold, silver]
@@ -317,7 +317,7 @@ governance:
       columns: [customer_email, customer_phone]
       tag: pii_contact
       masking: always_null
-      masked_readers: [analyst_group]
+      masked_readers: [analyst_group, consumer_group]
       fine_grained_readers: [contact_reader_group]
       brd_requirement_id: [R-12]
 
@@ -326,7 +326,7 @@ semantic_layer:
   looker:
     connection: bigquery_sales
     project_name: sales_performance
-    auth_mode: oauth
+    auth_mode: service_account
     datagroup_max_cache_age: "90 minutes"
   metrics:
     - name: net_sales
@@ -343,6 +343,13 @@ semantic_layer:
       expr: quantity
       filter: "is_cancelled = FALSE"
       description: Total units sold excluding cancelled order lines.
+    - name: order_line_count
+      label: Order Lines
+      type: simple
+      aggregation: count
+      model: fct_order_line
+      filter: "is_cancelled = FALSE"
+      description: Count of non-cancelled order lines.
   explores:
     - name: order_lines
       from: fct_order_line
@@ -350,8 +357,7 @@ semantic_layer:
       description: "Order-line sales joined to point-in-time customer segment, product category and calendar."
       joins: auto
       always_filter_partition: true
-      partition_default_filter: "90 days"
-      aggregate_tables: [sales_performance_monthly]
+      partition_default_filter: "365 days"
       brd_requirement_id: [R-1, R-2, R-4, R-6, R-7, R-8, R-12]
   dashboards:
     - name: executive_sales_pulse
@@ -364,7 +370,7 @@ semantic_layer:
           title: Order Date
           field: fct_order_line.order_date
           type: date_filter
-          default_value: "90 days"
+          default_value: "365 days"
         - name: region
           title: Region
           field: dim_customer.region
@@ -386,7 +392,7 @@ semantic_layer:
         - name: kpi_order_lines
           title: Order Lines
           kind: kpi
-          measures: [fct_order_line.count]
+          measures: [fct_order_line.order_line_count]
         - name: monthly_net_sales_trend
           title: Monthly Net Sales Trend
           kind: time_series

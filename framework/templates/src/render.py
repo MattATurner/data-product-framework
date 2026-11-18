@@ -28,7 +28,7 @@ OUT = ROOT / "framework" / "templates" / "define"
 SCORING = ROOT / "framework" / "templates" / "scoring.yaml"
 PORTFOLIO_EXAMPLE = ROOT / "examples" / "use-case-portfolio"
 SALES_EXAMPLE = ROOT / "examples" / "sales_performance" / "define"
-SALES_BRD = ROOT / "openspec" / "specs" / "products" / "sales" / "sales-performance" / "brd"
+SALES_BRD = ROOT / "examples" / "sales_performance" / "specs" / "brd"
 
 # Fixed so that re-rendering unchanged sources gives identical files.
 PDF_DATE = "2026-10-06T00:00:00Z"

@@ -15,7 +15,7 @@ view: sales_order_line_detail {
   }
 
   dimension: order_line_no {
-    type: string
+    type: number
     sql: ${TABLE}.order_line_no ;;
   }
 
@@ -83,35 +83,38 @@ view: sales_order_line_detail {
     sql: ${TABLE}.is_cancelled ;;
   }
 
-  dimension: quantity {
-    type: string
+  measure: count {
+    type: count
+    description: "Row count of sales_order_line_detail"
+  }
+
+  measure: quantity {
+    type: sum
     description: "Number of units on order lines that are not cancelled."
     sql: ${TABLE}.quantity ;;
   }
 
-  dimension: gross_amount {
-    type: string
+  measure: gross_amount {
+    type: sum
+    description: "gross_amount (additive) on sales_order_line_detail"
     sql: ${TABLE}.gross_amount ;;
   }
 
-  dimension: discount_amount {
-    type: string
+  measure: discount_amount {
+    type: sum
+    description: "discount_amount (additive) on sales_order_line_detail"
     sql: ${TABLE}.discount_amount ;;
   }
 
-  dimension: net_amount {
-    type: string
+  measure: net_amount {
+    type: sum
     description: "Gross amount less discount, excluding tax, for order lines that are not cancelled."
     sql: ${TABLE}.net_amount ;;
   }
 
-  dimension: counted_net_amount {
-    type: string
+  measure: counted_net_amount {
+    type: sum
+    description: "counted_net_amount (additive) on sales_order_line_detail"
     sql: ${TABLE}.counted_net_amount ;;
-  }
-
-  measure: count {
-    type: count
-    description: "Row count of sales_order_line_detail"
   }
 }

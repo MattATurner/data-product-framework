@@ -5,7 +5,7 @@ dpf_sales_performance:
     test:
       type: bigquery
       method: oauth
-      project: data-products-deploy
+      project: dpf-sales-test
       dataset: stg_sales
       location: us-central1
       threads: 4

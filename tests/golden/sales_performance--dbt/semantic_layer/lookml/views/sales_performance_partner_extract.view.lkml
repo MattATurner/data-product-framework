@@ -27,20 +27,20 @@ view: sales_performance_partner_extract {
     sql: ${TABLE}.region ;;
   }
 
-  dimension: net_sales {
-    type: string
+  measure: count {
+    type: count
+    description: "Row count of sales_performance_partner_extract"
+  }
+
+  measure: net_sales {
+    type: sum
     description: "Gross amount less discount, excluding tax, for order lines that are not cancelled."
     sql: ${TABLE}.net_sales ;;
   }
 
-  dimension: units_sold {
-    type: string
+  measure: units_sold {
+    type: sum
     description: "Number of units on order lines that are not cancelled."
     sql: ${TABLE}.units_sold ;;
-  }
-
-  measure: count {
-    type: count
-    description: "Row count of sales_performance_partner_extract"
   }
 }

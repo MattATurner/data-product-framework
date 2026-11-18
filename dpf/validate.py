@@ -143,7 +143,7 @@ def validate_adrs(ws: Workspace, report: Report) -> None:
         if s.get("adr"):
             cited[s.get("adr")] = f"skill {sid}"
     for pid in ws.product_ids():
-        for adr in load_yaml(ws.root / "products" / pid / "product.yaml").get("adrs") or []:
+        for adr in ws.product(pid).manifest.get("adrs") or []:
             cited[adr] = f"product {pid}"
     for adr, where in sorted(cited.items()):
         if adr not in ws.adrs:

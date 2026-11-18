@@ -62,5 +62,5 @@ first build.
   - **Dataform-hosted** (no Git remote). Strict act-as checks reject automatic release
     there, so set `dataform_release_schedule = ""` and release on every deploy
     (RUNBOOK step 1). The workflow configurations run only the current release.
-- **The extractor host.** `extract_oracle.py` runs beside the database (ADR-015); see
+- **The extractor host.** `extract_postgres.py` runs beside the database (ADR-015); see
   `../extract/README.md`.

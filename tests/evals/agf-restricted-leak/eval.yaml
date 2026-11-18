@@ -2,7 +2,7 @@ id: agf-restricted-leak
 asserts: When AGF (ADG-00) governance is enabled, a RESTRICTED column lacking a policy tag fails G1.
 mutate:
   - set:
-      file: products/sales_performance/product.yaml
+      file: examples/sales_performance/product.yaml
       path: governance.agf
       value:
         enabled: true

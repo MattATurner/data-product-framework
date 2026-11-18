@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Cloud Whitepaper — Specification-Driven Data Products on Google Cloud</title>
+  <meta name="description" content="Compressing Enterprise Data Delivery from Months to Days with Plain-English Specifications, Reusable Organisational Context, Deterministic Multi-Plane Compilation, and Symbiotic Runtime Governance">
+  <meta name="tags" content="Google Cloud Whitepaper, Data Product Framework, BigQuery, Knowledge Catalog, Looker, Gemini Platform, AGF">
+  <meta name="deck-role" content="master">
+  <meta name="catalog-visibility" content="visible">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-canvas: #F1F3F4;
+      --bg-paper: #FFFFFF;
+      --bg-subtle: #F8F9FA;
+      --bg-exec: #F4F8FE;
+      --ink-900: #202124;
+      --ink-700: #3C4043;
+      --ink-500: #5F6368;
+      --line-200: #DADCE0;
+      --line-300: #BDC1C6;
+      --gcp-blue: #1A73E8;
+      --gcp-red: #EA4335;
+      --gcp-yellow: #FBBC04;
+      --gcp-green: #1E8E3E;
+      --auto-bg: #F1F9F3;
+      --auto-border: #A8DAB5;
+      --auto-ink: #137333;
+      --human-bg: #FEF8EE;
+      --human-border: #FAD293;
+      --human-ink: #B06000;
+      --shadow-sheet: 0 1px 3px rgba(60, 64, 67, 0.12), 0 8px 30px rgba(60, 64, 67, 0.08);
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-serif: 'Source Serif 4', Georgia, serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    html[data-theme="dark"] {
+      --bg-canvas: #111315;
+      --bg-paper: #1A1D21;
+      --bg-subtle: #22262B;
+      --bg-exec: rgba(138, 180, 248, 0.08);
+      --ink-900: #E8EAED;
+      --ink-700: #BDC1C6;
+      --ink-500: #9AA0A6;
+      --line-200: #30343B;
+      --line-300: #454A52;
+      --gcp-blue: #8AB4F8;
+      --auto-bg: rgba(129, 201, 149, 0.09);
+      --auto-border: rgba(129, 201, 149, 0.34);
+      --auto-ink: #81C995;
+      --human-bg: rgba(253, 214, 99, 0.09);
+      --human-border: rgba(253, 214, 99, 0.34);
+      --human-ink: #FDD663;
+      --shadow-sheet: 0 6px 32px rgba(0, 0, 0, 0.45);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+    body {
+      margin: 0;
+      background: var(--bg-canvas);
+      color: var(--ink-900);
+      font-family: var(--font-sans);
+      line-height: 1.65;
+    }
+
+    /* 4-Color Google Bar + Top Utility Header */
+    .gcp-color-strip {
+      height: 4px;
+      background: linear-gradient(90deg, #4285F4 0% 25%, #EA4335 25% 50%, #FBBC05 50% 75%, #34A853 75% 100%);
+      position: sticky;
+      top: 0;
+      z-index: 120;
+    }
+
+    .wp-topbar {
+      position: sticky;
+      top: 4px;
+      z-index: 110;
+      background: color-mix(in srgb, var(--bg-paper) 92%, transparent);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line-200);
+    }
+
+    .wp-topbar-inner {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 0.6rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .wp-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.7rem;
+    }
+
+    .wp-doc-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.22rem 0.56rem;
+      border-radius: 4px;
+      background: rgba(26, 115, 232, 0.11);
+      color: var(--gcp-blue);
+    }
+
+    .wp-brand-title {
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: var(--ink-900);
+    }
+
+    .wp-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+    }
+
+    .wp-btn {
+      appearance: none;
+      border: 1px solid var(--line-200);
+      background: var(--bg-paper);
+      color: var(--ink-700);
+      font-family: var(--font-sans);
+      font-size: 0.77rem;
+      font-weight: 600;
+      padding: 0.4rem 0.78rem;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .wp-btn:hover {
+      border-color: var(--gcp-blue);
+      color: var(--gcp-blue);
+    }
+
+    .wp-btn-primary {
+      background: #1A73E8;
+      border-color: #1A73E8;
+      color: #FFFFFF;
+    }
+
+    .wp-btn-primary:hover {
+      background: #1557B0;
+      border-color: #1557B0;
+      color: #FFFFFF;
+    }
+
+    .wp-progress {
+      height: 2px;
+      width: 0%;
+      background: var(--gcp-blue);
+      transition: width 0.08s linear;
+    }
+
+    /* Main Layout: Left Sidebar Outline + Formal Whitepaper Sheet */
+    .wp-layout {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 5rem;
+      display: grid;
+      grid-template-columns: 280px minmax(0, 920px);
+      gap: 2.25rem;
+      justify-content: center;
+      align-items: start;
+    }
+
+    .wp-sidebar {
+      position: sticky;
+      top: 74px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      max-height: calc(100vh - 96px);
+      overflow-y: auto;
+    }
+
+    .wp-side-card {
+      background: var(--bg-paper);
+      border: 1px solid var(--line-200);
+      border-radius: 10px;
+      padding: 1rem 1.05rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+
+    .wp-side-title {
+      font-size: 0.69rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-500);
+      margin: 0 0 0.65rem;
+    }
+
+    .toc-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.18rem;
+    }
+
+    .toc-anchor {
+      display: block;
+      font-size: 0.77rem;
+      line-height: 1.38;
+      color: var(--ink-700);
+      text-decoration: none;
+      padding: 0.28rem 0.5rem;
+      border-left: 2px solid transparent;
+      border-radius: 0 5px 5px 0;
+    }
+
+    .toc-l3 .toc-anchor {
+      padding-left: 1.15rem;
+      font-size: 0.73rem;
+      color: var(--ink-500);
+    }
+
+    .toc-anchor:hover,
+    .toc-anchor.is-active {
+      color: var(--gcp-blue);
+      border-left-color: var(--gcp-blue);
+      background: rgba(26, 115, 232, 0.07);
+      font-weight: 600;
+    }
+
+    .side-links {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.48rem;
+    }
+
+    .side-links a {
+      display: block;
+      text-decoration: none;
+      padding: 0.35rem 0.45rem;
+      border-radius: 6px;
+      border: 1px solid transparent;
+    }
+
+    .side-links a:hover {
+      border-color: var(--line-200);
+      background: var(--bg-subtle);
+    }
+
+    .side-link-t {
+      display: block;
+      font-size: 0.77rem;
+      font-weight: 600;
+      color: var(--ink-900);
+    }
+
+    .side-link-s {
+      display: block;
+      font-size: 0.69rem;
+      color: var(--ink-500);
+    }
+
+    /* The Whitepaper Sheet */
+    .wp-sheet {
+      background: var(--bg-paper);
+      border: 1px solid var(--line-200);
+      border-radius: 12px;
+      box-shadow: var(--shadow-sheet);
+      overflow: hidden;
+    }
+
+    /* Formal Google Cloud Whitepaper Cover Banner */
+    .wp-cover {
+      padding: 3.2rem 3.8rem 2.5rem;
+      border-bottom: 1px solid var(--line-200);
+      background:
+        radial-gradient(circle at 92% 14%, rgba(26, 115, 232, 0.08), transparent 38%),
+        radial-gradient(circle at 80% 82%, rgba(52, 168, 83, 0.06), transparent 35%),
+        var(--bg-paper);
+    }
+
+    .wp-cover-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--gcp-blue);
+      margin-bottom: 1.15rem;
+    }
+
+    .wp-h1 {
+      font-family: var(--font-sans);
+      font-size: clamp(2rem, 3.3vw, 2.75rem);
+      font-weight: 800;
+      letter-spacing: -0.026em;
+      line-height: 1.15;
+      margin: 0 0 1rem;
+      color: var(--ink-900);
+    }
+
+    .wp-subtitle {
+      font-family: var(--font-serif);
+      font-size: 1.22rem;
+      line-height: 1.55;
+      color: var(--ink-700);
+      margin: 0 0 1.85rem;
+      max-width: 780px;
+    }
+
+    .wp-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1rem;
+      padding-top: 1.35rem;
+      border-top: 1px solid var(--line-200);
+    }
+
+    .wp-meta-cell span {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--ink-500);
+      margin-bottom: 0.2rem;
+    }
+
+    .wp-meta-cell strong {
+      font-size: 0.83rem;
+      font-weight: 600;
+      color: var(--ink-900);
+    }
+
+    /* Key Architectural Metrics Strip */
+    .wp-kpi-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border-bottom: 1px solid var(--line-200);
+      background: var(--bg-subtle);
+    }
+
+    .wp-kpi-item {
+      padding: 1.05rem 1.4rem;
+      border-right: 1px solid var(--line-200);
+    }
+
+    .wp-kpi-item:last-child {
+      border-right: none;
+    }
+
+    .wp-kpi-val {
+      display: block;
+      font-family: var(--font-sans);
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--gcp-blue);
+    }
+
+    .wp-kpi-lbl {
+      display: block;
+      font-size: 0.74rem;
+      color: var(--ink-500);
+      margin-top: 0.12rem;
+    }
+
+    /* Whitepaper Body Content */
+    .wp-content {
+      padding: 2.6rem 3.8rem 3.8rem;
+      font-family: var(--font-serif);
+      font-size: 1.09rem;
+      line-height: 1.74;
+      color: var(--ink-900);
+    }
+
+    .wp-exec-box {
+      background: var(--bg-exec);
+      border: 1px solid rgba(26, 115, 232, 0.24);
+      border-left: 4px solid var(--gcp-blue);
+      border-radius: 8px;
+      padding: 1.65rem 1.9rem;
+      margin-bottom: 2.6rem;
+    }
+
+    .wp-exec-heading {
+      font-family: var(--font-sans);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--gcp-blue);
+      margin: 0 0 0.85rem;
+    }
+
+    .wp-exec-box p {
+      margin: 0 0 1.05rem;
+      font-size: 1.03rem;
+      line-height: 1.68;
+    }
+
+    .wp-exec-box p:last-child {
+      margin-bottom: 0;
+    }
+
+    .wp-content p {
+      margin: 0 0 1.28rem;
+    }
+
+    .wp-h2 {
+      font-family: var(--font-sans);
+      font-size: 1.52rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.26;
+      color: var(--ink-900);
+      margin: 2.6rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--line-200);
+      scroll-margin-top: 84px;
+    }
+
+    .wp-h3 {
+      font-family: var(--font-sans);
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.012em;
+      line-height: 1.35;
+      color: var(--ink-900);
+      margin: 1.95rem 0 0.75rem;
+      scroll-margin-top: 84px;
+    }
+
+    .wp-h4 {
+      font-family: var(--font-sans);
+      font-size: 1.01rem;
+      font-weight: 700;
+      letter-spacing: -0.008em;
+      line-height: 1.38;
+      color: var(--ink-900);
+      margin: 1.5rem 0 0.6rem;
+      scroll-margin-top: 84px;
+    }
+
+    .wp-rule {
+      border: none;
+      border-top: 1px solid var(--line-200);
+      margin: 2.5rem 0;
+    }
+
+    .wp-link {
+      color: var(--gcp-blue);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .wp-ol {
+      margin: 0 0 1.35rem;
+      padding-left: 1.35rem;
+    }
+
+    .wp-ol li {
+      margin-bottom: 0.8rem;
+      padding-left: 0.25rem;
+    }
+
+    .wp-li-lead {
+      font-family: var(--font-sans);
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: var(--ink-900);
+    }
+
+    /* Automation vs Human Gate Callouts */
+    .wp-gate {
+      margin: 1.1rem 0 1.35rem;
+      padding: 0.95rem 1.2rem;
+      border-radius: 8px;
+      border: 1px solid var(--line-200);
+      break-inside: avoid;
+    }
+
+    .wp-gate-auto {
+      background: var(--auto-bg);
+      border-color: var(--auto-border);
+    }
+
+    .wp-gate-human {
+      background: var(--human-bg);
+      border-color: var(--human-border);
+    }
+
+    .wp-gate-label {
+      font-family: var(--font-sans);
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.45rem;
+    }
+
+    .wp-gate-auto .wp-gate-label { color: var(--auto-ink); }
+    .wp-gate-human .wp-gate-label { color: var(--human-ink); }
+
+    .wp-gate-body p:last-child,
+    .wp-gate-body .wp-ol:last-child,
+    .wp-gate-body .wp-ol li:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Whitepaper Figures */
+    .wp-figure {
+      margin: 2rem 0;
+      border: 1px solid var(--line-200);
+      border-radius: 10px;
+      background: #FFFFFF;
+      overflow: hidden;
+      break-inside: avoid;
+    }
+
+    .wp-figure-canvas {
+      position: relative;
+      padding: 0.85rem;
+      background: #FFFFFF;
+      cursor: zoom-in;
+    }
+
+    .wp-figure-canvas img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .wp-zoom-pill {
+      position: absolute;
+      right: 1rem;
+      bottom: 1rem;
+      background: rgba(32, 33, 36, 0.82);
+      color: #FFFFFF;
+      font-family: var(--font-sans);
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+
+    .wp-figure-canvas:hover .wp-zoom-pill {
+      opacity: 1;
+    }
+
+    .wp-figcaption {
+      padding: 0.78rem 1.15rem;
+      background: var(--bg-subtle);
+      border-top: 1px solid var(--line-200);
+      font-family: var(--font-sans);
+      font-size: 0.79rem;
+      line-height: 1.45;
+      color: var(--ink-700);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .wp-fig-link {
+      color: var(--gcp-blue);
+      font-weight: 600;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .wp-fig-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Whitepaper Tables */
+    .wp-table-wrap {
+      margin: 1.75rem 0;
+      overflow-x: auto;
+      border: 1px solid var(--line-200);
+      border-radius: 8px;
+      break-inside: avoid;
+    }
+
+    .wp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-sans);
+      font-size: 0.81rem;
+      line-height: 1.5;
+    }
+
+    .wp-table th {
+      background: var(--bg-subtle);
+      color: var(--ink-900);
+      font-weight: 700;
+      text-align: left;
+      padding: 0.72rem 0.9rem;
+      border-bottom: 2px solid var(--line-300);
+      font-size: 0.75rem;
+      letter-spacing: 0.02em;
+    }
+
+    .wp-table td {
+      padding: 0.74rem 0.9rem;
+      border-bottom: 1px solid var(--line-200);
+      color: var(--ink-700);
+      vertical-align: top;
+    }
+
+    .wp-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .wp-table td:first-child {
+      font-weight: 600;
+      color: var(--ink-900);
+    }
+
+    .wp-footer {
+      padding: 1.6rem 3.8rem;
+      border-top: 1px solid var(--line-200);
+      background: var(--bg-subtle);
+      font-family: var(--font-sans);
+      font-size: 0.78rem;
+      color: var(--ink-500);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    /* Lightbox */
+    .wp-lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(17, 19, 21, 0.88);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .wp-lightbox.is-open { display: flex; }
+
+    .wp-lightbox-box {
+      background: #FFFFFF;
+      border-radius: 10px;
+      padding: 1rem;
+      max-width: 94vw;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    .wp-lightbox-box img {
+      max-width: 90vw;
+      max-height: 80vh;
+      object-fit: contain;
+    }
+
+    .wp-lightbox-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.8rem;
+      color: #202124;
+    }
+
+    /* Print / PDF Typesetting */
+    @page {
+      size: A4;
+      margin: 15mm 14mm 16mm 14mm;
+    }
+
+    @media print {
+      body {
+        background: #FFFFFF !important;
+        color: #202124 !important;
+      }
+      .wp-topbar,
+      .wp-sidebar,
+      .wp-zoom-pill,
+      .wp-fig-link,
+      .wp-lightbox {
+        display: none !important;
+      }
+      .gcp-color-strip {
+        position: static;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .wp-layout {
+        display: block;
+        padding: 0;
+        max-width: 100%;
+      }
+      .wp-sheet {
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+      }
+      .wp-cover {
+        padding: 1rem 0 1.2rem;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .wp-meta-grid,
+      .wp-kpi-strip {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+      }
+      .wp-kpi-strip,
+      .wp-exec-box,
+      .wp-gate,
+      .wp-table th,
+      .wp-figcaption {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .wp-content {
+        padding: 1.2rem 0 0;
+        font-size: 10pt;
+        line-height: 1.56;
+      }
+      .wp-h2 {
+        font-size: 13.5pt;
+        margin-top: 1.6rem;
+        break-after: avoid;
+      }
+      .wp-h3 {
+        font-size: 11pt;
+        break-after: avoid;
+      }
+      .wp-figure,
+      .wp-table-wrap,
+      .wp-gate {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+      .wp-footer {
+        padding: 1rem 0 0;
+        background: transparent;
+      }
+    }
+
+    @media (max-width: 1100px) {
+      .wp-layout {
+        grid-template-columns: 1fr;
+      }
+      .wp-sidebar {
+        position: static;
+        max-height: none;
+      }
+      .wp-cover,
+      .wp-content,
+      .wp-footer {
+        padding-left: 1.6rem;
+        padding-right: 1.6rem;
+      }
+      .wp-meta-grid,
+      .wp-kpi-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  </style>
+  <meta name="git-commit" content="untracked">
+  <meta name="published-at" content="2026-11-16T07:44:25Z">
+</head>
+<body>
+  <div class="gcp-color-strip" aria-hidden="true"></div>
+
+  <header class="wp-topbar">
+    <div class="wp-topbar-inner">
+      <div class="wp-brand">
+        <span class="wp-doc-badge">Technical Whitepaper</span>
+        <span class="wp-brand-title">Google Cloud &middot; Specification-Driven Data Products (DPF)</span>
+      </div>
+      <div class="wp-actions">
+        <a href="https://github.com/MattATurner/data-product-framework" target="_blank" rel="noopener" class="wp-btn">GitHub Repo &nearr;</a>
+        <a href="../fhd/dpf-data-product-framework-fhd.html" target="_blank" rel="noopener" class="wp-btn">DPF-00 FHD &nearr;</a>
+        <a href="index.html" target="_blank" rel="noopener" class="wp-btn">3-Part Blog View &nearr;</a>
+        <button type="button" class="wp-btn" id="theme-btn">Dark / Light</button>
+        <button type="button" class="wp-btn wp-btn-primary" id="print-pdf-btn">Print / Save PDF</button>
+      </div>
+    </div>
+    <div class="wp-progress" id="wp-progress"></div>
+  </header>
+
+  <div class="wp-layout slide">
+    <aside class="wp-sidebar" aria-label="Whitepaper table of contents">
+      <div class="wp-side-card">
+        <h2 class="wp-side-title">Contents</h2>
+        <ul class="toc-list">
+          <li class="toc-item toc-l2"><a href="#executive-summary" class="toc-anchor">Executive Summary</a></li><li class="toc-item toc-l2"><a href="#1-the-enterprise-data-delivery-paradox" class="toc-anchor">1. The Enterprise Data Delivery Paradox</a></li><li class="toc-item toc-l3"><a href="#1-1-why-faster-sql-has-not-produced-faster-outcomes" class="toc-anchor">1.1 Why Faster SQL Has Not Produced Faster Outcomes</a></li><li class="toc-item toc-l3"><a href="#1-2-why-unbounded-prompt-driven-pipelines-stall-at-scale" class="toc-anchor">1.2 Why Unbounded Prompt-Driven Pipelines Stall at Scale</a></li><li class="toc-item toc-l2"><a href="#2-the-6-human-gated-operating-model" class="toc-anchor">2. The 6 Human-Gated Operating Model</a></li><li class="toc-item toc-l3"><a href="#step-1-prioritise-turn-business-ambition-into-a-funded-use-case-" class="toc-anchor">Step 1: Prioritise — Turn Business Ambition into a Funded Use-Case Brief</a></li><li class="toc-item toc-l3"><a href="#step-2-describe-capture-plain-english-rules-in-a-business-requir" class="toc-anchor">Step 2: Describe — Capture Plain-English Rules in a Business Requirements Document (Gate G0)</a></li><li class="toc-item toc-l3"><a href="#step-3-design-ground-architecture-and-approve-the-design-1-page-" class="toc-anchor">Step 3: Design — Ground Architecture and Approve the Design &amp; 1-Page Playback (Gate G1)</a></li><li class="toc-item toc-l3"><a href="#step-4-build-compile-pipelines-security-bi-deterministically-gat" class="toc-anchor">Step 4: Build — Compile Pipelines, Security &amp; BI Deterministically (Gates G2 &amp; G3)</a></li><li class="toc-item toc-l3"><a href="#step-5-accept-verify-live-data-and-publish-an-attested-live-data" class="toc-anchor">Step 5: Accept — Verify Live Data and Publish an Attested Live Data Product (Gate G4)</a></li><li class="toc-item toc-l3"><a href="#step-6-monitor-evolve-track-live-sla-status-and-loop-amendments-" class="toc-anchor">Step 6: Monitor &amp; Evolve — Track Live SLA Status and Loop Amendments Back to Step 2</a></li><li class="toc-item toc-l2"><a href="#3-architectural-principles-from-business-intent-enterprise-conte" class="toc-anchor">3. Architectural Principles: From Business Intent &amp; Enterprise Context to Four Synchronised Outcomes</a></li><li class="toc-item toc-l3"><a href="#3-1-business-intent-enterprise-context" class="toc-anchor">3.1 Business Intent &amp; Enterprise Context</a></li><li class="toc-item toc-l3"><a href="#3-2-grounded-design-compilation" class="toc-anchor">3.2 Grounded Design &amp; Compilation</a></li><li class="toc-item toc-l3"><a href="#3-3-four-synchronised-outcomes" class="toc-anchor">3.3 Four Synchronised Outcomes</a></li><li class="toc-item toc-l2"><a href="#4-symbiotic-governance-at-estate-scale-pairing-dpf-with-the-agen" class="toc-anchor">4. Symbiotic Governance at Estate Scale: Pairing DPF with the Agentic Data Governance Framework (AGF)</a></li><li class="toc-item toc-l3"><a href="#4-1-what-is-the-agentic-data-governance-framework-agf-and-how-do" class="toc-anchor">4.1 What Is the Agentic Data Governance Framework (AGF) and How Does It Work with DPF?</a></li><li class="toc-item toc-l3"><a href="#4-2-data-product-framework-dpf-build-time-specification-product-" class="toc-anchor">4.2 Data Product Framework (DPF): Build-Time Specification &amp; Product Delivery</a></li><li class="toc-item toc-l3"><a href="#4-3-agentic-data-governance-framework-agf-run-time-estate-protec" class="toc-anchor">4.3 Agentic Data Governance Framework (AGF): Run-Time Estate Protection &amp; Continuous Assurance</a></li><li class="toc-item toc-l3"><a href="#4-4-the-closed-loop-handshake-published-intent-estate-feedback" class="toc-anchor">4.4 The Closed-Loop Handshake: Published Intent &amp; Estate Feedback</a></li><li class="toc-item toc-l2"><a href="#5-adoption-roadmap-reference-implementation" class="toc-anchor">5. Adoption Roadmap &amp; Reference Implementation</a></li><li class="toc-item toc-l3"><a href="#exploring-the-open-reference-implementation" class="toc-anchor">Exploring the Open Reference Implementation</a></li><li class="toc-item toc-l2"><a href="#conclusion-what-this-architecture-proves" class="toc-anchor">Conclusion: What This Architecture Proves</a></li><li class="toc-item toc-l2"><a href="#reference-repository" class="toc-anchor">Reference Repository</a></li>
+        </ul>
+      </div>
+
+      <div class="wp-side-card">
+        <h2 class="wp-side-title">Reference Assets</h2>
+        <ul class="side-links">
+          <li><a href="https://github.com/MattATurner/data-product-framework" target="_blank" rel="noopener"><span class="side-link-t">DPF Reference Repository &nearr;</span><span class="side-link-s">MattATurner/data-product-framework</span></a></li>
+          <li><a href="../fhd/dpf-data-product-framework-fhd.html" target="_blank" rel="noopener"><span class="side-link-t">Live DPF-00 Capability Map &nearr;</span><span class="side-link-s">6-Pillar Functional Hierarchy</span></a></li>
+          <li><a href="../fhd/dpf-data-product-framework-fhd.html" target="_blank" rel="noopener"><span class="side-link-t">Live ADG-00 Governance Map &nearr;</span><span class="side-link-s">5-Pillar Estate Guardians</span></a></li>
+          <li><a href="https://drive.google.com/drive/folders/1-aHhTHJRxbwx4fcC_MFw9pWsIw2r9Fef" target="_blank" rel="noopener"><span class="side-link-t">Google Drive Folder &nearr;</span><span class="side-link-s">Editable Doc &amp; PDF Editions</span></a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <article class="wp-sheet">
+      <header class="wp-cover">
+        <div class="wp-cover-eyebrow">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 3L4 7.5V16.5L12 21L20 16.5V7.5L12 3Z" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+            <circle cx="12" cy="12" r="3" fill="#1E8E3E"/>
+          </svg>
+          <span>Google Cloud &middot; Data &amp; AI Reference Architecture</span>
+        </div>
+        <h1 class="wp-h1">Specification-Driven Data Products on Google Cloud</h1>
+        <p class="wp-subtitle">Compressing Enterprise Data Delivery from Months to Days with Plain-English Specifications, Reusable Organisational Context, Deterministic Multi-Plane Compilation, and Symbiotic Runtime Governance</p>
+
+        <div class="wp-meta-grid">
+          <div class="wp-meta-cell">
+            <span>Author</span>
+            <strong>Matt Turner (Google Cloud)</strong>
+          </div>
+          <div class="wp-meta-cell">
+            <span>Document Type</span>
+            <strong>Technical Whitepaper</strong>
+          </div>
+          <div class="wp-meta-cell">
+            <span>Publication Date</span>
+            <strong>November 2026</strong>
+          </div>
+          <div class="wp-meta-cell">
+            <span>Reading Time</span>
+            <strong>26 min (5,508 words)</strong>
+          </div>
+        </div>
+      </header>
+
+      <section class="wp-kpi-strip" aria-label="Reference Architecture Highlights">
+        <div class="wp-kpi-item">
+          <span class="wp-kpi-val">6 Gates</span>
+          <span class="wp-kpi-lbl">Plain-English G0 to Digest-Bound G4</span>
+        </div>
+        <div class="wp-kpi-item">
+          <span class="wp-kpi-val">&lt; 2 sec</span>
+          <span class="wp-kpi-lbl">Offline Deterministic Multi-Plane Build</span>
+        </div>
+        <div class="wp-kpi-item">
+          <span class="wp-kpi-val">4 Planes</span>
+          <span class="wp-kpi-lbl">Dataform/dbt, Terraform, Catalog &amp; Looker</span>
+        </div>
+        <div class="wp-kpi-item">
+          <span class="wp-kpi-val">CDMC C1–C14</span>
+          <span class="wp-kpi-lbl">Symbiotic Estate Assurance with AGF</span>
+        </div>
+      </section>
+
+      <div class="wp-content">
+        <section class="wp-exec-box" id="executive-summary" aria-labelledby="exec-h">
+          <h2 class="wp-exec-heading" id="exec-h">Executive Summary</h2>
+          <p>Over the past eighteen months, enterprise data teams have encountered a frustrating paradox. Generative AI assistants can draft a hundred lines of SQL in ten seconds, yet taking a new business idea all the way to a trusted, governed production data product still takes months. Speeding up SQL typing inside a fragmented delivery process simply moves teams faster toward user-acceptance rework, security review delays, and reconciliation disputes with Finance.</p>
+<p>This whitepaper introduces the Data Product Framework (DPF), an open, specification-driven operating model and reference implementation for Google Cloud. Rather than asking engineers to hand-stitch five separate cloud tools on every project—or allowing unconstrained coding agents to guess business rules in the dark—DPF separates what machines do deterministically from what only humans can decide. Organisations encode their institutional context once in a shared registry, capture each business need in plain everyday English, and compile every cloud plane offline in seconds between six explicit human decision gates.</p>
+<p>At enterprise scale, build-time compilation is paired symbiotically with the Agentic Data Governance Framework (AGF)—a companion runtime reference architecture on Gemini Platform that governs live cloud estates from table birth through seven-year retirement across all fourteen EDM Council Cloud Data Management Capabilities (CDMC). Using BigQuery Knowledge Catalog and seven single-writer metadata aspects as a zero-coupling contract bus, DPF enforces privacy, lineage, and semantic invariants before code ever ships—while AGF guardians continuously verify live table births, purpose-based access, general-ledger reconciliation, and regulatory retention across the cloud estate.</p>
+<p>In our reference architecture, a single validated plain-English specification and concise source-typing SQL compile deterministically in under two seconds into complete BigQuery and Dataform (or dbt) transformation pipelines, row-level quarantine gates, Terraform IAM and dynamic masking policies, isolated partner BigQuery sharing listings, BigQuery Knowledge Catalog quality scans, and symmetric-aggregate-safe Looker Explores and dashboards—compressing weeks of cross-team plumbing into hours while raising governance rigour.</p>
+        </section>
+
+        <h2 id="1-the-enterprise-data-delivery-paradox" class="wp-h2">1. The Enterprise Data Delivery Paradox</h2>
+<h3 id="1-1-why-faster-sql-has-not-produced-faster-outcomes" class="wp-h3">1.1 Why Faster SQL Has Not Produced Faster Outcomes</h3>
+<p>When data leaders audit where calendar time actually disappears between an initial business request and a trusted executive dashboard, writing transformation SQL rarely accounts for more than ten percent of elapsed effort. Across industries, quarters vanish into four structural bottlenecks:</p>
+<ol class="wp-ol"><li><span class="wp-li-lead">Unscored portfolio intake:</span> Engineering capacity is consumed debating vague requests or building low-return pipelines because teams lack a lightweight, objective way to score commercial value against data readiness upfront.</li><li><span class="wp-li-lead">Translation ping-pong between business and engineering:</span> Requirements are captured either as wishful slide decks or as spreadsheets of raw source column names, leaving critical commercial edge cases—such as mid-year customer reclassifications, cancelled orders, and restatement windows—undiscovered until user acceptance testing.</li><li><span class="wp-li-lead">Manual five-plane stitching:</span> Delivering a single governed data product requires coordinating transformation SQL, infrastructure and IAM, column-level PII masking, catalog metadata and quality rules, and BI semantic models across disconnected repositories and teams.</li><li><span class="wp-li-lead">Green syntax, wrong business numbers:</span> Pipelines pass technical continuous-integration checks while publishing figures that disagree with Finance or Merchandising because automated tests check syntax and nullability rather than signed business semantics.</li></ol>
+<h3 id="1-2-why-unbounded-prompt-driven-pipelines-stall-at-scale" class="wp-h3">1.2 Why Unbounded Prompt-Driven Pipelines Stall at Scale</h3>
+<p>With the arrival of autonomous coding agents and engine-native assistants, many teams hope to bypass those bottlenecks by prompting an agent directly from a chat request to a deployed pipeline. While effective for one-off sandbox exploration, prompt-driven pipelines stall in enterprise production for three reasons:</p>
+<ol class="wp-ol"><li><span class="wp-li-lead">Agents lack your institutional context:</span> Generic models know BigQuery and Terraform syntax, yet they do not know that your business day runs strictly during regional trading hours, that an isolated operational database allows only periodic outbound extracts, which domains share a single conformed definition of Customer, or which columns require dynamic PII masking. Without structured context, engineers re-explain institutional rules in prompts and pull-request comments on every project.</li><li><span class="wp-li-lead">Database jargon leaks into business sign-off:</span> When engineers or agents ask business sponsors to approve documents filled with terms like table grain, surrogate keys, or Slowly Changing Dimensions Type 2, sponsors sign documents they cannot meaningfully verify.</li><li><span class="wp-li-lead">Multi-plane drift accelerates:</span> Generating SQL ten times faster without deterministic coordination across Terraform, BigQuery Knowledge Catalog, and Looker simply creates ten times more ungoverned tables, missing policy tags, and shadow BI derived tables.</li></ol>
+<div class="wp-table-wrap"><table class="wp-table"><thead><tr><th>Delivery Dimension</th><th>Traditional &amp; Ad-Hoc Agent Delivery</th><th>Specification-Driven Delivery with DPF</th></tr></thead><tbody><tr><td>Portfolio triage</td><td>Weeks debating uncosted requests or building low-impact tickets</td><td>Two-page Candidate Idea scored across 11 Value and Ease criteria before engineering starts</td></tr><tr><td>Requirement capture</td><td>Technical jargon or raw column lists that hide edge cases until UAT</td><td>11-Group Business Rubric in plain commercial English; modelling and cloud jargon blocked at Gate G0</td></tr><tr><td>Institutional knowledge</td><td>Re-explained in tickets, chat threads, and code reviews per project</td><td>Encoded once in shared registries for glossary, sources, Existing Foundations, calendars, and masking</td></tr><tr><td>Multi-plane build</td><td>Weeks hand-syncing SQL, Terraform, IAM, catalog entries, and LookML</td><td>Offline Multi-Plane Compiler emits Dataform or dbt, Terraform, Knowledge Catalog, and Looker in seconds</td></tr><tr><td>Production release</td><td>Pipeline compiles green in CI while dashboards miss Finance totals</td><td>Cryptographic SHA-256 Build Digest Evidence plus human domain attestation at Gate G4</td></tr></tbody></table></div>
+<hr class="wp-rule" aria-hidden="true">
+<h2 id="2-the-6-human-gated-operating-model" class="wp-h2">2. The 6 Human-Gated Operating Model</h2>
+<p>To compress delivery from months to hours and days without sacrificing trust, DPF separates one-time portfolio funding from a continuous five-stage product lifecycle. Deterministic checks and bounded AI skills handle ninety-five percent of preparation between stages, while leaders step in strictly at six clear decision gates—and ongoing business evolution loops straight back into Step 2 rather than restarting portfolio intake.</p>
+
+                    <figure class="wp-figure" id="fig-figure-1">
+                      <div class="wp-figure-canvas" role="button" tabindex="0" data-zoom-src="dpf_operating_model_executive.png" data-zoom-cap="Figure 1 — Enterprise Data Product Operating Model — a one-time Opportunity Funnel (Step 01) feeds a continuous five-stage lifecycle (Steps 02–06), where business amendments loop directly back into Step 02 in hours.">
+                        <img data-svg-key="dpf_operating_model_executive.png" alt="Figure 1 — Enterprise Data Product Operating Model: From Opportunity Funnel to Virtuous Evolution Loop">
+                        <span class="wp-zoom-pill">Inspect Full-Screen</span>
+                      </div>
+                      <figcaption class="wp-figcaption">
+                        <div><strong>Figure 1.</strong> Enterprise Data Product Operating Model — a one-time Opportunity Funnel (Step 01) feeds a continuous five-stage lifecycle (Steps 02–06), where business amendments loop directly back into Step 02 in hours.</div>
+                        <a href="../fhd/dpf-data-product-framework-fhd.html" target="_blank" rel="noopener" class="wp-fig-link">Explore Interactive DPF-00 FHD &nearr;</a>
+                      </figcaption>
+                    </figure>
+                    
+<h3 id="step-1-prioritise-turn-business-ambition-into-a-funded-use-case-" class="wp-h3">Step 1: Prioritise — Turn Business Ambition into a Funded Use-Case Brief</h3>
+<p>High-impact data products rarely originate inside an engineering backlog. They emerge from structured business innovation workshops, quarterly commercial reviews, frontline operational bottlenecks, and executive value-discovery sessions targeting concrete levers—growing customer revenue, reducing operational cost and leakage, automating manual risk decisions, or unlocking external partner insights. Left unstructured, however, those workshops generate dozens of competing wishlist ideas where the loudest voice in the room wins engineering capacity rather than the highest-return opportunity.</p>
+<p>Step 1 channels that raw stream of ideas into a disciplined opportunity funnel before a single engineer is assigned. Sponsors capture each candidate opportunity as a concise two-page Funded Use-Case Brief focused strictly on the commercial decision at stake, measurable upside, target consumers, and believed source systems—giving leadership an apples-to-apples view across revenue generation, cost reduction, and risk-mitigation bets.</p>
+<div class="wp-gate wp-gate-auto"><div class="wp-gate-label">Deterministic &amp; Agentic Automation</div><div class="wp-gate-body"><ol class="wp-ol"><li>The Readiness Check agent evaluates the two-page submission against an eleven-criterion evidence rubric before the scoring panel meets, flagging vague value claims, unstated consumers, or honest source-readiness unknowns as clear questions for the sponsor.</li></ol></div></div>
+<div class="wp-gate wp-gate-human"><div class="wp-gate-label">Human Decision Gate</div><div class="wp-gate-body"><p>At the Portfolio Gate, business and data leaders score the candidate funnel across eleven weighted Value and Ease criteria in a single session—approving high-return Quick Wins as a Funded Use-Case Brief, sequencing larger Strategic Bets, and parking low-return requests before engineering begins.</p></div></div>
+<h3 id="step-2-describe-capture-plain-english-rules-in-a-business-requir" class="wp-h3">Step 2: Describe — Capture Plain-English Rules in a Business Requirements Document (Gate G0)</h3>
+<p>Once a candidate opportunity clears the portfolio funnel, the greatest threat to delivery velocity is premature technical translation. In most organisations, discovery sessions immediately drift into database schemas, raw source column names, and cloud modelling terminology—forcing business sponsors to nod along to technical specifications they cannot genuinely verify while leaving critical commercial edge cases unspoken until months later in user acceptance testing.</p>
+<p>Step 2 keeps requirements anchored strictly in how the business operates and measures success. Product owners, domain subject-matter experts, and business analysts collaborate interactively with an AI Business Analyst skill guided by the 11-Group Business Rubric—either starting from initial workshop notes or a partially filled form and interviewing only for the missing gaps, or walking through targeted commercial questions that quietly determine downstream architecture without technical terms (such as asking whether past figures should move when a customer changes segment rather than asking about dimension types). Whenever an answer is unknown, it is recorded explicitly as an open business question rather than guessed, producing a Business Requirements Document any executive sponsor can read, challenge, and stand behind.</p>
+<div class="wp-gate wp-gate-auto"><div class="wp-gate-label">Deterministic &amp; Agentic Automation</div><div class="wp-gate-body"><ol class="wp-ol"><li>Deterministic Gate G0 validation checks that all 11 rubric groups and worked acceptance examples are complete, verifies every metric and attribute against the shared business glossary, mechanically rejects any leaked database or cloud vocabulary (such as fact table, SCD, partition, or BigQuery), and compiles any unanswered items into a plain-English follow-up question list for the business.</li><li>An independent zero-context Ambiguity Check inspects the drafted Business Requirements Document on its own (without the interview conversation history) to surface hidden assumptions or unstated cancellation and restatement edge cases before sign-off.</li></ol></div></div>
+<div class="wp-gate wp-gate-human"><div class="wp-gate-label">Human Decision Gate</div><div class="wp-gate-body"><p>The business sponsor reads the Business Requirements Document written entirely in their own commercial language and signs off at Gate G0.</p></div></div>
+<h3 id="step-3-design-ground-architecture-and-approve-the-design-1-page-" class="wp-h3">Step 3: Design — Ground Architecture and Approve the Design &amp; 1-Page Playback (Gate G1)</h3>
+<p>Even the clearest business specification will stall in delivery if it collides six weeks later with an unexamined network firewall, an operational system that overwrites history in place, or three departments calculating the same metric differently. Traditionally, architects spend weeks in cross-team alignment meetings rediscovering enterprise standards and source quirks from scratch on every project—or engineers quietly compromise business requirements in code when a physical constraint surfaces mid-sprint.</p>
+<p>Step 3 collapses weeks of architectural discovery into hours by resolving the technical design directly against the organisation&#x27;s shared context registries—matching business intent against existing BigQuery foundations, conformed enterprise dimensions, security classifications, and real source reachability limits on Day 1. Whenever a source constraint requires a commercial trade-off, it is surfaced transparently to the sponsor upfront, and the resolved Design &amp; 1-Page Playback is signed in plain English before build begins.</p>
+<div class="wp-gate wp-gate-auto"><div class="wp-gate-label">Deterministic &amp; Agentic Automation</div><div class="wp-gate-body"><ol class="wp-ol"><li>Design &amp; SQL skills combine the approved Business Requirements Document with Organisational Context to produce the Technical Design Document and Design &amp; Product Manifest—defaulting to a lean direct model unless cross-domain conformance or historical tracking justifies dimensional or point-in-time modelling.</li><li>Source feasibility checks compare requested freshness and history rules against registered source capabilities, surfacing physical constraints immediately rather than downgrading service levels silently during build.</li><li>An independent Blind Playback agent inspects only the resolved manifest and SQL—without reading the original business document—and generates a one-page plain-English playback describing what the build will actually deliver, including any known source limitations.</li></ol></div></div>
+<div class="wp-gate wp-gate-human"><div class="wp-gate-label">Human Decision Gate</div><div class="wp-gate-body"><p>The business sponsor reviews the Design &amp; 1-Page Playback and records their sign-off at Gate G1. DPF locks that signature to a cryptographic SHA-256 semantic digest covering grain, history, and metric definitions; if any subsequent edit alters business meaning, Gate G1 invalidates the signature automatically until re-confirmed.</p></div></div>
+<h3 id="step-4-build-compile-pipelines-security-bi-deterministically-gat" class="wp-h3">Step 4: Build — Compile Pipelines, Security &amp; BI Deterministically (Gates G2 &amp; G3)</h3>
+<p>In conventional cloud delivery, signing off an architecture triggers the longest and most fragile phase of the project: weeks of manual coordination across separate repositories for transformation SQL, Terraform infrastructure, IAM and column masking, catalog registration, data quality rules, and BI semantic views. Every hand-off between data engineering, platform security, and analytics teams introduces subtle drift, inconsistent definitions, and multi-week review queues.</p>
+<p>Step 4 eliminates manual multi-plane wiring by compiling every cloud layer deterministically from the signed manifest into Compiled Pipelines &amp; BI. Engineers focus exclusively on genuine source-cleansing logic—and when exploring an unfamiliar dataset early on, can use a built-in Prototype Fast-Path to scaffold or import working Dataform and Looker sandboxes in minutes—while production promotion stays gated until business sign-off at Gates G0 and G1 is complete.</p>
+<div class="wp-gate wp-gate-auto"><div class="wp-gate-label">Deterministic &amp; Agentic Automation</div><div class="wp-gate-body"><ol class="wp-ol"><li>At Gate G2, Skill &amp; Adapter Compose selects the appropriate platform skills and MCP tools for each stage and verifies that every business acceptance scenario maps to an executable test.</li><li>At Gate G3, the offline Deterministic Product Compiler renders the complete Dataform or dbt project, row-quarantine views, Terraform IAM and policy-tag modules, BigQuery Knowledge Catalog registration payloads, and Looker views and dashboards twice in memory to prove byte-identical determinism.</li></ol></div></div>
+<div class="wp-gate wp-gate-human"><div class="wp-gate-label">Human Decision Gate</div><div class="wp-gate-body"><p>The engineer writes only concise source-typing SQL where needed and approves the Compiled Pipelines &amp; BI at Single Build Review (Gates G2 and G3), where every generated resource traces back to a numbered business requirement.</p></div></div>
+<h3 id="step-5-accept-verify-live-data-and-publish-an-attested-live-data" class="wp-h3">Step 5: Accept — Verify Live Data and Publish an Attested Live Data Product (Gate G4)</h3>
+<p>Every data leader knows the reputational cost of a pipeline that passes every technical continuous-integration check yet lands in an executive steering meeting showing revenue totals that disagree with Finance&#x27;s general ledger or product categories that Merchandising no longer recognises. Passing SQL syntax and nullability checks proves that a pipeline ran; it does not prove that commercial truth was delivered.</p>
+<p>Step 5 treats production publication as an earned commercial outcome rather than an automatic deployment step. Until a new or updated data product proves structural and scenario integrity against live data—and receives explicit sign-off from accountable domain authorities on the reconciliations no SQL query can verify alone—it remains marked provisional in BigQuery Knowledge Catalog so only an Attested Live Data Product ever reaches downstream consumers.</p>
+<div class="wp-gate wp-gate-auto"><div class="wp-gate-label">Deterministic &amp; Agentic Automation</div><div class="wp-gate-body"><ol class="wp-ol"><li>Live Sandbox Verification executes every generated grain, history, quarantine, masking, sharing, LookML, and business-scenario SQL assertion against the deployed build, writing results into Build Digest Evidence bound to the exact SHA-256 build hash. Modifying even one line of SQL invalidates stale evidence immediately.</li></ol></div></div>
+<div class="wp-gate wp-gate-human"><div class="wp-gate-label">Human Decision Gate</div><div class="wp-gate-body"><p>For commercial truths that no SQL query can prove alone—such as confirming that monthly net sales reconcile to Finance&#x27;s general ledger—domain owners record an explicit Outcome Attestation at Gate G4, promoting the Attested Live Data Product to published.</p></div></div>
+<h3 id="step-6-monitor-evolve-track-live-sla-status-and-loop-amendments-" class="wp-h3">Step 6: Monitor &amp; Evolve — Track Live SLA Status and Loop Amendments Back to Step 2</h3>
+<p>Launching a data product is only the start of its commercial lifecycle. Left to generic infrastructure monitoring, Day-two operations typically swing between two failure modes: alert fatigue from midnight cron checks firing on weekends when nobody is making decisions, or silent metric staleness during peak trading hours followed by weeks of ad-hoc ticket triage whenever an upstream schema shifts or a business rule evolves.</p>
+<p>Step 6 anchors live observability and ongoing evolution in the exact business calendar and requirements agreed upfront—producing a continuous Live SLA Status &amp; Change Brief that drives a fast virtuous cycle without sending existing products back through initial use-case scoring. Service levels are watched during real regional working hours, and every Day-two signal routes to the lightest gate that governs it: new metrics, altered commercial rules, or revised service levels loop straight back into Step 2 (Describe) for plain-English amendment in hours; purely technical optimisations with unchanged business meaning re-enter at Step 3 (Design); and only net-new spin-off ideas or low-adoption sunset reviews return to Step 1&#x27;s portfolio funnel.</p>
+<div class="wp-gate wp-gate-auto"><div class="wp-gate-label">Deterministic &amp; Agentic Automation</div><div class="wp-gate-body"><ol class="wp-ol"><li>Working-hours checks evaluate freshness and volume against the published data product strictly during the organisation&#x27;s declared operating calendar—suppressing 3:00 AM Sunday false alarms while catching real business-hour delays.</li><li>When a genuine breach occurs, DPF traces the alert straight back to the affected business requirement, links the operator runbook, and drafts a pre-populated Live SLA Status &amp; Change Brief ready to enter Step 2 or Step 3 in hours.</li></ol></div></div>
+<div class="wp-gate wp-gate-human"><div class="wp-gate-label">Human Decision Gate</div><div class="wp-gate-body"><p>At Change &amp; Evolution Triage, the product owner approves the Live SLA Status &amp; Change Brief—deciding whether the resolution is an immediate operational replay, a plain-English requirement amendment into Step 2, or a technical tuning delta into Step 3.</p></div></div>
+<hr class="wp-rule" aria-hidden="true">
+<h2 id="3-architectural-principles-from-business-intent-enterprise-conte" class="wp-h2">3. Architectural Principles: From Business Intent &amp; Enterprise Context to Four Synchronised Outcomes</h2>
+<p>Behind the six-step operating model sits a deliberate three-part architecture (Figure 2): combining per-product business intent with reusable enterprise context and approved architecture patterns (Column 1), decomposing business requirements into a multi-service technical design and deterministic compile plan (Column 2), and emitting four synchronised cloud outcomes with zero cross-layer drift (Column 3).</p>
+
+                    <figure class="wp-figure" id="fig-figure-2">
+                      <div class="wp-figure-canvas" role="button" tabindex="0" data-zoom-src="dpf_context_compiler_executive.png" data-zoom-cap="Figure 2 — Three-Part Architectural Flow — Business Intent &amp; Enterprise Context (including Approved Architecture &amp; Semantic Patterns) resolve through Grounded Design &amp; Compilation into Four Synchronised Cloud Outcomes.">
+                        <img data-svg-key="dpf_context_compiler_executive.png" alt="Figure 2 — Plain-English Intent + Organisational Context -&gt; Four Synchronised Cloud Outcomes">
+                        <span class="wp-zoom-pill">Inspect Full-Screen</span>
+                      </div>
+                      <figcaption class="wp-figcaption">
+                        <div><strong>Figure 2.</strong> Three-Part Architectural Flow — Business Intent &amp; Enterprise Context (including Approved Architecture &amp; Semantic Patterns) resolve through Grounded Design &amp; Compilation into Four Synchronised Cloud Outcomes.</div>
+                        <a href="https://github.com/MattATurner/data-product-framework" target="_blank" rel="noopener" class="wp-fig-link">Inspect Compiler in GitHub &nearr;</a>
+                      </figcaption>
+                    </figure>
+                    
+<h3 id="3-1-business-intent-enterprise-context" class="wp-h3">3.1 Business Intent &amp; Enterprise Context</h3>
+<p>Ninety percent of architectural friction in enterprise data delivery comes from rediscovering institutional rules and reinventing service topologies from scratch on every project. Column 1 of Figure 2 separates what changes per product from the paved-road context that Enterprise and Platform Architects encode once and reuse everywhere:</p>
+<ol class="wp-ol"><li><span class="wp-li-lead">Business Specification (Per Product):</span> Captures commercial purpose, required metrics, finest level of detail, historical behaviour, decision latency, data-fitness expectations, privacy boundaries, and worked acceptance examples in plain everyday English approved at Gate G0—never infrastructure or service names.</li><li><span class="wp-li-lead">Organisational Context (Encoded Once):</span> Version-controlled registries encoding four enterprise assets: Approved Architecture &amp; Semantic Patterns (sanctioned ingestion, processing, storage, semantic-layer, and serving blueprints paired with machine-readable entry conditions), the Shared Business Glossary (canonical metric definitions, Critical Data Element flags, and sensitivity classifications), Source System Limits (network reachability, event or change-capture capabilities, and whether operational tables retain history or overwrite in place), and Working-Hour Calendars &amp; Sovereign Defaults (local trading hours and approved cloud regions).</li><li><span class="wp-li-lead">Existing Foundations (Reused):</span> Catalogues established datasets, conformed enterprise dimensions across the conformance bus matrix, and existing governed semantic models so new products compose cleanly over trusted foundations rather than duplicating upstream pipelines or metric logic.</li></ol>
+<h3 id="3-2-grounded-design-compilation" class="wp-h3">3.2 Grounded Design &amp; Compilation</h3>
+<p>Business sponsors never specify event buses, stream processors, lakehouse table formats, or semantic join mechanics—they express operational and commercial needs. Column 2 of Figure 2 turns those plain-English needs into a concrete, multi-service Technical Design Document (TDD) and verified build across two stages:</p>
+<h4 id="grounded-design-playback" class="wp-h4">Grounded Design &amp; Playback</h4>
+<p>Evaluates the Business Specification signals (decision latency, historical truth rules, data modality, cross-team metric agreement, and target consumer) alongside physical Source System Limits to select the appropriate enterprise implementation patterns across each stage of the product:</p>
+<div class="wp-table-wrap"><table class="wp-table"><thead><tr><th>BRD Business Signal &amp; Source Reality</th><th>Selected Enterprise Pattern</th><th>How the TDD Decomposes Across Cloud Services</th></tr></thead><tbody><tr><td>Immediate operational reflex (seconds) + event-capable source (e.g. fraud holds, live stock locks, telemetry alerts)</td><td>1. Continuous Event &amp; Stream Processing</td><td>Event ingestion backbone -&gt; stateful stream windowing, deduplication, and late-arrival watermarks -&gt; dual sink into a low-latency operational serving store (for sub-50ms API reads) and an immutable analytical log.</td></tr><tr><td>Intra-day or daily commercial truth + relational systems + past figures must stay as they were</td><td>2. Change-Capture &amp; Point-in-Time Analytical Core</td><td>Log-based or watermark change capture -&gt; append-only landing and row-quarantine gate -&gt; conformed point-in-time historical dimensions and restatement-bounded marts.</td></tr><tr><td>Cross-region residency boundaries or petabyte open-table/object sources where copying data is prohibitive</td><td>3. Zero-Copy Federated Lakehouse</td><td>Open-table metadata registration over object storage -&gt; federated push-down query execution -&gt; fine-grained column masking and row-access policies enforced in place without duplicating storage.</td></tr><tr><td>Commercial facts locked inside unstructured documents, audio, or images (e.g. contracts, claims, service transcripts)</td><td>4. Multimodal AI Extraction &amp; Enrichment</td><td>Object landing -&gt; event-triggered extraction, classification, and embedding pipelines on Gemini Platform -&gt; confidence-score quarantine routing ambiguous records to human review -&gt; joined structured and vector ports.</td></tr><tr><td>Cross-team metric reconciliation, semi-additive ratios, fan-out joins, self-service BI, or conversational AI consumers</td><td>5. Governed Semantic &amp; Metric Layer</td><td>Centralised semantic model enforcing canonical metric formulas, surrogate-key symmetric aggregates (preventing fan-out double-counting), aggregate awareness, and grounded context for BI and conversational agents.</td></tr><tr><td>External partner organisations (zero internal cloud access) or write-back into operational CRM/ERP workflows</td><td>6. Isolated Exchange &amp; Operational Activation</td><td>Isolated clean-room or BigQuery sharing listing with export locks and aggregated grain for external partners, or governed reverse-activation egress contracts with delivery receipts to operational APIs.</td></tr></tbody></table></div>
+<p>Four architectural rules keep pattern decomposition rigorous rather than opaque:</p>
+<ol class="wp-ol"><li><span class="wp-li-lead">Per-stage pattern composition:</span> Patterns are selected independently across five stages (Acquire -&gt; Stage &amp; Quarantine -&gt; Transform -&gt; Semantic Layer -&gt; Serve). One BRD can combine event streaming for five-second alerts with analytical marts and a semantic layer for monthly Finance reporting off the same landing log.</li><li><span class="wp-li-lead">Non-prescriptive layer naming:</span> Functional stages are decoupled from storage conventions. Teams using Medallion map Stage &amp; Quarantine to Bronze and Transform to Silver and Gold in Organisational Context, while raw/conformed/mart, Data Vault, or zero-copy architectures keep their own naming.</li><li><span class="wp-li-lead">Complexity as a justified cost:</span> Organisational Context defaults to the leanest viable pattern. Stepping up to stateful streaming, point-in-time history, or a multi-entity semantic model requires an explicit BRD signal—and any custom departure requires an Architecture Decision Record (ADR).</li><li><span class="wp-li-lead">Day-1 feasibility trade-offs:</span> When a BRD requests sub-minute action from a source that only exports nightly batches, Step 3 flags the collision upfront—giving the sponsor a clear choice between funding source modernisation or amending the BRD before Gate G1.</li></ol>
+<h4 id="deterministic-product-compiler" class="wp-h4">Deterministic Product Compiler</h4>
+<p>Once the resolved TDD and one-page playback are signed at Gate G1, the offline compiler reads the signed manifest and concise transformation logic and renders the selected patterns twice in memory—guaranteeing byte-identical output and zero drift across data pipelines, security policies, catalog metadata, and semantic models.</p>
+<h3 id="3-3-four-synchronised-outcomes" class="wp-h3">3.3 Four Synchronised Outcomes</h3>
+<p>As shown in Column 3 of Figure 2, compiling the selected patterns from a single manifest produces four synchronised cloud outcomes simultaneously:</p>
+<ol class="wp-ol"><li><span class="wp-li-lead">Acquire, Stage &amp; Transform:</span> Emits the contracts and pipelines required by the selected data pattern—spanning event-stream schemas, append-only landing tables, blocking row-quarantine gates, point-in-time historical dimensions, restatement-bounded consumer marts, or multimodal enrichment workflows on Gemini Platform, mapped onto the organisation&#x27;s chosen layer convention (such as Medallion, raw/conformed/mart, or direct views).</li><li><span class="wp-li-lead">Access, Masking &amp; Sharing:</span> Emits least-privilege IAM bindings, taxonomy classifications, column-level policy tags with dynamic PII masking rules, row-level access predicates, and isolated BigQuery sharing clean-room listings for external partners.</li><li><span class="wp-li-lead">Catalog, Lineage &amp; Quality:</span> Emits structured BigQuery Knowledge Catalog registration payloads carrying accountable ownership, business glossary links, upstream-to-downstream lineage expectations, and automated data quality gates.</li><li><span class="wp-li-lead">Semantic Layer &amp; Consumption:</span> Compiles the governed semantic layer—binding canonical metric formulas, symmetric-aggregate join keys, time-intelligence calendars, aggregate-awareness accelerations, Stephen Few-compliant executive dashboards, natural-language grounding for conversational AI agents, and operational API or partner serving contracts to the exact same underlying model.</li></ol>
+<hr class="wp-rule" aria-hidden="true">
+<h2 id="4-symbiotic-governance-at-estate-scale-pairing-dpf-with-the-agen" class="wp-h2">4. Symbiotic Governance at Estate Scale: Pairing DPF with the Agentic Data Governance Framework (AGF)</h2>
+<h3 id="4-1-what-is-the-agentic-data-governance-framework-agf-and-how-do" class="wp-h3">4.1 What Is the Agentic Data Governance Framework (AGF) and How Does It Work with DPF?</h3>
+<p>The Agentic Data Governance Framework (AGF) is the companion runtime reference architecture that protects and governs an organisation&#x27;s live data estate after products ship—and across all the ad-hoc analyst tables, raw landing zones, and third-party feeds that exist outside formal product pipelines.</p>
+<p>Attempting to turn a build-time product compiler into an estate-wide runtime policing engine creates bloated, overlapping tooling. Conversely, running data governance as a manual review committee after pipelines are already in production fails because human stewards cannot keep up with cloud-scale data creation. As shown in Figure 3, DPF and AGF solve complementary halves of a single continuous lifecycle—DPF governing build-time specification and product delivery, and AGF governing run-time estate protection and continuous assurance across all fourteen EDM Council Cloud Data Management Capabilities (CDMC). Across its runtime checks, AGF applies an 80/20 operating principle: roughly eighty percent of routine scans, policy checks, and access expiries execute deterministically through event-driven rules, while bounded AI agents investigate the remaining twenty percent of ambiguous anomalies and route concise plain-English decisions to human stewards.</p>
+
+                    <figure class="wp-figure" id="fig-figure-3">
+                      <div class="wp-figure-canvas" role="button" tabindex="0" data-zoom-src="dpf_agf_symbiosis_executive.png" data-zoom-cap="Figure 3 — Two-Box Symbiotic Architecture — DPF governs build-time specification and product delivery, while AGF provides continuous run-time estate protection and assurance via Published Intent and Estate Feedback.">
+                        <img data-svg-key="dpf_agf_symbiosis_executive.png" alt="Figure 3 — How the Data Product Framework (DPF) and Agentic Data Governance Framework (AGF) Work Together">
+                        <span class="wp-zoom-pill">Inspect Full-Screen</span>
+                      </div>
+                      <figcaption class="wp-figcaption">
+                        <div><strong>Figure 3.</strong> Two-Box Symbiotic Architecture — DPF governs build-time specification and product delivery, while AGF provides continuous run-time estate protection and assurance via Published Intent and Estate Feedback.</div>
+                        <a href="../fhd/dpf-data-product-framework-fhd.html" target="_blank" rel="noopener" class="wp-fig-link">Explore Interactive ADG-00 FHD &nearr;</a>
+                      </figcaption>
+                    </figure>
+                    
+<h3 id="4-2-data-product-framework-dpf-build-time-specification-product-" class="wp-h3">4.2 Data Product Framework (DPF): Build-Time Specification &amp; Product Delivery</h3>
+<p>The left box of Figure 3 summarises how DPF embeds governance directly into product design before any pipeline reaches production:</p>
+<ol class="wp-ol"><li><span class="wp-li-lead">Plain-English Business Intent:</span> Captures commercial rules, accountable ownership, data stewardship, and authorised business purposes in everyday language at Gate G0.</li><li><span class="wp-li-lead">Upfront Privacy &amp; Policy Design:</span> Applies shared business glossary definitions, enforces regional residency allowlists, attaches dynamic PII masking rules, and blocks any model that exposes restricted fields on an external partner boundary at Gate G1.</li><li><span class="wp-li-lead">Deterministic Product Compilation:</span> Generates synchronised transformation pipelines, security policies, catalog contracts, quality assertions, and governed BI views from a single manifest at Gates G2 and G3.</li></ol>
+<h3 id="4-3-agentic-data-governance-framework-agf-run-time-estate-protec" class="wp-h3">4.3 Agentic Data Governance Framework (AGF): Run-Time Estate Protection &amp; Continuous Assurance</h3>
+<p>The right box of Figure 3 summarises the three runtime assurance capabilities AGF operates continuously across the live data estate:</p>
+<ol class="wp-ol"><li><span class="wp-li-lead">Birth Protection &amp; Live Lineage:</span> Scans newly arriving or modified datasets for sensitive personal data, quarantines unowned assets before consumers can query them, links physical columns to the shared business glossary, and verifies that live pipeline and query activity matches approved design-time lineage.</li><li><span class="wp-li-lead">Purpose-Bound Access &amp; Ledger Truth:</span> Brokers time-limited consumer access (such as 180-day or 360-day grants) strictly against authorised business purposes while continuously reconciling critical financial figures against Finance&#x27;s general ledger to supply automated evidence for Gate G4 sign-off.</li><li><span class="wp-li-lead">Retention &amp; Shadow Asset Discovery:</span> Enforces regional residency and legal holds, executes human-approved seven-year regulatory data retirement at end of life, and sweeps the broader estate to uncover ungoverned shadow pipelines and BI reports.</li></ol>
+<h3 id="4-4-the-closed-loop-handshake-published-intent-estate-feedback" class="wp-h3">4.4 The Closed-Loop Handshake: Published Intent &amp; Estate Feedback</h3>
+<p>As shown in the centre of Figure 3, DPF and AGF communicate with zero custom point-to-point integration through the shared catalog:</p>
+<ol class="wp-ol"><li><span class="wp-li-lead">Published Intent (DPF to AGF):</span> Whenever a data product is compiled and published, DPF writes its ownership, authorised purposes, privacy rules, expected lineage, quality thresholds, and retention windows into BigQuery Knowledge Catalog—giving AGF an immediate machine-readable contract to enforce at runtime.</li><li><span class="wp-li-lead">Estate Feedback (AGF to DPF):</span> Whenever AGF detects live lineage drift, newly arriving personal data in an upstream source, or a shadow pipeline gaining business adoption, it routes Estate Feedback back into DPF—either opening a pre-populated requirement amendment at Step 2 or onboarding the discovered shadow asset into the governed product lifecycle.</li></ol>
+<div class="wp-table-wrap"><table class="wp-table"><thead><tr><th>Build-Time Pillar in DPF (Left Box)</th><th>Shared Catalog Handshake (Centre)</th><th>Run-Time Pillar in AGF (Right Box)</th></tr></thead><tbody><tr><td>Plain-English Business Intent (ownership, commercial rules &amp; purpose)</td><td>Publishes ownership, glossary bindings, and expected lineage; returns live drift alerts</td><td>Birth Protection &amp; Live Lineage (day-zero PII scans, unowned quarantine &amp; live lineage verification)</td></tr><tr><td>Upfront Privacy &amp; Policy Design (shared definitions, PII masking &amp; partner boundaries)</td><td>Publishes allowed purpose codes, sensitivity tags, and financial reconciliation rules</td><td>Purpose-Bound Access &amp; Ledger Truth (expiring 180d/360d grants &amp; continuous Finance general-ledger reconciliation)</td></tr><tr><td>Deterministic Product Compilation (synchronised pipelines, security, catalog &amp; BI)</td><td>Publishes retention windows and quality SLAs; routes discovered shadow assets back for import</td><td>Retention &amp; Shadow Asset Discovery (legal holds, 7-year retirement &amp; estate-wide shadow pipeline discovery)</td></tr></tbody></table></div>
+<hr class="wp-rule" aria-hidden="true">
+<h2 id="5-adoption-roadmap-reference-implementation" class="wp-h2">5. Adoption Roadmap &amp; Reference Implementation</h2>
+<p>Organisations do not need a multi-quarter platform overhaul to adopt specification-driven data products. Because DPF compiles standard Dataform, dbt, Terraform, BigQuery Knowledge Catalog, and LookML files offline in Git, teams can adopt it incrementally across three pragmatic horizons:</p>
+<ol class="wp-ol"><li>Horizon 1 — Seed Context &amp; Deliver One Quick Win (Weeks 1 to 2): Initialise a clean DPF workspace, populate the core organisational context registries (working-hour calendar, initial source systems, and twenty to thirty glossary terms for one domain), score three candidate ideas at the Portfolio Gate, and take a single Quick Win from plain-English BRD through Gate G4.</li><li>Horizon 2 — Standardise Multi-Plane Golden Copies &amp; BI Guardrails (Weeks 3 to 6): Enable deterministic Golden Copy PR checks and the 26-case behavioural evaluation suite in continuous integration, bring Looker Explores and dashboards under the semantic compiler to eliminate shadow persistent derived tables, and expose shared domain dimensions as Existing Foundations for downstream decoupled products.</li><li>Horizon 3 — Activate Symbiotic Estate Governance (Month 2 Onward): Turn on the seven <a href="../fhd/dpf-data-product-framework-fhd.html" target="_blank" rel="noopener" class="wp-link">ADG-00</a> BigQuery Knowledge Catalog aspect registrations and connect AGF runtime guardians on Gemini Platform to automate T=0 birth protection, expiring purpose-based access, general-ledger reconciliation, and continuous shadow-pipeline onboarding.</li></ol>
+<h3 id="exploring-the-open-reference-implementation" class="wp-h3">Exploring the Open Reference Implementation</h3>
+<p>Every contract, skill, generator, golden copy, and evaluation suite referenced in this whitepaper is available in the open reference repository and companion architecture maps:</p>
+<div class="wp-table-wrap"><table class="wp-table"><thead><tr><th>Reference Asset</th><th>Location / Entrypoint</th><th>What Practitioners Can Inspect &amp; Run</th></tr></thead><tbody><tr><td>Core CLI &amp; Offline Compiler</td><td>dpf/ and framework/ in GitHub</td><td>Python CLI, 24 JSON Schema contracts, 29 Agent Skills, Kimball and Direct packs, and Dataform, dbt, and LookML adapters</td></tr><tr><td>Portfolio &amp; Plain-English Templates</td><td>framework/templates/</td><td>Fillable two-page candidate use-case form, 11-criterion Value and Ease scorecard, portfolio matrix, and BRD/TDD templates</td></tr><tr><td>Worked Examples &amp; Golden Copies</td><td>products/, examples/, and tests/golden/</td><td>End-to-end specifications, manifests, and byte-identical Dataform, dbt, Terraform, and LookML outputs for <a href="https://github.com/MattATurner/data-product-framework/tree/main/products/customer_orders" target="_blank" rel="noopener" class="wp-link">customer_orders</a> and <a href="https://github.com/MattATurner/data-product-framework/tree/main/products/sales_performance" target="_blank" rel="noopener" class="wp-link">sales_performance</a></td></tr><tr><td>Behavioural Guardrail Suite</td><td>tests/evals/ (dpf eval)</td><td>26 automated mutation evaluations proving every G0–G4 guardrail blocks jargon, semantic drift, unmasked PII, and stale evidence</td></tr><tr><td>Interactive Capability Maps</td><td><a href="../fhd/dpf-data-product-framework-fhd.html" target="_blank" rel="noopener" class="wp-link">DPF-00</a> and ADG-00 FHD Viewers</td><td>Chronological six-pillar functional decomposition of DPF and five-pillar decomposition of AGF with repository entrypoints</td></tr></tbody></table></div>
+<hr class="wp-rule" aria-hidden="true">
+<h2 id="conclusion-what-this-architecture-proves" class="wp-h2">Conclusion: What This Architecture Proves</h2>
+<p>Enterprise data delivery was never slow because engineers typed SQL too slowly. Quarters disappear into unscored intake queues, translation drift between business sponsors and technical teams, weeks of manual stitching across five separate cloud tools, and late reconciliation failures when pipelines compile cleanly in continuous integration yet publish numbers that disagree with Finance. Simply generating code faster inside that broken process only accelerates rework and multi-plane drift.</p>
+<p>As demonstrated throughout this whitepaper, compressing delivery from months to hours and days—while raising financial, privacy, and operational trust—requires four structural shifts working together:</p>
+<ol class="wp-ol"><li>A one-time opportunity funnel feeding a continuous delivery flywheel: Candidate ideas from domain innovation workshops, revenue initiatives, cost-reduction programmes, and risk controls are scored once at the Portfolio Gate (Step 1) to fund high-return Quick Wins. Once live, ongoing business amendments loop directly from Step 6 (Monitor &amp; Evolve) back into Step 2 (Describe) in hours rather than re-entering project intake.</li><li>Plain-English business specifications grounded in reusable organisational context: Business sponsors capture commercial rules in everyday language (Gate G0) and sign a one-page plain-English playback locked to a SHA-256 semantic digest (Gate G1). Shared glossary definitions, source reachability limits, Existing Foundations, and regional working-hour calendars are encoded once in versioned registries so physical constraints—such as periodic outbound extracts from isolated subnets or source history starting at go-live—are resolved on Day 1 rather than discovered mid-build.</li><li>Deterministic offline compilation across all four Google Cloud planes: From one validated manifest and concise staging SQL, the Multi-Plane Compiler emits byte-identical BigQuery and Dataform (or dbt) pipelines with row-level quarantine gates, Terraform IAM and dynamic contact masking, isolated partner BigQuery sharing listings, BigQuery Knowledge Catalog lineage and quality scans, and symmetric-aggregate-safe Looker Explores and dashboards in under two seconds (Gates G2 and G3).</li><li>Digest-bound outcome attestation paired symbiotically with runtime estate guardians: Production publication is earned at Gate G4 by combining live BigQuery verification with explicit human domain attestation from Finance and business owners, all cryptographically bound to the current build digest. Rather than reinventing runtime policing inside a build compiler, DPF handshakes through BigQuery Knowledge Catalog and seven single-writer aspects with the Agentic Data Governance Framework (AGF) on Gemini Platform—sustaining all fourteen CDMC capabilities across table birth, purpose-gated access, ledger reconciliation, and seven-year retention.</li></ol>
+<p>Speed and governance are not a trade-off. When organisations automate multi-plane cloud plumbing deterministically and reserve human judgement for the six moments that define commercial meaning and truth, data products ship in days, evolve in hours, and remain trusted for years.</p>
+<hr class="wp-rule" aria-hidden="true">
+<h2 id="reference-repository" class="wp-h2">Reference Repository</h2>
+<p>Explore the open-source Data Product Framework CLI, JSON Schema contracts, Agent Skills, fillable business templates, golden copies, and worked examples at:</p>
+<p><a href="https://github.com/MattATurner/data-product-framework" target="_blank" rel="noopener" class="wp-link">https://github.com/MattATurner/data-product-framework</a></p>
+      </div>
+
+      <footer class="wp-footer">
+        <span>Google Cloud Technical Whitepaper &middot; Data Product Framework (DPF) &amp; Agentic Data Governance Framework (AGF)</span>
+        <a href="https://github.com/MattATurner/data-product-framework" target="_blank" rel="noopener" class="wp-link">https://github.com/MattATurner/data-product-framework</a>
+      </footer>
+    </article>
+  </div>
+
+  <div class="wp-lightbox" id="wp-lightbox" role="dialog" aria-modal="true" aria-label="Architecture diagram viewer">
+    <div class="wp-lightbox-box">
+      <img id="wp-lb-img" src="" alt="Enlarged whitepaper diagram">
+      <div class="wp-lightbox-bar">
+        <span id="wp-lb-cap"></span>
+        <button type="button" class="wp-btn wp-btn-primary" id="wp-lb-close">Close (Esc)</button>
+      </div>
+    </div>
+  </div>
+
+  <script>window.WP_SVGS = {"dpf_operating_model_executive.png": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNDgwIiBoZWlnaHQ9IjU2NSIgdmlld0JveD0iMCAwIDE0ODAgNTY1Ij4KICA8ZGVmcz4KICAgIDxmaWx0ZXIgaWQ9InNoYWRvdyIgeD0iLTQlIiB5PSItNCUiIHdpZHRoPSIxMDglIiBoZWlnaHQ9IjExNCUiPgogICAgICA8ZmVEcm9wU2hhZG93IGR4PSIwIiBkeT0iMyIgc3RkRGV2aWF0aW9uPSI1IiBmbG9vZC1jb2xvcj0iIzBGMTcyQSIgZmxvb2Qtb3BhY2l0eT0iMC4wNSIvPgogICAgPC9maWx0ZXI+CiAgICA8bWFya2VyIGlkPSJhcnJOYXZ5IiB2aWV3Qm94PSIwIDAgMTAgMTAiIHJlZlg9IjguNSIgcmVmWT0iNSIgbWFya2VyV2lkdGg9IjciIG1hcmtlckhlaWdodD0iNyIgb3JpZW50PSJhdXRvIj4KICAgICAgPHBhdGggZD0iTSAwIDEuNSBMIDkgNSBMIDAgOC41IHoiIGZpbGw9IiMxRTNBOEEiLz4KICAgIDwvbWFya2VyPgogICAgPG1hcmtlciBpZD0iYXJyR3JlZW4iIHZpZXdCb3g9IjAgMCAxMCAxMCIgcmVmWD0iOC41IiByZWZZPSI1IiBtYXJrZXJXaWR0aD0iNy41IiBtYXJrZXJIZWlnaHQ9IjcuNSIgb3JpZW50PSJhdXRvIj4KICAgICAgPHBhdGggZD0iTSAwIDEuNSBMIDkgNSBMIDAgOC41IHoiIGZpbGw9IiMwNTk2NjkiLz4KICAgIDwvbWFya2VyPgogIDwvZGVmcz4KCiAgPCEtLSBDYW52YXMgLS0+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjE0ODAiIGhlaWdodD0iNTY1IiByeD0iMTQiIGZpbGw9IiNGQUY5RjYiIHN0cm9rZT0iI0UyRThGMCIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KCiAgPCEtLSBIZWFkZXIgLS0+CiAgPHRleHQgeD0iMzYiIHk9IjM4IiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEwLjUiIGZvbnQtd2VpZ2h0PSI4MDAiIGxldHRlci1zcGFjaW5nPSIwLjExZW0iIGZpbGw9IiMxRTNBOEEiPk9QRVJBVElORyBNT0RFTCAgwrcgIDYgSFVNQU4tR0FURUQgU1RFUFM8L3RleHQ+CiAgPHRleHQgeD0iMzYiIHk9IjY0IiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE5LjUiIGZvbnQtd2VpZ2h0PSI4MDAiIGxldHRlci1zcGFjaW5nPSItMC4wMmVtIiBmaWxsPSIjMEYxNzJBIj5PbmUtVGltZSBPcHBvcnR1bml0eSBGdW5uZWwgRmVlZHMgYSBDb250aW51b3VzIERlbGl2ZXJ5IEZseXdoZWVsPC90ZXh0PgoKICA8IS0tIE1pbmltYWwgTGVnZW5kIC0tPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDg1MiwgMjYpIj4KICAgIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSI2MDAiIGhlaWdodD0iNDIiIHJ4PSI5IiBmaWxsPSIjRkZGRkZGIiBzdHJva2U9IiNFMkU4RjAiIHN0cm9rZS13aWR0aD0iMSIvPgogICAgPHJlY3QgeD0iMTQiIHk9IjEwIiB3aWR0aD0iMjIiIGhlaWdodD0iMjIiIHJ4PSI1IiBmaWxsPSIjRjhGQUZDIiBzdHJva2U9IiNDQkQ1RTEiIHN0cm9rZS13aWR0aD0iMS4xIi8+CiAgICA8dGV4dCB4PSI0MiIgeT0iMjUiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTAuOCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFFMjkzQiI+U3RhZ2UgT3V0cHV0PC90ZXh0PgoKICAgIDx0ZXh0IHg9IjE0OCIgeT0iMjUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTAuNSIgZm9udC13ZWlnaHQ9IjgwMCIgZmlsbD0iI0I0NTMwOSI+RzDigJNHNDwvdGV4dD4KICAgIDx0ZXh0IHg9IjE3NCIgeT0iMjUiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTAuOCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzQ3NTU2OSI+QXV0b21hdGVkIEdhdGU8L3RleHQ+CgogICAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjg0LCA0KSBzY2FsZSgwLjg4KSI+CiAgICAgIAogICAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjMyIiBoZWlnaHQ9IjM0IiByeD0iOCIgZmlsbD0iI0ZFRjNDNyIgc3Ryb2tlPSIjRjU5RTBCIiBzdHJva2Utd2lkdGg9IjEuMiIvPgogICAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxMiIgcj0iNC4yIiBmaWxsPSIjQjQ1MzA5Ii8+CiAgICA8cGF0aCBkPSJNIDkgMjUuNSBDIDkgMTkuNSwgMjMgMTkuNSwgMjMgMjUuNSBaIiBmaWxsPSIjQjQ1MzA5Ii8+CiAgICAKICAgIDwvZz4KICAgIDx0ZXh0IHg9IjMxOCIgeT0iMjUiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTAuOCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzkyNDAwRSI+SHVtYW4gU2lnbi1PZmYgKEhJVEwpPC90ZXh0PgoKICAgIDxsaW5lIHgxPSI0NjAiIHkxPSIyMSIgeDI9IjQ4NCIgeTI9IjIxIiBzdHJva2U9IiMwNTk2NjkiIHN0cm9rZS13aWR0aD0iMi44Ii8+CiAgICA8dGV4dCB4PSI0OTIiIHk9IjI1IiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEwLjgiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMwNjVGNDYiPlZpcnR1b3VzIExvb3A8L3RleHQ+CiAgPC9nPgoKICA8IS0tIExFRlQ6IE9ORS1USU1FIFBPUlRGT0xJTyBFTlRSWSAoeD0yOC4uMjk2LCB3PTI2OCkgLS0+CiAgPHJlY3QgeD0iMjgiIHk9IjkyIiB3aWR0aD0iMjY4IiBoZWlnaHQ9IjQ0MiIgcng9IjE0IiBmaWxsPSIjRjNGMkVDIiBzdHJva2U9IiNENkQzQzkiIHN0cm9rZS13aWR0aD0iMS40Ii8+CiAgPHRleHQgeD0iNDgiIHk9IjEyMCIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMC41IiBmb250LXdlaWdodD0iODAwIiBsZXR0ZXItc3BhY2luZz0iMC4wOWVtIiBmaWxsPSIjNTc1MzRFIj5PTkUtVElNRSBQT1JURk9MSU8gRU5UUlk8L3RleHQ+CgogIDwhLS0gQ2xlYW4gQ29udmVyZ2luZyBGdW5uZWwgU2hhcGUgLS0+CiAgPHBvbHlnb24gcG9pbnRzPSI0NCwxNDQgMjgwLDE0NCAyMzYsMjI2IDg4LDIyNiIgZmlsbD0iI0ZGRkZGRiIgc3Ryb2tlPSIjQ0JENUUxIiBzdHJva2Utd2lkdGg9IjEuNCIvPgogIDx0ZXh0IHg9IjE2MiIgeT0iMTcyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMEYxNzJBIj5Xb3Jrc2hvcHMgJmFtcDsgQnVzaW5lc3MgSWRlYXM8L3RleHQ+CiAgPHRleHQgeD0iMTYyIiB5PSIxOTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTEiIGZvbnQtd2VpZ2h0PSI1MDAiIGZpbGw9IiM0NzU1NjkiPlJldmVudWUgwrcgQ29zdCBTYXZpbmdzIMK3IFJpc2s8L3RleHQ+CiAgPHRleHQgeD0iMTYyIiB5PSIyMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iOS41IiBmb250LXdlaWdodD0iODAwIiBsZXR0ZXItc3BhY2luZz0iMC4wOGVtIiBmaWxsPSIjMUUzQThBIj5PUFBPUlRVTklUWSBGVU5ORUw8L3RleHQ+CiAgPGxpbmUgeDE9IjE2MiIgeTE9IjIyNiIgeDI9IjE2MiIgeTI9IjI1OCIgc3Ryb2tlPSIjMUUzQThBIiBzdHJva2Utd2lkdGg9IjIuMiIgbWFya2VyLWVuZD0idXJsKCNhcnJOYXZ5KSIvPgoKICAKICA8Zz4KICAgIDxyZWN0IHg9IjQwIiB5PSIyNjQiIHdpZHRoPSIyNDQiIGhlaWdodD0iMTQ0IiByeD0iMTIiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iI0NCRDVFMSIgc3Ryb2tlLXdpZHRoPSIxLjQiIGZpbHRlcj0idXJsKCNzaGFkb3cpIi8+CiAgICA8cmVjdCB4PSI0MCIgeT0iMjY0IiB3aWR0aD0iMjQ0IiBoZWlnaHQ9IjQiIHJ4PSIyIiBmaWxsPSIjMUUzQThBIi8+CgogICAgPHJlY3QgeD0iNTgiIHk9IjI4NiIgd2lkdGg9IjMyIiBoZWlnaHQ9IjI0IiByeD0iNiIgZmlsbD0iI0YxRjVGOSIvPgogICAgPHRleHQgeD0iNzQiIHk9IjMwMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMS41IiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjMUUzQThBIj4wMTwvdGV4dD4KICAgIDx0ZXh0IHg9IjEwMCIgeT0iMzAzIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE2IiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjMEYxNzJBIj5Qcmlvcml0aXNlPC90ZXh0PgoKICAgIDx0ZXh0IHg9IjU4IiB5PSIzMzMiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIuMyIgZm9udC13ZWlnaHQ9IjUwMCIgZmlsbD0iIzQ3NTU2OSI+U2NvcmUgMi1wYWdlIGJyaWVmIG9uIFZhbHVlICZhbXA7IEVhc2U8L3RleHQ+CgogICAgPCEtLSBPdXRwdXQgRGVsaXZlcmFibGUgUGlsbCAoQm90dG9tIExlZnQpIC0tPgogICAgPHJlY3QgeD0iNTgiIHk9IjM1NiIgd2lkdGg9IjE2NiIgaGVpZ2h0PSIzNCIgcng9IjgiIGZpbGw9IiNGOEZBRkMiIHN0cm9rZT0iI0NCRDVFMSIgc3Ryb2tlLXdpZHRoPSIxLjEiLz4KICAgIDx0ZXh0IHg9IjE0MS4wIiB5PSIzNzciIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTAuMSIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFFMjkzQiI+RnVuZGVkIFVzZS1DYXNlIEJyaWVmPC90ZXh0PgoKICAgIDwhLS0gSElUTCBIdW1hbiBJY29uIEJhZGdlIChCb3R0b20gUmlnaHQpIC0tPgogICAgCiAgICA8cmVjdCB4PSIyMzQiIHk9IjM1NiIgd2lkdGg9IjMyIiBoZWlnaHQ9IjM0IiByeD0iOCIgZmlsbD0iI0ZFRjNDNyIgc3Ryb2tlPSIjRjU5RTBCIiBzdHJva2Utd2lkdGg9IjEuMiIvPgogICAgPGNpcmNsZSBjeD0iMjUwIiBjeT0iMzY4IiByPSI0LjIiIGZpbGw9IiNCNDUzMDkiLz4KICAgIDxwYXRoIGQ9Ik0gMjQzIDM4MS41IEMgMjQzIDM3NS41LCAyNTcgMzc1LjUsIDI1NyAzODEuNSBaIiBmaWxsPSIjQjQ1MzA5Ii8+CiAgICAKICA8L2c+CgoKICA8dGV4dCB4PSIxNjIiIHk9IjQ1NCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMSIgZm9udC13ZWlnaHQ9IjYwMCIgZmlsbD0iIzU3NTM0RSI+RnVuZHMgaGlnaC1yZXR1cm4gUXVpY2sgV2luczs8L3RleHQ+CiAgPHRleHQgeD0iMTYyIiB5PSI0NzEiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTEiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiM1NzUzNEUiPnBhcmtzIGxvdy12YWx1ZSByZXF1ZXN0cyBlYXJseTwvdGV4dD4KCiAgPCEtLSBSSUdIVDogQ09OVElOVU9VUyBQUk9EVUNUIEZMWVdIRUVMICh4PTQwOC4uMTQ1Miwgdz0xMDQ0KSAtLT4KICA8cmVjdCB4PSI0MDgiIHk9IjkyIiB3aWR0aD0iMTA0NCIgaGVpZ2h0PSI0NDIiIHJ4PSIxNCIgZmlsbD0iI0VGRjVGQiIgc3Ryb2tlPSIjQkZEQkZFIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogIDx0ZXh0IHg9IjQzMCIgeT0iMTIwIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEwLjUiIGZvbnQtd2VpZ2h0PSI4MDAiIGxldHRlci1zcGFjaW5nPSIwLjA5ZW0iIGZpbGw9IiMxRTNBOEEiPkNPTlRJTlVPVVMgUFJPRFVDVCBMSUZFQ1lDTEUgIMK3ICBEQVlTIFRPIFNISVAsIEhPVVJTIFRPIEVWT0xWRTwvdGV4dD4KCiAgPCEtLSBUb3AgUm93OiAwMiBEZXNjcmliZSAtPiAwMyBEZXNpZ24gLT4gMDQgQnVpbGQgLS0+CiAgCiAgPGc+CiAgICA8cmVjdCB4PSI0MjgiIHk9IjE0OCIgd2lkdGg9IjI1OCIgaGVpZ2h0PSIxNDQiIHJ4PSIxMiIgZmlsbD0iI0ZGRkZGRiIgc3Ryb2tlPSIjQ0JENUUxIiBzdHJva2Utd2lkdGg9IjEuNCIgZmlsdGVyPSJ1cmwoI3NoYWRvdykiLz4KICAgIDxyZWN0IHg9IjQyOCIgeT0iMTQ4IiB3aWR0aD0iMjU4IiBoZWlnaHQ9IjQiIHJ4PSIyIiBmaWxsPSIjMUUzQThBIi8+CgogICAgPHJlY3QgeD0iNDQ2IiB5PSIxNzAiIHdpZHRoPSIzMiIgaGVpZ2h0PSIyNCIgcng9IjYiIGZpbGw9IiNGMUY1RjkiLz4KICAgIDx0ZXh0IHg9IjQ2MiIgeT0iMTg2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjExLjUiIGZvbnQtd2VpZ2h0PSI4MDAiIGZpbGw9IiMxRTNBOEEiPjAyPC90ZXh0PgogICAgPHRleHQgeD0iNDg4IiB5PSIxODciIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtd2VpZ2h0PSI4MDAiIGZpbGw9IiMwRjE3MkEiPkRlc2NyaWJlPC90ZXh0PgoKICAgIDx0ZXh0IHg9IjQ0NiIgeT0iMjE3IiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyLjMiIGZvbnQtd2VpZ2h0PSI1MDAiIGZpbGw9IiM0NzU1NjkiPlBsYWluLUVuZ2xpc2ggcnVsZXM7IHplcm8gdGVjaCBqYXJnb248L3RleHQ+CgogICAgPCEtLSBPdXRwdXQgRGVsaXZlcmFibGUgUGlsbCAoQm90dG9tIExlZnQpIC0tPgogICAgPHJlY3QgeD0iNDQ2IiB5PSIyNDAiIHdpZHRoPSIxODAiIGhlaWdodD0iMzQiIHJ4PSI4IiBmaWxsPSIjRjhGQUZDIiBzdHJva2U9IiNDQkQ1RTEiIHN0cm9rZS13aWR0aD0iMS4xIi8+CiAgICA8dGV4dCB4PSI1MzYuMCIgeT0iMjYxIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEwLjEiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMxRTI5M0IiPkJ1c2luZXNzIFJlcXVpcmVtZW50cyBEb2M8L3RleHQ+CgogICAgPCEtLSBISVRMIEh1bWFuIEljb24gQmFkZ2UgKEJvdHRvbSBSaWdodCkgLS0+CiAgICAKICAgIDxyZWN0IHg9IjYzNiIgeT0iMjQwIiB3aWR0aD0iMzIiIGhlaWdodD0iMzQiIHJ4PSI4IiBmaWxsPSIjRkVGM0M3IiBzdHJva2U9IiNGNTlFMEIiIHN0cm9rZS13aWR0aD0iMS4yIi8+CiAgICA8Y2lyY2xlIGN4PSI2NTIiIGN5PSIyNTIiIHI9IjQuMiIgZmlsbD0iI0I0NTMwOSIvPgogICAgPHBhdGggZD0iTSA2NDUgMjY1LjUgQyA2NDUgMjU5LjUsIDY1OSAyNTkuNSwgNjU5IDI2NS41IFoiIGZpbGw9IiNCNDUzMDkiLz4KICAgIAogIDwvZz4KCgogIAogIDxnPgogICAgPHJlY3QgeD0iODAwIiB5PSIxNDgiIHdpZHRoPSIyNTgiIGhlaWdodD0iMTQ0IiByeD0iMTIiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iI0NCRDVFMSIgc3Ryb2tlLXdpZHRoPSIxLjQiIGZpbHRlcj0idXJsKCNzaGFkb3cpIi8+CiAgICA8cmVjdCB4PSI4MDAiIHk9IjE0OCIgd2lkdGg9IjI1OCIgaGVpZ2h0PSI0IiByeD0iMiIgZmlsbD0iIzFFM0E4QSIvPgoKICAgIDxyZWN0IHg9IjgxOCIgeT0iMTcwIiB3aWR0aD0iMzIiIGhlaWdodD0iMjQiIHJ4PSI2IiBmaWxsPSIjRjFGNUY5Ii8+CiAgICA8dGV4dCB4PSI4MzQiIHk9IjE4NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMS41IiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjMUUzQThBIj4wMzwvdGV4dD4KICAgIDx0ZXh0IHg9Ijg2MCIgeT0iMTg3IiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE2IiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjMEYxNzJBIj5EZXNpZ248L3RleHQ+CgogICAgPHRleHQgeD0iODE4IiB5PSIyMTciIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIuMyIgZm9udC13ZWlnaHQ9IjUwMCIgZmlsbD0iIzQ3NTU2OSI+R3JvdW5kIGluIHNoYXJlZCBnbG9zc2FyeSAmYW1wOyBsaW1pdHM8L3RleHQ+CgogICAgPCEtLSBPdXRwdXQgRGVsaXZlcmFibGUgUGlsbCAoQm90dG9tIExlZnQpIC0tPgogICAgPHJlY3QgeD0iODE4IiB5PSIyNDAiIHdpZHRoPSIxODAiIGhlaWdodD0iMzQiIHJ4PSI4IiBmaWxsPSIjRjhGQUZDIiBzdHJva2U9IiNDQkQ1RTEiIHN0cm9rZS13aWR0aD0iMS4xIi8+CiAgICA8dGV4dCB4PSI5MDguMCIgeT0iMjYxIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEwLjEiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMxRTI5M0IiPkRlc2lnbiAmYW1wOyAxLVBhZ2UgUGxheWJhY2s8L3RleHQ+CgogICAgPCEtLSBISVRMIEh1bWFuIEljb24gQmFkZ2UgKEJvdHRvbSBSaWdodCkgLS0+CiAgICAKICAgIDxyZWN0IHg9IjEwMDgiIHk9IjI0MCIgd2lkdGg9IjMyIiBoZWlnaHQ9IjM0IiByeD0iOCIgZmlsbD0iI0ZFRjNDNyIgc3Ryb2tlPSIjRjU5RTBCIiBzdHJva2Utd2lkdGg9IjEuMiIvPgogICAgPGNpcmNsZSBjeD0iMTAyNCIgY3k9IjI1MiIgcj0iNC4yIiBmaWxsPSIjQjQ1MzA5Ii8+CiAgICA8cGF0aCBkPSJNIDEwMTcgMjY1LjUgQyAxMDE3IDI1OS41LCAxMDMxIDI1OS41LCAxMDMxIDI2NS41IFoiIGZpbGw9IiNCNDUzMDkiLz4KICAgIAogIDwvZz4KCgogIAogIDxnPgogICAgPHJlY3QgeD0iMTE3MiIgeT0iMTQ4IiB3aWR0aD0iMjU4IiBoZWlnaHQ9IjE0NCIgcng9IjEyIiBmaWxsPSIjRkZGRkZGIiBzdHJva2U9IiNDQkQ1RTEiIHN0cm9rZS13aWR0aD0iMS40IiBmaWx0ZXI9InVybCgjc2hhZG93KSIvPgogICAgPHJlY3QgeD0iMTE3MiIgeT0iMTQ4IiB3aWR0aD0iMjU4IiBoZWlnaHQ9IjQiIHJ4PSIyIiBmaWxsPSIjMUUzQThBIi8+CgogICAgPHJlY3QgeD0iMTE5MCIgeT0iMTcwIiB3aWR0aD0iMzIiIGhlaWdodD0iMjQiIHJ4PSI2IiBmaWxsPSIjRjFGNUY5Ii8+CiAgICA8dGV4dCB4PSIxMjA2IiB5PSIxODYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTEuNSIgZm9udC13ZWlnaHQ9IjgwMCIgZmlsbD0iIzFFM0E4QSI+MDQ8L3RleHQ+CiAgICA8dGV4dCB4PSIxMjMyIiB5PSIxODciIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtd2VpZ2h0PSI4MDAiIGZpbGw9IiMwRjE3MkEiPkJ1aWxkPC90ZXh0PgoKICAgIDx0ZXh0IHg9IjExOTAiIHk9IjIxNyIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMi4zIiBmb250LXdlaWdodD0iNTAwIiBmaWxsPSIjNDc1NTY5Ij5Db21waWxlIGFsbCA0IGNsb3VkIGxheWVycyBpbiBzZWNvbmRzPC90ZXh0PgoKICAgIDwhLS0gT3V0cHV0IERlbGl2ZXJhYmxlIFBpbGwgKEJvdHRvbSBMZWZ0KSAtLT4KICAgIDxyZWN0IHg9IjExOTAiIHk9IjI0MCIgd2lkdGg9IjE4MCIgaGVpZ2h0PSIzNCIgcng9IjgiIGZpbGw9IiNGOEZBRkMiIHN0cm9rZT0iI0NCRDVFMSIgc3Ryb2tlLXdpZHRoPSIxLjEiLz4KICAgIDx0ZXh0IHg9IjEyODAuMCIgeT0iMjYxIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEwLjEiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMxRTI5M0IiPkNvbXBpbGVkIFBpcGVsaW5lcyAmYW1wOyBCSTwvdGV4dD4KCiAgICA8IS0tIEhJVEwgSHVtYW4gSWNvbiBCYWRnZSAoQm90dG9tIFJpZ2h0KSAtLT4KICAgIAogICAgPHJlY3QgeD0iMTM4MCIgeT0iMjQwIiB3aWR0aD0iMzIiIGhlaWdodD0iMzQiIHJ4PSI4IiBmaWxsPSIjRkVGM0M3IiBzdHJva2U9IiNGNTlFMEIiIHN0cm9rZS13aWR0aD0iMS4yIi8+CiAgICA8Y2lyY2xlIGN4PSIxMzk2IiBjeT0iMjUyIiByPSI0LjIiIGZpbGw9IiNCNDUzMDkiLz4KICAgIDxwYXRoIGQ9Ik0gMTM4OSAyNjUuNSBDIDEzODkgMjU5LjUsIDE0MDMgMjU5LjUsIDE0MDMgMjY1LjUgWiIgZmlsbD0iI0I0NTMwOSIvPgogICAgCiAgPC9nPgoKCiAgPCEtLSBCb3R0b20gUm93OiAwNiBNb25pdG9yICYgRXZvbHZlIChsZWZ0KSBhbmQgMDUgQWNjZXB0IChyaWdodCkgLS0+CiAgCiAgPGc+CiAgICA8cmVjdCB4PSI0MjgiIHk9IjM2NiIgd2lkdGg9IjMyMCIgaGVpZ2h0PSIxNDQiIHJ4PSIxMiIgZmlsbD0iI0ZGRkZGRiIgc3Ryb2tlPSIjQ0JENUUxIiBzdHJva2Utd2lkdGg9IjEuNCIgZmlsdGVyPSJ1cmwoI3NoYWRvdykiLz4KICAgIDxyZWN0IHg9IjQyOCIgeT0iMzY2IiB3aWR0aD0iMzIwIiBoZWlnaHQ9IjQiIHJ4PSIyIiBmaWxsPSIjMDU5NjY5Ii8+CgogICAgPHJlY3QgeD0iNDQ2IiB5PSIzODgiIHdpZHRoPSIzMiIgaGVpZ2h0PSIyNCIgcng9IjYiIGZpbGw9IiNGMUY1RjkiLz4KICAgIDx0ZXh0IHg9IjQ2MiIgeT0iNDA0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjExLjUiIGZvbnQtd2VpZ2h0PSI4MDAiIGZpbGw9IiMwNTk2NjkiPjA2PC90ZXh0PgogICAgPHRleHQgeD0iNDg4IiB5PSI0MDUiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtd2VpZ2h0PSI4MDAiIGZpbGw9IiMwRjE3MkEiPk1vbml0b3IgJmFtcDsgRXZvbHZlPC90ZXh0PgoKICAgIDx0ZXh0IHg9IjQ0NiIgeT0iNDM1IiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyLjMiIGZvbnQtd2VpZ2h0PSI1MDAiIGZpbGw9IiM0NzU1NjkiPldhdGNoIHdvcmtpbmcgaG91cnMgJmFtcDsgdHJhY2UgY2hhbmdlczwvdGV4dD4KCiAgICA8IS0tIE91dHB1dCBEZWxpdmVyYWJsZSBQaWxsIChCb3R0b20gTGVmdCkgLS0+CiAgICA8cmVjdCB4PSI0NDYiIHk9IjQ1OCIgd2lkdGg9IjI0MiIgaGVpZ2h0PSIzNCIgcng9IjgiIGZpbGw9IiNGOEZBRkMiIHN0cm9rZT0iI0NCRDVFMSIgc3Ryb2tlLXdpZHRoPSIxLjEiLz4KICAgIDx0ZXh0IHg9IjU2Ny4wIiB5PSI0NzkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTAuMSIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFFMjkzQiI+TGl2ZSBTTEEgU3RhdHVzICZhbXA7IENoYW5nZSBCcmllZjwvdGV4dD4KCiAgICA8IS0tIEhJVEwgSHVtYW4gSWNvbiBCYWRnZSAoQm90dG9tIFJpZ2h0KSAtLT4KICAgIAogICAgPHJlY3QgeD0iNjk4IiB5PSI0NTgiIHdpZHRoPSIzMiIgaGVpZ2h0PSIzNCIgcng9IjgiIGZpbGw9IiNGRUYzQzciIHN0cm9rZT0iI0Y1OUUwQiIgc3Ryb2tlLXdpZHRoPSIxLjIiLz4KICAgIDxjaXJjbGUgY3g9IjcxNCIgY3k9IjQ3MCIgcj0iNC4yIiBmaWxsPSIjQjQ1MzA5Ii8+CiAgICA8cGF0aCBkPSJNIDcwNyA0ODMuNSBDIDcwNyA0NzcuNSwgNzIxIDQ3Ny41LCA3MjEgNDgzLjUgWiIgZmlsbD0iI0I0NTMwOSIvPgogICAgCiAgPC9nPgoKCiAgCiAgPGc+CiAgICA8cmVjdCB4PSIxMTEwIiB5PSIzNjYiIHdpZHRoPSIzMjAiIGhlaWdodD0iMTQ0IiByeD0iMTIiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iI0NCRDVFMSIgc3Ryb2tlLXdpZHRoPSIxLjQiIGZpbHRlcj0idXJsKCNzaGFkb3cpIi8+CiAgICA8cmVjdCB4PSIxMTEwIiB5PSIzNjYiIHdpZHRoPSIzMjAiIGhlaWdodD0iNCIgcng9IjIiIGZpbGw9IiMwRjc2NkUiLz4KCiAgICA8cmVjdCB4PSIxMTI4IiB5PSIzODgiIHdpZHRoPSIzMiIgaGVpZ2h0PSIyNCIgcng9IjYiIGZpbGw9IiNGMUY1RjkiLz4KICAgIDx0ZXh0IHg9IjExNDQiIHk9IjQwNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMS41IiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjMEY3NjZFIj4wNTwvdGV4dD4KICAgIDx0ZXh0IHg9IjExNzAiIHk9IjQwNSIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNiIgZm9udC13ZWlnaHQ9IjgwMCIgZmlsbD0iIzBGMTcyQSI+QWNjZXB0PC90ZXh0PgoKICAgIDx0ZXh0IHg9IjExMjgiIHk9IjQzNSIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMi4zIiBmb250LXdlaWdodD0iNTAwIiBmaWxsPSIjNDc1NTY5Ij5WZXJpZnkgbGl2ZSBkYXRhICZhbXA7IHJlY29uY2lsZSBsZWRnZXI8L3RleHQ+CgogICAgPCEtLSBPdXRwdXQgRGVsaXZlcmFibGUgUGlsbCAoQm90dG9tIExlZnQpIC0tPgogICAgPHJlY3QgeD0iMTEyOCIgeT0iNDU4IiB3aWR0aD0iMjQyIiBoZWlnaHQ9IjM0IiByeD0iOCIgZmlsbD0iI0Y4RkFGQyIgc3Ryb2tlPSIjQ0JENUUxIiBzdHJva2Utd2lkdGg9IjEuMSIvPgogICAgPHRleHQgeD0iMTI0OS4wIiB5PSI0NzkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTAuMSIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFFMjkzQiI+QXR0ZXN0ZWQgTGl2ZSBEYXRhIFByb2R1Y3Q8L3RleHQ+CgogICAgPCEtLSBISVRMIEh1bWFuIEljb24gQmFkZ2UgKEJvdHRvbSBSaWdodCkgLS0+CiAgICAKICAgIDxyZWN0IHg9IjEzODAiIHk9IjQ1OCIgd2lkdGg9IjMyIiBoZWlnaHQ9IjM0IiByeD0iOCIgZmlsbD0iI0ZFRjNDNyIgc3Ryb2tlPSIjRjU5RTBCIiBzdHJva2Utd2lkdGg9IjEuMiIvPgogICAgPGNpcmNsZSBjeD0iMTM5NiIgY3k9IjQ3MCIgcj0iNC4yIiBmaWxsPSIjQjQ1MzA5Ii8+CiAgICA8cGF0aCBkPSJNIDEzODkgNDgzLjUgQyAxMzg5IDQ3Ny41LCAxNDAzIDQ3Ny41LCAxNDAzIDQ4My41IFoiIGZpbGw9IiNCNDUzMDkiLz4KICAgIAogIDwvZz4KCgogIDwhLS0gQ2xlYW4gRmxvdyBBcnJvd3MgKyBVbmJveGVkIEdhdGUgTGFiZWxzIChDb2RlIGFib3ZlIGxpbmUsIEFjdGlvbiBiZWxvdyBsaW5lKSAtLT4KICA8IS0tIDAxIC0+IDAyIChQb3J0Zm9saW8gR2F0ZSkgLS0+CiAgPHBhdGggZD0iTSAyODQgMzM2IEwgMzA2IDMzNiBMIDMwNiAyMjAgTCA0MjQgMjIwIiBmaWxsPSJub25lIiBzdHJva2U9IiMxRTNBOEEiIHN0cm9rZS13aWR0aD0iMi40IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBtYXJrZXItZW5kPSJ1cmwoI2Fyck5hdnkpIi8+CiAgCiAgPGc+CiAgICA8dGV4dCB4PSIzNTcuMCIgeT0iMjEwLjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTEiIGZvbnQtd2VpZ2h0PSI4MDAiIGxldHRlci1zcGFjaW5nPSIwLjA2ZW0iIGZpbGw9IiNCNDUzMDkiPlBPUlRGT0xJTzwvdGV4dD4KICAgIDx0ZXh0IHg9IjM1Ny4wIiB5PSIyMzguMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMC4yIiBmb250LXdlaWdodD0iNjAwIiBmaWxsPSIjNDc1NTY5Ij5WYWx1ZSAmYW1wOyBFYXNlPC90ZXh0PgogIDwvZz4KCgogIDwhLS0gMDIgLT4gMDMgKEdhdGUgRzApIC0tPgogIDxsaW5lIHgxPSI2ODYiIHkxPSIyMjAiIHgyPSI3OTYiIHkyPSIyMjAiIHN0cm9rZT0iIzFFM0E4QSIgc3Ryb2tlLXdpZHRoPSIyLjQiIG1hcmtlci1lbmQ9InVybCgjYXJyTmF2eSkiLz4KICAKICA8Zz4KICAgIDx0ZXh0IHg9Ijc0MS4wIiB5PSIyMTAuMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMSIgZm9udC13ZWlnaHQ9IjgwMCIgbGV0dGVyLXNwYWNpbmc9IjAuMDZlbSIgZmlsbD0iI0I0NTMwOSI+RzA8L3RleHQ+CiAgICA8dGV4dCB4PSI3NDEuMCIgeT0iMjM4LjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTAuMiIgZm9udC13ZWlnaHQ9IjYwMCIgZmlsbD0iIzQ3NTU2OSI+VmFsaWRhdGUgUnVicmljPC90ZXh0PgogIDwvZz4KCgogIDwhLS0gMDMgLT4gMDQgKEdhdGUgRzEpIC0tPgogIDxsaW5lIHgxPSIxMDU4IiB5MT0iMjIwIiB4Mj0iMTE2OCIgeTI9IjIyMCIgc3Ryb2tlPSIjMUUzQThBIiBzdHJva2Utd2lkdGg9IjIuNCIgbWFya2VyLWVuZD0idXJsKCNhcnJOYXZ5KSIvPgogIAogIDxnPgogICAgPHRleHQgeD0iMTExMy4wIiB5PSIyMTAuMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMSIgZm9udC13ZWlnaHQ9IjgwMCIgbGV0dGVyLXNwYWNpbmc9IjAuMDZlbSIgZmlsbD0iI0I0NTMwOSI+RzE8L3RleHQ+CiAgICA8dGV4dCB4PSIxMTEzLjAiIHk9IjIzOC4wIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEwLjIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiM0NzU1NjkiPlZlcmlmeSBQbGF5YmFjazwvdGV4dD4KICA8L2c+CgoKICA8IS0tIDA0IC0+IDA1IChHYXRlcyBHMi1HMykgLS0+CiAgPGxpbmUgeDE9IjEyOTUiIHkxPSIyOTIiIHgyPSIxMjk1IiB5Mj0iMzYyIiBzdHJva2U9IiMxRTNBOEEiIHN0cm9rZS13aWR0aD0iMi40IiBtYXJrZXItZW5kPSJ1cmwoI2Fyck5hdnkpIi8+CiAgPHRleHQgeD0iMTMxMCIgeT0iMzIzIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjExIiBmb250LXdlaWdodD0iODAwIiBsZXR0ZXItc3BhY2luZz0iMC4wNmVtIiBmaWxsPSIjQjQ1MzA5Ij5HMuKAk0czPC90ZXh0PgogIDx0ZXh0IHg9IjEzMTAiIHk9IjMzOSIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMC4yIiBmb250LXdlaWdodD0iNjAwIiBmaWxsPSIjNDc1NTY5Ij5EZXRlcm1pbmlzdGljIEJ1aWxkPC90ZXh0PgoKICA8IS0tIDA1IC0+IDA2IChHYXRlIEc0KSAtLT4KICA8bGluZSB4MT0iMTExMCIgeTE9IjQzOCIgeDI9Ijc1MyIgeTI9IjQzOCIgc3Ryb2tlPSIjMEY3NjZFIiBzdHJva2Utd2lkdGg9IjIuNCIgbWFya2VyLWVuZD0idXJsKCNhcnJHcmVlbikiLz4KICAKICA8Zz4KICAgIDx0ZXh0IHg9IjkzMS4wIiB5PSI0MjguMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMSIgZm9udC13ZWlnaHQ9IjgwMCIgbGV0dGVyLXNwYWNpbmc9IjAuMDZlbSIgZmlsbD0iIzBGNzY2RSI+RzQgwrcgUFVCTElTSEVEIExJVkU8L3RleHQ+CiAgICA8dGV4dCB4PSI5MzEuMCIgeT0iNDU2LjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTAuMiIgZm9udC13ZWlnaHQ9IjYwMCIgZmlsbD0iIzQ3NTU2OSI+TGl2ZSBDaGVja3MgJmFtcDsgQXR0ZXN0YXRpb248L3RleHQ+CiAgPC9nPgoKCiAgPCEtLSAwNiAtPiAwMjogQm9sZCBWaXJ0dW91cyBFdm9sdXRpb24gTG9vcCAtLT4KICA8bGluZSB4MT0iNDcyIiB5MT0iMzY2IiB4Mj0iNDcyIiB5Mj0iMjk3IiBzdHJva2U9IiMwNTk2NjkiIHN0cm9rZS13aWR0aD0iMy4yIiBtYXJrZXItZW5kPSJ1cmwoI2FyckdyZWVuKSIvPgogIDx0ZXh0IHg9IjQ4OCIgeT0iMzI2IiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEwLjUiIGZvbnQtd2VpZ2h0PSI4MDAiIGxldHRlci1zcGFjaW5nPSIwLjA2ZW0iIGZpbGw9IiMwNTk2NjkiPlZJUlRVT1VTIExPT1A8L3RleHQ+CiAgPHRleHQgeD0iNDg4IiB5PSIzNDIiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTAuMiIgZm9udC13ZWlnaHQ9IjYwMCIgZmlsbD0iIzA2NUY0NiI+QW1lbmRtZW50cyAmIzg1OTQ7IFN0ZXAgMDI8L3RleHQ+Cjwvc3ZnPgo=", "dpf_context_compiler_executive.png": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMzIwIiBoZWlnaHQ9IjQ4MCIgdmlld0JveD0iMCAwIDEzMjAgNDgwIj4KICA8ZGVmcz4KICAgIDxmaWx0ZXIgaWQ9InNoYWRvdyIgeD0iLTQlIiB5PSItNCUiIHdpZHRoPSIxMDglIiBoZWlnaHQ9IjExNCUiPgogICAgICA8ZmVEcm9wU2hhZG93IGR4PSIwIiBkeT0iMyIgc3RkRGV2aWF0aW9uPSI1IiBmbG9vZC1jb2xvcj0iIzBGMTcyQSIgZmxvb2Qtb3BhY2l0eT0iMC4wNSIvPgogICAgPC9maWx0ZXI+CiAgICA8bWFya2VyIGlkPSJhcnJOYXZ5IiB2aWV3Qm94PSIwIDAgMTAgMTAiIHJlZlg9IjguNSIgcmVmWT0iNSIgbWFya2VyV2lkdGg9IjciIG1hcmtlckhlaWdodD0iNyIgb3JpZW50PSJhdXRvIj4KICAgICAgPHBhdGggZD0iTSAwIDEuNSBMIDkgNSBMIDAgOC41IHoiIGZpbGw9IiMxRTNBOEEiLz4KICAgIDwvbWFya2VyPgogICAgPG1hcmtlciBpZD0iYXJyVGVhbCIgdmlld0JveD0iMCAwIDEwIDEwIiByZWZYPSI4LjUiIHJlZlk9IjUiIG1hcmtlcldpZHRoPSI3IiBtYXJrZXJIZWlnaHQ9IjciIG9yaWVudD0iYXV0byI+CiAgICAgIDxwYXRoIGQ9Ik0gMCAxLjUgTCA5IDUgTCAwIDguNSB6IiBmaWxsPSIjMEY3NjZFIi8+CiAgICA8L21hcmtlcj4KICA8L2RlZnM+CgogIDwhLS0gQ2FudmFzIC0tPgogIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxMzIwIiBoZWlnaHQ9IjQ4MCIgcng9IjE0IiBmaWxsPSIjRkFGOUY2IiBzdHJva2U9IiNFMkU4RjAiIHN0cm9rZS13aWR0aD0iMS41Ii8+CgogIDwhLS0gSGVhZGVyIC0tPgogIDx0ZXh0IHg9IjQwIiB5PSIzOCIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMC41IiBmb250LXdlaWdodD0iODAwIiBsZXR0ZXItc3BhY2luZz0iMC4xMWVtIiBmaWxsPSIjMUUzQThBIj5BUkNISVRFQ1RVUkFMIFBSSU5DSVBMRSAgwrcgIENPTVBJTEUgT05DRSBBQ1JPU1MgRVZFUlkgTEFZRVI8L3RleHQ+CiAgPHRleHQgeD0iNDAiIHk9IjY0IiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjIwIiBmb250LXdlaWdodD0iODAwIiBsZXR0ZXItc3BhY2luZz0iLTAuMDJlbSIgZmlsbD0iIzBGMTcyQSI+UGxhaW4tRW5nbGlzaCBJbnRlbnQgKyBPcmdhbmlzYXRpb25hbCBDb250ZXh0ICYjODU5NDsgRm91ciBTeW5jaHJvbmlzZWQgQ2xvdWQgT3V0Y29tZXM8L3RleHQ+CgogIDwhLS0gQ09MVU1OIDE6IFJFVVNBQkxFIElOUFVUUyAoeD0zNi4uMzk2LCB3PTM2MCkgLS0+CiAgPHJlY3QgeD0iMzYiIHk9IjkwIiB3aWR0aD0iMzYwIiBoZWlnaHQ9IjM1OCIgcng9IjE0IiBmaWxsPSIjRjNGMkVDIiBzdHJva2U9IiNENkQzQzkiIHN0cm9rZS13aWR0aD0iMS40Ii8+CiAgPHRleHQgeD0iNTgiIHk9IjExOCIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMC41IiBmb250LXdlaWdodD0iODAwIiBsZXR0ZXItc3BhY2luZz0iMC4wOWVtIiBmaWxsPSIjNTc1MzRFIj4xLiBCVVNJTkVTUyBJTlRFTlQgJmFtcDsgRU5URVJQUklTRSBDT05URVhUPC90ZXh0PgoKICAKICA8Zz4KICAgIDxyZWN0IHg9IjU2IiB5PSIxMzYiIHdpZHRoPSIzMjAiIGhlaWdodD0iODgiIHJ4PSIxMSIgZmlsbD0iI0ZGRkZGRiIgc3Ryb2tlPSIjQ0JENUUxIiBzdHJva2Utd2lkdGg9IjEuNCIgZmlsdGVyPSJ1cmwoI3NoYWRvdykiLz4KICAgIDxyZWN0IHg9IjU2IiB5PSIxMzYiIHdpZHRoPSI1IiBoZWlnaHQ9Ijg4IiByeD0iMi41IiBmaWxsPSIjRDk3NzA2Ii8+CiAgICAKICAgIDxyZWN0IHg9Ijc0IiB5PSIxNTAiIHdpZHRoPSIxMDciIGhlaWdodD0iMjAiIHJ4PSI1IiBmaWxsPSIjRkVGM0M3Ii8+CiAgICA8dGV4dCB4PSIxMjcuNSIgeT0iMTY0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjkuNSIgZm9udC13ZWlnaHQ9IjgwMCIgbGV0dGVyLXNwYWNpbmc9IjAuMDZlbSIgZmlsbD0iIzkyNDAwRSI+UEVSIFBST0RVQ1Q8L3RleHQ+CiAgICAgICAgCiAgICA8dGV4dCB4PSI3NiIgeT0iMTkwIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE1IiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjMEYxNzJBIj5CdXNpbmVzcyBTcGVjaWZpY2F0aW9uPC90ZXh0PgogICAgPHRleHQgeD0iNzYiIHk9IjIxMiIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZm9udC13ZWlnaHQ9IjUwMCIgZmlsbD0iIzQ3NTU2OSI+UGxhaW4tRW5nbGlzaCBydWxlcyBhcHByb3ZlZCBhdCBHYXRlIEcwPC90ZXh0PgogIDwvZz4KCiAgCiAgPGc+CiAgICA8cmVjdCB4PSI1NiIgeT0iMjM4IiB3aWR0aD0iMzIwIiBoZWlnaHQ9Ijg4IiByeD0iMTEiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iI0NCRDVFMSIgc3Ryb2tlLXdpZHRoPSIxLjQiIGZpbHRlcj0idXJsKCNzaGFkb3cpIi8+CiAgICA8cmVjdCB4PSI1NiIgeT0iMjM4IiB3aWR0aD0iNSIgaGVpZ2h0PSI4OCIgcng9IjIuNSIgZmlsbD0iIzFFM0E4QSIvPgogICAgCiAgICA8cmVjdCB4PSI3NCIgeT0iMjUyIiB3aWR0aD0iMTE1IiBoZWlnaHQ9IjIwIiByeD0iNSIgZmlsbD0iI0RCRUFGRSIvPgogICAgPHRleHQgeD0iMTMxLjUiIHk9IjI2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI5LjUiIGZvbnQtd2VpZ2h0PSI4MDAiIGxldHRlci1zcGFjaW5nPSIwLjA2ZW0iIGZpbGw9IiMxRTQwQUYiPkVOQ09ERUQgT05DRTwvdGV4dD4KICAgICAgICAKICAgIDx0ZXh0IHg9Ijc2IiB5PSIyOTIiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTUiIGZvbnQtd2VpZ2h0PSI4MDAiIGZpbGw9IiMwRjE3MkEiPk9yZ2FuaXNhdGlvbmFsIENvbnRleHQ8L3RleHQ+CiAgICA8dGV4dCB4PSI3NiIgeT0iMzE0IiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmb250LXdlaWdodD0iNTAwIiBmaWxsPSIjNDc1NTY5Ij5HbG9zc2FyeSwgc291cmNlIGxpbWl0cyAmYW1wOyBhcmNoIHBhdHRlcm5zPC90ZXh0PgogIDwvZz4KCiAgCiAgPGc+CiAgICA8cmVjdCB4PSI1NiIgeT0iMzQwIiB3aWR0aD0iMzIwIiBoZWlnaHQ9Ijg4IiByeD0iMTEiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iI0NCRDVFMSIgc3Ryb2tlLXdpZHRoPSIxLjQiIGZpbHRlcj0idXJsKCNzaGFkb3cpIi8+CiAgICA8cmVjdCB4PSI1NiIgeT0iMzQwIiB3aWR0aD0iNSIgaGVpZ2h0PSI4OCIgcng9IjIuNSIgZmlsbD0iIzFFM0E4QSIvPgogICAgCiAgICA8cmVjdCB4PSI3NCIgeT0iMzU0IiB3aWR0aD0iNjkiIGhlaWdodD0iMjAiIHJ4PSI1IiBmaWxsPSIjREJFQUZFIi8+CiAgICA8dGV4dCB4PSIxMDguNSIgeT0iMzY4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjkuNSIgZm9udC13ZWlnaHQ9IjgwMCIgbGV0dGVyLXNwYWNpbmc9IjAuMDZlbSIgZmlsbD0iIzFFNDBBRiI+UkVVU0VEPC90ZXh0PgogICAgICAgIAogICAgPHRleHQgeD0iNzYiIHk9IjM5NCIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNSIgZm9udC13ZWlnaHQ9IjgwMCIgZmlsbD0iIzBGMTcyQSI+RXhpc3RpbmcgRm91bmRhdGlvbnM8L3RleHQ+CiAgICA8dGV4dCB4PSI3NiIgeT0iNDE2IiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmb250LXdlaWdodD0iNTAwIiBmaWxsPSIjNDc1NTY5Ij5Db25mb3JtZWQgZGltZW5zaW9ucywgZGF0YSAmYW1wOyBzZW1hbnRpY3M8L3RleHQ+CiAgPC9nPgoKCiAgPCEtLSBDT0xVTU4gMjogR1JPVU5ERUQgREVTSUdOICYgQ09NUElMRVIgKHg9NDU2Li44NDQsIHc9Mzg4KSAtLT4KICA8cmVjdCB4PSI0NTYiIHk9IjkwIiB3aWR0aD0iMzg4IiBoZWlnaHQ9IjM1OCIgcng9IjE0IiBmaWxsPSIjRUZGNUZCIiBzdHJva2U9IiNCRkRCRkUiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPHRleHQgeD0iNDc4IiB5PSIxMTgiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTAuNSIgZm9udC13ZWlnaHQ9IjgwMCIgbGV0dGVyLXNwYWNpbmc9IjAuMDllbSIgZmlsbD0iIzFFM0E4QSI+Mi4gR1JPVU5ERUQgREVTSUdOICZhbXA7IENPTVBJTEFUSU9OPC90ZXh0PgoKICA8Zz4KICAgIDxyZWN0IHg9IjQ3OCIgeT0iMTQyIiB3aWR0aD0iMzQ0IiBoZWlnaHQ9IjEzMiIgcng9IjEyIiBmaWxsPSIjRkZGRkZGIiBzdHJva2U9IiNDQkQ1RTEiIHN0cm9rZS13aWR0aD0iMS40IiBmaWx0ZXI9InVybCgjc2hhZG93KSIvPgogICAgPHJlY3QgeD0iNDc4IiB5PSIxNDIiIHdpZHRoPSIzNDQiIGhlaWdodD0iNCIgcng9IjIiIGZpbGw9IiMxRTNBOEEiLz4KICAgIDx0ZXh0IHg9IjQ5OCIgeT0iMTc0IiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE2IiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjMEYxNzJBIj5Hcm91bmRlZCBEZXNpZ24gJmFtcDsgUGxheWJhY2s8L3RleHQ+CiAgICA8dGV4dCB4PSI0OTgiIHk9IjE5OCIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMS44IiBmb250LXdlaWdodD0iNTAwIiBmaWxsPSIjNDc1NTY5Ij5NYXBzIEJSRCBzaWduYWxzIHRvIHNlcnZpY2UgJmFtcDsgc2VtYW50aWMgcGF0dGVybnM8L3RleHQ+CiAgICA8cmVjdCB4PSI0OTgiIHk9IjIxOCIgd2lkdGg9IjI2NCIgaGVpZ2h0PSIzNCIgcng9IjgiIGZpbGw9IiNGOEZBRkMiIHN0cm9rZT0iI0NCRDVFMSIgc3Ryb2tlLXdpZHRoPSIxLjEiLz4KICAgIDx0ZXh0IHg9IjYzMCIgeT0iMjM5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjExIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMUUyOTNCIj5EZXNpZ24gJmFtcDsgMS1QYWdlIFBsYXliYWNrPC90ZXh0PgogICAgCiAgICA8cmVjdCB4PSI3NzAiIHk9IjIxOCIgd2lkdGg9IjMyIiBoZWlnaHQ9IjM0IiByeD0iOCIgZmlsbD0iI0ZFRjNDNyIgc3Ryb2tlPSIjRjU5RTBCIiBzdHJva2Utd2lkdGg9IjEuMiIvPgogICAgPGNpcmNsZSBjeD0iNzg2IiBjeT0iMjMwIiByPSI0LjIiIGZpbGw9IiNCNDUzMDkiLz4KICAgIDxwYXRoIGQ9Ik0gNzc5IDI0My41IEMgNzc5IDIzNy41LCA3OTMgMjM3LjUsIDc5MyAyNDMuNSBaIiBmaWxsPSIjQjQ1MzA5Ii8+CiAgICAKICA8L2c+CgogIDxsaW5lIHgxPSI2NTAiIHkxPSIyNzQiIHgyPSI2NTAiIHkyPSIzMDIiIHN0cm9rZT0iIzFFM0E4QSIgc3Ryb2tlLXdpZHRoPSIyLjQiIG1hcmtlci1lbmQ9InVybCgjYXJyTmF2eSkiLz4KCiAgPGc+CiAgICA8cmVjdCB4PSI0NzgiIHk9IjMwNiIgd2lkdGg9IjM0NCIgaGVpZ2h0PSIxMjAiIHJ4PSIxMiIgZmlsbD0iI0ZGRkZGRiIgc3Ryb2tlPSIjQ0JENUUxIiBzdHJva2Utd2lkdGg9IjEuNCIgZmlsdGVyPSJ1cmwoI3NoYWRvdykiLz4KICAgIDxyZWN0IHg9IjQ3OCIgeT0iMzA2IiB3aWR0aD0iMzQ0IiBoZWlnaHQ9IjQiIHJ4PSIyIiBmaWxsPSIjMEY3NjZFIi8+CiAgICA8dGV4dCB4PSI0OTgiIHk9IjMzOCIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNiIgZm9udC13ZWlnaHQ9IjgwMCIgZmlsbD0iIzBGMTcyQSI+RGV0ZXJtaW5pc3RpYyBQcm9kdWN0IENvbXBpbGVyPC90ZXh0PgogICAgPHRleHQgeD0iNDk4IiB5PSIzNjIiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTEuOCIgZm9udC13ZWlnaHQ9IjUwMCIgZmlsbD0iIzQ3NTU2OSI+Q29tcGlsZXMgY2hvc2VuIHBhdHRlcm5zIGFjcm9zcyBhbGwgZm91ciBsYXllcnM8L3RleHQ+CiAgICA8cmVjdCB4PSI0OTgiIHk9IjM3OCIgd2lkdGg9IjMwNCIgaGVpZ2h0PSIzMiIgcng9IjgiIGZpbGw9IiNGMEZERjQiIHN0cm9rZT0iIzg2RUZBQyIgc3Ryb2tlLXdpZHRoPSIxLjEiLz4KICAgIDx0ZXh0IHg9IjY1MCIgeT0iMzk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjExIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMTY2NTM0Ij5aZXJvIERyaWZ0IEFjcm9zcyBEYXRhLCBTZWN1cml0eSAmYW1wOyBTZW1hbnRpY3M8L3RleHQ+CiAgPC9nPgoKICA8IS0tIENPTFVNTiAzOiA0IFNZTkNIUk9OSVNFRCBPVVRDT01FUyAoeD05MDQuLjEyODQsIHc9MzgwKSAtLT4KICA8cmVjdCB4PSI5MDQiIHk9IjkwIiB3aWR0aD0iMzgwIiBoZWlnaHQ9IjM1OCIgcng9IjE0IiBmaWxsPSIjRUNGREY1IiBzdHJva2U9IiNBN0YzRDAiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPHRleHQgeD0iOTI2IiB5PSIxMTgiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTAuNSIgZm9udC13ZWlnaHQ9IjgwMCIgbGV0dGVyLXNwYWNpbmc9IjAuMDllbSIgZmlsbD0iIzA2NUY0NiI+My4gRk9VUiBTWU5DSFJPTklTRUQgT1VUQ09NRVM8L3RleHQ+CgogIAogIDxnPgogICAgPHJlY3QgeD0iOTI0IiB5PSIxMzQiIHdpZHRoPSIzNDAiIGhlaWdodD0iNjgiIHJ4PSIxMSIgZmlsbD0iI0ZGRkZGRiIgc3Ryb2tlPSIjQ0JENUUxIiBzdHJva2Utd2lkdGg9IjEuNCIgZmlsdGVyPSJ1cmwoI3NoYWRvdykiLz4KICAgIDxyZWN0IHg9IjkyNCIgeT0iMTM0IiB3aWR0aD0iNSIgaGVpZ2h0PSI2OCIgcng9IjIuNSIgZmlsbD0iIzA1OTY2OSIvPgogICAgCiAgICA8dGV4dCB4PSI5NDQiIHk9IjE3MCIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNSIgZm9udC13ZWlnaHQ9IjgwMCIgZmlsbD0iIzBGMTcyQSI+QWNxdWlyZSwgU3RhZ2UgJmFtcDsgVHJhbnNmb3JtPC90ZXh0PgogICAgPHRleHQgeD0iOTQ0IiB5PSIxOTQiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiIGZvbnQtd2VpZ2h0PSI1MDAiIGZpbGw9IiM0NzU1NjkiPlF1YXJhbnRpbmUgZ2F0ZXMsIGhpc3RvcnksIHN0cmVhbSAmYW1wOyBBSSBwaXBlbGluZXM8L3RleHQ+CiAgPC9nPgoKICAKICA8Zz4KICAgIDxyZWN0IHg9IjkyNCIgeT0iMjEyIiB3aWR0aD0iMzQwIiBoZWlnaHQ9IjY4IiByeD0iMTEiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iI0NCRDVFMSIgc3Ryb2tlLXdpZHRoPSIxLjQiIGZpbHRlcj0idXJsKCNzaGFkb3cpIi8+CiAgICA8cmVjdCB4PSI5MjQiIHk9IjIxMiIgd2lkdGg9IjUiIGhlaWdodD0iNjgiIHJ4PSIyLjUiIGZpbGw9IiMwNTk2NjkiLz4KICAgIAogICAgPHRleHQgeD0iOTQ0IiB5PSIyNDgiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTUiIGZvbnQtd2VpZ2h0PSI4MDAiIGZpbGw9IiMwRjE3MkEiPkFjY2VzcywgTWFza2luZyAmYW1wOyBTaGFyaW5nPC90ZXh0PgogICAgPHRleHQgeD0iOTQ0IiB5PSIyNzIiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiIGZvbnQtd2VpZ2h0PSI1MDAiIGZpbGw9IiM0NzU1NjkiPkxlYXN0LXByaXZpbGVnZSBhY2Nlc3MsIFBJSSBtYXNraW5nICZhbXA7IHNoYXJlPC90ZXh0PgogIDwvZz4KCiAgCiAgPGc+CiAgICA8cmVjdCB4PSI5MjQiIHk9IjI5MCIgd2lkdGg9IjM0MCIgaGVpZ2h0PSI2OCIgcng9IjExIiBmaWxsPSIjRkZGRkZGIiBzdHJva2U9IiNDQkQ1RTEiIHN0cm9rZS13aWR0aD0iMS40IiBmaWx0ZXI9InVybCgjc2hhZG93KSIvPgogICAgPHJlY3QgeD0iOTI0IiB5PSIyOTAiIHdpZHRoPSI1IiBoZWlnaHQ9IjY4IiByeD0iMi41IiBmaWxsPSIjMDU5NjY5Ii8+CiAgICAKICAgIDx0ZXh0IHg9Ijk0NCIgeT0iMzI2IiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE1IiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjMEYxNzJBIj5DYXRhbG9nLCBMaW5lYWdlICZhbXA7IFF1YWxpdHk8L3RleHQ+CiAgICA8dGV4dCB4PSI5NDQiIHk9IjM1MCIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZm9udC13ZWlnaHQ9IjUwMCIgZmlsbD0iIzQ3NTU2OSI+QnVzaW5lc3MgZ2xvc3NhcnkgbGlua3MgJmFtcDsgcXVhbGl0eSBnYXRlczwvdGV4dD4KICA8L2c+CgogIAogIDxnPgogICAgPHJlY3QgeD0iOTI0IiB5PSIzNjgiIHdpZHRoPSIzNDAiIGhlaWdodD0iNjgiIHJ4PSIxMSIgZmlsbD0iI0ZGRkZGRiIgc3Ryb2tlPSIjQ0JENUUxIiBzdHJva2Utd2lkdGg9IjEuNCIgZmlsdGVyPSJ1cmwoI3NoYWRvdykiLz4KICAgIDxyZWN0IHg9IjkyNCIgeT0iMzY4IiB3aWR0aD0iNSIgaGVpZ2h0PSI2OCIgcng9IjIuNSIgZmlsbD0iIzA1OTY2OSIvPgogICAgCiAgICA8dGV4dCB4PSI5NDQiIHk9IjQwNCIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNSIgZm9udC13ZWlnaHQ9IjgwMCIgZmlsbD0iIzBGMTcyQSI+U2VtYW50aWMgTGF5ZXIgJmFtcDsgQ29uc3VtcHRpb248L3RleHQ+CiAgICA8dGV4dCB4PSI5NDQiIHk9IjQyOCIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZm9udC13ZWlnaHQ9IjUwMCIgZmlsbD0iIzQ3NTU2OSI+Q2Fub25pY2FsIG1ldHJpY3MsIEJJLCBBSSBncm91bmRpbmcgJmFtcDsgQVBJczwvdGV4dD4KICA8L2c+CgoKICA8IS0tIENvbm5lY3RvcnMgQ29sdW1uIDEgLT4gQ29sdW1uIDIgLS0+CiAgPHBhdGggZD0iTSAzNzYgMTgwIEwgNDI0IDE4MCBMIDQyNCAyMDggTCA0NzQgMjA4IiBmaWxsPSJub25lIiBzdHJva2U9IiMxRTNBOEEiIHN0cm9rZS13aWR0aD0iMi4yIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBtYXJrZXItZW5kPSJ1cmwoI2Fyck5hdnkpIi8+CiAgPHBhdGggZD0iTSAzNzYgMjgyIEwgNDI0IDI4MiBMIDQyNCAyMDgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzFFM0E4QSIgc3Ryb2tlLXdpZHRoPSIyLjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KICA8cGF0aCBkPSJNIDM3NiAzODQgTCA0MjQgMzg0IEwgNDI0IDI4MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMUUzQThBIiBzdHJva2Utd2lkdGg9IjIuMiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgoKICA8IS0tIENvbm5lY3RvcnMgQ29sdW1uIDIgLT4gQ29sdW1uIDMgLS0+CiAgPHBhdGggZD0iTSA4MjIgMzY2IEwgODcyIDM2NiBMIDg3MiAxNjggTCA5MjAgMTY4IiBmaWxsPSJub25lIiBzdHJva2U9IiMwRjc2NkUiIHN0cm9rZS13aWR0aD0iMi4yIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBtYXJrZXItZW5kPSJ1cmwoI2FyclRlYWwpIi8+CiAgPHBhdGggZD0iTSA4NzIgMjQ2IEwgOTIwIDI0NiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMEY3NjZFIiBzdHJva2Utd2lkdGg9IjIuMiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgbWFya2VyLWVuZD0idXJsKCNhcnJUZWFsKSIvPgogIDxwYXRoIGQ9Ik0gODcyIDMyNCBMIDkyMCAzMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzBGNzY2RSIgc3Ryb2tlLXdpZHRoPSIyLjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIG1hcmtlci1lbmQ9InVybCgjYXJyVGVhbCkiLz4KICA8cGF0aCBkPSJNIDg3MiAzNjYgTCA4NzIgNDAyIEwgOTIwIDQwMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMEY3NjZFIiBzdHJva2Utd2lkdGg9IjIuMiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgbWFya2VyLWVuZD0idXJsKCNhcnJUZWFsKSIvPgo8L3N2Zz4K", "dpf_agf_symbiosis_executive.png": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMzIwIiBoZWlnaHQ9IjQ5MCIgdmlld0JveD0iMCAwIDEzMjAgNDkwIj4KICA8ZGVmcz4KICAgIDxmaWx0ZXIgaWQ9InNoYWRvdyIgeD0iLTQlIiB5PSItNCUiIHdpZHRoPSIxMDglIiBoZWlnaHQ9IjExNCUiPgogICAgICA8ZmVEcm9wU2hhZG93IGR4PSIwIiBkeT0iMyIgc3RkRGV2aWF0aW9uPSI1IiBmbG9vZC1jb2xvcj0iIzBGMTcyQSIgZmxvb2Qtb3BhY2l0eT0iMC4wNSIvPgogICAgPC9maWx0ZXI+CiAgICA8bWFya2VyIGlkPSJhcnJOYXZ5IiB2aWV3Qm94PSIwIDAgMTAgMTAiIHJlZlg9IjguNSIgcmVmWT0iNSIgbWFya2VyV2lkdGg9IjcuNSIgbWFya2VySGVpZ2h0PSI3LjUiIG9yaWVudD0iYXV0byI+CiAgICAgIDxwYXRoIGQ9Ik0gMCAxLjUgTCA5IDUgTCAwIDguNSB6IiBmaWxsPSIjMUUzQThBIi8+CiAgICA8L21hcmtlcj4KICAgIDxtYXJrZXIgaWQ9ImFyckdyZWVuIiB2aWV3Qm94PSIwIDAgMTAgMTAiIHJlZlg9IjguNSIgcmVmWT0iNSIgbWFya2VyV2lkdGg9IjcuNSIgbWFya2VySGVpZ2h0PSI3LjUiIG9yaWVudD0iYXV0byI+CiAgICAgIDxwYXRoIGQ9Ik0gMCAxLjUgTCA5IDUgTCAwIDguNSB6IiBmaWxsPSIjMDU5NjY5Ii8+CiAgICA8L21hcmtlcj4KICA8L2RlZnM+CgogIDwhLS0gQ2FudmFzIC0tPgogIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxMzIwIiBoZWlnaHQ9IjQ5MCIgcng9IjE0IiBmaWxsPSIjRkFGOUY2IiBzdHJva2U9IiNFMkU4RjAiIHN0cm9rZS13aWR0aD0iMS41Ii8+CgogIDwhLS0gSGVhZGVyIC0tPgogIDx0ZXh0IHg9IjQwIiB5PSIzOCIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMC41IiBmb250LXdlaWdodD0iODAwIiBsZXR0ZXItc3BhY2luZz0iMC4xMWVtIiBmaWxsPSIjMUUzQThBIj5TWU1CSU9USUMgR09WRVJOQU5DRSAgwrcgIFRXTyBGUkFNRVdPUktTLCBPTkUgQ09OVElOVU9VUyBMSUZFQ1lDTEU8L3RleHQ+CiAgPHRleHQgeD0iNDAiIHk9IjY0IiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjIwIiBmb250LXdlaWdodD0iODAwIiBsZXR0ZXItc3BhY2luZz0iLTAuMDJlbSIgZmlsbD0iIzBGMTcyQSI+SG93IHRoZSBEYXRhIFByb2R1Y3QgRnJhbWV3b3JrIChEUEYpIGFuZCBBZ2VudGljIEdvdmVybmFuY2UgKEFHRikgV29yayBUb2dldGhlcjwvdGV4dD4KCiAgPCEtLSBCT1ggMTogREFUQSBQUk9EVUNUIEZSQU1FV09SSyAoRFBGKSAoeD0zNi4uNTMyLCB3PTQ5NikgLS0+CiAgPHJlY3QgeD0iMzYiIHk9IjkyIiB3aWR0aD0iNDk2IiBoZWlnaHQ9IjM2NCIgcng9IjE0IiBmaWxsPSIjRUZGNUZCIiBzdHJva2U9IiNCRkRCRkUiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPHRleHQgeD0iNjAiIHk9IjEyMCIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMSIgZm9udC13ZWlnaHQ9IjgwMCIgbGV0dGVyLXNwYWNpbmc9IjAuMDhlbSIgZmlsbD0iIzFFM0E4QSI+REFUQSBQUk9EVUNUIEZSQU1FV09SSyAoRFBGKTwvdGV4dD4KICA8dGV4dCB4PSI2MCIgeT0iMTQwIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyLjUiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiM0NzU1NjkiPkJ1aWxkLVRpbWUgU3BlY2lmaWNhdGlvbiAmYW1wOyBQcm9kdWN0IERlbGl2ZXJ5PC90ZXh0PgoKICAKICA8Zz4KICAgIDxyZWN0IHg9IjYwIiB5PSIxNTgiIHdpZHRoPSI0NDgiIGhlaWdodD0iODIiIHJ4PSIxMSIgZmlsbD0iI0ZGRkZGRiIgc3Ryb2tlPSIjQ0JENUUxIiBzdHJva2Utd2lkdGg9IjEuNCIgZmlsdGVyPSJ1cmwoI3NoYWRvdykiLz4KICAgIDxyZWN0IHg9IjYwIiB5PSIxNTgiIHdpZHRoPSI1IiBoZWlnaHQ9IjgyIiByeD0iMi41IiBmaWxsPSIjMUUzQThBIi8+CiAgICA8dGV4dCB4PSI4MiIgeT0iMTkyIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE1LjUiIGZvbnQtd2VpZ2h0PSI4MDAiIGZpbGw9IiMwRjE3MkEiPlBsYWluLUVuZ2xpc2ggQnVzaW5lc3MgSW50ZW50PC90ZXh0PgogICAgPHRleHQgeD0iODIiIHk9IjIxNiIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMi4yIiBmb250LXdlaWdodD0iNTAwIiBmaWxsPSIjNDc1NTY5Ij5DYXB0dXJlcyBjb21tZXJjaWFsIHJ1bGVzLCBvd25lcnNoaXAgJmFtcDsgYXV0aG9yaXNlZCBwdXJwb3NlPC90ZXh0PgogIDwvZz4KCiAgCiAgPGc+CiAgICA8cmVjdCB4PSI2MCIgeT0iMjU0IiB3aWR0aD0iNDQ4IiBoZWlnaHQ9IjgyIiByeD0iMTEiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iI0NCRDVFMSIgc3Ryb2tlLXdpZHRoPSIxLjQiIGZpbHRlcj0idXJsKCNzaGFkb3cpIi8+CiAgICA8cmVjdCB4PSI2MCIgeT0iMjU0IiB3aWR0aD0iNSIgaGVpZ2h0PSI4MiIgcng9IjIuNSIgZmlsbD0iIzFFM0E4QSIvPgogICAgPHRleHQgeD0iODIiIHk9IjI4OCIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNS41IiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjMEYxNzJBIj5VcGZyb250IFByaXZhY3kgJmFtcDsgUG9saWN5IERlc2lnbjwvdGV4dD4KICAgIDx0ZXh0IHg9IjgyIiB5PSIzMTIiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIuMiIgZm9udC13ZWlnaHQ9IjUwMCIgZmlsbD0iIzQ3NTU2OSI+QXBwbGllcyBzaGFyZWQgZGVmaW5pdGlvbnMsIFBJSSBtYXNraW5nICZhbXA7IHBhcnRuZXIgYm91bmRhcmllczwvdGV4dD4KICA8L2c+CgogIAogIDxnPgogICAgPHJlY3QgeD0iNjAiIHk9IjM1MCIgd2lkdGg9IjQ0OCIgaGVpZ2h0PSI4MiIgcng9IjExIiBmaWxsPSIjRkZGRkZGIiBzdHJva2U9IiNDQkQ1RTEiIHN0cm9rZS13aWR0aD0iMS40IiBmaWx0ZXI9InVybCgjc2hhZG93KSIvPgogICAgPHJlY3QgeD0iNjAiIHk9IjM1MCIgd2lkdGg9IjUiIGhlaWdodD0iODIiIHJ4PSIyLjUiIGZpbGw9IiMxRTNBOEEiLz4KICAgIDx0ZXh0IHg9IjgyIiB5PSIzODQiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTUuNSIgZm9udC13ZWlnaHQ9IjgwMCIgZmlsbD0iIzBGMTcyQSI+RGV0ZXJtaW5pc3RpYyBQcm9kdWN0IENvbXBpbGF0aW9uPC90ZXh0PgogICAgPHRleHQgeD0iODIiIHk9IjQwOCIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMi4yIiBmb250LXdlaWdodD0iNTAwIiBmaWxsPSIjNDc1NTY5Ij5HZW5lcmF0ZXMgc3luY2hyb25pc2VkIHBpcGVsaW5lcywgc2VjdXJpdHksIGNhdGFsb2cgJmFtcDsgQkk8L3RleHQ+CiAgPC9nPgoKCiAgPCEtLSBCT1ggMjogQUdFTlRJQyBEQVRBIEdPVkVSTkFOQ0UgRlJBTUVXT1JLIChBR0YpICh4PTc4OC4uMTI4NCwgdz00OTYpIC0tPgogIDxyZWN0IHg9Ijc4OCIgeT0iOTIiIHdpZHRoPSI0OTYiIGhlaWdodD0iMzY0IiByeD0iMTQiIGZpbGw9IiNFQ0ZERjUiIHN0cm9rZT0iI0E3RjNEMCIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICA8dGV4dCB4PSI4MTIiIHk9IjEyMCIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMSIgZm9udC13ZWlnaHQ9IjgwMCIgbGV0dGVyLXNwYWNpbmc9IjAuMDhlbSIgZmlsbD0iIzA2NUY0NiI+QUdFTlRJQyBEQVRBIEdPVkVSTkFOQ0UgRlJBTUVXT1JLIChBR0YpPC90ZXh0PgogIDx0ZXh0IHg9IjgxMiIgeT0iMTQwIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyLjUiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiM0NzU1NjkiPlJ1bi1UaW1lIEVzdGF0ZSBQcm90ZWN0aW9uICZhbXA7IENvbnRpbnVvdXMgQXNzdXJhbmNlPC90ZXh0PgoKICAKICA8Zz4KICAgIDxyZWN0IHg9IjgxMiIgeT0iMTU4IiB3aWR0aD0iNDQ4IiBoZWlnaHQ9IjgyIiByeD0iMTEiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iI0NCRDVFMSIgc3Ryb2tlLXdpZHRoPSIxLjQiIGZpbHRlcj0idXJsKCNzaGFkb3cpIi8+CiAgICA8cmVjdCB4PSI4MTIiIHk9IjE1OCIgd2lkdGg9IjUiIGhlaWdodD0iODIiIHJ4PSIyLjUiIGZpbGw9IiMwNTk2NjkiLz4KICAgIDx0ZXh0IHg9IjgzNCIgeT0iMTkyIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE1LjUiIGZvbnQtd2VpZ2h0PSI4MDAiIGZpbGw9IiMwRjE3MkEiPkJpcnRoIFByb3RlY3Rpb24gJmFtcDsgTGl2ZSBMaW5lYWdlPC90ZXh0PgogICAgPHRleHQgeD0iODM0IiB5PSIyMTYiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIuMiIgZm9udC13ZWlnaHQ9IjUwMCIgZmlsbD0iIzQ3NTU2OSI+U2NhbnMgbmV3IGRhdGEgYXQgYXJyaXZhbCBhbmQgdmVyaWZpZXMgbGl2ZSBwaXBlbGluZSBiZWhhdmlvdXI8L3RleHQ+CiAgPC9nPgoKICAKICA8Zz4KICAgIDxyZWN0IHg9IjgxMiIgeT0iMjU0IiB3aWR0aD0iNDQ4IiBoZWlnaHQ9IjgyIiByeD0iMTEiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iI0NCRDVFMSIgc3Ryb2tlLXdpZHRoPSIxLjQiIGZpbHRlcj0idXJsKCNzaGFkb3cpIi8+CiAgICA8cmVjdCB4PSI4MTIiIHk9IjI1NCIgd2lkdGg9IjUiIGhlaWdodD0iODIiIHJ4PSIyLjUiIGZpbGw9IiMwNTk2NjkiLz4KICAgIDx0ZXh0IHg9IjgzNCIgeT0iMjg4IiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE1LjUiIGZvbnQtd2VpZ2h0PSI4MDAiIGZpbGw9IiMwRjE3MkEiPlB1cnBvc2UtQm91bmQgQWNjZXNzICZhbXA7IExlZGdlciBUcnV0aDwvdGV4dD4KICAgIDx0ZXh0IHg9IjgzNCIgeT0iMzEyIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyLjIiIGZvbnQtd2VpZ2h0PSI1MDAiIGZpbGw9IiM0NzU1NjkiPkJyb2tlcnMgdGltZS1saW1pdGVkIGFjY2VzcyBhbmQgcmVjb25jaWxlcyB0byBGaW5hbmNlIHRvdGFsczwvdGV4dD4KICA8L2c+CgogIAogIDxnPgogICAgPHJlY3QgeD0iODEyIiB5PSIzNTAiIHdpZHRoPSI0NDgiIGhlaWdodD0iODIiIHJ4PSIxMSIgZmlsbD0iI0ZGRkZGRiIgc3Ryb2tlPSIjQ0JENUUxIiBzdHJva2Utd2lkdGg9IjEuNCIgZmlsdGVyPSJ1cmwoI3NoYWRvdykiLz4KICAgIDxyZWN0IHg9IjgxMiIgeT0iMzUwIiB3aWR0aD0iNSIgaGVpZ2h0PSI4MiIgcng9IjIuNSIgZmlsbD0iIzA1OTY2OSIvPgogICAgPHRleHQgeD0iODM0IiB5PSIzODQiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTUuNSIgZm9udC13ZWlnaHQ9IjgwMCIgZmlsbD0iIzBGMTcyQSI+UmV0ZW50aW9uICZhbXA7IFNoYWRvdyBBc3NldCBEaXNjb3Zlcnk8L3RleHQ+CiAgICA8dGV4dCB4PSI4MzQiIHk9IjQwOCIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMi4yIiBmb250LXdlaWdodD0iNTAwIiBmaWxsPSIjNDc1NTY5Ij5FbmZvcmNlcyByZWd1bGF0b3J5IHJldGlyZW1lbnQgYW5kIHVuY292ZXJzIHVuZ292ZXJuZWQgZGF0YTwvdGV4dD4KICA8L2c+CgoKICA8IS0tIENFTlRFUiBIQU5EU0hBS0UgKHg9NTMyLi43ODgpIOKAlCBVbmJveGVkIHRpdGxlIGFib3ZlIGxpbmUsIGFjdGlvbiBiZWxvdyBsaW5lIC0tPgogIDwhLS0gRm9yd2FyZCBIYW5kc2hha2U6IERQRiAtPiBBR0YgLS0+CiAgPHRleHQgeD0iNjYwIiB5PSIyMDciIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTEiIGZvbnQtd2VpZ2h0PSI4MDAiIGxldHRlci1zcGFjaW5nPSIwLjA3ZW0iIGZpbGw9IiMxRTNBOEEiPlBVQkxJU0hFRCBJTlRFTlQ8L3RleHQ+CiAgPGxpbmUgeDE9IjUzMiIgeTE9IjIyMCIgeDI9Ijc4MiIgeTI9IjIyMCIgc3Ryb2tlPSIjMUUzQThBIiBzdHJva2Utd2lkdGg9IjIuOCIgbWFya2VyLWVuZD0idXJsKCNhcnJOYXZ5KSIvPgogIDx0ZXh0IHg9IjY2MCIgeT0iMjQwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEwLjgiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiM0NzU1NjkiPk93bmVyc2hpcCwgcHJpdmFjeSBydWxlczwvdGV4dD4KICA8dGV4dCB4PSI2NjAiIHk9IjI1NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IidQbHVzIEpha2FydGEgU2FucycsIHN5c3RlbS11aSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMC44IiBmb250LXdlaWdodD0iNjAwIiBmaWxsPSIjNDc1NTY5Ij4mYW1wOyBTTEFzIGluIHNoYXJlZCBjYXRhbG9nPC90ZXh0PgoKICA8IS0tIFJldHVybiBIYW5kc2hha2U6IEFHRiAtPiBEUEYgLS0+CiAgPHRleHQgeD0iNjYwIiB5PSIzMjUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSInUGx1cyBKYWthcnRhIFNhbnMnLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTEiIGZvbnQtd2VpZ2h0PSI4MDAiIGxldHRlci1zcGFjaW5nPSIwLjA3ZW0iIGZpbGw9IiMwNTk2NjkiPkVTVEFURSBGRUVEQkFDSzwvdGV4dD4KICA8bGluZSB4MT0iNzg4IiB5MT0iMzM4IiB4Mj0iNTM4IiB5Mj0iMzM4IiBzdHJva2U9IiMwNTk2NjkiIHN0cm9rZS13aWR0aD0iMi44IiBtYXJrZXItZW5kPSJ1cmwoI2FyckdyZWVuKSIvPgogIDx0ZXh0IHg9IjY2MCIgeT0iMzU4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEwLjgiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiM0NzU1NjkiPkxpdmUgZHJpZnQsIG5ldyBQSUkgJmFtcDsgc2hhZG93PC90ZXh0PgogIDx0ZXh0IHg9IjY2MCIgeT0iMzczIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iJ1BsdXMgSmFrYXJ0YSBTYW5zJywgc3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEwLjgiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiM0NzU1NjkiPmFzc2V0cyByb3V0ZWQgZm9yIGFtZW5kbWVudDwvdGV4dD4KPC9zdmc+Cg=="};</script>
+  <script>
+    (function() {
+      if (window.WP_SVGS) {
+        document.querySelectorAll('img[data-svg-key]').forEach(img => {
+          const k = img.getAttribute('data-svg-key');
+          if (window.WP_SVGS[k]) img.src = window.WP_SVGS[k];
+        });
+      }
+
+      document.getElementById('print-pdf-btn')?.addEventListener('click', () => window.print());
+
+      const themeBtn = document.getElementById('theme-btn');
+      const saved = localStorage.getItem('dpf-wp-theme');
+      if (saved === 'dark' || saved === 'light') document.documentElement.setAttribute('data-theme', saved);
+      themeBtn?.addEventListener('click', () => {
+        const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('dpf-wp-theme', next);
+      });
+
+      const lb = document.getElementById('wp-lightbox');
+      const lbImg = document.getElementById('wp-lb-img');
+      const lbCap = document.getElementById('wp-lb-cap');
+      document.querySelectorAll('[data-zoom-src]').forEach(el => {
+        el.addEventListener('click', () => {
+          const key = el.getAttribute('data-zoom-src');
+          if (window.WP_SVGS && window.WP_SVGS[key]) {
+            lbImg.src = window.WP_SVGS[key];
+            lbCap.textContent = el.getAttribute('data-zoom-cap') || '';
+            lb.classList.add('is-open');
+          }
+        });
+      });
+      document.getElementById('wp-lb-close')?.addEventListener('click', () => lb.classList.remove('is-open'));
+      lb?.addEventListener('click', (e) => { if (e.target === lb) lb.classList.remove('is-open'); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') lb.classList.remove('is-open'); });
+
+      const bar = document.getElementById('wp-progress');
+      const anchors = Array.from(document.querySelectorAll('.toc-anchor'));
+      const targets = anchors.map(a => document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+
+      function onScroll() {
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        if (bar) bar.style.width = (max > 20 ? Math.min(100, (window.scrollY / max) * 100) : 0).toFixed(1) + '%';
+        let activeId = targets[0]?.id || '';
+        for (const t of targets) {
+          if (t.getBoundingClientRect().top <= 120) activeId = t.id;
+        }
+        anchors.forEach(a => a.classList.toggle('is-active', a.getAttribute('href') === '#' + activeId));
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    })();
+  </script>
+</body>
+</html>

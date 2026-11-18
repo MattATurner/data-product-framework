@@ -40,15 +40,17 @@ def _lkml_str(val: str) -> str:
     return f'"{escaped}"'
 
 
-def _dg_base_and_tfs(col: str, all_cols: set[str]) -> tuple[str, list[str], str]:
+def _dg_base_and_tfs(col: str, all_cols: set[str], datatype_hint: str | None = None) -> tuple[str, list[str], str]:
     """Return (dimension_group_name, timeframes, datatype) for a time column."""
-    if is_timestamp(col):
+    dt = (datatype_hint or "").lower()
+    if dt in ("timestamp", "datetime") or is_timestamp(col):
+        resolved = dt if dt in ("timestamp", "datetime") else "timestamp"
         for suf in ("_timestamp", "_ts", "_at"):
             if col.endswith(suf):
                 stem = col[: -len(suf)]
                 if stem and stem not in all_cols:
-                    return stem, TS_TIMEFRAMES, "timestamp"
-        return col, TS_TIMEFRAMES, "timestamp"
+                    return stem, TS_TIMEFRAMES, resolved
+        return col, TS_TIMEFRAMES, resolved
     if col.endswith("_date"):
         stem = col[:-5]
         if stem and stem not in all_cols:
@@ -71,7 +73,7 @@ def cube_field_map(cube: dict) -> dict[str, str]:
         fields["_dpf_pk"] = "dimension"
     for d in cube.get("dimensions") or []:
         if d["type"] == "time":
-            dg_name, tfs, _ = _dg_base_and_tfs(d["name"], all_cols)
+            dg_name, tfs, _ = _dg_base_and_tfs(d["name"], all_cols, d.get("datatype"))
             for tf in tfs:
                 fields[f"{dg_name}_{tf}"] = "dimension"
         else:
@@ -220,14 +222,19 @@ def _render_model_lkml(p: Product, spec: dict, cube_refs: dict[str, tuple[str, s
         lines.append('include: "/dashboards/*.dashboard.lookml"')
     lines.append("")
 
-    # Pick a deterministic datagroup trigger from the primary partitioned cube when available.
+    # Pick a zero-byte BigQuery partition metadata trigger from the primary cube when available,
+    # invalidating cache immediately on every intraday refresh, backdated amendment, or recovery.
     trigger_sql = "SELECT CURRENT_DATE()"
-    for c in spec.get("cubes") or []:
-        part = c.get("partition_by")
-        if part and c["name"] in cube_refs:
-            p_const, d_const, tbl = cube_refs[c["name"]]
-            trigger_sql = f"SELECT MAX({part}) FROM `@{{{p_const}}}.@{{{d_const}}}.{tbl}`"
-            break
+    primary_cube = next(
+        (c for c in (spec.get("cubes") or []) if c.get("partition_by") and c["name"] in cube_refs),
+        next((c for c in (spec.get("cubes") or []) if c["name"] in cube_refs), None),
+    )
+    if primary_cube:
+        p_const, d_const, tbl = cube_refs[primary_cube["name"]]
+        trigger_sql = (
+            f"SELECT MAX(last_modified_time) FROM `@{{{p_const}}}.@{{{d_const}}}.INFORMATION_SCHEMA.PARTITIONS` "
+            f"WHERE table_name = '{tbl}'"
+        )
 
     lines += [
         f"datagroup: {dg_name} {{",
@@ -317,10 +324,13 @@ def _render_view_lkml(
     sk = cube.get("surrogate_key")
     grain = list(cube.get("grain_columns") or [])
     tagged_cols: dict[str, str] = {}
-    if auth_mode == "service_account":
-        for pt in cube.get("policy_tags") or []:
-            for col in pt.get("columns") or []:
+    policy_hidden_cols: set[str] = set()
+    for pt in cube.get("policy_tags") or []:
+        for col in pt.get("columns") or []:
+            if auth_mode == "service_account":
                 tagged_cols[col] = snake_id("can_view", pt["tag"])
+            else:
+                policy_hidden_cols.add(col)
 
     pk_col: str | None = None
     if sk:
@@ -355,7 +365,7 @@ def _render_view_lkml(
         dname = d["name"]
         desc = d.get("description")
         if d["type"] == "time":
-            dg_name, tfs, dtype = _dg_base_and_tfs(dname, all_cols)
+            dg_name, tfs, dtype = _dg_base_and_tfs(dname, all_cols, d.get("datatype"))
             lines += [
                 "",
                 f"  dimension_group: {dg_name} {{",
@@ -376,7 +386,7 @@ def _render_view_lkml(
             lines += ["", f"  dimension: {dname} {{"]
             if dname == pk_col:
                 lines.append("    primary_key: yes")
-            if d.get("hidden"):
+            if d.get("hidden") or dname in policy_hidden_cols:
                 lines.append("    hidden: yes")
             lines.append(f"    type: {ltype}")
             if desc:
@@ -405,8 +415,10 @@ def _render_view_lkml(
         lines += [
             "",
             f"  measure: {mname} {{",
-            f"    type: {mtype}",
         ]
+        if ms.get("hidden"):
+            lines.append("    hidden: yes")
+        lines.append(f"    type: {mtype}")
         if ms.get("description"):
             lines.append(f"    description: {_lkml_str(ms['description'])}")
         lines += [
@@ -424,6 +436,7 @@ def _render_view_lkml(
 def _render_metric_measure(mt: dict, bool_dims: set[str]) -> list[str]:
     mname = mt["name"]
     mtype_in = mt.get("type", "simple")
+    agg = (mt.get("aggregation") or "").lower()
     col = mt.get("expr") or mt.get("measure") or mname
     desc = mt.get("description") or mt.get("label")
     label = mt.get("label")
@@ -436,6 +449,12 @@ def _render_metric_measure(mt: dict, bool_dims: set[str]) -> list[str]:
         lines.append("    type: number")
         sql_expr = col if "${" in col else f"${{TABLE}}.{col}"
         lines.append(f"    sql: {sql_expr} ;;")
+    elif agg == "count":
+        lines.append("    type: count")
+        if mt.get("filter"):
+            kv_filters, _ = _parse_measure_filter(mt["filter"], bool_dims)
+            for fk, fv in kv_filters:
+                lines.append(f"    filters: [{fk}: {_lkml_str(fv)}]")
     else:
         lines.append("    type: sum")
         if mt.get("filter"):
@@ -482,7 +501,8 @@ def _render_explore_lkml(p: Product, g: ProductGraph, spec: dict, explore: dict,
     if part_col and explore.get("always_filter_partition", True):
         all_cols = {d["name"] for d in base.get("dimensions") or []}
         if any(d["name"] == part_col and d["type"] == "time" for d in base.get("dimensions") or []):
-            dg_name, _, _ = _dg_base_and_tfs(part_col, all_cols)
+            part_dim = next(d for d in base.get("dimensions") or [] if d["name"] == part_col)
+            dg_name, _, _ = _dg_base_and_tfs(part_col, all_cols, part_dim.get("datatype"))
             filter_field = f"{base_name}.{dg_name}_date"
         else:
             filter_field = f"{base_name}.{part_col}"
@@ -544,11 +564,19 @@ def _render_explore_lkml(p: Product, g: ProductGraph, spec: dict, explore: dict,
                 match = next((qf for qf, fk in exp_fields.items() if fk == "dimension" and qf.split(".")[-1] == gcol), None)
                 if match:
                     agg_dims.append(match)
-            agg_measures = [
+            agg_col_names = {
+                *(d["name"] for d in (agg_cube.get("dimensions") or [])),
+                *(m["name"] for m in (agg_cube.get("measures") or []) if m["name"] != "row_count"),
+            }
+            base_m_map = cube_field_map(base)
+            matched_measures = [
                 f"{base_name}.{fname}"
-                for fname, fk in cube_field_map(base).items()
-                if fk == "measure" and (fname == "count" or any(d["name"] == fname for d in (agg_cube.get("dimensions") or [])))
+                for fname, fk in base_m_map.items()
+                if fk == "measure" and fname in agg_col_names
             ]
+            agg_measures = matched_measures or (
+                [f"{base_name}.count"] if "count" in base_m_map else []
+            )
             if agg_dims and agg_measures:
                 lines += [
                     "",
@@ -656,6 +684,8 @@ def _render_dashboard_lkml(p: Product, spec: dict, dash: dict, explores_by_name:
             elem["pivots"] = list(tile["pivots"])
         if tile.get("sorts"):
             elem["sorts"] = list(tile["sorts"])
+        elif kind == "ranked_bar" and tile.get("measures"):
+            elem["sorts"] = [f"{tile['measures'][0]} desc"]
         if tile.get("limit"):
             elem["limit"] = int(tile["limit"])
         if tile.get("filters"):
@@ -838,6 +868,15 @@ def validate_lookml_files(files: dict[str, str], spec: dict) -> list[str]:
                 problems.append(f"{path}: LookML dashboard must be a non-empty YAML list of dashboard objects")
                 continue
             dobj = parsed[0]
+            default_exp_name = dobj.get("explore") or ""
+            for flt in dobj.get("filters") or []:
+                f_exp = explores_by_name.get(flt.get("explore") or default_exp_name)
+                if f_exp and flt.get("field"):
+                    f_reach = explore_field_map(f_exp, cubes_by_name)
+                    if flt["field"] not in f_reach:
+                        problems.append(
+                            f"{path}: filter '{flt.get('name')}' references unknown field '{flt['field']}' in explore '{f_exp['name']}'"
+                        )
             for elem in dobj.get("elements") or []:
                 etype = elem.get("type")
                 if etype in ("looker_pie", "looker_donut_multiples", "pie", "donut"):
@@ -854,5 +893,16 @@ def validate_lookml_files(files: dict[str, str], spec: dict) -> list[str]:
                     if fld not in reach:
                         problems.append(
                             f"{path}: element '{elem.get('name')}' references unknown field '{fld}' in explore '{ename}'"
+                        )
+                for l_key, l_fld in (elem.get("listen") or {}).items():
+                    if l_fld not in reach:
+                        problems.append(
+                            f"{path}: element '{elem.get('name')}' listen '{l_key}' references unknown field '{l_fld}' in explore '{ename}'"
+                        )
+                for s_item in elem.get("sorts") or []:
+                    s_fld = str(s_item).split()[0]
+                    if s_fld not in reach:
+                        problems.append(
+                            f"{path}: element '{elem.get('name')}' sort references unknown field '{s_fld}' in explore '{ename}'"
                         )
     return problems

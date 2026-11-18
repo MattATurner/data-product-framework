@@ -15,7 +15,7 @@ view: fct_order_line {
   }
 
   dimension: order_line_no {
-    type: string
+    type: number
     sql: ${TABLE}.order_line_no ;;
   }
 
@@ -79,10 +79,17 @@ view: fct_order_line {
   }
 
   measure: quantity {
-    label: "Quantity"
-    description: "Quantity"
+    hidden: yes
     type: sum
+    description: "Unfiltered quantity (additive) on fct_order_line; prefer governed filtered metric"
     sql: ${TABLE}.quantity ;;
+  }
+
+  measure: net_amount {
+    hidden: yes
+    type: sum
+    description: "Unfiltered net_amount (additive) on fct_order_line; prefer governed filtered metric"
+    sql: ${TABLE}.net_amount ;;
   }
 
   measure: gross_amount {
@@ -99,13 +106,6 @@ view: fct_order_line {
     sql: ${TABLE}.discount_amount ;;
   }
 
-  measure: net_amount {
-    label: "Net Amount"
-    description: "Net Amount"
-    type: sum
-    sql: ${TABLE}.net_amount ;;
-  }
-
   measure: net_sales {
     label: "Net Sales (AUD)"
     description: "Net sales in AUD excluding tax and cancelled order lines."
@@ -120,5 +120,12 @@ view: fct_order_line {
     type: sum
     filters: [is_cancelled: "no"]
     sql: ${TABLE}.quantity ;;
+  }
+
+  measure: order_line_count {
+    label: "Order Lines"
+    description: "Count of non-cancelled order lines."
+    type: count
+    filters: [is_cancelled: "no"]
   }
 }

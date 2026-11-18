@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -188,6 +189,10 @@ def cmd_proto(ws, args, report):
             return
         sys_id = args.source or "erp_orders"
         entity = args.entity or "orders"
+        reg_defaults = ws.registry().defaults
+        default_proj = args.project or reg_defaults.get("gcp_project") or os.environ.get("DPF_GCP_PROJECT") or "example-dpf-dev"
+        default_region = reg_defaults.get("region") or "us-central1"
+        default_tz = reg_defaults.get("business_timezone") or "UTC"
         man = {
             "product_id": pid,
             "version": "0.1.0",
@@ -196,8 +201,8 @@ def cmd_proto(ws, args, report):
             "domain": args.domain or "commerce",
             "classification": "INTERNAL",
             "deployment": {
-                "gcp_project": args.project or "example-dpf-dev",
-                "region": "europe-west2",
+                "gcp_project": default_proj,
+                "region": default_region,
                 "datasets": {
                     "raw": f"{pid}_raw",
                     "staging": f"{pid}_staging",
@@ -256,7 +261,7 @@ def cmd_proto(ws, args, report):
             "quality": {"gate_behaviour": "warn", "rules": []},
             "orchestration": {
                 "engine": "dataform",
-                "timezone": "UTC",
+                "timezone": default_tz,
                 "schedules": [{"id": "hourly", "cron": "15 * * * *"}],
             },
         }
@@ -369,6 +374,60 @@ def cmd_proto(ws, args, report):
                       .replace("{domain}", domain)) if sem_tmpl.exists() else f"# Business playback — {pid}\n\nPlain-language playback of {pid} for business owner sign-off.\n"
             write_text(tdd_dir / "playback.md", pb_txt)
         report.ok(f"promoted {pid} to status: draft and scaffolded {brd_rel} and {tdd_rel} (with playback.md)")
+
+
+def cmd_looker(ws, args, report):
+    from dpf.looker_deploy import deploy_looker, verify_looker
+
+    if not getattr(args, "product", None):
+        raise SystemExit("name a product")
+    if args.looker_cmd == "deploy":
+        deploy_looker(
+            ws,
+            args.product,
+            report,
+            env=args.env,
+            project_id=args.project_id,
+            profile=args.profile,
+            host=args.host,
+            port=args.port,
+            folder=args.folder,
+            update_connection=args.update_connection,
+            verify_queries=not args.no_verify,
+        )
+    elif args.looker_cmd == "verify":
+        verify_looker(
+            ws,
+            args.product,
+            report,
+            env=args.env,
+            project_id=args.project_id,
+            profile=args.profile,
+            host=args.host,
+            port=args.port,
+        )
+    elif args.looker_cmd == "cockpit":
+        from dpf.looker_cockpit import build_or_serve_cockpit
+
+        build_or_serve_cockpit(
+            ws,
+            args.product,
+            report,
+            env=args.env,
+            project_id=args.project_id,
+            profile=args.profile,
+            host=args.host,
+            port=args.port,
+            date_filter=args.date_filter,
+            out_path=Path(args.out) if args.out else None,
+            serve_port=args.serve,
+            publish=args.publish,
+            presentation_server_url=args.presentation_server_url,
+            presentation_bucket=args.presentation_bucket,
+            net_sales_target=args.net_sales_target,
+            units_target=args.units_target,
+            discount_ceiling_pct=args.discount_ceiling_pct,
+        )
 
 
 def cmd_eval(ws, args, report):
@@ -507,11 +566,53 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--domain", help="domain name (default: analytics)")
     sp.add_argument("--project", help="GCP project id (overrides manifest.lkml / sql_table_name)")
     sp.add_argument("--dataset", help="default BigQuery dataset when sql_table_name is unqualified")
-    sp.add_argument("--region", help="GCP region (default: europe-west2)")
+    sp.add_argument("--region", help="GCP region (default: registry platform-defaults.yaml)")
     sp.set_defaults(fn=cmd_proto)
     sp = psub.add_parser("promote", parents=[common], help="promote a prototype product to status: draft and scaffold BRD/TDD")
     product_args(sp, all_ok=False)
     sp.set_defaults(fn=cmd_proto)
+
+    looker_ap = sub.add_parser("looker", help="deploy and verify LookML semantic models and dashboards via looker-cli")
+    lsub = looker_ap.add_subparsers(dest="looker_cmd", required=True)
+    sp = lsub.add_parser("deploy", parents=[common],
+                         help="sync LookML + dashboards to Looker, validate, import UDDs and verify tile queries")
+    product_args(sp, all_ok=False)
+    sp.add_argument("--env", help="environment name from deployment.environments.<env>")
+    sp.add_argument("--project-id", help="override BigQuery GCP project id (or set DPF_GCP_PROJECT)")
+    sp.add_argument("--profile", help="looker-cli profile name (or set LOOKER_PROFILE)")
+    sp.add_argument("--host", help="override Looker host (or set LOOKER_HOST)")
+    sp.add_argument("--port", help="override Looker API port (or set LOOKER_PORT)")
+    sp.add_argument("--folder", default="Shared", help="target Looker folder name or numeric id (default: Shared)")
+    sp.add_argument("--update-connection", action="store_true", help="re-import the BigQuery connection even if it exists")
+    sp.add_argument("--no-verify", action="store_true", help="skip live tile query execution after dashboard sync")
+    sp.set_defaults(fn=cmd_looker)
+    sp = lsub.add_parser("verify", parents=[common],
+                         help="validate the deployed Looker project and execute every dashboard tile query")
+    product_args(sp, all_ok=False)
+    sp.add_argument("--env", help="environment name from deployment.environments.<env>")
+    sp.add_argument("--project-id", help="override BigQuery GCP project id (or set DPF_GCP_PROJECT)")
+    sp.add_argument("--profile", help="looker-cli profile name (or set LOOKER_PROFILE)")
+    sp.add_argument("--host", help="override Looker host (or set LOOKER_HOST)")
+    sp.add_argument("--port", help="override Looker API port (or set LOOKER_PORT)")
+    sp.set_defaults(fn=cmd_looker)
+    sp = lsub.add_parser("cockpit", parents=[common],
+                         help="render (or serve) a Stephen Few HTML cockpit queried exclusively through the LookML semantic layer")
+    product_args(sp, all_ok=False)
+    sp.add_argument("--env", help="environment name from deployment.environments.<env>")
+    sp.add_argument("--project-id", help="override BigQuery GCP project id (or set DPF_GCP_PROJECT)")
+    sp.add_argument("--profile", help="looker-cli profile name (or set LOOKER_PROFILE)")
+    sp.add_argument("--host", help="override Looker host (or set LOOKER_HOST)")
+    sp.add_argument("--port", help="override Looker API port (or set LOOKER_PORT)")
+    sp.add_argument("--date-filter", help="Looker date filter expression (default: explore partition_default_filter)")
+    sp.add_argument("--out", help="output HTML file path (default: generated/<product>/semantic_layer/<product>_semantic_cockpit.html)")
+    sp.add_argument("--serve", type=int, help="optional local port to serve live /api/lookml-telemetry refreshes")
+    sp.add_argument("--publish", action="store_true", help="publish cockpit to configured Presentation Server (prompts for URL on first run)")
+    sp.add_argument("--presentation-server-url", help="Presentation Server base URL (saved to agent-config.json on first run)")
+    sp.add_argument("--presentation-bucket", help="optional GCS bucket backing the Presentation Server (or set DPF_PRESENTATION_BUCKET)")
+    sp.add_argument("--net-sales-target", type=float, help="comparative target for Net Sales Bullet Graph")
+    sp.add_argument("--units-target", type=float, help="comparative target for Units Sold Bullet Graph")
+    sp.add_argument("--discount-ceiling-pct", type=float, default=10.0, help="ceiling % for Discount Rate Bullet Graph (default: 10.0)")
+    sp.set_defaults(fn=cmd_looker)
 
     sp = sub.add_parser("eval", parents=[common], help="run the behavioural evals in tests/evals/")
     sp.add_argument("--id", nargs="*", help="eval ids to run (default: all)")

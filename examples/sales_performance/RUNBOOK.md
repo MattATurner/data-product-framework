@@ -4,11 +4,11 @@ On-premises PostgreSQL 16 (`pg_local`) to BigQuery (`us-central1`) via 15-minute
 
 | | |
 |---|---|
-| BRD | `openspec/specs/products/sales/sales-performance/brd/spec.md` (BRD-SALES-002 @ 1.2.0) |
-| TDD | `openspec/specs/products/sales/sales-performance/tdd/spec.md` (TDD-SALES-002) |
-| Signed semantics | `.../tdd/semantics.md`, signature in `.../tdd/signoff.yaml` |
-| Manifest | `products/sales_performance/product.yaml` |
-| Acceptance | `products/sales_performance/acceptance.yaml` (AT-1 … AT-14) |
+| BRD | `examples/sales_performance/specs/brd/spec.md` (BRD-SALES-002 @ 1.2.0) |
+| TDD | `examples/sales_performance/specs/tdd/spec.md` (TDD-SALES-002) |
+| Signed semantics | `examples/sales_performance/specs/tdd/semantics.md`, signature in `.../tdd/signoff.yaml` |
+| Manifest | `examples/sales_performance/product.yaml` |
+| Acceptance | `examples/sales_performance/acceptance.yaml` (AT-1 … AT-16) |
 
 ## 0. Check the specs before building anything
 
@@ -23,10 +23,22 @@ stop.
 
 ## 1. Generate and deploy the infrastructure
 
-This is how the example was deployed to the sandbox project `data-product-framework` on
-5 October 2026 to collect G4 evidence.
+### Fast path: Automated Layer-0 bootstrap (recommended)
 
-**Once per project, before the first apply.** The module creates none of these; the table in
+Run the workspace Layer-0 bootstrap from the repository root once per environment. It enables all required Google Cloud APIs, creates the Google-managed service identities (`dataplex.googleapis.com`, `dataform.googleapis.com`, `bigquerydatatransfer.googleapis.com`), provisions `dataform-runner` and `dpf-monitor` via keyless impersonation, creates the state bucket and Dataform repository, asks once on first run for an optional Presentation Server URL, and auto-hydrates `registry/agent-config.json`, `registry/platform-defaults.yaml`, and `examples/sales_performance/terraform/terraform.tfvars`:
+
+```bash
+# Brand-new GCP project (Org/Folder Admin + Billing; add --relax-domain-policy in a sandbox):
+source bootstrap/deploy.sh --project-id my-dpf-demo --region us-central1 --timezone Australia/Perth --relax-domain-policy
+
+# Or attach to an existing customer GCP project (non-org-admin):
+./bootstrap/deploy-existing-project.sh --project-id <existing-project> --region us-central1 --timezone Australia/Perth
+```
+
+### Manual project prerequisites (only if skipping `bootstrap/deploy.sh`)
+
+This is how the example was deployed manually to the sandbox project `data-product-framework` on
+5 October 2026 to collect G4 evidence. The per-product module creates none of these; the table in
 `terraform/README.md` says what needs each one.
 
 - Enable the APIs: BigQuery, BigQuery Data Transfer, BigQuery Data Policy, BigQuery sharing,
@@ -184,6 +196,53 @@ stops publication instead of publishing wrong numbers.
 dbt instead: `dpf generate sales_performance --engine dbt`, then `dbt build` in
 `generated/sales_performance--dbt/dbt/` with `--vars` for the policy tag names (Terraform
 output `policy_tags`).
+
+## 3.5 Deploy and verify the Looker semantic layer and dashboard (ADR-018)
+
+`dpf generate sales_performance` writes a governed LookML project under
+`generated/sales_performance/semantic_layer/lookml/`: symmetric-aggregate views (`_dpf_pk`
+and surrogate keys), zero-byte BigQuery partition-metadata cache invalidation, the
+`order_lines` Explore, and the Stephen Few `executive_sales_pulse` LookML dashboard.
+
+Nothing is hard-coded: Looker host and credentials come from your `looker-cli` profile
+(`~/.config/looker-cli/config.yaml` or `LOOKER_HOST`), and the target BigQuery project
+resolves from `--env <env>`, `--project-id`, or `DPF_GCP_PROJECT`.
+
+1. **Grant Looker Core's service agent access to the target BigQuery project** (once per
+   project when using Looker Core Application Default Credentials):
+
+   ```bash
+   LOOKER_PROJECT_NUM=$(gcloud projects describe "<looker_gcp_project>" --format="value(projectNumber)")
+   for ROLE in roles/bigquery.dataViewer roles/bigquery.jobUser roles/serviceusage.serviceUsageConsumer; do
+     gcloud projects add-iam-policy-binding "<bigquery_gcp_project>" \
+       --member="serviceAccount:service-${LOOKER_PROJECT_NUM}@gcp-sa-looker.iam.gserviceaccount.com" \
+       --role="${ROLE}"
+   done
+   ```
+
+2. **Configure and authenticate `looker-cli`** (once per workstation session):
+
+   ```bash
+   looker-cli profile add default --host "<your-instance.looker.app>" --port 443
+   looker-cli profile use default
+   looker-cli session login --oauth
+   ```
+
+3. **Deploy LookML, validate on the Looker server, import the dashboard, and execute every tile query**:
+
+   ```bash
+   dpf looker deploy sales_performance --env test        # or --project-id <bigquery_gcp_project> --profile default
+   dpf looker verify sales_performance --env test        # re-validate LookML and re-run every tile query
+   dpf looker cockpit sales_performance --env test       # render Stephen Few HTML cockpit purely from LookML queries
+   dpf looker cockpit sales_performance --env test --serve 8765   # serve live /api/lookml-telemetry refreshes
+   dpf looker cockpit sales_performance --env test --publish      # publish to Presentation Server (prompts for URL on first run)
+   ```
+
+   `dpf looker deploy` upserts the `bigquery_sales` connection, syncs every file under
+   `semantic_layer/lookml/`, runs Looker's `validate_project` compiler, commits and deploys
+   to production, syncs `sales_performance::executive_sales_pulse` into the target Looker
+   folder (`--folder Shared` by default), executes `query runquery` for every tile against
+   BigQuery, and prints the live dashboard URL.
 
 ## 4. Verify: record evidence for G4
 

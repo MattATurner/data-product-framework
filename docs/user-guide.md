@@ -143,13 +143,13 @@ pip install '.[dev,gcp]'       # also google-cloud-bigquery, for live tests and 
 make install                   # or: the hash-locked versions that CI uses
 ```
 
-`make install` runs `pip install --require-hashes -r requirements/dev.txt` and then
-`pip install --no-deps -e .`. `make lock` re-pins `requirements/dev.txt` and
-`requirements/dbt.txt` with `uv pip compile`. Without an install, run `python -m dpf` from the
-repository root or `tools/dpf` from a checkout.
+`make install` runs `pip install --require-hashes -r .github/requirements/dev.txt` and then
+`pip install --no-deps -e .`. `make lock` re-pins `.github/requirements/dev.txt` and
+`.github/requirements/dbt.txt` with `uv pip compile`. Without an install, run `python -m dpf`
+from the repository root (inside `.venv`).
 
 `dpf` finds the workspace by walking up from the current folder to the first folder that has
-both `contracts/` and `openspec/`. Use `--root <path>` to point at another workspace.
+both `framework/contracts/` and `openspec/`. Use `--root <path>` to point at another workspace.
 
 ### Run the first check
 
@@ -193,22 +193,23 @@ example a file that was written. A warning keeps the exit code at 0. Exit codes:
 ## 4. Find your way around the repository
 
 ```text
+dpf/            the CLI and multi-plane compiler: gates, compose, generate/, looker_deploy, trace, testing, monitor, lint, evals
+framework/      declarative framework packs and starter templates:
+  contracts/      24 JSON Schemas, one for each stage and AGF hand-off
+  engines/        engine adapters: dataform and dbt implemented; dataflow and spark planned
+  methodologies/  modelling packs direct (default) and kimball: roles, rules, skills
+  skills/         composable platform and pipeline stage skills (Agent Skills format plus dpf metadata)
+  templates/      Define-stage forms (fillable PDFs) and Design-stage templates (Markdown and YAML)
 openspec/       project context, the data-product change schema, platform and product specs, changes
-contracts/      22 JSON Schemas, one for each hand-off
-dpf/            the CLI: gates, compose, generate/, trace, testing, monitor, lint, evals
-methodologies/  modelling packs direct (default) and kimball: roles, rules, skills
-engines/        engine adapters: dataform and dbt implemented; dataflow and spark planned
-skills/         platform skills (Agent Skills format plus dpf metadata)
-registry/       platform defaults, MCP servers, BRD rubric and vocabulary, empty catalogues
-adr/            platform decision records ADR-001 to ADR-015
-products/       example manifests, SQL bodies, acceptance mappings, product ADRs
-examples/       example registry overlay, extractor, seed fixtures, Terraform wrapper, runbook, Define examples
-templates/      Define-stage forms (fillable PDFs) and Design-stage templates (Markdown and YAML)
-requirements/   hash-locked dependency pins (dev, dbt, templates)
-generated/      build output (gitignored, regenerate at will)
-evidence/       test evidence per product (written by dpf test)
-tests/          unit and contract tests, golden copies, behavioural evals
-docs/           this guide, the design plan, the method diagram, connectivity notes
+registry/       platform defaults, MCP servers, foundations, BRD rubric and vocabulary, empty catalogues
+products/       product manifests, SQL bodies, acceptance mappings, product ADRs
+examples/       example registry overlay, PostgreSQL simulator and extractor, seed fixtures, Terraform wrapper, runbook, evidence
+docs/           this guide, adr/ (ADR-001 to ADR-019), fhd/, design narrative, presentation, connectivity notes
+tests/          unit and contract tests, golden copies, 26 behavioural evals
+.agents/        coding-agent skill wiring (skills.json), assess-use-case, goldfish-verify
+.github/        CI workflows and hash-locked dependency pins (.github/requirements/)
+generated/      build output (gitignored, created on demand by dpf generate)
+evidence/       test evidence per product (created on demand by dpf test)
 ```
 
 ### Template and example material
@@ -216,9 +217,9 @@ docs/           this guide, the design plan, the method diagram, connectivity no
 | Template: copied by `dpf init` | Example: not copied |
 |---|---|
 | `openspec/` config, schema, project context, `specs/platform/`, `changes/README.md` | `openspec/specs/products/*` |
-| `contracts/`, `methodologies/`, `engines/`, `skills/`, `registry/`, `adr/` | `products/*`, `examples/` |
-| `dpf/`, `tools/dpf`, `pyproject.toml`, `requirements/`, `Makefile`, `.gitignore`, CI | `generated/`, `evidence/`, `tests/golden/*` |
-| `tests/contracts`, the eval and golden READMEs, `docs/user-guide.md`, `templates/` | `docs/presentation/`, `docs/index.html`, `docs/data-product-framework-plan.md` |
+| `framework/` (`contracts/`, `methodologies/`, `engines/`, `skills/`, `templates/`), `.agents/`, `registry/`, `docs/adr/` | `products/*`, `examples/` (including `examples/evidence/`) |
+| `dpf/`, `pyproject.toml`, `.github/` (`workflows/ci.yml`, `requirements/`), `Makefile`, `.gitignore` | `generated/`, `evidence/`, `tests/golden/*` |
+| `tests/contracts`, the eval and golden READMEs, `docs/user-guide.md` | `docs/fhd/`, `docs/presentation/`, `docs/index.html`, `docs/data-product-framework-plan.md` |
 
 ### The registry
 
@@ -1480,7 +1481,7 @@ Run it with `dpf eval --id <id>`. It passes when the command gives the expected 
 ```text
 $ dpf --help
 usage: dpf [-h] [--version]
-           {validate,lint,brd,tdd,signoff,compose,generate,trace,test,monitor,check,eval,init} ...
+           {validate,lint,brd,tdd,signoff,compose,generate,trace,test,monitor,check,proto,looker,eval,init} ...
 ```
 
 `dpf --version` prints `dpf 0.3.0`. The common flags `--json`, `--quiet` and `--root <path>`
@@ -1495,13 +1496,15 @@ go **after** the subcommand, for example `dpf check --all --gate G3 --json`.
 | `tdd resolve` | `<product>` | – | prints the resolution guide and methodology recommendation |
 | `signoff` | `<product> --by <name> --role <role> [--date] [--note] [--link URL ...]` | `signoff.yaml` | records the business signature and optional approval links |
 | `compose` | `[product] [--all] [--no-write]` | `dag.json`, `dag.md` | G2 · Compose |
-| `generate` | `[product] [--all] [--engine E] [--check] [--update-golden] [--no-write]` | `generated/<p>/` | G3 · Build ([section 7](#7-understand-what-the-generators-produce)) |
+| `generate` | `[product] [--all] [--engine E] [--env ENV] [--semantic-layer ...] [--check] [--update-golden] [--no-write]` | `generated/<p>/` | G3 · Build ([section 7](#7-understand-what-the-generators-produce)) |
 | `trace` | `[product] [--all] [--no-write] [--print]` | `trace.json`, `trace.md` | G3 traceability |
 | `test plan` | `<product>` | – | prints the cases; with `--json`, the test spec |
 | `test run` | `<product> [--live] [--env E] [--only ID ...]` | `evidence/<p>/run-*.json` (live only) | static checks only without `--live` |
 | `test attest` | `<product> <AT-n> --by <name> --role <role> [--note] [--link URL ...] [--env]` | `evidence/<p>/attest-*.json` | the role must equal `attested_by_role` |
 | `monitor` | `<product> [--evidence FILE] [--open-change]` | a change folder (with `--open-change`) | observability policy |
-| `check` | `[product] [--all] [--gate G0-G4\|define..test]` | as the gates do, except `gaps.md` | default gate G3 (`build`); cumulative |
+| `check` | `[product] [--all] [--gate proto\|G0-G4\|define..test]` | as the gates do, except `gaps.md` | default gate G3 (`build`); cumulative |
+| `proto` | `{init,import-dataform,import-looker,promote} <product> ...` | `products/<p>/` (+ specs on `promote`) | fast-path prototyping (ADR-016..018) |
+| `looker` | `{deploy,verify,cockpit} <product> [--env E] [--project-id P] [--profile PROF] [--publish] [--presentation-server-url URL] ...` | Looker connection, project, UDD, HTML cockpit | deploys LookML via `looker-cli`, verifies tile queries, and builds/publishes a LookML-backed Stephen Few cockpit (asks for Presentation Server URL on first run) |
 | `eval` | `[--id ID ...]` | temporary copies only | behavioural evals |
 | `init` | `<target>` | the new workspace | the target must be empty |
 

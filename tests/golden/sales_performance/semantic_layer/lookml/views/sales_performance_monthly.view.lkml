@@ -33,25 +33,26 @@ view: sales_performance_monthly {
     sql: ${TABLE}.region ;;
   }
 
-  dimension: net_sales {
-    type: string
+  measure: count {
+    type: count
+    description: "Row count of sales_performance_monthly"
+  }
+
+  measure: net_sales {
+    type: sum
     description: "Gross amount less discount, excluding tax, for order lines that are not cancelled."
     sql: ${TABLE}.net_sales ;;
   }
 
-  dimension: units_sold {
-    type: string
+  measure: units_sold {
+    type: sum
     description: "Number of units on order lines that are not cancelled."
     sql: ${TABLE}.units_sold ;;
   }
 
-  dimension: order_line_count {
-    type: string
+  measure: order_line_count {
+    type: sum
+    description: "order_line_count (additive) on sales_performance_monthly"
     sql: ${TABLE}.order_line_count ;;
-  }
-
-  measure: count {
-    type: count
-    description: "Row count of sales_performance_monthly"
   }
 }

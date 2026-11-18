@@ -11,7 +11,7 @@
     model: sales_performance
     explore: order_lines
     field: fct_order_line.order_date
-    default_value: 90 days
+    default_value: 365 days
     allow_multiple_values: true
     required: false
   - name: region
@@ -80,7 +80,7 @@
     explore: order_lines
     type: single_value
     fields:
-    - fct_order_line.count
+    - fct_order_line.order_line_count
     listen:
       order_date: fct_order_line.order_date
       region: dim_customer.region
@@ -117,6 +117,8 @@
     fields:
     - dim_customer.region
     - fct_order_line.net_sales
+    sorts:
+    - fct_order_line.net_sales desc
     y_axes:
     - unpinAxis: false
     x_axis_gridlines: false
@@ -138,6 +140,8 @@
     fields:
     - dim_product.product_category
     - fct_order_line.net_sales
+    sorts:
+    - fct_order_line.net_sales desc
     y_axes:
     - unpinAxis: false
     x_axis_gridlines: false

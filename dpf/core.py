@@ -351,7 +351,10 @@ class Workspace:
     @cached_property
     def adrs(self) -> dict[str, Path]:
         out = {}
-        for p in sorted(self.adr_dir.glob("ADR-*.md")) + sorted(self.root.glob("products/*/adr/ADR-*.md")):
+        adr_paths = list(sorted(self.adr_dir.glob("ADR-*.md")))
+        for pdir in self.product_dirs().values():
+            adr_paths.extend(sorted(pdir.glob("adr/ADR-*.md")))
+        for p in adr_paths:
             fm, _ = front_matter(p)
             m = re.match(r"^(ADR-[A-Z0-9-]+?)(?:-[a-z].*)?$", p.stem)
             adr_id = fm.get("id") or (m.group(1) if m else p.stem)
@@ -362,15 +365,24 @@ class Workspace:
         return Registry(self.root / "registry", (self.root / overlay) if overlay else None)
 
     # -- products
+    def product_dirs(self) -> dict[str, Path]:
+        """Map product_id -> directory (`products/<id>` overrides worked examples in `examples/<id>`)."""
+        out: dict[str, Path] = {}
+        for base in (self.root / "examples", self.root / "products"):
+            if base.is_dir():
+                for p in sorted(base.glob("*/product.yaml")):
+                    out[p.parent.name] = p.parent
+        return out
+
     def product_ids(self) -> list[str]:
-        return sorted(p.parent.name for p in (self.root / "products").glob("*/product.yaml"))
+        return sorted(self.product_dirs().keys())
 
     def product(self, product_id: str) -> "Product":
-        path = self.root / "products" / product_id / "product.yaml"
-        if not path.exists():
+        pdir = self.product_dirs().get(product_id)
+        if not pdir:
             known = ", ".join(self.product_ids()) or "none"
             raise SystemExit(f"unknown product '{product_id}' (known: {known})")
-        return Product(self, product_id, path)
+        return Product(self, product_id, pdir / "product.yaml")
 
     @property
     def platform_specs(self) -> dict[str, Path]:
@@ -396,14 +408,26 @@ class Product:
     def brd_dir(self) -> Path:
         specs = self.manifest.get("specs") or {}
         if specs.get("brd"):
-            return self.ws.root / "openspec/specs" / specs["brd"]
+            primary = self.ws.root / "openspec/specs" / specs["brd"]
+            if primary.exists():
+                return primary
+            local = self.dir / "specs/brd"
+            if local.exists():
+                return local
+            return primary
         return self.ws.root / "openspec/specs/_prototype" / self.id / "brd"
 
     @property
     def tdd_dir(self) -> Path:
         specs = self.manifest.get("specs") or {}
         if specs.get("tdd"):
-            return self.ws.root / "openspec/specs" / specs["tdd"]
+            primary = self.ws.root / "openspec/specs" / specs["tdd"]
+            if primary.exists():
+                return primary
+            local = self.dir / "specs/tdd"
+            if local.exists():
+                return local
+            return primary
         return self.ws.root / "openspec/specs/_prototype" / self.id / "tdd"
 
     @cached_property
@@ -482,8 +506,10 @@ class Product:
         primary = self.ws.root / "evidence" / self.id
         if primary.exists():
             return primary
-        example_ev = self.ws.root / "examples/evidence" / self.id
-        return example_ev if example_ev.exists() else primary
+        for cand in (self.dir / "evidence", self.ws.root / "examples/evidence" / self.id):
+            if cand.exists():
+                return cand
+        return primary
 
     # -- requirement ids
     @cached_property

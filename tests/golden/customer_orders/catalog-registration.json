@@ -77,9 +77,9 @@
     "stg_orders -> customer_orders"
   ],
   "quality_scan_ref": null,
-  "brd_link": "openspec/specs/products/sales/customer-orders/brd/spec.md",
-  "tdd_link": "openspec/specs/products/sales/customer-orders/tdd/spec.md",
-  "semantics_link": "openspec/specs/products/sales/customer-orders/tdd/semantics.md",
+  "brd_link": "examples/customer_orders/specs/brd/spec.md",
+  "tdd_link": "examples/customer_orders/specs/tdd/spec.md",
+  "semantics_link": "examples/customer_orders/specs/tdd/semantics.md",
   "registered_via": "knowledge-catalog-mcp",
   "brd_requirement_id": [
     "R-1",

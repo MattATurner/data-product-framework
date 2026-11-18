@@ -1285,8 +1285,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         raw_cfg = yaml.safe_load(Path(args.config).read_text()) or {}
         if args.dsn:
             raw_cfg.setdefault("source", {})["dsn"] = args.dsn
-        if args.project:
-            raw_cfg.setdefault("target", {})["project"] = args.project
+        proj_override = args.project or os.environ.get("DPF_GCP_PROJECT") or os.environ.get("DPF_DEMO_PROJECT")
+        if proj_override:
+            raw_cfg.setdefault("target", {})["project"] = proj_override
         cfg = validate_config(raw_cfg)
     except Exception as exc:
         alert("extract_failed", f"config: {exc}", source_system=None, entity=args.entity,

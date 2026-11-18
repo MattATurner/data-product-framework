@@ -10,17 +10,17 @@ from dpf.core import Report, Workspace
 # Framework parts copied into a new workspace. Example products, their specs, the example
 # registry overlay, generated output and evidence are never copied.
 TEMPLATE_PATHS = [
-    "AGENTS.md", "agent-config.json", "Using-This-Template.md", "Using-This-Template-Prompt.md",
-    "bootstrap", "deploy.sh", "deploy-use-existing-project-non-org-admin.sh", "clean-up.sh",
+    "AGENTS.md", "bootstrap", "products/README.md",
     "openspec/config.yaml", "openspec/schemas", "openspec/project.md", "openspec/AGENTS.md",
     "openspec/changes/README.md", "openspec/specs/platform", "framework", ".agents", "registry", "docs/adr",
     "docs/user-guide.md", "dpf", "pyproject.toml", ".github/requirements", "Makefile", ".gitignore",
     ".github/workflows/ci.yml", "tests/contracts", "tests/evals/README.md", "tests/golden/README.md",
 ]
 AGENT_SYMLINKS = ("GEMINI.md", "CLAUDE.md", ".cursorrules", ".clinerules")
-EMPTY_DIRS = ["openspec/specs/products", "openspec/changes", "products", "tests/golden"]
-EXCLUDED = ["openspec/specs/products/*", "products/*", "examples/", "generated/", "evidence/", "tests/golden/*",
-            "docs/fhd/", "docs/presentation/", "docs/index.html", "docs/data-product-framework-plan.md"]
+EMPTY_DIRS = ["openspec/changes", "products", "tests/golden"]
+EXCLUDED = ["examples/", "generated/", "evidence/", "tests/golden/*",
+            "docs/fhd/", "docs/presentation/", "docs/index.html", "docs/data-product-framework-plan.md",
+            "docs/demo-walkthrough.md"]
 IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store")
 
 
@@ -43,9 +43,7 @@ def init(ws: Workspace, target: Path, report: Report) -> int:
             shutil.copy2(src, out)
         report.ok(rel)
     for rel in EMPTY_DIRS:
-        d = dst / rel
-        d.mkdir(parents=True, exist_ok=True)
-        (d / ".gitkeep").touch()
+        (dst / rel).mkdir(parents=True, exist_ok=True)
     for link_name in AGENT_SYMLINKS:
         link_path = dst / link_name
         if not link_path.exists() and not link_path.is_symlink():

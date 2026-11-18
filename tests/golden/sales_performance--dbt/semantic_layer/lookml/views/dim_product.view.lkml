@@ -14,8 +14,10 @@ view: dim_product {
     sql: ${TABLE}.product_id ;;
   }
 
-  dimension: valid_from {
-    type: string
+  dimension_group: valid_from {
+    type: time
+    timeframes: [raw, time, date, week, month, quarter, year]
+    datatype: timestamp
     sql: ${TABLE}.valid_from ;;
   }
 
@@ -32,8 +34,8 @@ view: dim_product {
 
   dimension_group: valid_to {
     type: time
-    timeframes: [raw, date, week, month, quarter, year]
-    datatype: date
+    timeframes: [raw, time, date, week, month, quarter, year]
+    datatype: timestamp
     sql: ${TABLE}.valid_to ;;
   }
 

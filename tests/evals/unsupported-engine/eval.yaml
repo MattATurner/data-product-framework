@@ -2,7 +2,7 @@ id: unsupported-engine
 asserts: Kimball dimensions on a streaming engine fail compose instead of generating code that misbehaves.
 mutate:
 - set:
-    file: products/sales_performance/product.yaml
+    file: examples/sales_performance/product.yaml
     path: layers.silver.engine
     value: dataflow
 run:

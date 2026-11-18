@@ -2,7 +2,7 @@ id: modelling-vocabulary
 asserts: 'A BRD that uses modelling vocabulary (fact table, SCD) fails G0: design words belong in the TDD.'
 mutate:
 - append:
-    file: openspec/specs/products/sales/customer-orders/brd/spec.md
+    file: examples/customer_orders/specs/brd/spec.md
     text: '
 
       The fact table must keep SCD history for every customer.

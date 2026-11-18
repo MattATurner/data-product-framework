@@ -2,7 +2,7 @@ id: prototype-blocks-g1
 asserts: A product with status prototype cannot pass G0 or G1 until promoted via dpf proto promote.
 mutate:
 - set:
-    file: products/customer_orders/product.yaml
+    file: examples/customer_orders/product.yaml
     path: status
     value: prototype
 run:

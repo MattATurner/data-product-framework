@@ -167,9 +167,9 @@
     "stg_products -> dim_product"
   ],
   "quality_scan_ref": "projects/data-product-framework/locations/us-central1/dataScans/dpf-sales-performance-fct-order-line, projects/data-product-framework/locations/us-central1/dataScans/dpf-sales-performance-sales-performance-monthly",
-  "brd_link": "openspec/specs/products/sales/sales-performance/brd/spec.md",
-  "tdd_link": "openspec/specs/products/sales/sales-performance/tdd/spec.md",
-  "semantics_link": "openspec/specs/products/sales/sales-performance/tdd/semantics.md",
+  "brd_link": "examples/sales_performance/specs/brd/spec.md",
+  "tdd_link": "examples/sales_performance/specs/tdd/spec.md",
+  "semantics_link": "examples/sales_performance/specs/tdd/semantics.md",
   "registered_via": "knowledge-catalog-mcp",
   "brd_requirement_id": [
     "R-1",

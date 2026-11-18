@@ -1,7 +1,7 @@
 {
   "product_id": "sales_performance",
   "version": "1.2.0",
-  "artefact_digest": "sha256:5116919894c393f7d342b6c13db1631495766f959a66fbdd1c138d7070259314",
+  "artefact_digest": "sha256:a30ef73d68df4564c133f48ce2e2e9992661ccb0c3e24052e4a5507c4a7a42bd",
   "targets": [
     "lookml"
   ],
@@ -31,7 +31,8 @@
         {
           "name": "valid_from",
           "sql": "valid_from",
-          "type": "string"
+          "type": "time",
+          "datatype": "timestamp"
         },
         {
           "name": "customer_segment",
@@ -64,7 +65,8 @@
         {
           "name": "valid_to",
           "sql": "valid_to",
-          "type": "time"
+          "type": "time",
+          "datatype": "timestamp"
         },
         {
           "name": "is_current",
@@ -92,7 +94,8 @@
           "tag": "pii_contact",
           "masking": "always_null",
           "masked_readers": [
-            "analyst_group"
+            "analyst_group",
+            "consumer_group"
           ],
           "fine_grained_readers": [
             "contact_reader_group"
@@ -208,7 +211,8 @@
         {
           "name": "valid_from",
           "sql": "valid_from",
-          "type": "string"
+          "type": "time",
+          "datatype": "timestamp"
         },
         {
           "name": "product_category",
@@ -224,7 +228,8 @@
         {
           "name": "valid_to",
           "sql": "valid_to",
-          "type": "time"
+          "type": "time",
+          "datatype": "timestamp"
         },
         {
           "name": "is_current",
@@ -260,7 +265,7 @@
         {
           "name": "order_line_no",
           "sql": "order_line_no",
-          "type": "string"
+          "type": "number"
         },
         {
           "name": "sk_customer",
@@ -319,7 +324,8 @@
           "sql": "quantity",
           "type": "sum",
           "additivity": "additive",
-          "description": "Number of units on order lines that are not cancelled."
+          "description": "Unfiltered quantity (additive) on fct_order_line; prefer governed filtered metric",
+          "hidden": true
         },
         {
           "name": "gross_amount",
@@ -340,7 +346,8 @@
           "sql": "net_amount",
           "type": "sum",
           "additivity": "additive",
-          "description": "Gross amount less discount, excluding tax, for order lines that are not cancelled."
+          "description": "Unfiltered net_amount (additive) on fct_order_line; prefer governed filtered metric",
+          "hidden": true
         },
         {
           "name": "net_sales",
@@ -355,6 +362,13 @@
           "type": "sum",
           "additivity": "additive",
           "description": "Total units sold excluding cancelled order lines."
+        },
+        {
+          "name": "order_line_count",
+          "sql": "*",
+          "type": "count",
+          "additivity": "additive",
+          "description": "Count of non-cancelled order lines."
         }
       ],
       "joins": [
@@ -395,7 +409,7 @@
         {
           "name": "order_line_no",
           "sql": "order_line_no",
-          "type": "string"
+          "type": "number"
         },
         {
           "name": "order_date",
@@ -458,36 +472,44 @@
           "name": "is_cancelled",
           "sql": "is_cancelled",
           "type": "boolean"
-        },
+        }
+      ],
+      "measures": [
         {
           "name": "quantity",
           "sql": "quantity",
-          "type": "string",
+          "type": "sum",
+          "additivity": "additive",
           "description": "Number of units on order lines that are not cancelled."
         },
         {
           "name": "gross_amount",
           "sql": "gross_amount",
-          "type": "string"
+          "type": "sum",
+          "additivity": "additive",
+          "description": "gross_amount (additive) on sales_order_line_detail"
         },
         {
           "name": "discount_amount",
           "sql": "discount_amount",
-          "type": "string"
+          "type": "sum",
+          "additivity": "additive",
+          "description": "discount_amount (additive) on sales_order_line_detail"
         },
         {
           "name": "net_amount",
           "sql": "net_amount",
-          "type": "string",
+          "type": "sum",
+          "additivity": "additive",
           "description": "Gross amount less discount, excluding tax, for order lines that are not cancelled."
         },
         {
           "name": "counted_net_amount",
           "sql": "counted_net_amount",
-          "type": "string"
-        }
-      ],
-      "measures": [
+          "type": "sum",
+          "additivity": "additive",
+          "description": "counted_net_amount (additive) on sales_order_line_detail"
+        },
         {
           "name": "row_count",
           "sql": "order_id",
@@ -534,26 +556,30 @@
           "sql": "region",
           "type": "string",
           "description": "Sales region of the customer (Australian state or territory code)."
-        },
+        }
+      ],
+      "measures": [
         {
           "name": "net_sales",
           "sql": "net_sales",
-          "type": "string",
+          "type": "sum",
+          "additivity": "additive",
           "description": "Gross amount less discount, excluding tax, for order lines that are not cancelled."
         },
         {
           "name": "units_sold",
           "sql": "units_sold",
-          "type": "string",
+          "type": "sum",
+          "additivity": "additive",
           "description": "Number of units on order lines that are not cancelled."
         },
         {
           "name": "order_line_count",
           "sql": "order_line_count",
-          "type": "string"
-        }
-      ],
-      "measures": [
+          "type": "sum",
+          "additivity": "additive",
+          "description": "order_line_count (additive) on sales_performance_monthly"
+        },
         {
           "name": "row_count",
           "sql": "year_month",
@@ -593,21 +619,23 @@
           "sql": "region",
           "type": "string",
           "description": "Sales region of the customer (Australian state or territory code)."
-        },
+        }
+      ],
+      "measures": [
         {
           "name": "net_sales",
           "sql": "net_sales",
-          "type": "string",
+          "type": "sum",
+          "additivity": "additive",
           "description": "Gross amount less discount, excluding tax, for order lines that are not cancelled."
         },
         {
           "name": "units_sold",
           "sql": "units_sold",
-          "type": "string",
+          "type": "sum",
+          "additivity": "additive",
           "description": "Number of units on order lines that are not cancelled."
-        }
-      ],
-      "measures": [
+        },
         {
           "name": "row_count",
           "sql": "year_month",
@@ -621,20 +649,6 @@
     }
   ],
   "metrics": [
-    {
-      "name": "quantity",
-      "label": "Quantity",
-      "type": "simple",
-      "model": "fct_order_line",
-      "measure": "quantity",
-      "time_grain": [
-        "day",
-        "week",
-        "month",
-        "quarter",
-        "year"
-      ]
-    },
     {
       "name": "gross_amount",
       "label": "Gross Amount",
@@ -664,20 +678,6 @@
       ]
     },
     {
-      "name": "net_amount",
-      "label": "Net Amount",
-      "type": "simple",
-      "model": "fct_order_line",
-      "measure": "net_amount",
-      "time_grain": [
-        "day",
-        "week",
-        "month",
-        "quarter",
-        "year"
-      ]
-    },
-    {
       "name": "net_sales",
       "label": "Net Sales (AUD)",
       "type": "simple",
@@ -694,12 +694,21 @@
       "expr": "quantity",
       "filter": "is_cancelled = FALSE",
       "description": "Total units sold excluding cancelled order lines."
+    },
+    {
+      "name": "order_line_count",
+      "label": "Order Lines",
+      "type": "simple",
+      "aggregation": "count",
+      "model": "fct_order_line",
+      "filter": "is_cancelled = FALSE",
+      "description": "Count of non-cancelled order lines."
     }
   ],
   "looker": {
     "connection": "bigquery_sales",
     "project_name": "sales_performance",
-    "auth_mode": "oauth",
+    "auth_mode": "service_account",
     "datagroup_max_cache_age": "90 minutes"
   },
   "explores": [
@@ -710,10 +719,7 @@
       "description": "Order-line sales joined to point-in-time customer segment, product category and calendar.",
       "joins": "auto",
       "always_filter_partition": true,
-      "partition_default_filter": "90 days",
-      "aggregate_tables": [
-        "sales_performance_monthly"
-      ],
+      "partition_default_filter": "365 days",
       "brd_requirement_id": [
         "R-1",
         "R-2",
@@ -742,7 +748,7 @@
           "title": "Order Date",
           "field": "fct_order_line.order_date",
           "type": "date_filter",
-          "default_value": "90 days"
+          "default_value": "365 days"
         },
         {
           "name": "region",
@@ -782,7 +788,7 @@
           "title": "Order Lines",
           "kind": "kpi",
           "measures": [
-            "fct_order_line.count"
+            "fct_order_line.order_line_count"
           ]
         },
         {

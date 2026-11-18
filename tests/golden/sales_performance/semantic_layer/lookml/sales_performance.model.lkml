@@ -6,8 +6,13 @@ include: "/explores/*.explore.lkml"
 include: "/dashboards/*.dashboard.lookml"
 
 datagroup: sales_performance_default_datagroup {
-  sql_trigger: SELECT MAX(order_date) FROM `@{GCP_PROJECT}.@{DATASET_SILVER}.fct_order_line` ;;
+  sql_trigger: SELECT MAX(last_modified_time) FROM `@{GCP_PROJECT}.@{DATASET_SILVER}.INFORMATION_SCHEMA.PARTITIONS` WHERE table_name = 'fct_order_line' ;;
   max_cache_age: "90 minutes"
 }
 
 persist_with: sales_performance_default_datagroup
+
+access_grant: can_view_pii_contact {
+  user_attribute: dpf_pii_contact_access
+  allowed_values: ["unmasked"]
+}

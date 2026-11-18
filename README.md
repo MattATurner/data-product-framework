@@ -165,8 +165,8 @@ build digest binds test evidence to exactly this build.
 
 | | Paths |
 |---|---|
-| **Template** (copied by `dpf init`) | `openspec/` config, schema, project context, agent rules, changes README and `specs/platform/`; `.agents/` (skill wiring, `assess-use-case`, `goldfish-verify`); `framework/` (`contracts/`, `methodologies/`, `engines/`, `skills/`, `templates/`); `registry/`, `docs/adr/`, `docs/user-guide.md`, `dpf/`, `pyproject.toml`, `Makefile`, `.gitignore`, `.github/` (CI + hash-locked requirements), contract tests, eval and golden READMEs |
-| **Example** (not copied) | `openspec/specs/products/`, `products/`, `examples/` (including sandbox `examples/evidence/`), `tests/golden/*`, `docs/fhd/`, and the plan, method diagram, presentation and README diagram in `docs/` |
+| **Template** (copied by `dpf init`) | `AGENTS.md` (+ agent symlinks), `bootstrap/` (Layer-0 Terraform + onboarding), `openspec/` config, schema, project context, agent rules, changes README and `specs/platform/`; `.agents/` (skill wiring, `assess-use-case`, `goldfish-verify`); `framework/` (`contracts/`, `methodologies/`, `engines/`, `skills/`, `templates/`); `registry/`, `products/README.md`, `docs/adr/`, `docs/user-guide.md`, `dpf/`, `pyproject.toml`, `Makefile`, `.gitignore`, `.github/` (CI + hash-locked requirements), contract tests, eval and golden READMEs |
+| **Example** (not copied) | `examples/` (`customer_orders/`, `sales_performance/`, `use-case-portfolio/`, `registry/`), `tests/golden/*`, `docs/fhd/`, `docs/presentation/`, `docs/demo-walkthrough.md`, `docs/index.html`, and `docs/data-product-framework-plan.md` |
 
 **`registry/` ships without project content by design**: the source-system, glossary,
 entity and conformance catalogues are empty, so a new project never inherits someone
@@ -198,7 +198,7 @@ moved to 1.1.0 with the reason recorded. See `examples/sales_performance/RUNBOOK
 
 **Status of the examples:** G0–G3 pass for both. `sales_performance` was deployed to a
 sandbox project on 5 October 2026: 41 of its 43 test cases pass for build
-`sha256:fd95e365e03e…` (evidence in `examples/evidence/sales_performance/`). G4 still fails on AT-5
+`sha256:fd95e365e03e…` (evidence in `examples/sales_performance/evidence/`). G4 still fails on AT-5
 and AT-8, which need a person from Finance and from Merchandising to attest. `customer_orders`
 has not been deployed, so G4 fails with 14 missing results. The sign-offs in
 `tdd/signoff.yaml` are example signatures ("Sales Operations (example)"), not real approvals.
@@ -219,12 +219,12 @@ offline checks cannot see, now fixed; see section 15 of the [user guide](docs/us
 
 | | |
 |---|---|
-| **Technical whitepaper** | [`docs/presentation/dpf-whitepaper.html`](docs/presentation/dpf-whitepaper.html) (open from disk, or `{presentation_server_url}/p/dpf-whitepaper` when configured in `agent-config.json`) |
-| **User guide** | [`docs/user-guide.md`](docs/user-guide.md) |
+| **Technical whitepaper** | [`docs/presentation/dpf-whitepaper.html`](docs/presentation/dpf-whitepaper.html) (open from disk, or `{presentation_server_url}/p/dpf-whitepaper` when configured in `registry/agent-config.json`) |
+| **User guide & Demo walkthrough** | [`docs/user-guide.md`](docs/user-guide.md), [`docs/demo-walkthrough.md`](docs/demo-walkthrough.md), and [`bootstrap/README.md`](bootstrap/README.md) |
 | **Define and Design templates** | [`framework/templates/README.md`](framework/templates/README.md): use case, scorecard, prioritisation, BRD or PRD (fillable PDFs); TDD, semantics, manifest and ADR (Markdown and YAML) |
 | **Define worked examples** (filled PDFs) | UC-SALES-001: [use case](examples/sales_performance/define/use-case.pdf), [scorecard](examples/sales_performance/define/scorecard.pdf), [prioritisation](examples/sales_performance/define/prioritisation.pdf), [BRD](examples/sales_performance/define/brd.pdf). The seed's three use cases: [scorecard](examples/use-case-portfolio/scorecard.pdf), [prioritisation](examples/use-case-portfolio/prioritisation.pdf) |
 | **Presentation** | [`docs/presentation/index.html`](docs/presentation/index.html) (open from disk) |
-| Method diagram (interactive, offline) | [`docs/index.html`](docs/index.html), generated from the plan by `cd docs && python3 build_method_diagram.py` |
+| Method diagram (interactive, offline) | [`docs/index.html`](docs/index.html), generated from the plan by `python3 docs/images/build_method_diagram.py` |
 | Design narrative | [`docs/data-product-framework-plan.md`](docs/data-product-framework-plan.md) |
 | Connecting an on-premises source | [`docs/local-source-connectivity.md`](docs/local-source-connectivity.md) |
 | Agent rules | [`openspec/AGENTS.md`](openspec/AGENTS.md) |
@@ -233,7 +233,7 @@ offline checks cannot see, now fixed; see section 15 of the [user guide](docs/us
 
 ## Repository structure & `DPF-00` capability map
 
-The root is organised into **eight visible directories** (plus `.agents/` and `.github/`), cleanly separating **how the framework runs** (`dpf/`, `framework/`), **what product teams author** (`openspec/`, `registry/`, `products/`), and **worked examples, documentation & verification** (`examples/`, `docs/`, `tests/`). [`docs/fhd/`](docs/fhd/DPF_Functional_Hierarchy_Dictionary.md) decomposes DPF left-to-right across the six human-gated steps (`DPF-01`–`DPF-06`) and maps every leaf capability (`?lens=impl`) directly to its repository entrypoint:
+The root is organised into **nine clean directories** (plus `.agents/` and `.github/`), separating **how the framework and Layer-0 bootstrap run** (`dpf/`, `framework/`, `bootstrap/`), **what product teams author** (`openspec/`, `registry/`, `products/` — all clean of example pollution), and **self-contained worked examples, documentation & verification** (`examples/`, `docs/`, `tests/`):
 
 ```
 data-product-framework/
@@ -244,13 +244,14 @@ data-product-framework/
 │   ├── methodologies/                    modelling packs (`direct` default, `kimball`), rules & pack skills
 │   ├── skills/                           composable platform & pipeline stage skills (Agent Skills format)
 │   └── templates/                        Define-stage fillable PDF scorecards & Design starter scaffolds
+├── bootstrap/               [Layer 0]    GCP workspace foundation Terraform, hydration & onboarding scripts
 │
-├── openspec/                [DPF-02..06] Specifications: platform specs, BRDs, TDDs & `changes/` (OpenSpec CLI)
-├── registry/                [DPF-02..03] Organisational context: defaults, glossary, sources, foundations, MCP
-├── products/                [DPF-03..04] Resolved product manifests (`product.yaml`), custom `sql/`, acceptance
+├── openspec/                [DPF-02..06] Specifications: platform specs, user product BRDs/TDDs & `changes/`
+├── registry/                [DPF-02..03] Organisational context: defaults, `agent-config.json`, glossary, MCP
+├── products/                [DPF-03..04] Workspace product manifests (`products/<id>/product.yaml` & `sql/`)
 │
-├── examples/                [DPF-01..05] Worked overlay, PostgreSQL simulator & extractor, seeds & `evidence/`
-├── docs/                    [Docs]       User guide, `adr/` (ADR-001..019), `fhd/` (DPF-00), deck & diagrams
+├── examples/                [DPF-01..05] Self-contained worked examples (`customer_orders/`, `sales_performance/`)
+├── docs/                    [Docs]       User guide, walkthrough, `adr/` (ADR-001..019), `fhd/`, decks & SVGs
 ├── tests/                   [DPF-04..06] Unit tests, contract checks, `golden/` snapshots & 26 `evals/`
 │
 ├── .agents/                 [DPF-01..04] Coding-agent skill wiring (`skills.json`), `assess-use-case`, `goldfish-verify`

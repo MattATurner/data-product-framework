@@ -148,8 +148,7 @@ class ProductGraph:
             if up_id == p.id:
                 self.problems.append(f"upstream product '{up_id}' cannot reference itself")
                 return
-            up_path = p.ws.root / "products" / up_id / "product.yaml"
-            if not up_path.exists():
+            if up_id not in p.ws.product_dirs():
                 self.problems.append(f"upstream product '{up_id}' is not found in products/{up_id}/product.yaml")
                 return
             up_prod = p.ws.product(up_id)

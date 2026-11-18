@@ -37,7 +37,65 @@ def _bq_to_sem_type(col: str, bq_type: str | None, m: dict | None = None) -> str
         return "time"
     if col.startswith("is_") or col.startswith("has_"):
         return "boolean"
+    if col.endswith(("_no", "_num", "_number")):
+        return "number"
     return "string"
+
+
+_AGG_EXPR_RE = (
+    "SUM(",
+    "COUNT(",
+    "COUNTIF(",
+    "AVG(",
+)
+
+
+def _infer_sql_measures(sql: str | None, grain: list[str], glossary: dict[str, str]) -> dict[str, dict]:
+    """Infer numeric additive measures from authored business_view SQL SELECT items."""
+    from dpf.graph import strip_sql_comments
+    import re
+
+    if not sql:
+        return {}
+    grain_set = set(grain)
+    text = strip_sql_comments(sql)
+    # Inspect top-level SELECT items
+    m_sel = re.findall(r"\bSELECT\b(.*?)\bFROM\b", text, flags=re.I | re.S)
+    if not m_sel:
+        return {}
+    select_list = m_sel[-1]
+    items, depth, cur = [], 0, ""
+    for ch in select_list:
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+        if ch == "," and depth == 0:
+            items.append(cur.strip())
+            cur = ""
+        else:
+            cur += ch
+    if cur.strip():
+        items.append(cur.strip())
+
+    out: dict[str, dict] = {}
+    for item in items:
+        m_alias = re.search(r"\bAS\s+([A-Za-z_][A-Za-z0-9_]*)\s*$", item, re.I)
+        col = m_alias.group(1) if m_alias else (re.search(r"([A-Za-z_][A-Za-z0-9_]*)\s*$", item).group(1) if re.search(r"([A-Za-z_][A-Za-z0-9_]*)\s*$", item) else "")
+        if not col or col in grain_set or col.endswith(("_id", "_key", "_code", "_cd", "_name", "_status", "_date", "_month", "_quarter", "_ts")):
+            continue
+        up = item.upper()
+        is_agg = any(tok in up for tok in _AGG_EXPR_RE)
+        is_num_col = col in ("quantity", "gross_amount", "discount_amount", "net_amount", "counted_net_amount") or col.endswith(
+            ("_amount", "_sales", "_sold", "_count", "_qty", "_total", "_revenue")
+        )
+        if is_agg or is_num_col:
+            out[col] = {
+                "name": col,
+                "additivity": "additive",
+                "description": glossary.get(col),
+            }
+    return out
 
 
 def _glossary_index(p: Product) -> dict[str, str]:
@@ -78,13 +136,36 @@ def build_semantic_spec(p: Product, g: ProductGraph, digest: str, targets_overri
         measures: list[dict] = []
         joins: list[dict] = []
 
-        def add_dim(col: str, dtype: str | None = None, pk: bool = False, hidden: bool = False) -> None:
+        is_scd2_dim = n.role == "dimension" and (
+            int(attrs.get("scd_type", 1) or 1) == 2 or m.get("history_semantics") == "scd2"
+        )
+        scd2_ts_cols = {"valid_from", "valid_to"} if is_scd2_dim else set()
+        filtered_exprs = {
+            (em.get("expr") or em.get("measure"))
+            for em in explicit_metrics
+            if em.get("model") == name and em.get("filter")
+        }
+
+        def add_dim(
+            col: str,
+            dtype: str | None = None,
+            pk: bool = False,
+            hidden: bool = False,
+            datatype: str | None = None,
+        ) -> None:
             if not col or col in seen_dims:
                 return
             seen_dims.add(col)
             cinfo = col_meta.get(col) or {}
+            if col in scd2_ts_cols:
+                dtype = dtype or "time"
+                datatype = datatype or "timestamp"
             resolved_type = dtype or _bq_to_sem_type(col, cinfo.get("type"), m)
             d_obj: dict = {"name": col, "sql": col, "type": resolved_type}
+            if datatype:
+                d_obj["datatype"] = datatype
+            elif cinfo.get("type") and cinfo["type"].upper() in ("DATE", "DATETIME", "TIMESTAMP"):
+                d_obj["datatype"] = cinfo["type"].lower()
             if pk:
                 d_obj["primary_key"] = True
             if hidden:
@@ -104,9 +185,9 @@ def build_semantic_spec(p: Product, g: ProductGraph, digest: str, targets_overri
                 add_dim(col)
             for col in col_meta:
                 add_dim(col)
-            if int(attrs.get("scd_type", 1) or 1) == 2 or m.get("history_semantics") == "scd2":
-                add_dim("valid_from", dtype="time")
-                add_dim("valid_to", dtype="time")
+            if is_scd2_dim:
+                add_dim("valid_from", dtype="time", datatype="timestamp")
+                add_dim("valid_to", dtype="time", datatype="timestamp")
                 add_dim("is_current", dtype="boolean")
                 add_dim("version_no", dtype="number")
         elif n.role == "fact":
@@ -150,15 +231,19 @@ def build_semantic_spec(p: Product, g: ProductGraph, digest: str, targets_overri
             for ms in list(attrs.get("measures") or []):
                 mname = ms["name"]
                 mtype = MEASURE_TYPE.get(ms.get("additivity", "additive"), "sum")
-                desc = glossary.get(mname) or f"{mname} ({ms.get('additivity', 'additive')}) on {name}"
+                if mname in filtered_exprs:
+                    desc = f"Unfiltered {mname} ({ms.get('additivity', 'additive')}) on {name}; prefer governed filtered metric"
+                else:
+                    desc = glossary.get(mname) or f"{mname} ({ms.get('additivity', 'additive')}) on {name}"
                 measures.append({
                     "name": mname,
                     "sql": mname,
                     "type": mtype,
                     "additivity": ms.get("additivity", "additive"),
                     "description": desc,
+                    **({"hidden": True} if mname in filtered_exprs else {}),
                 })
-                if not any(em.get("name") == mname for em in explicit_metrics):
+                if mname not in filtered_exprs and not any(em.get("name") == mname for em in explicit_metrics):
                     metrics.append({
                         "name": mname,
                         "label": mname.replace("_", " ").title(),
@@ -169,7 +254,8 @@ def build_semantic_spec(p: Product, g: ProductGraph, digest: str, targets_overri
                     })
         else:
             out_cols = g.output_columns(name) or list(col_meta)
-            attr_measures = {ms["name"]: ms for ms in (attrs.get("measures") or [])}
+            inferred_measures = _infer_sql_measures(p.body(m), grain, glossary) if n.role != "calendar" else {}
+            attr_measures = {**inferred_measures, **{ms["name"]: ms for ms in (attrs.get("measures") or [])}}
             for col in out_cols:
                 if col not in attr_measures:
                     dtype = "number" if n.role == "calendar" and col in ("date_key", "year", "quarter", "month", "day_of_week") else None
@@ -181,7 +267,7 @@ def build_semantic_spec(p: Product, g: ProductGraph, digest: str, targets_overri
                     "sql": mname,
                     "type": mtype,
                     "additivity": ms.get("additivity", "additive"),
-                    "description": glossary.get(mname) or f"{mname} ({ms.get('additivity', 'additive')}) on {name}",
+                    "description": ms.get("description") or glossary.get(mname) or f"{mname} ({ms.get('additivity', 'additive')}) on {name}",
                 })
             measures.append({
                 "name": "row_count",
@@ -222,11 +308,13 @@ def build_semantic_spec(p: Product, g: ProductGraph, digest: str, targets_overri
         target_cube = next((c for c in cubes if c["model"] == em.get("model")), None)
         if target_cube:
             mname = em["name"]
+            agg = (em.get("aggregation") or "").lower()
+            m_type = "count" if agg == "count" else ("sum" if em.get("type", "simple") == "simple" else "number")
             if not any(ms["name"] == mname for ms in target_cube["measures"]):
                 target_cube["measures"].append({
                     "name": mname,
-                    "sql": em.get("expr") or em.get("measure") or mname,
-                    "type": "sum" if em.get("type", "simple") == "simple" else "number",
+                    "sql": em.get("expr") or em.get("measure") or ("*" if m_type == "count" else mname),
+                    "type": m_type,
                     "additivity": "additive" if em.get("type", "simple") == "simple" else "non_additive",
                     "description": em_copy.get("description") or em.get("label") or mname,
                 })

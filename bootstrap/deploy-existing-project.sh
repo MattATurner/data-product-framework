@@ -6,7 +6,7 @@
 # (Non-Org-Admin / Pre-Provisioned Enterprise GCP Project)
 #
 # USAGE:
-#   ./deploy-use-existing-project-non-org-admin.sh \
+#   ./bootstrap/deploy-existing-project.sh \
 #     --project-id my-existing-project \
 #     --region australia-southeast1 \
 #     --timezone Pacific/Auckland
@@ -45,15 +45,16 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd -P)"
 
 if [[ "${CLEAN_EXAMPLES}" == "true" ]]; then
   echo "==> Stripping worked example material to create a clean customer workspace..."
-  bash "${REPO_ROOT}/clean-up.sh" --strip-examples
+  bash "${SCRIPT_DIR}/clean-up.sh" --strip-examples
 fi
 
 if [[ "${AUTO_CONFIRM}" != "true" && "${PRESENTATION_URL_SET}" != "true" ]]; then
-  existing_pres_url=$(python3 -c 'import json,sys,pathlib; p=pathlib.Path(sys.argv[1]); print((json.loads(p.read_text()).get("presentation_server_url") or "") if p.is_file() else "")' "${REPO_ROOT}/agent-config.json" 2>/dev/null || true)
+  existing_pres_url=$(python3 -c 'import json,sys,pathlib; p=pathlib.Path(sys.argv[1]); print((json.loads(p.read_text()).get("presentation_server_url") or "") if p.is_file() else "")' "${REPO_ROOT}/registry/agent-config.json" 2>/dev/null || true)
   if [[ -n "${existing_pres_url}" ]]; then
     PRESENTATION_SERVER_URL="${existing_pres_url}"
   else

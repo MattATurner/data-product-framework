@@ -159,7 +159,9 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--phase", type=int, choices=sorted(PHASES), default=1)
     ap.add_argument("--load", action="store_true", help="append the phase to the raw tables in BigQuery")
-    ap.add_argument("--project", default="data-product-framework")
+    import os
+    default_proj = os.environ.get("DPF_GCP_PROJECT") or os.environ.get("DPF_DEMO_PROJECT") or "data-product-framework"
+    ap.add_argument("--project", default=default_proj, help="target GCP project (or set DPF_GCP_PROJECT)")
     ap.add_argument("--dataset", default="raw_pg_local")
     ap.add_argument("--location", default="us-central1")
     a = ap.parse_args()

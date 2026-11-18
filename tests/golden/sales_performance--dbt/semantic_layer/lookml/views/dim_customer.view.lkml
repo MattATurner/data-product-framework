@@ -14,8 +14,10 @@ view: dim_customer {
     sql: ${TABLE}.customer_id ;;
   }
 
-  dimension: valid_from {
-    type: string
+  dimension_group: valid_from {
+    type: time
+    timeframes: [raw, time, date, week, month, quarter, year]
+    datatype: timestamp
     sql: ${TABLE}.valid_from ;;
   }
 
@@ -39,18 +41,20 @@ view: dim_customer {
 
   dimension: customer_email {
     type: string
+    required_access_grants: [can_view_pii_contact]
     sql: ${TABLE}.customer_email ;;
   }
 
   dimension: customer_phone {
     type: string
+    required_access_grants: [can_view_pii_contact]
     sql: ${TABLE}.customer_phone ;;
   }
 
   dimension_group: valid_to {
     type: time
-    timeframes: [raw, date, week, month, quarter, year]
-    datatype: date
+    timeframes: [raw, time, date, week, month, quarter, year]
+    datatype: timestamp
     sql: ${TABLE}.valid_to ;;
   }
 

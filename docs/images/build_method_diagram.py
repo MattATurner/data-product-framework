@@ -15,8 +15,9 @@ import re
 import sys
 from pathlib import Path
 
-SRC = Path("data-product-framework-plan.md")
-OUT = Path("index.html")          # index.html so GitHub Pages serves it from /docs
+DOCS_DIR = Path(__file__).resolve().parents[1]
+SRC = DOCS_DIR / "data-product-framework-plan.md"
+OUT = DOCS_DIR / "index.html"          # index.html so GitHub Pages serves it from /docs
 
 
 # --------------------------------------------------------------------------

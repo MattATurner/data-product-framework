@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 from typing import Any
@@ -119,9 +120,12 @@ def import_looker(
         report.fail(f"no .view.lkml or .dashboard.lookml files found in '{src_dir}'")
         return
 
-    resolved_project = project or consts.get("GCP_PROJECT") or "example-dpf-dev"
+    reg_defaults = ws.registry().defaults
+    default_proj = reg_defaults.get("gcp_project") or os.environ.get("DPF_GCP_PROJECT") or "example-dpf-dev"
+    default_region = reg_defaults.get("region") or "us-central1"
+    resolved_project = project or consts.get("GCP_PROJECT") or default_proj
     resolved_dataset = dataset or f"{pid}_gold"
-    resolved_region = region or "europe-west2"
+    resolved_region = region or default_region
 
     tables: list[dict[str, Any]] = []
     metrics: list[dict[str, Any]] = []

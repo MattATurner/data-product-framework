@@ -12,7 +12,8 @@ EXTRACT_DIR="$(cd "${HERE}/../extract" && pwd)"
 REPO_ROOT="$(cd "${HERE}/../../.." && pwd)"
 
 TARGET="${DPF_DEMO_TARGET:-auto}"
-PROJECT="${DPF_DEMO_PROJECT:-data-products-deploy}"
+DEFAULT_CFG_PROJ="$(awk '/^\s*project:/{print $2; exit}' "${EXTRACT_DIR}/config.yaml" 2>/dev/null || true)"
+PROJECT="${DPF_GCP_PROJECT:-${DPF_DEMO_PROJECT:-${DEFAULT_CFG_PROJ}}}"
 ZONE="${DPF_DEMO_ZONE:-us-central1-a}"
 REGION="${ZONE%-*}"
 VM_NAME="${DPF_DEMO_VM:-pg-onprem-sim}"
@@ -183,15 +184,15 @@ EOS
     framework/contracts | tar -xf - -C "${stage_dir}/app"
 
   if command -v uv >/dev/null 2>&1; then
-    uv pip install --no-config --default-index https://pypi.org/simple --quiet --target "${stage_dir}/site-packages" \
+    uv pip install --quiet --target "${stage_dir}/site-packages" \
       --python-platform x86_64-unknown-linux-gnu --python-version 3.12 \
       'psycopg[binary]' google-cloud-bigquery pyyaml jsonschema referencing
   elif [[ -x "${HOME}/.local/bin/uv" ]]; then
-    "${HOME}/.local/bin/uv" pip install --no-config --default-index https://pypi.org/simple --quiet --target "${stage_dir}/site-packages" \
+    "${HOME}/.local/bin/uv" pip install --quiet --target "${stage_dir}/site-packages" \
       --python-platform x86_64-unknown-linux-gnu --python-version 3.12 \
       'psycopg[binary]' google-cloud-bigquery pyyaml jsonschema referencing
   else
-    python3 -m pip install --index-url https://pypi.org/simple --quiet --target "${stage_dir}/site-packages" \
+    python3 -m pip install --quiet --target "${stage_dir}/site-packages" \
       --platform manylinux2014_x86_64 --python-version 3.12 --only-binary=:all: \
       'psycopg[binary]' google-cloud-bigquery pyyaml jsonschema referencing
   fi
@@ -320,8 +321,15 @@ case "${ACTION}" in
     if [[ "${RESET_BQ}" == "true" ]]; then
       echo "==> Resetting BigQuery raw_pg_local and dpf_control tables in ${PROJECT}..."
       for ds in raw_pg_local dpf_control; do
-        bq --location=us-central1 rm -r -f -d "${PROJECT}:${ds}" >/dev/null 2>&1 || true
-        bq --location=us-central1 mk -d "${PROJECT}:${ds}" >/dev/null
+        bq --project_id="${PROJECT}" --location="${REGION}" mk -d "${PROJECT}:${ds}" >/dev/null 2>&1 || true
+        for tbl in $(bq --project_id="${PROJECT}" ls --format=json "${PROJECT}:${ds}" 2>/dev/null | "${PY_BIN}" -c 'import json,sys; data=json.load(sys.stdin) if not sys.stdin.isatty() else []; print(" ".join(r["tableReference"]["tableId"] for r in (data or [])))' 2>/dev/null || true); do
+          if [[ "${ds}" == "dpf_control" ]]; then
+            bq --project_id="${PROJECT}" query --use_legacy_sql=false "TRUNCATE TABLE \`${PROJECT}.${ds}.${tbl}\`" >/dev/null 2>&1 || true
+          else
+            bq --project_id="${PROJECT}" rm -f -t "${PROJECT}:${ds}.${tbl}" >/dev/null 2>&1 || \
+              bq --project_id="${PROJECT}" query --use_legacy_sql=false "TRUNCATE TABLE \`${PROJECT}.${ds}.${tbl}\`" >/dev/null 2>&1 || true
+          fi
+        done
       done
     fi
     ;;

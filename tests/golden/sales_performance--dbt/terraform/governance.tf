@@ -47,3 +47,12 @@ resource "google_bigquery_datapolicy_data_policy_iam_member" "pt_1_masked_analys
   role           = "roles/bigquerydatapolicy.maskedReader"
   member         = "group:${var.analyst_group}"
 }
+
+# dpf: element=policy:PT-1 satisfies=R-12
+resource "google_bigquery_datapolicy_data_policy_iam_member" "pt_1_masked_consumer_group" {
+  project        = var.project_id
+  location       = var.region
+  data_policy_id = google_bigquery_datapolicy_data_policy.pt_1.data_policy_id
+  role           = "roles/bigquerydatapolicy.maskedReader"
+  member         = "group:${var.consumer_group}"
+}

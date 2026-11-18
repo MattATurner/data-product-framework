@@ -3,10 +3,10 @@ asserts: A BRD missing its level-of-detail and history answers fails G0, and the
   to ask.
 mutate:
 - delete:
-    file: openspec/specs/products/sales/customer-orders/brd/brd.yaml
+    file: examples/customer_orders/specs/brd/brd.yaml
     path: level_of_detail
 - delete:
-    file: openspec/specs/products/sales/customer-orders/brd/brd.yaml
+    file: examples/customer_orders/specs/brd/brd.yaml
     path: history_behaviour
 run:
   command: brd

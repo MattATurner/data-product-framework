@@ -2,7 +2,7 @@ id: no-methodology-envy
 asserts: 'A direct-pack product that hand-rolls dimensional structures fails G1: adopt the Kimball pack instead.'
 mutate:
 - append:
-    file: products/customer_orders/sql/customer_orders.sql
+    file: examples/customer_orders/sql/customer_orders.sql
     text: '
 
       -- valid_from / valid_to tracked by hand here

@@ -2,11 +2,11 @@ id: reject-gate-required
 asserts: Without row quarantine there is no reject gate, and the static check for AX-12 fails.
 mutate:
 - set:
-    file: products/sales_performance/product.yaml
+    file: examples/sales_performance/product.yaml
     path: quality.rules[id=QR-1].on_fail
     value: fail
 - set:
-    file: products/sales_performance/product.yaml
+    file: examples/sales_performance/product.yaml
     path: quality.rules[id=QR-2].on_fail
     value: fail
 run:

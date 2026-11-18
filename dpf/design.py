@@ -350,8 +350,7 @@ def _upstream(p: Product, g: ProductGraph, report: Report) -> None:
     for u in upstreams:
         if u.get("product"):
             up_id = u["product"]
-            up_path = p.ws.root / "products" / up_id / "product.yaml"
-            if not up_path.exists():
+            if up_id not in p.ws.product_dirs():
                 continue
             up_prod = p.ws.product(up_id)
             min_v = u.get("min_version")

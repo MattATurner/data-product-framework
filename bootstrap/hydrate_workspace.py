@@ -68,7 +68,7 @@ def main() -> int:
         ap.error("Provide <path/to/tf-output.json> or pass --offline.")
 
     repo_root = Path(__file__).resolve().parent.parent
-    agent_cfg_path = repo_root / "agent-config.json"
+    agent_cfg_path = repo_root / "registry/agent-config.json"
     existing_cfg: dict = {}
     if agent_cfg_path.is_file():
         try:
@@ -159,8 +159,8 @@ def main() -> int:
         tfvars_path.write_text(tfvars_content, encoding="utf-8")
         print(f"  ok | updated {tfvars_path.relative_to(repo_root)}")
 
-    # 4. Re-stamp golden copies for worked examples if products/ is populated and dpf is installed
-    if list((repo_root / "products").glob("*/product.yaml")):
+    # 4. Re-stamp golden copies for worked examples if products or examples are populated and dpf is installed
+    if list((repo_root / "products").glob("*/product.yaml")) or list((repo_root / "examples").glob("*/product.yaml")):
         dpf_cmd: list[str] | None = None
         venv_dpf = repo_root / ".venv/bin/dpf"
         which_dpf = shutil.which("dpf")

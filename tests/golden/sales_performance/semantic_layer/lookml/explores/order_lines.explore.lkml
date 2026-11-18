@@ -7,7 +7,7 @@ explore: order_lines {
   description: "Order-line sales joined to point-in-time customer segment, product category and calendar."
 
   conditionally_filter: {
-    filters: [fct_order_line.order_date: "90 days"]
+    filters: [fct_order_line.order_date: "365 days"]
     unless: [dim_date.year_month, dim_date.year_quarter, dim_date.year, dim_date.calendar_date]
   }
 
@@ -27,15 +27,5 @@ explore: order_lines {
     type: left_outer
     relationship: many_to_one
     sql_on: ${fct_order_line.date_key} = ${dim_date.date_key} ;;
-  }
-
-  aggregate_table: sales_performance_monthly {
-    query: {
-      dimensions: [dim_date.year_month, dim_customer.customer_segment, dim_product.product_category, dim_customer.region]
-      measures: [fct_order_line.count, fct_order_line.net_sales, fct_order_line.units_sold]
-    }
-    materialization: {
-      datagroup_trigger: sales_performance_default_datagroup
-    }
   }
 }
