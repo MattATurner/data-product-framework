@@ -59,9 +59,43 @@ dpf eval                                    # 26 behavioural evals
 make ci                                     # what CI runs
 ```
 
-Starting a new project:
-- **GitHub Template + Layer-0 Terraform bootstrap (recommended)**: click **Use this template** on GitHub (see [`bootstrap/README.md`](bootstrap/README.md) or run `@bootstrap/onboarding-prompt.md`), then run `source bootstrap/deploy.sh` (creates a new Google Cloud project, enables APIs, provisions service identities and Dataform/monitor service accounts via keyless impersonation, asks once on first run for an optional Presentation Server URL, and hydrates `registry/agent-config.json` + `registry/platform-defaults.yaml`), or `./bootstrap/deploy-existing-project.sh --project-id <id>` to attach to an existing customer project. Pass `--clean-examples` (or `./bootstrap/clean-up.sh --strip-examples`) to strip worked examples for a blank customer repo.
-- **Local scaffold**: `dpf init ../my-workspace` copies the framework, Layer-0 bootstrap scripts, agent routing files (`AGENTS.md`), and the Define and Design templates into a fresh directory with no example material.
+Starting a new workspace or cloud environment (`bootstrap/deploy.sh`):
+
+- **Agentic fast path**: click **Use this template** on GitHub, open the repo in Gemini CLI, Antigravity, Claude Code, or Cursor, and run `@bootstrap/onboarding-prompt.md` for a guided 5-question setup.
+- **Two-layer separation**: **Layer 0** (`bootstrap/terraform/`, run once per environment) provisions or attaches to your Google Cloud project; **Layer 1..N** (`generated/<product>/terraform/`, owned by `dpf generate`) remains 100% compiled per data product.
+
+```bash
+# 1a. New GCP project — Workshop / Demo mode (keeps worked examples & re-stamps goldens)
+source bootstrap/deploy.sh \
+  --project-id my-dpf-demo \
+  --region us-central1 \
+  --timezone Australia/Perth \
+  --relax-domain-policy
+
+# 1b. New GCP project — Clean customer workspace (strips worked examples & demo decks first)
+source bootstrap/deploy.sh \
+  --clean-examples \
+  --project-id acme-dpf \
+  --region australia-southeast1 \
+  --timezone Pacific/Auckland
+
+# 2. Existing customer GCP project (non-Org-Admin: skips project creation & Org Policies)
+./bootstrap/deploy-existing-project.sh \
+  --clean-examples \
+  --project-id my-existing-gcp-project \
+  --region australia-southeast1 \
+  --timezone Pacific/Auckland
+
+# 3. Offline-only hydration or fresh local scaffold (no Terraform / cloud credentials needed)
+python3 bootstrap/hydrate_workspace.py --offline --region us-central1 --timezone Australia/Perth
+dpf init ../my-workspace                    # copies framework + bootstrap/ with zero example material
+```
+
+What `bootstrap/deploy.sh` automates end-to-end (full flag reference in [`bootstrap/README.md`](bootstrap/README.md)):
+
+1. **Identity, Org/Folder & Billing auto-discovery** — detects your active `gcloud` user, 12-digit Organization ID (or accepts `--org-id` / `--folder-id`), and open Billing Account (`--billing-account`), appending a 4-char collision-free suffix to the project ID by default (`--no-random-suffix` for exact IDs; `--yes` / `-y` for non-interactive runs).
+2. **Keyless Layer-0 foundation** — batch-enables required Google Cloud APIs (BigQuery, BigQuery Data Policy, BigQuery sharing, BigQuery Data Transfer, Data Catalog, Dataform, Knowledge Catalog, Logging, Monitoring, Storage, IAM), configures keyless Service Account Impersonation (`dpf-deployer@<project>.iam.gserviceaccount.com` — zero exported JSON keys), provisions Google-managed service identities plus `dataform-runner` and `dpf-monitor` service accounts, creates the `gs://<project>-dpf-state` bucket and initial Dataform repository (`--dataform-repo`), and backs up `tf-output.json` and `terraform.tfstate` to GCS.
+3. **Workspace & golden-copy hydration (`bootstrap/hydrate_workspace.py`)** — prompts once on first run for an optional Presentation Server URL (`--presentation-server-url` / `DPF_PRESENTATION_SERVER_URL`, plus `--fhd-server-url` / `DPF_FHD_SERVER_URL`), writes resolved IDs and service accounts into `registry/agent-config.json` and `registry/platform-defaults.yaml`, pre-populates `examples/sales_performance/terraform/terraform.tfvars` (when examples are retained), and re-stamps worked-example golden copies (`dpf generate --all --update-golden`) so `dpf check --all --gate G3` passes immediately for your project, region, and timezone.
 
 ## How it fits together
 
@@ -69,6 +103,7 @@ Starting a new project:
 
 | Plane | Decides | Where |
 |---|---|---|
+| **Bootstrap (Layer 0)** | One-time Google Cloud project creation (or existing-project attachment), API enablement, keyless SA impersonation, state bucket, and workspace hydration | `bootstrap/` |
 | **Specs** | What the business needs (BRD) and how it is met (TDD, `semantics.md`, sign-off) | `openspec/specs/` |
 | **Templates** | Which use cases go ahead (scored and chosen before any BRD), and the starting shape of each Define and Design document | `framework/templates/` |
 | **Manifest** | The resolved design: sources, models, grain, history, quality, ports, schedules, governance, observability | `products/<id>/product.yaml` |
@@ -172,8 +207,10 @@ build digest binds test evidence to exactly this build.
 entity and conformance catalogues are empty, so a new project never inherits someone
 else's. The examples declare `registry_overlay: examples/registry` in their manifests and
 read that overlay without changing `registry/`. Framework configuration ships populated:
-`platform-defaults.yaml` (set your project, region and business time zone), the BRD rubric
-and vocabulary (`brd-rubric.yaml`, `brd-vocabulary.yaml`) and the MCP catalogue
+`platform-defaults.yaml` and `agent-config.json` (hydrated automatically by `bootstrap/deploy.sh`
+or `bootstrap/hydrate_workspace.py` with your project ID/number, region, business time zone,
+service accounts, state bucket, and optional Presentation/FHD Server URLs), the BRD rubric
+and vocabulary (`brd-rubric.yaml`, `brd-vocabulary.yaml`), and the MCP catalogue
 (`mcp_servers.yaml`).
 
 ## Worked examples
@@ -205,11 +242,12 @@ has not been deployed, so G4 fails with 14 missing results. The sign-offs in
 
 ## Verified with the real tools
 
-The golden copies and the example Terraform wrapper are checked in CI
+The Layer-0 bootstrap Terraform, the golden copies, and the example Terraform wrapper are checked in CI
 (`.github/workflows/ci.yml`, pinned tool versions) and were verified locally with the same
-versions: Terraform 1.9.8 `fmt -check` and `validate` (all three golden modules and the
-wrapper), Dataform CLI 3.0.71 `compile` (both products, 0 errors) and dbt 1.12.5 `parse` (the
-dbt rendering of `sales_performance`: 18 models, 36 tests, 4 sources).
+versions: Terraform 1.9.8 `fmt -check` and `validate` (`bootstrap/`, all three golden modules, and the
+example wrapper), Dataform CLI 3.0.71 `compile` (both products, 0 errors), dbt 1.12.5 `parse` (the
+dbt rendering of `sales_performance`: 18 models, 36 tests, 4 sources), and LookML view/Explore/dashboard
+validation across every semantic-layer golden copy.
 
 The sandbox deployment of `sales_performance` applied all 37 Terraform resources, built all
 54 Dataform actions, and passed every SQL acceptance case. It also found four problems that
