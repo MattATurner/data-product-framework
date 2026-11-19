@@ -38,4 +38,4 @@ Interactive FHD viewer: [`dpf-data-product-framework-fhd.html`](dpf-data-product
 | DPF-06-01 | Business-Calendar Monitor | business_function | cli_batch | `dpf/monitor.py` | Evaluates freshness, volume, and schema drift strictly during business working hours. |
 | DPF-06-02 | AGF & Catalog Breach Feed | integration | cloud_service | `framework/contracts/run-evidence.v1.schema.json` | Ingests AGF lineage, ledger, and Knowledge Catalog scan alerts as run-evidence.v1. |
 | DPF-06-03 | Build & Run Evidence Ledger | crud_module | cli_batch | `examples/sales_performance/evidence/` | Stores immutable test, attestation, and runtime health evidence per build digest. |
-| DPF-06-04 | Change Proposal Workbench | ui_workbench | chat_ui | `openspec/changes/README.md` | Opens requirement-traced delta specs for human review when breaches or new needs arise. |
+| DPF-06-04 | Change Proposal Workbench | ui_workbench | chat_ui | `dpf/monitor.py · changes/` | Opens requirement-traced change briefs for human review when breaches or new needs arise. |

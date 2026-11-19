@@ -43,7 +43,7 @@ def _make_twin(tmp_path: Path) -> Workspace:
         ".terraform", "terraform.tfstate*",
     )
     for rel in (
-        "framework", "openspec", "registry", "examples", "products", "docs", "bootstrap",
+        "framework", "registry", "examples", "products", "docs", "bootstrap",
         ".agents", "pyproject.toml", "Makefile", ".gitignore", "AGENTS.md",
     ):
         src = ROOT / rel
@@ -276,7 +276,7 @@ def test_proto_promote_snake_case_and_decoupled_emits_schema_valid_manifests(tmp
     assert "schema_drift" in promoted_man["observability"]
     assert ws.validate(promoted_man, "product-manifest.v1") == []
 
-    brd_path = tmp_path / "openspec/specs" / promoted_man["specs"]["brd"] / "brd.yaml"
+    brd_path = pdir / promoted_man["specs"]["brd"] / "brd.yaml"
     promoted_brd = load_yaml(brd_path)
     assert ws.validate(promoted_brd, "brd.v1") == []
 

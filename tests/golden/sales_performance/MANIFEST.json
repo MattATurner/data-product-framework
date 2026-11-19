@@ -2,9 +2,9 @@
   "product_id": "sales_performance",
   "engine": "dataform",
   "dpf_version": "0.3.0",
-  "build_digest": "sha256:8c6cc18532f8a0c6742692d9ca824a42a9b4cfd6cf2eed165cd2d745bd79757c",
+  "build_digest": "sha256:ff115820cbca09042b1674e91fb6f82521489f8dac69a6babfaea7891ce4e2f3",
   "files": {
-    "README.md": "sha256:02c4f4a48fedf79eb7c4511796a53c2adab9c24d481ac98700ae4540d66e3534",
+    "README.md": "sha256:31e35fa905527d0071bb12db8cddaa8da5267ac306a8ec6c8e5717f0360677ef",
     "catalog-registration.json": "sha256:a627baca139da0b3dc4bd5baadfbece4cc1c5b686c9d3777c7a91e22780a096e",
     "dag.json": "sha256:34661bcb4f4b77c56546249ceca9593f2766e10abb25a07abf7664249cd3dd8b",
     "dag.md": "sha256:f90de2454556f048a595b718f739d4af3c69636594d5724e9e53d747d2135816",
@@ -75,7 +75,7 @@
     "raw/raw_order_lines.json": "sha256:edcad9d7d88ec88580cf1d277083244880dd844257a2d99a71259a4a8edde5e4",
     "raw/raw_orders.json": "sha256:82052b76c93c5252e232692d12b366217854be216eaa154e61733ce694168e57",
     "raw/raw_products.json": "sha256:1f06e6eaa3845fb4caa661b18da9bc8dd886e73dd69809670f8ee47b97adb348",
-    "semantic-layer.json": "sha256:8b1547632dbd27579ec1da36d8f072622f45198eb1cf3dd1bed6ecf9253ec360",
+    "semantic-layer.json": "sha256:fe22866f96af484952b586dafdd3863484f5811a32f0757c17c202acccdee71e",
     "semantic/dim_customer.json": "sha256:1b8b05e7e775955f5caf050791f99a7f7eef48733cf9f299ff7ff7444fadf21f",
     "semantic/dim_date.json": "sha256:32c9400e92da0471a4bb1db78a78183321158f2df1ae37960d199dad190a03a7",
     "semantic/dim_product.json": "sha256:edd13922e5a3c4ca1402671c4871c88bb8610d27fa8edbd88ad690b0d1b77dc4",
@@ -110,6 +110,6 @@
     "terraform/sharing.tf": "sha256:f9027b748f728ed073eb036136a335842eb6524fc6613d57789c2d1bbb102afd",
     "terraform/variables.tf": "sha256:e1acc68138ccaf0fd21c94ef2d0494632554568a559c31a4083d0061e7acbb53",
     "terraform/versions.tf": "sha256:f0454f82fdf69e5266369e722396c7c6740de3b316bc414d007528ba835685e6",
-    "test-spec.json": "sha256:32ac5ca0154bbbd567c1dd85ffd20ae51bb6c17ddd56ac55aec3be5abc7b42e5"
+    "test-spec.json": "sha256:49f15d1661e0dbd4a58bfb5e16300e5c3fcded3ce240b2ccd9e36564251a1d10"
   }
 }

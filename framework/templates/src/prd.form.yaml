@@ -199,7 +199,7 @@ sections:
   - id: releases
     title: Releases
     hint: What comes in the first release, and what can wait? Refer to requirement IDs.
-    maps_to: "Kept with the PRD; later releases become OpenSpec changes"
+    maps_to: "Kept with the PRD; later releases become follow-up Git pull requests"
     fields:
       - id: releases
         kind: grid

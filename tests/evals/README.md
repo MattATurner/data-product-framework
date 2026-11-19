@@ -24,7 +24,7 @@ dpf eval --id grain-violation  # one or more by id
 | `lookml-pdt-without-adr` | check G1 | Enabling Looker PDTs (`allow_pdt: true`) without a product ADR deciding `semantic_layer` fails G1. |
 | `lookml-unpinned-bar-axis` | check G1 | A LookML bar or column chart tile with `y_axis_zero: false` violates Stephen Few zero-baseline rules and fails G1. |
 | `modelling-vocabulary` | check G0 | A BRD that uses modelling vocabulary (fact table, SCD) fails G0: design words belong in the TDD. |
-| `monitor-breach` | monitor | A freshness breach in business hours fails `dpf monitor` and opens an OpenSpec change quoting it. |
+| `monitor-breach` | monitor | A freshness breach in business hours fails `dpf monitor` and opens a structured change brief quoting it. |
 | `no-methodology-envy` | check G1 | A direct-pack product that hand-rolls dimensional structures fails G1: adopt the Kimball pack instead. |
 | `orphan-design` | check G1 | A design element or TDD decision that cites no requirement (and no platform capability) fails G1. |
 | `port-without-model` | check G1 | An output port that exposes an undeclared model fails G1. |

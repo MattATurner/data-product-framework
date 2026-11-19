@@ -17,7 +17,7 @@ tests/evals/<id>/eval.yaml:
       outcome: fail                           # fail: at least one failure; pass: none
       messages: ["substring of a FAIL line"]  # each must appear in a failure (or `level: warn`)
       absent: ["substring that must not appear in any failure"]
-      files: ["openspec/changes/monitor-*/proposal.md"]   # globs that must exist afterwards
+      files: ["changes/monitor-*/proposal.md"]            # globs that must exist afterwards
       dag_node: {id: "extract:pg_local", skill: extract-rdbms-watermark}
 
 Evals run on every change to skills, packs, generators or the model behind an agent: they
@@ -36,7 +36,7 @@ import yaml
 
 from dpf.core import Report, Workspace, load_yaml
 
-COPY = ["framework", "registry", "openspec", "products", "docs/adr", "examples", "tests/golden"]
+COPY = ["framework", "registry", "products", "docs/adr", "examples", "tests/golden"]
 IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", "out", "node_modules", ".terraform", ".terraform.lock.hcl", "*.tfstate*")
 TOKEN = re.compile(r"^([^\[\]]+)(?:\[([^\]]+)\])?$")
 

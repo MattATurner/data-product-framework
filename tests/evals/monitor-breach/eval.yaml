@@ -1,5 +1,5 @@
 id: monitor-breach
-asserts: A freshness breach in business hours fails dpf monitor and opens an OpenSpec change quoting it.
+asserts: A freshness breach in business hours fails dpf monitor and opens a structured change brief quoting it.
 run:
   command: monitor
   product: sales_performance
@@ -10,5 +10,5 @@ expect:
   messages:
   - 'freshness OB-1: sales_performance_monthly is 150 minutes old (limit 90)'
   files:
-  - openspec/changes/monitor-sales-performance-freshness-*/proposal.md
-  - openspec/changes/monitor-sales-performance-freshness-*/.openspec.yaml
+  - changes/monitor-sales-performance-freshness-*/proposal.md
+  - changes/monitor-sales-performance-freshness-*/change.yaml

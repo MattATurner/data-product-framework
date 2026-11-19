@@ -3,8 +3,8 @@
 The deployed product checks itself (generated scheduled queries, Knowledge Catalog data
 quality scans, log-based alerts). `dpf monitor` is the same policy evaluated offline from a
 run-evidence.v1 document, so a breach can be reproduced, tested and turned into work:
-with `--open-change` it opens an OpenSpec change (schema `data-product`, `skip_specs: true`)
-that quotes the breach and links the runbook, so the fix flows back through the gates.
+with `--open-change` it opens a structured change brief under `changes/` that quotes the
+breach and links the runbook, so the fix flows back through the gates.
 """
 
 from __future__ import annotations
@@ -116,12 +116,12 @@ def _kebab(s: str) -> str:
 
 
 def open_change(p: Product, ev: dict, breaches: list[Breach]) -> Path:
-    """Write an OpenSpec change that turns the breach into tracked work."""
+    """Write a structured change brief under changes/ that turns the breach into tracked work."""
     at = parse_ts(ev["observed_at"])
     kinds = sorted({b.kind for b in breaches})
     kind = kinds[0] if len(kinds) == 1 else "incident"
     cid = _kebab(f"monitor-{p.id}-{kind}-{at.strftime('%Y%m%d-%H%M')}")
-    d = p.ws.root / "openspec" / "changes" / cid
+    d = p.ws.root / "changes" / cid
     obs = p.manifest.get("observability") or {}
     runbook = (obs.get("alerting") or {}).get("runbook") or f"examples/{p.id}/RUNBOOK.md"
     reqs = sorted({r for b in breaches for r in b.requirements}, key=lambda x: int(x.split("-")[1]))
@@ -129,14 +129,15 @@ def open_change(p: Product, ev: dict, breaches: list[Breach]) -> Path:
     brd = f"{p.brd.get('brd_id')}@{p.brd.get('version')}"
     rows = "\n".join(f"| {b.kind} | {b.policy} | {b.observed} | {b.threshold} | {', '.join(b.requirements) or '—'} |"
                      for b in breaches)
-    write_text(d / ".openspec.yaml",
-               "schema: data-product\n"
+    write_text(d / "change.yaml",
+               f"product_id: {p.id}\n"
                f"created: {at.date().isoformat()}\n"
+               f"kind: {kind}\n"
                f"goal: Restore {p.id} to its observability policy after a {kind} breach\n"
                f"affected_areas:\n  - products/{p.id}\n  - monitor-data-product\n"
-               "# Opened by `dpf monitor --open-change`: an operational fix has no spec delta until the\n"
-               "# investigation shows a requirement or decision must change. Remove skip_specs then.\n"
-               "skip_specs: true\n")
+               "# Opened by `dpf monitor --open-change`: an operational fix requires no spec edit\n"
+               "# until the investigation shows a requirement or decision must change.\n"
+               "requires_spec_change: false\n")
     write_text(d / "proposal.md", f"""# Proposal: restore {p.id} after a {kind} breach
 
 ## Why
@@ -152,7 +153,7 @@ def open_change(p: Product, ev: dict, breaches: list[Breach]) -> Path:
 
 - Find the cause using the runbook ({', '.join(f'`{runbook}#{a}`' for a in anchors)}).
 - Apply the operational fix: re-run, backfill, or accept a reviewed schema change.
-- If the cause is a design gap, add BRD or TDD delta specs and remove `skip_specs` from `.openspec.yaml`.
+- If the cause is a design gap, update the product's BRD or TDD specs (`specs/brd/` or `specs/tdd/`) and set `requires_spec_change: true` in `change.yaml`.
 
 ## Capabilities
 
@@ -171,7 +172,7 @@ def open_change(p: Product, ev: dict, breaches: list[Breach]) -> Path:
 
 No design change is planned. If the investigation finds that the manifest, a SQL body or a
 methodology pack must change, describe it here, say whether the semantic digest changes, and
-re-sign `semantics.md` with `dpf signoff {p.id}` when it does.
+re-sign `playback.md` with `dpf signoff {p.id}` when it does.
 """)
     write_text(d / "verification.md", f"""# Verification
 
@@ -190,14 +191,17 @@ State any backfill or restatement window here before running it.
     write_text(d / "tasks.md", f"""# Tasks
 
 ## 1. Investigate
+
 - [ ] 1.1 Confirm the breach in the deployed project (alert, transfer run history, or quality scan result).
 - [ ] 1.2 Follow the runbook section(s) above and record the cause in operations.md.
 
 ## 2. Fix
+
 - [ ] 2.1 Apply the operational fix (re-run, backfill, or accept the schema change with `--accept-schema`).
-- [ ] 2.2 If a spec or design change is needed, add delta specs, remove `skip_specs`, and run `openspec validate --strict`.
+- [ ] 2.2 If a spec or design change is needed, update `specs/brd/` or `specs/tdd/`, set `requires_spec_change: true`, and run `dpf validate`.
 
 ## 3. Verify
+
 - [ ] 3.1 `dpf monitor {p.id} --evidence <new run-evidence.json>` reports no breach.
 - [ ] 3.2 If the build changed: `dpf check {p.id} --gate G3`, then `dpf check {p.id} --gate G4` after a deployed run.
 """)
@@ -267,7 +271,7 @@ def monitor(p: Product, report: Report, evidence: dict | None = None, open_chang
         return 0
     if open_change_on_breach:
         d = open_change(p, evidence, breaches)
-        report.info(f"opened change {d.relative_to(p.ws.root)}/ (validate with `openspec validate {d.name} --strict`)")
+        report.info(f"opened change brief {d.relative_to(p.ws.root)}/ (verify fixes with `dpf check {p.id} --gate G3`)")
     return 1
 
 

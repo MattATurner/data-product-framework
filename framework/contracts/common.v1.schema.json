@@ -16,7 +16,7 @@
     "platform_capability": {
       "type": "string",
       "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
-      "description": "Platform capability spec id (openspec/specs/platform/<id>) that mandates this element when no business requirement does."
+      "description": "Platform capability spec id (framework/specs/<id>) that mandates this element when no business requirement does."
     },
     "engine": {
       "type": "string",

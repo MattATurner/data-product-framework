@@ -58,7 +58,7 @@ An open question SHALL have an owner, a due date, a default assumption and a bla
 
 ### Requirement: The gap register is output, not specification
 Validation SHALL write the gap register to the generated output area and SHALL NOT modify
-files under `openspec/specs/`.
+files under the product's `specs/` tree.
 
 #### Scenario: Validating an incomplete BRD
 - **WHEN** G0 finds gaps

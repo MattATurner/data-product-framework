@@ -22,9 +22,9 @@ CLOUD_IMPORT = re.compile(
     r"^\s*(?:from|import)\s+(google\.cloud|googleapiclient|oracledb|cx_Oracle|psycopg2?|pymysql|mysql\.connector|"
     r"pyodbc|pymssql|snowflake|boto3|azure|sqlalchemy|apache_beam|pyspark)\b", re.M)
 CODE_GLOBS = ("examples/**/*.py", "products/**/*.py")
-PROSE_GLOBS = ("*.md", "docs/**/*.md", "framework/**/*.md", "openspec/**/*.md", "products/**/*.md",
+PROSE_GLOBS = ("*.md", "docs/**/*.md", "framework/**/*.md", "products/**/*.md",
                "examples/**/*.md", "bootstrap/**/*.md", ".agents/**/*.md",
-               "registry/**/*.yaml", "openspec/**/*.yaml", "docs/**/*.html")
+               "registry/**/*.yaml", "docs/**/*.html")
 RETIRED = {  # retired product name -> current name (prose only)
     r"\bDataplex\b": "Knowledge Catalog",
     r"\bVertex AI\b": "Gemini Platform",
@@ -34,7 +34,7 @@ RETIRED = {  # retired product name -> current name (prose only)
     r"\bBigQuery Omni\b": "cross-cloud connections",
 }
 # The naming table maps current to former names; only the catalog's former name is banned there too.
-NAMING_TABLE = {"openspec/project.md", "docs/data-product-framework-plan.md", "docs/index.html"}
+NAMING_TABLE = {"framework/project.md", "docs/data-product-framework-plan.md", "docs/index.html"}
 SKIP_DIRS = {".venv", "node_modules", "generated", "golden", ".git"}
 
 

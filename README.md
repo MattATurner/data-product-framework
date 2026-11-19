@@ -1,8 +1,9 @@
 # Data Product Framework (DPF)
 
 A spec-driven, composable data engineering toolkit for building **data products** on
-Google Cloud. Specs live in [OpenSpec](https://openspec.dev); a small Python CLI, `dpf`,
-checks a machine gate at every stage and generates everything that can be generated.
+Google Cloud. Product specifications live beside each product (`products/<id>/specs/`), platform
+capability specs live under `framework/specs/`, and a small Python CLI, `dpf`, checks a machine
+gate at every stage and generates everything that can be generated.
 
 ![Operating model — 6 human-gated steps. A one-time Opportunity Funnel enters Step 01 Prioritise (Funded Use-Case Brief), crosses the Portfolio Gate into the continuous product lifecycle: Step 02 Describe (Business Requirements Doc) -> G0 Validate Rubric -> Step 03 Design (Design & 1-Page Playback) -> G1 Verify Playback -> Step 04 Build (Compiled Pipelines & BI) -> G2–G3 Deterministic Build -> Step 05 Accept (Attested Live Data Product) -> G4 Published Live -> Step 06 Monitor & Evolve (Live SLA Status & Change Brief), with the Virtuous Loop returning amendments directly to Step 02.](docs/images/dpf-lifecycle.svg)
 
@@ -30,7 +31,7 @@ every artefact traces back to one of its requirements.
 | **4. Build** *(Compose)* | **G2** | Each stage selects a skill and an implemented engine adapter; every business scenario (AX) maps to an acceptance test (AT) | `dpf check <product> --gate G2` (or `--gate compose`) |
 | **4. Build** *(Generate)* | **G3** | Artefacts generate deterministically, match the reviewed golden copy, and every requirement reaches a decision, an artefact and a test | `dpf check <product> --gate G3` (or `--gate build`) |
 | **5. Accept** | **G4** | Every test and human attestation has passing evidence for the **current** build digest | `dpf check <product> --gate G4` (or `--gate accept`) |
-| **6. Monitor** | Day 2 | The deployed product meets its observability policy; a breach opens an OpenSpec change | `dpf monitor <product>` |
+| **6. Monitor** | Day 2 | The deployed product meets its observability policy; a breach opens a change brief under `changes/` | `dpf monitor <product>` |
 
 Gates are cumulative (`--gate G3` or `--gate build` runs G0–G3), and accept either the number (`G0`–`G4`) or the stage name (`describe`/`define`, `design`, `compose`, `build`, `accept`/`test`). Exit code 0 means pass, 1 fail, 2 usage error, and `--json` gives a machine-readable report, so the same commands run locally and in CI.
 
@@ -104,7 +105,7 @@ What `bootstrap/deploy.sh` automates end-to-end (full flag reference in [`bootst
 | Plane | Decides | Where |
 |---|---|---|
 | **Bootstrap (Layer 0)** | One-time Google Cloud project creation (or existing-project attachment), API enablement, keyless SA impersonation, state bucket, and workspace hydration | `bootstrap/` |
-| **Specs** | What the business needs (BRD) and how it is met (TDD, `semantics.md`, sign-off) | `openspec/specs/` |
+| **Specs** | What the business needs (BRD) and how it is met (TDD, `playback.md`, sign-off), plus platform capability rules | `products/<id>/specs/`, `framework/specs/` |
 | **Templates** | Which use cases go ahead (scored and chosen before any BRD), and the starting shape of each Define and Design document | `framework/templates/` |
 | **Manifest** | The resolved design: sources, models, grain, history, quality, ports, schedules, governance, observability | `products/<id>/product.yaml` |
 | **Methodology** | What *shape* the data takes. Optional and pluggable: [`direct`](framework/methodologies/direct/METHODOLOGY.md) (default: stage, type and expose business views/tables directly with declared grain—no star-schema ceremony) or [`kimball`](framework/methodologies/kimball/METHODOLOGY.md) (conformed dimensions and facts) | `framework/methodologies/` |
@@ -155,15 +156,15 @@ build digest binds test evidence to exactly this build.
   native Dataform assertions or dbt tests. What DPF adds is **business-calendar evaluation**
   (for example, checking freshness only during Perth working hours), **attestations** for
   checks SQL cannot prove, and **requirement traceability** so a breach can open a pre-filled
-  OpenSpec change (`dpf monitor --open-change`) naming the exact BRD requirement at risk.
-- **Where does DPF use OpenSpec as-is, and where does it extend it?** DPF uses OpenSpec's
-  directory structure (`openspec/specs/`, `openspec/changes/`), `Requirement`/`Scenario`
-  markdown grammar, delta specs (`ADDED`/`MODIFIED`/`REMOVED`), `openspec validate --strict`,
-  and custom workflow schemas (`openspec/schemas/data-product/schema.yaml`). DPF extends
-  OpenSpec by splitting each product into a business-language BRD (`brd/spec.md` + `brd.yaml`)
-  and a technical TDD (`tdd/spec.md` + `semantics.md` + `signoff.yaml`), adding traceable
-  metadata lines (`**ID:** R-1`, `**Status:** deferred`, `**Decision:** D-3`), and enforcing
-  machine gates G0–G4.
+  structured change brief (`dpf monitor --open-change`, written to `changes/`) naming the exact BRD requirement at risk.
+- **How are product specifications structured and validated?** Each product co-locates its
+  business-language BRD (`products/<id>/specs/brd/spec.md` + `brd.yaml`) and technical TDD
+  (`products/<id>/specs/tdd/spec.md` + `playback.md` + `signoff.yaml`) right beside
+  `product.yaml`, while platform capability specs live in `framework/specs/<capability>/spec.md`.
+  Specs use a lightweight Markdown grammar (`## Purpose`, `## Requirements`, `### Requirement:`
+  with `SHALL`/`MUST`, `#### Scenario:` with bold `WHEN`/`THEN` steps, and traceable metadata
+  lines such as `**ID:** R-1` and `**Decision:** D-3`), enforced natively by `dpf validate`
+  alongside machine gates G0–G4 — with zero external Node/npm specification CLI required.
 - **How does DPF integrate with Dataform's native Data Engineering Agent?** DPF keeps
   control-plane semantics, cross-plane orchestration and gate enforcement outside the engine,
   treating Dataform's native agent as a bounded Tier 3 leaf worker ([ADR-017](docs/adr/ADR-017-engine-native-agents.md))
@@ -200,7 +201,7 @@ build digest binds test evidence to exactly this build.
 
 | | Paths |
 |---|---|
-| **Template** (copied by `dpf init`) | `AGENTS.md` (+ agent symlinks), `bootstrap/` (Layer-0 Terraform + onboarding), `openspec/` config, schema, project context, agent rules, changes README and `specs/platform/`; `.agents/` (skill wiring, `assess-use-case`, `goldfish-verify`); `framework/` (`contracts/`, `methodologies/`, `engines/`, `skills/`, `templates/`); `registry/`, `products/README.md`, `docs/adr/`, `docs/user-guide.md`, `dpf/`, `pyproject.toml`, `Makefile`, `.gitignore`, `.github/` (CI + hash-locked requirements), contract tests, eval and golden READMEs |
+| **Template** (copied by `dpf init`) | `AGENTS.md` (+ agent symlinks), `bootstrap/` (Layer-0 Terraform + onboarding), `.agents/` (skill wiring, `assess-use-case`, `goldfish-verify`); `framework/` (`contracts/`, `specs/`, `project.md`, `methodologies/`, `engines/`, `skills/`, `templates/`); `registry/`, `products/README.md`, `docs/adr/`, `docs/user-guide.md`, `dpf/`, `pyproject.toml`, `Makefile`, `.gitignore`, `.github/` (CI + hash-locked requirements), contract tests, eval and golden READMEs |
 | **Example** (not copied) | `examples/` (`customer_orders/`, `sales_performance/`, `use-case-portfolio/`, `registry/`), `tests/golden/*`, `docs/fhd/`, `docs/presentation/`, `docs/demo-walkthrough.md`, `docs/index.html`, and `docs/data-product-framework-plan.md` |
 
 **`registry/` ships without project content by design**: the source-system, glossary,
@@ -265,28 +266,28 @@ offline checks cannot see, now fixed; see section 15 of the [user guide](docs/us
 | Method diagram (interactive, offline) | [`docs/index.html`](docs/index.html), generated from the plan by `python3 docs/images/build_method_diagram.py` |
 | Design narrative | [`docs/data-product-framework-plan.md`](docs/data-product-framework-plan.md) |
 | Connecting an on-premises source | [`docs/local-source-connectivity.md`](docs/local-source-connectivity.md) |
-| Agent rules | [`openspec/AGENTS.md`](openspec/AGENTS.md) |
+| Agent rules & platform context | [`AGENTS.md`](AGENTS.md) and [`framework/project.md`](framework/project.md) |
 | Functional Hierarchy (`DPF-00`) | [`docs/fhd/DPF_Functional_Hierarchy_Dictionary.md`](docs/fhd/DPF_Functional_Hierarchy_Dictionary.md) and [`docs/fhd/dpf-data-product-framework-fhd.html`](docs/fhd/dpf-data-product-framework-fhd.html) (open from disk) |
 | Decisions | [`docs/adr/`](docs/adr/README.md) |
 
 ## Repository structure & `DPF-00` capability map
 
-The root is organised into **nine clean directories** (plus `.agents/` and `.github/`), separating **how the framework and Layer-0 bootstrap run** (`dpf/`, `framework/`, `bootstrap/`), **what product teams author** (`openspec/`, `registry/`, `products/` — all clean of example pollution), and **self-contained worked examples, documentation & verification** (`examples/`, `docs/`, `tests/`):
+The root is organised into **eight clean directories** (plus `.agents/` and `.github/`), separating **how the framework and Layer-0 bootstrap run** (`dpf/`, `framework/`, `bootstrap/`), **what product teams author** (`registry/`, `products/` — clean of example pollution, with each product co-locating its `specs/` beside `product.yaml`), and **self-contained worked examples, documentation & verification** (`examples/`, `docs/`, `tests/`):
 
 ```
 data-product-framework/
 ├── dpf/                     [DPF-02..06] Python CLI & multi-plane compiler (`dpf` / `python -m dpf`)
-├── framework/               [All stages] Declarative framework packs & starter templates:
+├── framework/               [All stages] Declarative framework packs, specs & starter templates:
 │   ├── contracts/                        24 Draft 2020-12 JSON Schemas for every stage & AGF handoff
+│   ├── specs/                            17 platform capability specifications (`spec-conventions`, ...)
 │   ├── engines/                          execution adapters (`dataform`, `dbt`; `dataflow`, `spark` planned)
 │   ├── methodologies/                    modelling packs (`direct` default, `kimball`), rules & pack skills
 │   ├── skills/                           composable platform & pipeline stage skills (Agent Skills format)
 │   └── templates/                        Define-stage fillable PDF scorecards & Design starter scaffolds
 ├── bootstrap/               [Layer 0]    GCP workspace foundation Terraform, hydration & onboarding scripts
 │
-├── openspec/                [DPF-02..06] Specifications: platform specs, user product BRDs/TDDs & `changes/`
 ├── registry/                [DPF-02..03] Organisational context: defaults, `agent-config.json`, glossary, MCP
-├── products/                [DPF-03..04] Workspace product manifests (`products/<id>/product.yaml` & `sql/`)
+├── products/                [DPF-02..04] Workspace products (`products/<id>/product.yaml`, `specs/`, `sql/`)
 │
 ├── examples/                [DPF-01..05] Self-contained worked examples (`customer_orders/`, `sales_performance/`)
 ├── docs/                    [Docs]       User guide, walkthrough, `adr/` (ADR-001..019), `fhd/`, decks & SVGs
@@ -295,4 +296,4 @@ data-product-framework/
 ├── .agents/                 [DPF-01..04] Coding-agent skill wiring (`skills.json`), `assess-use-case`, `goldfish-verify`
 └── .github/                 [CI]         GitHub Actions workflows & hash-locked Python pins (`requirements/`)
 ```
-*(Running `dpf generate` and `dpf test run` in a workspace creates gitignored `generated/` and `evidence/` on demand.)*
+*(Running `dpf generate`, `dpf test run`, and `dpf monitor --open-change` in a workspace creates `generated/`, `evidence/`, and `changes/` on demand.)*

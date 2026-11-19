@@ -49,4 +49,4 @@ whether the requirement or the design must change.
 
 #### Scenario: Repeated freshness breach
 - **WHEN** a breach is confirmed
-- **THEN** a change proposal SHALL be created under `openspec/changes/` with the evidence attached
+- **THEN** a change brief SHALL be created under `changes/` with the evidence attached

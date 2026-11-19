@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Data Product Framework (DPF): data products that prove they do what the business asked</title>
-<meta name="description" content="A spec-driven, composable data engineering toolkit on Google Cloud, built on OpenSpec: five stages, five machine gates, one manifest, and evidence bound to the build.">
+<meta name="description" content="A spec-driven, composable data engineering toolkit on Google Cloud: five stages, five machine gates, one manifest, and evidence bound to the build.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@500;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Roboto+Mono:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -617,7 +617,7 @@ a.badge-inline:hover { border-color: var(--primary); color: var(--primary); }
 .ex-d { margin-top: -3px; font-size: 14px; line-height: 1.3; color: var(--text-secondary); white-space: nowrap; }
 .ex:hover .ex-t { text-decoration: underline; }
 </style>
-  <meta name="tags" content="Data Products, OpenSpec, BigQuery, Dataform, Knowledge Catalog, Spec-driven">
+  <meta name="tags" content="Data Products, BigQuery, Dataform, Knowledge Catalog, Spec-driven">
   <meta name="deck-role" content="master">
   <meta name="catalog-visibility" content="visible">
   <meta name="git-commit" content="24ccd34">
@@ -660,12 +660,12 @@ a.badge-inline:hover { border-color: var(--primary); color: var(--primary); }
 
 <!-- ================= 0 · HERO ================= -->
 <div class="s hero" data-idx="0"
-  data-notes="<strong>Opening.</strong> DPF, the Data Product Framework, is a toolkit for building <em>data products</em> on Google Cloud. The specification stays in control from the first business conversation to production monitoring. It is built on OpenSpec, and one small CLI, <code>dpf</code>, checks a machine gate at every stage and generates everything that can be generated.<br><br><strong>The cycle.</strong> Every product goes round one loop: Define, Design, Compose, Build, Test and Monitor, with a machine gate, G0 to G4, between the stages. A breach in production, or a new business need, opens an OpenSpec change, and that change goes round the same gates. Each loop leaves new evidence, so the product improves and the proof stays current.<br><br><strong>In about 25 minutes:</strong> the problem; the method; the templates for the Define and Design stages; a worked example, <code>sales_performance</code>; what a review found and what we fixed; what the real tools confirm; what a sandbox deployment proved and found; honest limits; and three decisions we need from you.">
+  data-notes="<strong>Opening.</strong> DPF, the Data Product Framework, is a toolkit for building <em>data products</em> on Google Cloud. The specification stays in control from the first business conversation to production monitoring. One small CLI, <code>dpf</code>, checks spec structure and a machine gate at every stage and generates everything that can be generated.<br><br><strong>The cycle.</strong> Every product goes round one loop: Define, Design, Compose, Build, Test and Monitor, with a machine gate, G0 to G4, between the stages. A breach in production, or a new business need, opens a traced change brief, and that change goes round the same gates. Each loop leaves new evidence, so the product improves and the proof stays current.<br><br><strong>In about 25 minutes:</strong> the problem; the method; the templates for the Define and Design stages; a worked example, <code>sales_performance</code>; what a review found and what we fixed; what the real tools confirm; what a sandbox deployment proved and found; honest limits; and three decisions we need from you.">
   <div class="hero-grid">
     <div class="hero-left">
       <span class="badge">Data Product Framework</span>
       <h1>Data products that <span class="hl">prove</span> they do what the business asked</h1>
-      <p class="lede">A spec-driven toolkit for data engineering on Google Cloud, built on OpenSpec.</p>
+      <p class="lede">A spec-driven toolkit for data engineering on Google Cloud.</p>
       <div class="kpi-strip">
         <div class="kpi"><div class="kpi-num">5</div><div class="kpi-label">machine gates</div></div>
         <div class="kpi"><div class="kpi-num">9</div><div class="kpi-label">templates</div></div>
@@ -746,7 +746,7 @@ a.badge-inline:hover { border-color: var(--primary); color: var(--primary); }
 <div class="s" data-idx="2" data-steps="3"
   data-notes="<strong>The method.</strong> The data product is the unit. Every BRD scopes one product, every TDD resolves one, and every artefact traces back to one of its requirements. Each product moves through five stages: Define, Design, Compose, Build and Test."
   data-notes-1="<strong>Five machine gates.</strong> <strong>G0</strong>: the BRD is complete, approved and in business language only. <strong>G1</strong>: the TDD and manifest resolve every requirement, and the business sign-off matches the semantic digest. <strong>G2</strong>: every stage selects a skill and an implemented engine adapter, and every business scenario maps to an acceptance test. <strong>G3</strong>: artefacts generate the same way every time, match the reviewed golden copy, and every requirement reaches a decision, an artefact and a test. <strong>G4</strong>: passing evidence exists for the current build digest."
-  data-notes-2="<strong>Then Monitor.</strong> The observability policy is deployed as checks and alerts. <code>dpf monitor</code> evaluates run evidence. A breach opens an OpenSpec change, so the fix flows back through the same gates. That closes the loop."
+  data-notes-2="<strong>Then Monitor.</strong> The observability policy is deployed as checks and alerts. <code>dpf monitor</code> evaluates run evidence. A breach opens a structured change brief under <code>changes/</code>, so the fix flows back through the same gates. That closes the loop."
   data-notes-3="<strong>One CLI.</strong> Gates are cumulative: <code>dpf check --gate G3</code> runs G0 to G3. Exit code 0 means pass, 1 fail and 2 a usage error, and <code>--json</code> gives a machine-readable report. The same commands run on a laptop and in CI, so nobody argues about which result is real.">
   <div class="slide-header">
     <span class="badge">The method</span>
@@ -1208,7 +1208,7 @@ a.badge-inline:hover { border-color: var(--primary); color: var(--primary); }
 <div class="s" data-idx="15" data-steps="2"
   data-notes="<strong>Monitor.</strong> The manifest declares an observability policy (contract <code>observability-policy.v1</code>). OB-1: the monthly view is never more than 90 minutes old, Monday to Friday, 08:00 to 18:00 Perth time, checked every 15 minutes. OB-2: the partner extract is no older than 32 days. OB-3: about 40,000 order lines a day, plus or minus 60 percent. The generator turns these into scheduled checks, log-based alerts and Knowledge Catalog quality scans in Terraform, and each alert links its runbook section. <code>dpf monitor</code> reads run evidence (<code>run-evidence.v1</code>), observed from the deployed product or read from a file."
   data-notes-1="<strong>A breach.</strong> This is the <code>monitor-breach</code> eval: on a Wednesday at 11:00 Perth time, the monthly view was last built 150 minutes earlier, against a limit of 90. <code>dpf monitor</code> fails."
-  data-notes-2="<strong>The loop closes.</strong> With <code>--open-change</code>, <code>dpf monitor</code> writes an OpenSpec change with <code>skip_specs: true</code> that quotes the breach and links the runbook. The fix goes through the same gates as any other change: G3 again, redeploy, then new evidence for G4. If the fix needs a spec change, remove <code>skip_specs</code>. Read the whole row as one loop: policy, checks, monitor, breach and change.">
+  data-notes-2="<strong>The loop closes.</strong> With <code>--open-change</code>, <code>dpf monitor</code> writes a structured change brief under <code>changes/</code> with <code>requires_spec_change: false</code> that quotes the breach and links the runbook. The fix goes through the same gates as any other change: G3 again, redeploy, then new evidence for G4. If the fix needs a spec edit, update the co-located specs and set <code>requires_spec_change: true</code>. Read the whole row as one loop: policy, checks, monitor, breach and change.">
   <div class="slide-header">
     <span class="badge">Monitor</span>
     <h2>A production breach opens a change that re-enters the gates</h2>
@@ -1238,7 +1238,7 @@ a.badge-inline:hover { border-color: var(--primary); color: var(--primary); }
         </div>
         <div class="card mnode acc-green" data-build="2" data-active-step="2">
           <div class="icon green"><svg class="ico"><use href="#i-branch"/></svg></div>
-          <h3>OpenSpec change</h3>
+          <h3>Change brief</h3>
           <p>Fix goes back through the gates</p>
         </div>
       </div>
@@ -1278,7 +1278,7 @@ a.badge-inline:hover { border-color: var(--primary); color: var(--primary); }
 
 <!-- ================= 17 · REVIEW -> FIXES ================= -->
 <div class="s" data-idx="17"
-  data-notes="<strong>From review to fixes.</strong> The review said define and design were strong, but the specs stopped controlling everything after G1. <strong>P0, honest gates:</strong> fix R-11 with quarantine and a blocking reject gate; extend trace to artefacts, tests and evidence; validate the BRD and manifest against schemas; and make compose select skills per stage from the sources. <strong>P1, executable specs:</strong> OpenSpec config and a custom <code>data-product</code> change schema, kebab-case specs with IDs on metadata lines, a test spec generated from the scenarios, generators, golden copies and GitHub Actions. <strong>P2, breadth:</strong> the monitor plane (<code>observability-policy.v1</code>, <code>run-evidence.v1</code>, generated checks and alerts, <code>dpf monitor</code>), dbt adapter parity, and skills that Agent Skills loaders can discover. Also: 22 contracts; lint now checks bespoke-code markers, ADRs and terminology; the sign-off is bound to the semantic digest; and the ADR files are written.">
+  data-notes="<strong>From review to fixes.</strong> The review said define and design were strong, but the specs stopped controlling everything after G1. <strong>P0, honest gates:</strong> fix R-11 with quarantine and a blocking reject gate; extend trace to artefacts, tests and evidence; validate the BRD and manifest against schemas; and make compose select skills per stage from the sources. <strong>P1, executable specs:</strong> native spec-convention validation in <code>dpf validate</code>, co-located product specs with IDs on metadata lines, a test spec generated from the scenarios, generators, golden copies and GitHub Actions. <strong>P2, breadth:</strong> the monitor plane (<code>observability-policy.v1</code>, <code>run-evidence.v1</code>, generated checks and alerts, <code>dpf monitor</code>), dbt adapter parity, and skills that Agent Skills loaders can discover. Also: 24 contracts; lint now checks bespoke-code markers, ADRs and terminology; the sign-off is bound to the semantic digest; and the ADR files are written.">
   <div class="slide-header">
     <span class="badge">Review</span>
     <h2>We made the gates honest first, then added tests and monitoring</h2>
@@ -1298,7 +1298,7 @@ a.badge-inline:hover { border-color: var(--primary); color: var(--primary); }
         <div class="prio-tag yellow">P1</div>
         <h3>Executable specs</h3>
         <ul class="ticks">
-          <li><svg class="ico"><use href="#i-check"/></svg>OpenSpec change schema</li>
+          <li><svg class="ico"><use href="#i-check"/></svg>Native spec validation</li>
           <li><svg class="ico"><use href="#i-check"/></svg>Tests from scenarios</li>
           <li><svg class="ico"><use href="#i-check"/></svg>Golden copies, CI</li>
         </ul>
@@ -1318,8 +1318,8 @@ a.badge-inline:hover { border-color: var(--primary); color: var(--primary); }
 
 <!-- ================= 18 · VERIFIED ================= -->
 <div class="s" data-idx="18" data-steps="1"
-  data-notes="<strong>What we verified.</strong> <code>dpf check --all --gate G3</code> passes for both examples. All 19 behavioural evals pass. pytest: 171 unit and contract tests pass on Python 3.10 and 3.13. <code>openspec validate --all --strict</code> passes, so the specs work with the official OpenSpec CLI."
-  data-notes-1="<strong>Real tools, real output.</strong> On the golden copies, <code>terraform fmt -check</code> and <code>terraform validate</code> pass; Dataform compile reports 0 errors; and <code>dbt parse</code> on the dbt version of the same product finds 18 models, 36 tests and 4 sources. CI runs three jobs: OpenSpec strict; gates, golden copies, evals and tests; and a real-tool compile of the golden copies. Tools are pinned: hash-locked Python requirements, OpenSpec CLI 1.14.0, Dataform CLI 3.0.71, dbt-core 1.12.5 with dbt-bigquery 1.12.1, and Terraform 1.9.8.">
+  data-notes="<strong>What we verified.</strong> <code>dpf check --all --gate G3</code> passes for both examples, including native spec-convention validation on all 21 specs. All 26 behavioural evals pass. pytest: 212 unit and contract tests pass with <code>-W error</code>."
+  data-notes-1="<strong>Real tools, real output.</strong> On the golden copies, <code>terraform fmt -check</code> and <code>terraform validate</code> pass; Dataform compile reports 0 errors; and <code>dbt parse</code> on the dbt version of the same product finds 18 models, 36 tests and 4 sources. CI runs two jobs: gates, native spec validation, golden copies, evals and tests; and a real-tool compile of the golden copies. Tools are pinned: hash-locked Python requirements, Dataform CLI 3.0.71, dbt-core 1.12.5 with dbt-bigquery 1.12.1, and Terraform 1.9.8.">
   <div class="slide-header">
     <span class="badge">Verified</span>
     <h2>Our checks and real tools pass before anything is deployed</h2>
@@ -1329,9 +1329,9 @@ a.badge-inline:hover { border-color: var(--primary); color: var(--primary); }
       <div class="ver-label">Framework</div>
       <div class="grid-4">
         <div class="metric-card"><div class="m-num">G0&ndash;G3</div><div class="m-label">both examples</div></div>
-        <div class="metric-card"><div class="m-num">19/19</div><div class="m-label">evals pass</div></div>
-        <div class="metric-card"><div class="m-num">171</div><div class="m-label">tests pass (pytest)</div></div>
-        <div class="metric-card"><div class="m-num">OpenSpec</div><div class="m-label">strict mode passes</div></div>
+        <div class="metric-card"><div class="m-num">26/26</div><div class="m-label">evals pass</div></div>
+        <div class="metric-card"><div class="m-num">212</div><div class="m-label">tests pass (pytest)</div></div>
+        <div class="metric-card"><div class="m-num">21/21</div><div class="m-label">specs validate cleanly</div></div>
       </div>
     </div>
     <div class="ver-row" data-build="1">
@@ -1378,7 +1378,7 @@ a.badge-inline:hover { border-color: var(--primary); color: var(--primary); }
 
 <!-- ================= 20 · DEVIATIONS ================= -->
 <div class="s" data-idx="20"
-  data-notes="<strong>Where we differed from the review, and why.</strong> <strong>One:</strong> the review suggested making <code>brd.yaml</code> the only source and rendering the markdown from it. We kept the markdown specs as the source of truth for requirement text, and <code>brd.yaml</code> holds rubric answers only, so OpenSpec deltas and archive keep working. <strong>Two:</strong> the review suggested flattening the nested spec folders, in case OpenSpec could not see them. We tested with OpenSpec 1.14: it discovers nested folders, so we kept the structure. <strong>Three:</strong> the review suggested compiling at G3. G3 compiles nothing against BigQuery, so it needs no credentials; the real-tool compile of the golden copies runs in CI instead.">
+  data-notes="<strong>Where we differed from the review, and why.</strong> <strong>One:</strong> the review suggested making <code>brd.yaml</code> the only source and rendering the markdown from it. We kept the markdown specs as the source of truth for requirement prose and scenarios, and <code>brd.yaml</code> holds structured rubric answers only, so human-readable pull-request diffs stay clean. <strong>Two:</strong> we co-located every product's BRD and TDD right beside <code>product.yaml</code> under <code>specs/</code> with native validation in <code>dpf validate</code>, removing external Node spec-CLI dependencies. <strong>Three:</strong> the review suggested compiling at G3. G3 compiles nothing against BigQuery, so it needs no credentials; the real-tool compile of the golden copies runs in CI instead.">
   <div class="slide-header">
     <span class="badge">Where we differed</span>
     <h2>We declined three review suggestions, each for a stated reason</h2>
@@ -1388,12 +1388,12 @@ a.badge-inline:hover { border-color: var(--primary); color: var(--primary); }
       <div class="card acc-blue">
         <div class="icon blue"><svg class="ico"><use href="#i-doc"/></svg></div>
         <h3>Markdown stays the source</h3>
-        <p class="p-lg">OpenSpec deltas and archive keep working</p>
+        <p class="p-lg">Readable prose diffs beside structured YAML</p>
       </div>
       <div class="card acc-yellow">
         <div class="icon yellow"><svg class="ico"><use href="#i-folder"/></svg></div>
-        <h3>Nested folders stay</h3>
-        <p class="p-lg">OpenSpec 1.14 finds them; no move needed</p>
+        <h3>Co-located product specs</h3>
+        <p class="p-lg">Specs live beside product.yaml; dpf validates them natively</p>
       </div>
       <div class="card acc-green">
         <div class="icon green"><svg class="ico"><use href="#i-lock"/></svg></div>

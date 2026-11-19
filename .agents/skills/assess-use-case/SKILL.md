@@ -8,8 +8,8 @@ description: >-
   review, check or quality-assure a use case. Don't use to write a use case or to score it:
   the panel scores, in templates/define/2-scorecard.pdf.
 metadata:
-  # Workspace-only for now. Before moving this skill into skills/, add the platform capability
-  # spec openspec/specs/platform/define-readiness: dpf validate requires it.
+  # Workspace-only for now. Before moving this skill into framework/skills/, add the platform capability
+  # spec framework/specs/define-readiness: dpf validate requires it.
   dpf:
     skill_id: assess-use-case
     stage: define

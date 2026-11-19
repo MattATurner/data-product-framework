@@ -12,8 +12,7 @@ requirements it satisfies. The resolved design is `products/{product_id}/product
 TDD template · Design stage · Data Product Framework
 
 Start from an approved BRD that passes G0 (`dpf brd validate {product}`). Save this file as
-openspec/specs/products/{domain}/{product}/tdd/spec.md, or write it as a delta spec in an
-OpenSpec change. The worked example is
+products/{product_id}/specs/tdd/spec.md. The worked example is
 examples/sales_performance/specs/tdd/spec.md.
 
 1. Run `dpf tdd resolve {product}`. It shows how each BRD answer drives a design decision

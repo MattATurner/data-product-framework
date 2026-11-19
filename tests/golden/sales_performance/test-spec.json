@@ -1,6 +1,6 @@
 {
   "product_id": "sales_performance",
-  "artefact_digest": "sha256:8c6cc18532f8a0c6742692d9ca824a42a9b4cfd6cf2eed165cd2d745bd79757c",
+  "artefact_digest": "sha256:ff115820cbca09042b1674e91fb6f82521489f8dac69a6babfaea7891ce4e2f3",
   "cases": [
     {
       "id": "grain:stg_customers",

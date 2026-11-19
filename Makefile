@@ -1,8 +1,7 @@
-.PHONY: help install lock check gates golden evals test openspec ci templates
+.PHONY: help install lock check gates golden evals test ci templates
 
 PY      ?= python3
 DPF     ?= $(PY) -m dpf
-OPENSPEC ?= openspec
 PRODUCT ?= --all
 UV_COMPILE ?= uv pip compile --universal --python-version 3.10 --generate-hashes --custom-compile-command "make lock"
 
@@ -33,10 +32,7 @@ evals: ## behavioural evals in tests/evals/
 test: ## unit and contract tests
 	$(PY) -m pytest
 
-openspec: ## OpenSpec structure, strict
-	$(OPENSPEC) validate --all --strict
-
-ci: openspec check evals test ## everything CI runs
+ci: check evals test ## everything CI runs
 	$(DPF) generate --all --check
 
 templates: ## render the Define-stage PDFs and worked examples (needs .github/requirements/templates.txt)

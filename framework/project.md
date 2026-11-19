@@ -54,7 +54,6 @@ customer-facing use.
 
 | Tool | Role |
 |---|---|
-| `dpf` (`pip install -e .`) | gates G0–G4, generate, trace, test, monitor, eval, init |
-| OpenSpec ≥ 1.14 | spec structure (`openspec validate --all --strict`) and changes, schema `data-product` |
+| `dpf` (`pip install -e .`) | spec & contract validation, gates G0–G4, generate, trace, test, monitor, eval, init |
 | Dataform / dbt | engines the generated projects compile with |
 | Terraform ≥ 1.5 | applies the generated infrastructure module |

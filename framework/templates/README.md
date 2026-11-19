@@ -94,7 +94,7 @@ The business chooses one. Both answer the same rubric (groups A to K in
 `registry/brd-rubric.yaml`) and either one feeds the technical design.
 
 - Record the approved document in the repository with the `author-brd` skill, as
-  `openspec/specs/products/<domain>/<product>/brd/spec.md` and `brd.yaml`. Then run
+  `products/<product>/specs/brd/spec.md` and `brd.yaml`. Then run
   `dpf brd validate <product>` (G0) and take any gaps back to the business.
 - **A PRD is recorded as a BRD.** Keep the number: `PRD-SALES-003` becomes `BRD-SALES-003`,
   and the Purpose line names the source document, for example

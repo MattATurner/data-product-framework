@@ -13,13 +13,12 @@ from dpf.core import Report, Workspace
 # registry overlay, generated output and evidence are never copied.
 TEMPLATE_PATHS = [
     "AGENTS.md", "bootstrap", "products/README.md",
-    "openspec/config.yaml", "openspec/schemas", "openspec/project.md", "openspec/AGENTS.md",
-    "openspec/changes/README.md", "openspec/specs/platform", "framework", ".agents", "registry", "docs/adr",
+    "framework", ".agents", "registry", "docs/adr",
     "docs/user-guide.md", "dpf", "pyproject.toml", ".github/requirements", "Makefile", ".gitignore",
     ".github/workflows/ci.yml", "tests/contracts", "tests/evals/README.md", "tests/golden/README.md",
 ]
 AGENT_SYMLINKS = ("GEMINI.md", "CLAUDE.md", ".cursorrules", ".clinerules")
-EMPTY_DIRS = ["openspec/changes", "products", "tests/golden"]
+EMPTY_DIRS = ["changes", "products", "tests/golden"]
 EXCLUDED = ["examples/", "generated/", "evidence/", "tests/golden/*",
             "docs/fhd/", "docs/presentation/", "docs/index.html", "docs/data-product-framework-plan.md",
             "docs/demo-walkthrough.md"]
@@ -102,9 +101,9 @@ def init(ws: Workspace, target: Path, report: Report) -> int:
         "2. With the business, describe, score and choose the use case, then write a BRD or a PRD\n"
         "   (`framework/templates/define/`, see `framework/templates/README.md`).\n"
         "3. Record the BRD in business language (`framework/skills/author-brd`):\n"
-        "   `openspec/specs/products/<domain>/<product>/brd/spec.md` and `brd.yaml`.\n"
+        "   `products/<product>/specs/brd/spec.md` and `brd.yaml`.\n"
         "4. `dpf brd validate <product>` until G0 passes.\n"
-        "5. `dpf tdd resolve <product>`; write the TDD spec, `playback.md` (`semantics.md`), and `products/<product>/product.yaml`\n"
+        "5. `dpf tdd resolve <product>`; write `products/<product>/specs/tdd/spec.md`, `playback.md`, and `products/<product>/product.yaml`\n"
         "   from `framework/templates/design/`.\n"
         "6. The business owner reads `playback.md`; record it with `dpf signoff <product> --by <name> --role business_owner`.\n"
         "7. `dpf check <product> --gate G2`, then `dpf generate <product>` and `dpf check <product> --gate G3`.\n"

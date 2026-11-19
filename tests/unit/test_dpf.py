@@ -215,17 +215,17 @@ def test_monitor_passes_clean_evidence(sales):
     assert r.failures == 0
 
 
-def test_open_change_writes_an_openspec_change(sales, tmp_path):
+def test_open_change_writes_a_change_brief(sales, tmp_path):
     ev = run_evidence("2026-10-07T03:00:00Z", "2026-10-07T00:30:00Z")
     breaches, _ = evaluate(sales, ev)
     # A stand-in product whose workspace root is the temporary directory.
     stub = SimpleNamespace(id=sales.id, manifest=sales.manifest, brd=sales.brd, ws=SimpleNamespace(root=tmp_path))
     d = open_change(stub, ev, breaches)
-    assert d == tmp_path / "openspec/changes/monitor-sales-performance-freshness-20261007-0300"
-    assert {f.name for f in d.iterdir()} == {".openspec.yaml", "proposal.md", "design.md", "verification.md",
+    assert d == tmp_path / "changes/monitor-sales-performance-freshness-20261007-0300"
+    assert {f.name for f in d.iterdir()} == {"change.yaml", "proposal.md", "design.md", "verification.md",
                                             "operations.md", "tasks.md"}
-    meta = yaml.safe_load((d / ".openspec.yaml").read_text(encoding="utf-8"))
-    assert meta["schema"] == "data-product" and meta["skip_specs"] is True
+    meta = yaml.safe_load((d / "change.yaml").read_text(encoding="utf-8"))
+    assert meta["product_id"] == "sales_performance" and meta["requires_spec_change"] is False
     proposal = (d / "proposal.md").read_text(encoding="utf-8")
     assert "examples/sales_performance/RUNBOOK.md#freshness-or-volume-breach" in proposal
     assert "requirements at risk: R-10" in proposal
@@ -267,8 +267,8 @@ def test_lint_terms_flags_retired_names_in_prose_only(tmp_path):
         "# Dataplex in a code block is fine\n"                                      # 4: code -> fine
         "```\n"
         "Share the views with Analytics Hub.\n", encoding="utf-8")                  # 6: prose -> fail
-    (tmp_path / "openspec").mkdir()
-    (tmp_path / "openspec/project.md").write_text(
+    (tmp_path / "framework").mkdir()
+    (tmp_path / "framework/project.md").write_text(
         "| BigQuery sharing | formerly Analytics Hub |\n"   # naming table may list former names ...
         "| Knowledge Catalog | formerly Dataplex |\n",      # ... except the catalog's
         encoding="utf-8")
@@ -277,9 +277,33 @@ def test_lint_terms_flags_retired_names_in_prose_only(tmp_path):
     (msg,) = r.messages("fail")
     assert "README.md:1 'Dataplex' (say Knowledge Catalog)" in msg
     assert "README.md:6 'Analytics Hub' (say BigQuery sharing)" in msg
-    assert "openspec/project.md:2 'Dataplex'" in msg
-    for clean in ("README.md:2", "README.md:4", "openspec/project.md:1"):
+    assert "framework/project.md:2 'Dataplex'" in msg
+    for clean in ("README.md:2", "README.md:4", "framework/project.md:1"):
         assert clean not in msg
+
+
+def test_validate_specs_enforces_structure_and_conventions(tmp_path):
+    from dpf.validate import validate_specs
+
+    bad_dir = tmp_path / "framework/specs/Bad_Name"
+    bad_dir.mkdir(parents=True)
+    (bad_dir / "spec.md").write_text(
+        "# Broken Spec\n\n"
+        "## Requirements\n\n"
+        "### Requirement: Missing normative [R-1]\n"
+        "Does something without mandatory language.\n\n"
+        "#### Scenario: Missing THEN step\n"
+        "- **WHEN** something happens\n",
+        encoding="utf-8",
+    )
+    r = quiet()
+    validate_specs(Workspace(tmp_path), r)
+    fails = "\n".join(r.messages("fail"))
+    assert "capability directory must be kebab-case" in fails
+    assert "missing or empty `## Purpose`" in fails
+    assert "must not embed an identifier" in fails
+    assert "must contain SHALL or MUST" in fails
+    assert "must include bold **WHEN** and **THEN** steps" in fails
 
 
 # ----------------------------------------------------------------- CLI
@@ -936,12 +960,11 @@ def test_decoupled_looker_product_mode_a_and_upstream_guards(tmp_path):
     root = twin_ws.root
 
     # Author a governed Mode-A decoupled Looker data product over sales_performance (zero sources/layers)
-    brd_dir = root / "openspec/specs/products/sales/exec-looker-cockpit/brd"
-    tdd_dir = root / "openspec/specs/products/sales/exec-looker-cockpit/tdd"
     p_dir = root / "products/exec_looker_cockpit"
+    brd_dir = p_dir / "specs/brd"
+    tdd_dir = p_dir / "specs/tdd"
     brd_dir.mkdir(parents=True)
     tdd_dir.mkdir(parents=True)
-    p_dir.mkdir(parents=True)
 
     (brd_dir / "spec.md").write_text(
         "# Executive Sales Cockpit — Business Requirements\n\n"
@@ -1023,8 +1046,8 @@ def test_decoupled_looker_product_mode_a_and_upstream_guards(tmp_path):
         "classification": "INTERNAL-COMMERCIAL",
         "registry_overlay": "examples/registry",
         "specs": {
-            "brd": "products/sales/exec-looker-cockpit/brd",
-            "tdd": "products/sales/exec-looker-cockpit/tdd",
+            "brd": "specs/brd",
+            "tdd": "specs/tdd",
         },
         "brd_id": "BRD-SALES-010",
         "tdd_id": "TDD-SALES-010",

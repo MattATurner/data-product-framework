@@ -15,7 +15,7 @@ decides: agent_integration
 2. **Tier-3 leaf worker scope (`data-engineering-agent-api`).** Dataform's Data Engineering Agent is registered at Tier 3 (`managed_agent`) with capabilities strictly disjoint from `artefact_generation` and `dataform_workflow_invocation`:
    - drafting or optimising engine-neutral SQL bodies saved back to `products/<id>/sql/*.sql` (`sql_wrangling`);
    - interactive sandbox prototyping imported via `dpf proto import-dataform` into `status: prototype` products;
-   - diagnosing failed Dataform workflow invocations and proposing fixes via OpenSpec changes (`pipeline_troubleshooting`).
+   - diagnosing failed Dataform workflow invocations and proposing fixes via reviewed pull requests and change briefs (`pipeline_troubleshooting`).
 3. **Anti-drift repository and release guardrails.** The Dataform adapter emits a deterministic `dataform/GEMINI.md` agent instruction file naming the product's grain contracts and forbidding direct edits to `definitions/` or silent `WHERE` row drops in staging. Non-prototype Terraform release configurations disable scheduled auto-compilation of `main` (`dataform_release_schedule = ""`) so unreviewed console workspace commits cannot auto-release into production.
 
 ## Consequences

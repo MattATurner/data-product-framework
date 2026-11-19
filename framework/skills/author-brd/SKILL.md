@@ -58,7 +58,7 @@ answers = {k: v.get("/V") for k, v in PdfReader("filled-brd.pdf").get_fields().i
 
 ## Write
 
-- `openspec/specs/products/<domain>/<product>/brd/spec.md`: `## Purpose` with the
+- `products/<product>/specs/brd/spec.md`: `## Purpose` with the
   `**BRD:** ... · **Version:** ...` line, then one `### Requirement:` per behaviour with an
   `**ID:** R-n` line, a SHALL statement and at least one `#### Scenario:` with an
   `**ID:** AX-n` line and GIVEN/WHEN/THEN bullets.

@@ -7,11 +7,11 @@
 > the `direct` pack is the default methodology (Kimball is opted into per layer with an ADR);
 > the worked example (§12) is BRD-SALES-002 v1.2.0 and uses an outbound watermark extractor
 > (ADR-015, ADR-SALES-002-02) on an hourly cadence rather than Datastream CDC every 15 minutes;
-> the contract registry has 22 contracts, not 8; G2 (compose and acceptance mapping) sits
-> between G1 and G3; and the monitor stage (`dpf monitor`) closes the loop by opening an
-> OpenSpec change on a breach. Sections 13, 13.1, 13.2 and 14 are updated to the as-built state.
+> the contract registry has 24 contracts, not 8; G2 (compose and acceptance mapping) sits
+> between G1 and G3; and the monitor stage (`dpf monitor`) closes the loop by opening a
+> structured change brief under `changes/` on a breach. Sections 13, 13.1, 13.2 and 14 are updated to the as-built state.
 
-**The Data Product Framework (DPF)** — an OpenSpec-anchored, skill-composable framework for specifying, designing, building and governing data products on Google Cloud.
+**The Data Product Framework (DPF)** — a specification-anchored, skill-composable framework for specifying, designing, building and governing data products on Google Cloud.
 
 **Author:** Matt Turner (Data Analytics)
 **Date:** 2026-09-09 · **Version:** 0.4
@@ -24,7 +24,7 @@
 
 ## 1. What we are building, in one paragraph
 
-A repository where a data product is described first as a **business requirement** (what and why, including grain, history and service levels), promoted only when that requirement is provably complete, then resolved into a **technical design** (how) that selects and wires composable skills from across the Extract/Load/Transform lifecycle, and finally **built** into real Google Cloud artefacts — Dataform SQLX, Terraform, Datastream config, Composer DAGs, Knowledge Catalog registrations. Behaviour lives in OpenSpec. Composability is enforced by typed contracts between skills. Nothing gets built that cannot be traced back to a business requirement, and no business requirement can be signed off with the questions that matter still open.
+A repository where a data product is described first as a **business requirement** (what and why, including grain, history and service levels), promoted only when that requirement is provably complete, then resolved into a **technical design** (how) that selects and wires composable skills from across the Extract/Load/Transform lifecycle, and finally **built** into real Google Cloud artefacts — Dataform SQLX, Terraform, Datastream config, Composer DAGs, Knowledge Catalog registrations. Behaviour lives in structured Markdown specifications validated natively by `dpf`. Composability is enforced by typed contracts between skills. Nothing gets built that cannot be traced back to a business requirement, and no business requirement can be signed off with the questions that matter still open.
 
 **The example you gave, expressed in the framework:**
 
@@ -62,26 +62,26 @@ extract-rdbms-cdc → load-gcs-raw-zone → load-bq-raw-table
 
 ## 3. The lifecycle: BRD → TDD → Build
 
-### 3.1 Mapping onto OpenSpec's native artefacts
+### 3.1 Mapping onto native DPF specification artefacts
 
-Each data product carries **two specs** — a BRD spec and a TDD spec — plus the generated build. Both specs are source of truth in their own right and both evolve through delta change proposals.
+Each data product carries **two specs** — a BRD spec and a TDD spec — co-located right beside `product.yaml`, plus the generated build. Both specs are source of truth in their own right and both evolve through reviewed Git pull requests.
 
-| Layer | Question | OpenSpec artefact | Owner | Language |
+| Layer | Question | Specification artefact | Owner | Language |
 |---|---|---|---|---|
-| **BRD spec** | Why are we building this, and what does the business need? | `openspec/specs/products/<domain>/<product>/brd/spec.md` + `brd.yaml` | Business SME / analyst, facilitated by a data engineer | Business only. Outputs, level of detail, history behaviour, timeliness, exceptions, sensitivity. **No grain, no SCD, no BigQuery.** |
-| **TDD spec** | How will we satisfy it, and on which services? | `openspec/specs/products/<domain>/<product>/tdd/spec.md` + `products/<id>/product.yaml` | Data engineer, agent-assisted | Technical. Methodology, grain, SCD, keys, conformance, services, cost. Declares `satisfies: BRD-…@<version>`. |
-| **Semantics** | What will the business actually receive? | `…/<product>/semantics.md` | Derived from the TDD, **signed by the business** | BRD language, TDD content. The one document both parties read (§5.3). |
-| **Build** | Do it, and prove it. | `openspec/changes/<id>/tasks.md` + `generated/<id>/**` | Agent, reviewed by engineer | Artefacts only. Regenerable from BRD + TDD. |
+| **BRD spec** | Why are we building this, and what does the business need? | `products/<id>/specs/brd/spec.md` + `brd.yaml` | Business SME / analyst, facilitated by a data engineer | Business only. Outputs, level of detail, history behaviour, timeliness, exceptions, sensitivity. **No grain, no SCD, no BigQuery.** |
+| **TDD spec** | How will we satisfy it, and on which services? | `products/<id>/specs/tdd/spec.md` + `products/<id>/product.yaml` | Data engineer, agent-assisted | Technical. Methodology, grain, SCD, keys, conformance, services, cost. Declares `satisfies: BRD-…@<version>`. |
+| **Semantics** | What will the business actually receive? | `products/<id>/specs/tdd/playback.md` (`semantics.md`) | Derived from the TDD, **signed by the business** | BRD language, TDD content. The one document both parties read (§5.3). |
+| **Build** | Do it, and prove it. | `changes/<id>/tasks.md` + `generated/<id>/**` | Agent, reviewed by engineer | Artefacts only. Regenerable from BRD + TDD. |
 
-A change proposal may carry deltas against the BRD spec, the TDD spec, or both. On archive the deltas merge into their respective specs and the generated artefacts become deployed state.
+A pull request may update the BRD spec, the TDD spec, or both, while `dpf validate` and `dpf check --gate G3` enforce structure, traceability and golden-copy parity before merge.
 
 ### 3.2 Three kinds of spec
 
 | Spec family | Location | Written | Example requirement |
 |---|---|---|---|
-| **Platform capability** | `openspec/specs/platform/<capability>/spec.md` | Once, reused by every product | `model-integration-layer` SHALL enforce a declared grain and history semantics; the active methodology pack supplies the legal model roles |
-| **Product BRD** | `…/products/<domain>/<product>/brd/spec.md` | Per product, by the business | Users SHALL be able to drill from segment totals to an individual line on a customer order |
-| **Product TDD** | `…/products/<domain>/<product>/tdd/spec.md` | Per product, by engineering | The fact SHALL be modelled at grain `(order_id, order_line_no)` using a Kimball transaction fact, satisfying BRD R-3 |
+| **Platform capability** | `framework/specs/<capability>/spec.md` | Once, reused by every product | `model-integration-layer` SHALL enforce a declared grain and history semantics; the active methodology pack supplies the legal model roles |
+| **Product BRD** | `products/<id>/specs/brd/spec.md` | Per product, by the business | Users SHALL be able to drill from segment totals to an individual line on a customer order |
+| **Product TDD** | `products/<id>/specs/tdd/spec.md` | Per product, by engineering | The fact SHALL be modelled at grain `(order_id, order_line_no)` using a Kimball transaction fact, satisfying BRD R-3 |
 
 Platform capabilities define what the *framework* can do. The BRD declares what *the business* needs. The TDD is the join: it selects the methodology and the platform capabilities — and therefore the skills — that satisfy the BRD.
 
@@ -252,7 +252,7 @@ Each data product has **two living specs**, not one spec plus a design note. Bot
 
 | | **BRD spec** | **TDD spec** |
 |---|---|---|
-| Path | `openspec/specs/products/<domain>/<product>/brd/spec.md` | `openspec/specs/products/<domain>/<product>/tdd/spec.md` |
+| Path | `products/<id>/specs/brd/spec.md` | `products/<id>/specs/tdd/spec.md` |
 | Question | What and why | How |
 | Author | Business SME / analyst, facilitated | Data engineer, agent-assisted |
 | Language | Business only — no modelling vocabulary | Technical — methodology, grain, SCD, keys, services |
@@ -615,9 +615,9 @@ flowchart TB
   end
 
   subgraph PLAT["Platform plane — reusable framework"]
-    P1["openspec/specs/platform/&lt;capability&gt;/spec.md"]
-    P2["contracts/*.schema.json — the 8 contracts"]
-    P3["skills/&lt;skill-id&gt;/SKILL.md + scripts + templates"]
+    P1["framework/specs/&lt;capability&gt;/spec.md"]
+    P2["framework/contracts/*.schema.json — 24 contracts"]
+    P3["framework/skills/&lt;skill-id&gt;/SKILL.md + scripts + templates"]
   end
 
   subgraph ART["Artefact plane — generated, disposable"]
@@ -639,7 +639,7 @@ flowchart TB
   S1 -.confirmed statements generate.-> D1
 ```
 
-**Contract registry.** Eight JSON Schemas — the piece OpenSpec does not give you and the piece that makes skills genuinely composable rather than a pile of prompts. Every skill validates its input against the consumed schema and emits the produced schema; `compose-pipeline` refuses to wire a hop whose contracts do not match.
+**Contract registry.** Typed JSON Schemas — the piece that makes skills genuinely composable rather than a pile of prompts. Every skill validates its input against the consumed schema and emits the produced schema; `compose-pipeline` refuses to wire a hop whose contracts do not match.
 
 **Artefact plane.** Fully regenerable. Deleting `generated/` and re-running from BRD + TDD must reproduce it byte-for-byte — that is a Phase 1 acceptance test, and it is what keeps the specs authoritative rather than decorative.
 
@@ -656,7 +656,7 @@ Capabilities are named for behaviour, not tooling, so swapping Datastream for a 
 | Meta | `methodology-pack` | What a pack MUST provide: rubric extension, design process, roles, skills, rules, templates, critiques |
 | Meta | `select-methodology` | Per-layer selection, domain defaults, deviation and ADR rules |
 | Meta | `compose-pipeline` | Contract compatibility rules; manifest → skill DAG resolution |
-| Meta | `openspec-conventions` | House rules for writing these specs |
+| Meta | `spec-conventions` | House rules for writing these specs |
 | Extract | `extract-incremental-capture` | Watermarks, CDC ops, exactly-once, replay, backfill, schema-drift response |
 | Extract | `extract-full-snapshot` | Snapshot consistency, cut-over to incremental |
 | Extract | `extract-connection-security` | Secrets, private connectivity, least privilege, egress boundaries |
@@ -879,28 +879,24 @@ It exercises every layer (BRD, TDD, contracts, skills, artefacts), every lifecyc
 
 ```
 data-product-framework/
-├── openspec/
-│   ├── config.yaml                         # schema: data-product; context and per-artefact rules
-│   ├── schemas/data-product/               # custom change schema + templates
-│   ├── project.md · AGENTS.md              # platform context; how agents work here
-│   ├── specs/
-│   │   ├── platform/<capability>/spec.md   # behaviour every product inherits (§9)
-│   │   └── products/<domain>/<product>/    # kebab-case, two specs per product
-│   │       ├── brd/spec.md · brd.yaml      # requirements + scenarios; rubric answers
-│   │       └── tdd/spec.md · semantics.md · signoff.yaml
-│   └── changes/<change-id>/                # proposal, specs/, design, verification, operations, tasks
-├── contracts/*.schema.json                 # 22 contracts, versioned
-├── dpf/                                    # the CLI: gates, compose, generate/, trace, testing, monitor, lint, evals
-├── methodologies/<pack>/                   # methodology.yaml · rules/ · skills/ (direct, kimball)
-├── engines/<engine>/                       # adapter.yaml + ADAPTER.md (dataform, dbt implemented)
-├── skills/<skill-id>/SKILL.md              # Agent Skills front-matter + metadata.dpf
+├── AGENTS.md                               # canonical agent rules (symlinked by GEMINI.md, CLAUDE.md, ...)
+├── framework/
+│   ├── project.md                          # platform context, Google Cloud naming policy & non-negotiables
+│   ├── specs/<capability>/spec.md          # 17 platform capability specifications (§9)
+│   ├── contracts/*.schema.json             # 24 contracts, versioned
+│   ├── methodologies/<pack>/               # methodology.yaml · rules/ · skills/ (direct, kimball)
+│   ├── engines/<engine>/                   # adapter.yaml + ADAPTER.md (dataform, dbt implemented)
+│   ├── skills/<skill-id>/SKILL.md          # Agent Skills front-matter + metadata.dpf
+│   └── templates/                          # Define-stage PDFs & Design-stage scaffolds
+├── dpf/                                    # the CLI: spec validation, gates, compose, generate/, trace, testing, monitor, lint, evals
+├── bootstrap/                              # Layer-0 GCP project bootstrap, hydration & onboarding
 ├── registry/                               # platform defaults, MCP servers, BRD rubric + vocabulary; no example data
-├── adr/                                    # ADR-001 … ADR-015
-├── products/<product_id>/                  # product.yaml · sql/ · acceptance.yaml · adr/
+├── products/<product_id>/                  # product.yaml · specs/{brd,tdd}/ · sql/ · acceptance.yaml · adr/
+├── changes/<change-id>/                    # structured breach/change briefs (opened on demand by dpf monitor --open-change)
 ├── generated/<product_id>/                 # disposable build output (gitignored)
 ├── evidence/<product_id>/                  # test-evidence.v1 per run, bound to a build digest
-├── examples/                               # registry overlay; extractor, seed, Terraform wrapper, runbook
-├── docs/                                   # user guide, presentation, this plan, method diagram
+├── examples/                               # self-contained worked examples, registry overlay, extractor, seed, Terraform wrapper, runbook
+├── docs/                                   # user guide, adr/ (ADR-001 … ADR-019), fhd/, presentation, this plan, method diagram
 └── tests/                                  # unit/ · contracts/ · golden/ · evals/
 ```
 
@@ -911,8 +907,8 @@ mechanical, not a matter of discipline:
 
 | | Paths | Notes |
 |---|---|---|
-| **Template** | `openspec/` (config, schema, platform specs), `contracts/`, `methodologies/`, `engines/`, `skills/`, `registry/`, `adr/`, `dpf/`, `tests/contracts/` | Copied by `dpf init` |
-| **Example** | `openspec/specs/products/`, `products/`, `examples/`, `tests/golden/*`, `evidence/` | Never copied |
+| **Template** | `AGENTS.md`, `bootstrap/`, `framework/` (`contracts/`, `specs/`, `project.md`, `methodologies/`, `engines/`, `skills/`, `templates/`), `.agents/`, `registry/`, `docs/adr/`, `dpf/`, `tests/contracts/` | Copied by `dpf init` |
+| **Example** | `examples/`, `tests/golden/*`, `generated/`, `evidence/` | Never copied |
 
 The examples read their registry content through `registry_overlay: examples/registry` in
 the manifest, so running them never changes `registry/`.
@@ -974,7 +970,7 @@ Five gates, cheapest first. G0 and G1 are the new ones and they are the reason t
 | **G3 Artefact** | `dpf validate` + `dpf lint`; generate twice and compare (determinism); golden-copy diff; trace: every requirement reaches a decision, an artefact and a test | Merge |
 | **G4 Acceptance** | static checks plus passing evidence (automated runs and attestations) for the **current** build digest | `published` status |
 
-Spec hygiene (`openspec validate --all --strict`) runs in CI beside the gates. Compiling
+Spec hygiene (`dpf validate`, checking `## Purpose`, `SHALL`/`MUST`, `WHEN`/`THEN` scenarios and metadata-only IDs across all platform and product specs) runs natively inside G3 and in CI. Compiling
 the generated artefacts with the real tools (`terraform validate`, Dataform `compile`,
 `dbt parse`) runs in CI's artefacts job. `bq query --dry_run`, `terraform plan` and a
 sandbox deploy need credentials, so they are not part of a gate.
@@ -1004,13 +1000,13 @@ Effort is indicative for one engineer plus agent assistance; the breadth phases 
 
 | # | Task | Owner | Depends on | Output |
 |---|---|---|---|---|
-| 0.1 | Create repo, `openspec init`, write `project.md` + `AGENTS.md` house rules | Matt | — | `data-product-framework/` skeleton |
-| 0.2 | Platform capability specs: `openspec-conventions`, `compose-pipeline` | Matt | 0.1 | 2 spec files |
+| 0.1 | Create repo, scaffold `framework/specs/`, write `framework/project.md` + `AGENTS.md` house rules | Matt | — | `data-product-framework/` skeleton |
+| 0.2 | Platform capability specs: `spec-conventions`, `compose-pipeline` | Matt | 0.1 | 2 spec files |
 | 0.3 | Draft the 8 contract schemas at v1 (accept they will churn) | Team | 0.2 | `contracts/` |
 | 0.4 | ADRs 001–004 (transform engine, raw store, orchestrator, CDC apply) | Matt | — | 4 ADRs |
 | 0.5 | Sandbox GCP project; Datastream-ready Oracle fixture (XE + sample schema) | Team | — | Reproducible fixture |
 
-**Exit:** `openspec validate` green on a valid empty repo; contracts published; engine decisions recorded.
+**Exit:** `dpf validate` green on a valid empty repo; contracts published; engine decisions recorded.
 
 ### Phase 1 — The lifecycle spine (≈2 weeks) — *new in v0.2, and the highest-leverage phase*
 
@@ -1138,7 +1134,7 @@ Effort is indicative for one engineer plus agent assistance; the breadth phases 
 2. **Confirm the gate model (§3.3)** — in particular that G1 requires business sign-off on `semantics.md`. That signature is what replaces putting grain in the BRD, and it is the one piece of business ceremony the framework insists on.
 3. **Confirm ADR recommendations 001–004 and 008–010** — especially 008 (business owner accountable for the BRD) and 009 (provisional promotion), since those are organisational commitments rather than technical ones.
 4. **Confirm the methodology plane (§6)** — specifically the per-layer split (silver integration vs gold consumption), `direct` as the platform default with Kimball opted into per layer, and the initial pack roadmap. If Data Vault is a near-term requirement for a specific agency, say so now and I will pull it forward, because it is the pack that most stresses the interface.
-5. On your go-ahead I will scaffold **Phase 0 + Phase 1** for real: repo, `openspec init`, `project.md`, the meta capability specs, the eight contract schemas, the `brd.yaml` rubric schema, the `validate-brd` skill and the gap-register generator — then we review before any pipeline skill gets written.
+5. On your go-ahead I will scaffold **Phase 0 + Phase 1** for real: repo, `framework/project.md`, `AGENTS.md`, the meta capability specs (`framework/specs/`), the eight contract schemas, the `brd.yaml` rubric schema, the `validate-brd` skill and the gap-register generator — then we review before any pipeline skill gets written.
 
 I would sequence it that way deliberately: the lifecycle spine is worth more than the first pipeline, and it is what makes the framework yours rather than another ELT accelerator.
 

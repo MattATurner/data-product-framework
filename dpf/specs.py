@@ -1,8 +1,8 @@
-"""OpenSpec markdown parser.
+"""DPF specification markdown parser.
 
-Understands the OpenSpec spec format (`## Purpose`, `## Requirements`, `### Requirement:`,
+Understands the DPF spec format (`## Purpose`, `## Requirements`, `### Requirement:`,
 `#### Scenario:` with `- **WHEN**` / `- **THEN**` bullets) plus DPF metadata lines, which keep
-identifiers out of headings so OpenSpec delta matching on requirement names stays stable:
+identifiers out of headings so requirement titles stay clean and stable across diffs:
 
     ### Requirement: Order line grain
     **Decision:** D-3 · **Satisfies:** R-2, R-3 · **Model:** fct_order_line · **Grain:** order_id, order_line_no

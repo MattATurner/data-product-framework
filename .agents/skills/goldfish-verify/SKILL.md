@@ -7,8 +7,8 @@ description: >-
   business sign-off (`dpf signoff`), after `dpf brd validate` on a co-drafted BRD, or before
   accepting `--update-golden` when custom SQL or acceptance cases changed.
 metadata:
-  # Workspace-only for now. Before moving this skill into skills/, add the platform capability
-  # spec openspec/specs/platform/semantic-verification: dpf validate requires it.
+  # Workspace-only for now. Before moving this skill into framework/skills/, add the platform capability
+  # spec framework/specs/semantic-verification: dpf validate requires it.
   dpf:
     skill_id: goldfish-verify
     stage: design
@@ -43,7 +43,7 @@ artefacts under test and **none** of the conversation that produced them.
    stateless verification was skipped.
 2. **Enforce strict reading lists.** Pass only the file paths listed for the chosen gate.
    Instruct the Goldfish explicitly which directories it **must not** read.
-3. **Never write into `openspec/specs/` or `tests/golden/`.** Write Goldfish reports only under
+3. **Never write into `products/<product>/specs/`, `examples/<product>/specs/` or `tests/golden/`.** Write Goldfish reports only under
    `generated/<product>/` (gitignored).
 4. **Sceptical, plain-English posture.** Instruct every Goldfish to lead with defects and
    unstated assumptions, avoid praise or filler, and write findings in plain English.
@@ -56,7 +56,7 @@ Run after `dpf brd validate <product>` passes mechanically, when the BRD was co-
 edited in a multi-turn session.
 
 - **Goldfish may read:**
-  - `openspec/specs/products/<domain>/<product>/brd/spec.md` and `brd.yaml` (or
+  - `products/<product>/specs/brd/spec.md` and `brd.yaml` (or
     `examples/<product>/specs/brd/spec.md` and `brd.yaml` for worked examples)
   - `registry/brd-rubric.yaml`, `registry/brd-vocabulary.yaml` and `registry/glossary.yaml`
     (plus any `registry_overlay` glossary such as `examples/registry/glossary.yaml`)
@@ -86,7 +86,7 @@ running `dpf signoff`.
     - `products/<product>/lookml/*.lookml` (or `examples/<product>/lookml/*.lookml`, if any)
     - `registry/platform-defaults.yaml`, `registry/foundations.yaml` and `registry/glossary.yaml`
       (plus `registry_overlay`)
-  - **Goldfish must NOT read:** `openspec/specs/` or `examples/<product>/specs/` (`brd/` and
+  - **Goldfish must NOT read:** `products/<product>/specs/` or `examples/<product>/specs/` (`brd/` and
     `tdd/`, including `playback.md` / `semantics.md`), `acceptance.yaml`, or chat history.
   - **Prompt task:** Restate in plain business English (zero SQL, cloud or modelling jargon)
     what this data product actually delivers: one row per what, how historical changes and
@@ -115,7 +115,7 @@ changed.
   - `products/<product>/product.yaml` and `acceptance.yaml` (or `examples/<product>/...`)
   - `products/<product>/sql/*.sql` (or `examples/<product>/sql/*.sql`)
   - `generated/<product>/` (`dataform/` or `dbt/`, `terraform/`, `semantic_layer/`, `test-spec.json`)
-- **Goldfish must NOT read:** `openspec/specs/products/*/brd/`, `examples/*/specs/brd/`,
+- **Goldfish must NOT read:** `products/*/specs/brd/`, `examples/*/specs/brd/`,
   `tests/golden/`, or chat history.
 - **Goldfish checks (offline blind spots `compile`, `parse` and `validate` miss):**
   1. **Dialect & execution traps:** `SELECT` alias collisions inside `GROUP BY` / `HAVING` /

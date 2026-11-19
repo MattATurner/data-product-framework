@@ -1,6 +1,9 @@
 """Framework self-validation (`dpf validate`): the toolkit's own parts fit together.
 
 * contracts are valid JSON Schema 2020-12 documents with an `$id`, and every `$ref` resolves;
+* specifications (platform capability specs under `framework/specs/` and product BRD/TDD
+  specs) follow DPF spec conventions (`## Purpose`, `## Requirements`, `SHALL`/`MUST`,
+  `#### Scenario:` with `WHEN`/`THEN`, metadata-only identifiers, kebab-case capability dirs);
 * every SKILL.md front-matter conforms to skill.v1, follows the Agent Skills format (the
   `name` equals the skill's directory) and implements a platform capability spec that exists;
 * methodology packs conform to methodology-pack.v1; every role names an existing skill and
@@ -14,8 +17,14 @@
 from __future__ import annotations
 
 import json
+import re
+from pathlib import Path
 
 from dpf.core import Report, Workspace, front_matter, load_yaml
+from dpf.specs import parse_spec
+
+KEBAB_DIR = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+HEADING_ID = re.compile(r"\[(?:R|D|AX|AT|BQ|HB|OUT)-\d+\]|\b(?:R|D|AX|AT)-\d+\b")
 
 
 def _strip(d: dict) -> dict:
@@ -59,6 +68,78 @@ def validate_contracts(ws: Workspace, report: Report) -> None:
                 bad += 1
     if not bad:
         report.ok(f"{len(ws.contracts)} contracts are valid JSON Schema 2020-12 and every $ref resolves")
+
+
+def _check_spec_file(path: Path, rel: str, report: Report) -> int:
+    bad = 0
+    spec = parse_spec(path.read_text(encoding="utf-8"), path)
+    if not spec.has_purpose or not spec.purpose.strip():
+        report.fail(f"{rel}: missing or empty `## Purpose` section")
+        bad += 1
+    if not spec.has_requirements:
+        report.fail(f"{rel}: missing `## Requirements` section")
+        bad += 1
+    if not spec.requirements:
+        report.fail(f"{rel}: must contain at least one `### Requirement:`")
+        bad += 1
+    for req in spec.requirements:
+        if HEADING_ID.search(req.name):
+            report.fail(f"{rel}:{req.line_no}: requirement heading '{req.name}' must not embed an identifier (use a metadata line)")
+            bad += 1
+        if not req.normative:
+            report.fail(f"{rel}:{req.line_no}: requirement '{req.name}' must contain SHALL or MUST")
+            bad += 1
+        if not req.scenarios:
+            report.fail(f"{rel}:{req.line_no}: requirement '{req.name}' has no `#### Scenario:`")
+            bad += 1
+        for sc in req.scenarios:
+            if HEADING_ID.search(sc.name):
+                report.fail(f"{rel}:{sc.line_no}: scenario heading '{sc.name}' must not embed an identifier (use a metadata line)")
+                bad += 1
+            kw = sc.keywords
+            if "WHEN" not in kw or "THEN" not in kw:
+                report.fail(f"{rel}:{sc.line_no}: scenario '{sc.name}' must include bold **WHEN** and **THEN** steps")
+                bad += 1
+    return bad
+
+
+def validate_specs(ws: Workspace, report: Report) -> None:
+    report.head("validate · specifications", gate="validate")
+    bad = 0
+    checked = 0
+    spec_root = ws.root / "framework/specs"
+    if spec_root.is_dir():
+        for d in sorted(spec_root.iterdir()):
+            if not d.is_dir():
+                continue
+            if not KEBAB_DIR.match(d.name):
+                report.fail(f"framework/specs/{d.name}: capability directory must be kebab-case")
+                bad += 1
+            sp = d / "spec.md"
+            if not sp.is_file():
+                report.fail(f"framework/specs/{d.name}: missing spec.md")
+                bad += 1
+                continue
+            checked += 1
+            bad += _check_spec_file(sp, sp.relative_to(ws.root).as_posix(), report)
+    else:
+        report.fail("framework/specs directory is missing")
+        bad += 1
+    for pid in ws.product_ids():
+        p = ws.product(pid)
+        if p.is_prototype:
+            continue
+        for sdir in (p.brd_dir, p.tdd_dir):
+            sp = sdir / "spec.md"
+            if sp.is_file():
+                checked += 1
+                try:
+                    rel = sp.relative_to(ws.root).as_posix()
+                except ValueError:
+                    rel = str(sp)
+                bad += _check_spec_file(sp, rel, report)
+    if not bad:
+        report.ok(f"{checked} specifications conform to DPF spec conventions (Purpose, SHALL/MUST, WHEN/THEN scenarios)")
 
 
 def validate_skills(ws: Workspace, report: Report) -> None:
@@ -164,8 +245,11 @@ def validate_products(ws: Workspace, report: Report) -> None:
             berr = ws.validate(p.brd, "brd.v1")
             report.check(not berr, f"{pid}: brd.yaml conforms to brd.v1", f"{pid}: brd.yaml: {'; '.join(berr[:3])}")
         elif not p.is_prototype:
-            brd_rel = (p.manifest.get("specs") or {}).get("brd", "<missing specs.brd>")
-            report.fail(f"{pid}: BRD directory openspec/specs/{brd_rel} is missing")
+            try:
+                brd_disp = p.brd_dir.relative_to(ws.root).as_posix()
+            except ValueError:
+                brd_disp = str(p.brd_dir)
+            report.fail(f"{pid}: BRD directory {brd_disp} is missing")
         if p.acceptance is not None:
             aerr = ws.validate(p.acceptance, "acceptance.v1")
             report.check(not aerr, f"{pid}: acceptance.yaml conforms to acceptance.v1",
@@ -178,6 +262,7 @@ def validate_products(ws: Workspace, report: Report) -> None:
 
 def validate(ws: Workspace, report: Report) -> int:
     validate_contracts(ws, report)
+    validate_specs(ws, report)
     validate_skills(ws, report)
     validate_packs(ws, report)
     validate_adrs(ws, report)

@@ -304,11 +304,10 @@ def cmd_proto(ws, args, report):
             return
         man = load_yaml(mpath)
         import re as _re
-        slug = pid.replace("_", "-")
         id_token = _re.sub(r"[^A-Z0-9]", "", pid.upper()) or "PRODUCT"
         domain = man.get("domain", "commerce")
-        brd_rel = f"products/{domain}/{slug}/brd"
-        tdd_rel = f"products/{domain}/{slug}/tdd"
+        brd_rel = "specs/brd"
+        tdd_rel = "specs/tdd"
         man["status"] = "draft"
         man.setdefault("classification", "INTERNAL")
         man.setdefault("steward", "data-analytics")
@@ -329,8 +328,8 @@ def cmd_proto(ws, args, report):
         man.setdefault("observability", obs_default)
         man.setdefault("governance", {"register": "knowledge_catalog", "registered_via": "knowledge-catalog-mcp"})
         write_text(mpath, yaml.safe_dump(man, sort_keys=False))
-        brd_dir = ws.root / "openspec/specs" / brd_rel
-        tdd_dir = ws.root / "openspec/specs" / tdd_rel
+        brd_dir = pdir / brd_rel
+        tdd_dir = pdir / tdd_rel
         if not (brd_dir / "spec.md").exists():
             write_text(brd_dir / "spec.md", f"# {pid} — Business Requirements\n\n## Purpose\n\n**BRD:** {man['brd_id']} · **Version:** 1.0.0\n\n## Requirements\n\n### Requirement: Core output\n**ID:** R-1\n\nThe product SHALL provide {pid} records for business reporting.\n\n#### Scenario: Records are available\n**ID:** AX-1\n- **WHEN** the dataset is refreshed\n- **THEN** each record SHALL appear once\n")
         if not (brd_dir / "brd.yaml").exists():
@@ -536,7 +535,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("monitor", parents=[common], help="evaluate run evidence against the observability policy")
     product_args(sp, all_ok=False)
     sp.add_argument("--evidence", help="run-evidence.v1 JSON file (default: observe the deployed product)")
-    sp.add_argument("--open-change", action="store_true", help="on a breach, open an OpenSpec change under openspec/changes/")
+    sp.add_argument("--open-change", action="store_true", help="on a breach, open a change brief under changes/")
     sp.set_defaults(fn=cmd_monitor)
 
     sp = sub.add_parser("check", parents=[common], help="run every gate up to --gate (cumulative)")

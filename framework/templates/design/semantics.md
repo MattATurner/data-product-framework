@@ -7,7 +7,7 @@ playback.md (formerly semantics.md) template · Design stage · Data Product Fra
 
 This page tells the business owner what the design will deliver, in their own words. They
 sign it before anything is built. Save it as
-openspec/specs/products/{domain}/{product}/tdd/playback.md (or semantics.md), beside the TDD. The worked
+products/{product_id}/specs/tdd/playback.md (or semantics.md), beside the TDD. The worked
 example is examples/sales_performance/specs/tdd/semantics.md.
 
 - Write for the business owner. Use the words of the BRD.

@@ -5,8 +5,8 @@ start from business requirements and end with a tested, monitored product on Goo
 One worked example, `sales_performance`, goes through every stage with real command output.
 
 > [!NOTE]
-> **Template or example?** This guide links to the worked examples in `products/`,
-> `examples/`, `openspec/specs/products/` and `tests/golden/`. They exist only in the
+> **Template or example?** This guide links to the worked examples in `examples/`
+> and `tests/golden/`. They exist only in the
 > framework repository. `dpf init` copies this guide into a new workspace but not the
 > examples, so those links do not work there. Read the examples in the framework repository.
 
@@ -28,7 +28,7 @@ One worked example, `sales_performance`, goes through every stage with real comm
 7. [Understand what the generators produce](#7-understand-what-the-generators-produce)
 8. [Test the build and record evidence](#8-test-the-build-and-record-evidence)
 9. [Monitor and operate the product](#9-monitor-and-operate-the-product)
-10. [Change a product with OpenSpec](#10-change-a-product-with-openspec)
+10. [Change a product safely](#10-change-a-product-safely)
 11. [Keep the framework itself correct](#11-keep-the-framework-itself-correct)
 12. [Extend the framework](#12-extend-the-framework)
 13. [CLI reference](#13-cli-reference)
@@ -52,8 +52,8 @@ flowchart LR
   CMP -->|G2| GEN["generate: engine project, Terraform, tests"]
   GEN -->|G3| EVD["deploy and record evidence"]
   EVD -->|G4| MON["monitor the observability policy"]
-  MON -->|breach| CHG["OpenSpec change"]
-  CHG -.->|"spec delta, if needed"| BRD
+  MON -->|breach| CHG["Change brief (changes/)"]
+  CHG -.->|"spec update, if needed"| BRD
 ```
 
 | Gate | Stage | Passes when | Command |
@@ -63,7 +63,7 @@ flowchart LR
 | **G2 · Compose** | Build *(Compose)* | Each pipeline stage selects exactly one skill and an implemented engine adapter. Every business scenario (AX) has an acceptance test (AT) | `dpf check <product> --gate G2` (or `--gate compose`) |
 | **G3 · Build** | Build *(Generate)* | Generation is deterministic and matches the reviewed golden copy. Every requirement reaches a decision, a generated file and a test | `dpf check <product> --gate G3` (or `--gate build`) |
 | **G4 · Accept** | Accept *(Test)* | Every test case and human attestation has passing evidence for the current build digest | `dpf check <product> --gate G4` (or `--gate accept`) |
-| **Monitor** | Monitor | The deployed product meets its observability policy. A breach can open an OpenSpec change | `dpf monitor <product>` |
+| **Monitor** | Monitor | The deployed product meets its observability policy. A breach can open a structured change brief under `changes/` | `dpf monitor <product>` |
 
 Gates are cumulative: `--gate G3` (or `--gate build`) runs G0 to G3, and `--gate` accepts either the gate code (`G0`–`G4`) or the stage name (`describe`/`define`, `design`, `compose`, `build`, `accept`/`test`). At G3 and G4, `dpf check` also runs `dpf validate` and `dpf lint` first.
 
@@ -71,11 +71,11 @@ Gates are cumulative: `--gate G3` (or `--gate build`) runs G0 to G3, and `--gate
 
 | Role | Writes or runs | Main files |
 |---|---|---|
-| Business owner or analyst | The BRD in business language. Reads and signs `semantics.md` | `brd/spec.md`, `brd/brd.yaml`, `tdd/semantics.md` |
-| Data engineer or architect | The TDD, the manifest, SQL bodies and the acceptance mapping. Runs the gates | `tdd/spec.md`, `product.yaml`, `sql/*.sql`, `acceptance.yaml` |
-| Platform team | Methodology packs, engine adapters, skills, contracts and the registry | `methodologies/`, `engines/`, `skills/`, `contracts/`, `registry/` |
+| Business owner or analyst | The BRD in business language. Reads and signs `playback.md` (`semantics.md`) | `specs/brd/spec.md`, `specs/brd/brd.yaml`, `specs/tdd/playback.md` |
+| Data engineer or architect | The TDD, the manifest, SQL bodies and the acceptance mapping. Runs the gates | `specs/tdd/spec.md`, `product.yaml`, `sql/*.sql`, `acceptance.yaml` |
+| Platform team | Methodology packs, engine adapters, skills, contracts and the registry | `framework/methodologies/`, `framework/engines/`, `framework/skills/`, `framework/contracts/`, `registry/` |
 | Operator | Deploys, records evidence, responds to alerts | the product runbook, `evidence/`, `dpf monitor` |
-| Coding agent | Follows the same rules as people | [`openspec/AGENTS.md`](../openspec/AGENTS.md) |
+| Coding agent | Follows the same rules as people | [`AGENTS.md`](../AGENTS.md) |
 
 ### What DPF does not do
 
@@ -96,7 +96,7 @@ Gates are cumulative: `--gate G3` (or `--gate build`) runs G0 to G3, and `--gate
 | Term | Meaning | Where |
 |---|---|---|
 | Data product | The unit of work: one BRD, one TDD, one manifest, one set of generated files | `products/<id>/` |
-| BRD | Business requirements document. Requirements (`R-n`) and acceptance scenarios (`AX-n`) in business language, plus structured rubric answers | `openspec/specs/products/<domain>/<product>/brd/` |
+| BRD | Business requirements document. Requirements (`R-n`) and acceptance scenarios (`AX-n`) in business language, plus structured rubric answers | `products/<id>/specs/brd/` |
 | Rubric | The questions every BRD must answer, in groups A to K | `registry/brd-rubric.yaml` |
 | TDD | Technical design document. Decisions (`D-n`), each citing the requirements it satisfies | `.../tdd/spec.md` |
 | `semantics.md` | The design told back in business language: what the figures mean, how history behaves, timing | `.../tdd/semantics.md` |
@@ -119,7 +119,7 @@ Gates are cumulative: `--gate G3` (or `--gate build`) runs G0 to G3, and `--gate
 | Attestation | A recorded human confirmation for a test that SQL cannot check | `dpf test attest` |
 | Static check | A check that `dpf` runs on the manifest and the generated files, for example `freshness_policy` | `acceptance.yaml` |
 | Quarantine and reject gate | Staging moves rows that fail a blocking quality rule (`QR-n`) to a `_rejects` view. A reject-gate assertion then stops every downstream refresh | generated staging |
-| Change | An OpenSpec change folder: proposal, delta specs, design, verification, operations, tasks | `openspec/changes/<id>/` |
+| Change brief | A structured breach or change folder: `change.yaml`, proposal, design, verification, operations, tasks | `changes/<id>/` |
 
 ## 3. Install DPF and run the first check
 
@@ -127,9 +127,8 @@ Gates are cumulative: `--gate G3` (or `--gate build`) runs G0 to G3, and `--gate
 
 | You need | Version | For |
 |---|---|---|
-| Python | 3.10 or later | `dpf` itself |
+| Python | 3.10 or later | `dpf` itself (including spec validation and gates G0–G4) |
 | `google-cloud-bigquery` | 3.20 or later (the `[gcp]` extra) | `dpf test run --live`, `dpf monitor` without `--evidence`, the example extractor |
-| OpenSpec CLI | `@fission-ai/openspec@1.14.0` (CI pin) | `openspec validate`, new changes |
 | Terraform | 1.5 or later (CI uses 1.9.8) | applying the generated module |
 | Dataform CLI | `@dataform/cli@3.0.71` through `npx` (CI pin) | compiling or running the Dataform project |
 | dbt | `dbt-core` 1.12.5 and `dbt-bigquery` 1.12.1 (`requirements/dbt.txt`) | the dbt rendering only |
@@ -149,7 +148,7 @@ make install                   # or: the hash-locked versions that CI uses
 from the repository root (inside `.venv`).
 
 `dpf` finds the workspace by walking up from the current folder to the first folder that has
-both `framework/contracts/` and `openspec/`. Use `--root <path>` to point at another workspace.
+both `framework/contracts/` and `framework/specs/`. Use `--root <path>` to point at another workspace.
 
 ### Run the first check
 
@@ -194,15 +193,16 @@ example a file that was written. A warning keeps the exit code at 0. Exit codes:
 
 ```text
 dpf/            the CLI and multi-plane compiler: gates, compose, generate/, looker_deploy, trace, testing, monitor, lint, evals
-framework/      declarative framework packs and starter templates:
+framework/      declarative framework packs, specs and starter templates:
   contracts/      24 JSON Schemas, one for each stage and AGF hand-off
+  specs/          17 platform capability specifications (`spec-conventions`, `brd-completeness`, ...)
+  project.md      platform context, Google Cloud naming policy and non-negotiables
   engines/        engine adapters: dataform and dbt implemented; dataflow and spark planned
   methodologies/  modelling packs direct (default) and kimball: roles, rules, skills
   skills/         composable platform and pipeline stage skills (Agent Skills format plus dpf metadata)
   templates/      Define-stage forms (fillable PDFs) and Design-stage templates (Markdown and YAML)
-openspec/       project context, the data-product change schema, platform and product specs, changes
 registry/       platform defaults, MCP servers, foundations, BRD rubric and vocabulary, empty catalogues
-products/       product manifests, SQL bodies, acceptance mappings, product ADRs
+products/       product manifests, co-located specs (`specs/brd/`, `specs/tdd/`), SQL bodies, acceptance mappings, product ADRs
 examples/       example registry overlay, PostgreSQL simulator and extractor, seed fixtures, Terraform wrapper, runbook, evidence
 docs/           this guide, adr/ (ADR-001 to ADR-019), fhd/, design narrative, presentation, connectivity notes
 tests/          unit and contract tests, golden copies, 26 behavioural evals
@@ -210,14 +210,14 @@ tests/          unit and contract tests, golden copies, 26 behavioural evals
 .github/        CI workflows and hash-locked dependency pins (.github/requirements/)
 generated/      build output (gitignored, created on demand by dpf generate)
 evidence/       test evidence per product (created on demand by dpf test)
+changes/        structured breach/change briefs (created on demand by dpf monitor --open-change)
 ```
 
 ### Template and example material
 
 | Template: copied by `dpf init` | Example: not copied |
 |---|---|
-| `openspec/` config, schema, project context, `specs/platform/`, `changes/README.md` | `openspec/specs/products/*` |
-| `framework/` (`contracts/`, `methodologies/`, `engines/`, `skills/`, `templates/`), `.agents/`, `registry/`, `docs/adr/` | `products/*`, `examples/` (including `examples/evidence/`) |
+| `AGENTS.md` (+ agent symlinks), `bootstrap/`, `framework/` (`contracts/`, `specs/`, `project.md`, `methodologies/`, `engines/`, `skills/`, `templates/`), `.agents/`, `registry/`, `docs/adr/` | `products/*`, `examples/` (including `examples/evidence/`) |
 | `dpf/`, `pyproject.toml`, `.github/` (`workflows/ci.yml`, `requirements/`), `Makefile`, `.gitignore` | `generated/`, `evidence/`, `tests/golden/*` |
 | `tests/contracts`, the eval and golden READMEs, `docs/user-guide.md` | `docs/fhd/`, `docs/presentation/`, `docs/index.html`, `docs/data-product-framework-plan.md` |
 
@@ -248,15 +248,15 @@ The target path below is shortened to `../my-workspace`:
 $ dpf init ../my-workspace
 
 init — ../my-workspace
-  ok | openspec/config.yaml
-  ok | openspec/schemas
+  ok | AGENTS.md
+  ok | bootstrap
+  ok | framework
 …
-  ok | requirements
+  ok | .github/requirements
   ok | Makefile
 …
   ok | docs/user-guide.md
-  ok | templates
-     | not copied (example material): openspec/specs/products/*, products/*, examples/, generated/, evidence/, tests/golden/*, docs/presentation/, docs/index.html, docs/data-product-framework-plan.md
+     | not copied (example material): examples/, generated/, evidence/, tests/golden/*, docs/fhd/, docs/presentation/, docs/index.html, docs/data-product-framework-plan.md, docs/demo-walkthrough.md
 
 all checks passed (0 warning(s))
 ```
@@ -693,20 +693,20 @@ FAIL | freshness OB-1: sales_performance_monthly is 150 minutes old (limit 90) [
 1 failure(s), 0 warning(s)
 ```
 
-With `--open-change`, the breach becomes an OpenSpec change (scratch copy):
+With `--open-change`, the breach becomes a structured change brief under `changes/` (scratch copy):
 
 ```text
 $ dpf monitor sales_performance --evidence tests/evals/monitor-breach/run-evidence.json --open-change
 …
 FAIL | freshness OB-1: sales_performance_monthly is 150 minutes old (limit 90) [R-10]
-     | opened change openspec/changes/monitor-sales-performance-freshness-20261007-0300/ (validate with `openspec validate monitor-sales-performance-freshness-20261007-0300 --strict`)
+     | opened change brief changes/monitor-sales-performance-freshness-20261007-0300/ (verify fixes with `dpf check sales_performance --gate G3`)
 ```
 
-The folder holds `.openspec.yaml`, `proposal.md`, `design.md`, `verification.md`,
+The folder holds `change.yaml`, `proposal.md`, `design.md`, `verification.md`,
 `operations.md` and `tasks.md`. The proposal quotes the breach (OB-1, 150 min against a
-90 min limit, R-10) and links the runbook section `#freshness-or-volume-breach`. The
-`.openspec.yaml` sets `skip_specs: true`. An operational fix has no spec delta until the
-investigation shows that a requirement or decision must change.
+90 min limit, R-10) and links the runbook section `#freshness-or-volume-breach`.
+`change.yaml` sets `requires_spec_change: false`. An operational fix needs no spec edit until
+the investigation shows that a requirement or decision must change.
 
 Without `--evidence`, `dpf monitor` reads the deployed tables. Against the sandbox, at 06:45
 on a Tuesday in Perth:
@@ -730,16 +730,16 @@ The OB-3 breach is expected: `fct_order_line` held five seed lines, all dated Ma
 | File | Written by | Checked at | Start from |
 |---|---|---|---|
 | Use case, scorecard, prioritisation, and a BRD or PRD (fillable PDFs) | the business | no gate; the `assess-use-case` skill reviews a use case | `templates/define/` |
-| `openspec/specs/products/<domain>/<product>/brd/spec.md` and `brd.yaml` | business analyst | G0 | the approved BRD or PRD |
-| `.../tdd/spec.md` | data engineer | G1 | `templates/design/tdd-spec.md` |
-| `.../tdd/semantics.md` and `signoff.yaml` | data engineer; signed by the business owner | G1 | `templates/design/semantics.md` |
-| `products/<id>/product.yaml` | data engineer | validate, G1, G2 | `templates/design/product.yaml` |
-| `products/<id>/adr/ADR-*.md` | data engineer | validate, G1 | `templates/design/adr.md` |
+| `products/<id>/specs/brd/spec.md` and `brd.yaml` | business analyst | G0 | the approved BRD or PRD |
+| `products/<id>/specs/tdd/spec.md` | data engineer | G1 | `framework/templates/design/tdd-spec.md` |
+| `products/<id>/specs/tdd/playback.md` (`semantics.md`) and `signoff.yaml` | data engineer; signed by the business owner | G1 | `framework/templates/design/semantics.md` |
+| `products/<id>/product.yaml` | data engineer | validate, G1, G2 | `framework/templates/design/product.yaml` |
+| `products/<id>/adr/ADR-*.md` | data engineer | validate, G1 | `framework/templates/design/adr.md` |
 | `products/<id>/sql/*.sql` | data engineer | G1 rules, G3 | |
 | `products/<id>/acceptance.yaml` | data engineer with the business | G2, G4 | |
 
 The manifest links the two specs with `specs.brd` and `specs.tdd`, relative to
-`openspec/specs/`. [Section 6.7](#67-templates-for-the-define-and-design-stages) describes
+`products/<id>/` (conventionally `specs/brd` and `specs/tdd`). [Section 6.7](#67-templates-for-the-define-and-design-stages) describes
 the templates.
 
 ### 6.1 The BRD
@@ -1241,7 +1241,7 @@ Without `--evidence`, `dpf monitor` reads the deployed tables in BigQuery. Witho
 library it stops with this message:
 `pass --evidence <run-evidence.json>, or install google-cloud-bigquery to observe the deployed product`.
 
-`--open-change` writes `openspec/changes/monitor-<product>-<kind>-<YYYYMMDD-HHMM>/`. The kind
+`--open-change` writes `changes/monitor-<product>-<kind>-<YYYYMMDD-HHMM>/`. The kind
 is `freshness`, `volume`, `check`, `schema-drift`, or `incident` for a mix.
 
 ### Respond to an alert
@@ -1266,30 +1266,25 @@ landing manifest in one BigQuery transaction, so a failed run commits nothing. E
 success or no new rows, `1` failure or breaking drift, `2` config or usage error. See
 [extract/README.md](../examples/sales_performance/extract/README.md).
 
-## 10. Change a product with OpenSpec
+## 10. Change a product safely
 
-All work after the first release happens as an OpenSpec change. Changes use the project schema
-`data-product`, so every change has the same files: `.openspec.yaml`, `proposal.md`, delta
-specs in `specs/`, `design.md`, `verification.md`, `operations.md` and `tasks.md`.
-[openspec/changes/README.md](../openspec/changes/README.md) says what each file holds and
-lists the `openspec` commands. OpenSpec was not installed for this guide, so no output is
-shown:
-
-```bash
-openspec new change add-margin-measure --goal "Add a gross margin measure"
-openspec validate add-margin-measure --strict
-openspec archive add-margin-measure        # after G3 (and G4) pass: merge deltas into specs/
-```
+All changes after the first release flow through a normal Git pull request — and when a
+monitor breach triggers work, `dpf monitor --open-change` scaffolds a structured change brief
+under `changes/<id>/` (`change.yaml`, `proposal.md`, `design.md`, `verification.md`,
+`operations.md` and `tasks.md`). Because every product co-locates its specs beside
+`product.yaml` (`products/<id>/specs/{brd,tdd}/`), Git diffs show requirement changes, design
+changes, SQL changes and golden-copy diffs together in one review, while `dpf validate` and
+`dpf check --gate G3` enforce spec structure and traceability mechanically.
 
 ### Which specs a change touches
 
-| Change | BRD delta | TDD delta | Business re-approval |
+| Change | BRD update | TDD update | Business re-approval |
 |---|---|---|---|
 | New measure or attribute requested | Yes | Yes | Yes |
-| Grain or history behaviour changes | Yes | Yes | Yes: `semantics.md` is signed again (`dpf signoff`) |
+| Grain or history behaviour changes | Yes | Yes | Yes: `playback.md` (`semantics.md`) is signed again (`dpf signoff`) |
 | Re-partitioning, reservation sizing, engine swap | No | Yes | No: engineering lead only |
 | Methodology graduation with unchanged semantics | No | Yes | No |
-| Operational fix after a monitor breach | No | No | No (`skip_specs: true`) |
+| Operational fix after a monitor breach | No | No | No (`requires_spec_change: false`) |
 
 ### A BRD version bump makes the design stale
 
@@ -1367,22 +1362,20 @@ runs one. [tests/evals/README.md](../tests/evals/README.md) states what each eva
 
 | CI job | Runs |
 |---|---|
-| `specs` | `openspec validate --all --strict` (OpenSpec CLI 1.14.0) |
-| `gates` | installs `requirements/dev.txt` with hashes, then `dpf check --all --gate G3`, `dpf generate --all --check --no-write`, `dpf eval`, `python -m pytest` |
-| `artefacts` | for every golden copy: `terraform fmt -check`, `init -backend=false` and `validate` (Terraform 1.9.8); `npx @dataform/cli@3.0.71 compile`; `dbt parse` with `requirements/dbt.txt` |
+| `gates` | installs `.github/requirements/dev.txt` with hashes, then `dpf check --all --gate G3` (including native spec validation), `dpf generate --all --check --no-write`, `dpf eval`, `python -m pytest` |
+| `artefacts` | for Layer-0 `bootstrap/`, every golden copy, and the example wrapper: `terraform fmt -check`, `init -backend=false` and `validate` (Terraform 1.9.8); `npx @dataform/cli@3.0.71 compile`; `dbt parse` with `.github/requirements/dbt.txt`; LookML validation |
 
 The `artefacts` job is the only place where generated code meets the real tools before a
 deployment.
 
 | Target | Runs |
 |---|---|
-| `make install` / `make lock` | hash-locked install as CI does / re-pin `requirements/*.txt` (needs `uv`) |
+| `make install` / `make lock` | hash-locked install as CI does / re-pin `.github/requirements/*.txt` (needs `uv`) |
 | `make check` | `dpf check $(PRODUCT) --gate G3`; `PRODUCT` defaults to `--all` |
 | `make gates` | the same at G4 (fails until deployed-run evidence exists) |
 | `make golden` | `dpf generate --all --update-golden` (review the diff) |
 | `make evals`, `make test` | `dpf eval`; `pytest` on `tests/unit` and `tests/contracts` |
-| `make openspec` | `openspec validate --all --strict` |
-| `make ci` | `openspec`, `check`, `evals`, `test`, then `dpf generate --all --check` |
+| `make ci` | `check`, `evals`, `test`, then `dpf generate --all --check` |
 
 ## 12. Extend the framework
 
@@ -1390,8 +1383,8 @@ deployment.
 
 1. Add registry entries (source systems, glossary terms, entities, conformed dimensions) to
    `registry/` or to an overlay folder named by `registry_overlay`.
-2. Write the BRD in `openspec/specs/products/<domain>/<product>/brd/`. Pass G0.
-3. Write the TDD and `semantics.md` in `.../tdd/`.
+2. Write the BRD in `products/<id>/specs/brd/`. Pass G0.
+3. Write the TDD and `playback.md` (`semantics.md`) in `products/<id>/specs/tdd/`.
 4. Write `products/<id>/product.yaml`, `sql/`, `acceptance.yaml` and any product ADRs in
    `products/<id>/adr/`. Get the signature with `dpf signoff`.
 5. Pass G2. Generate, review the output, create the golden copy with
@@ -1610,8 +1603,8 @@ every push (the `artefacts` job). The sandbox rows come from the deployment on 5
 | Dataform CLI 3.0.71, `compile` | 0 errors. `sales_performance`: 18 tables, 36 assertions, 4 declarations. `customer_orders`: 10, 14 and 3. Run locally with `@dataform/core` 3.0.71; CI lets the CLI install the pinned core 3.0.0 |
 | `dbt-core` 1.12.5 with `dbt-bigquery` 1.12.1, `parse` | the dbt rendering of `sales_performance`: 18 models, 36 tests, 4 sources |
 | Terraform 1.9.8, `fmt -check` and `validate` | pass for all three golden modules (one per product, plus the dbt rendering) and for the example wrapper around the generated module |
-| OpenSpec 1.14.0, `validate --all --strict` | 21 of 21 items pass |
-| `pytest` | 171 tests pass on Python 3.10 and 3.13 |
+| `dpf validate` (spec & contract validator) | all 21 specifications, 24 contracts, 29 skills, 2 packs and 21 ADRs pass |
+| `pytest` | 212 tests pass with `-W error` |
 | Sandbox: Terraform 1.9.8, `google` and `google-beta` 8.5.0, `apply` | 37 resources in `data-product-framework` (`us-central1`) |
 | Sandbox: Dataform service, core 3.0.0 | full refresh 54 of 54 actions; `hourly` run 44 of 44; with a rejected line the reject gate stopped the run |
 | Sandbox: `dpf test run --live` | 36 SQL cases and 5 static checks pass for build `sha256:fd95e365e03e…` |
@@ -1630,8 +1623,8 @@ every push (the `artefacts` job). The sandbox rows come from the deployment on 5
 | Document | Purpose |
 |---|---|
 | [README.md](../README.md) | overview and quick start |
-| [openspec/AGENTS.md](../openspec/AGENTS.md) | rules for coding agents |
-| [openspec/changes/README.md](../openspec/changes/README.md) | how changes work |
+| [AGENTS.md](../AGENTS.md) | rules for coding agents |
+| [framework/project.md](../framework/project.md) | platform context, naming policy and non-negotiables |
 | [RUNBOOK.md](../examples/sales_performance/RUNBOOK.md) | deploy and operate the example |
 | [local-source-connectivity.md](local-source-connectivity.md) | connect an on-premises source |
 | [data-product-framework-plan.md](data-product-framework-plan.md) | the design narrative |

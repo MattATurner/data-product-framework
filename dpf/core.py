@@ -397,7 +397,7 @@ class Workspace:
 
     @property
     def platform_specs(self) -> dict[str, Path]:
-        return {p.parent.name: p for p in sorted((self.root / "openspec/specs/platform").glob("*/spec.md"))}
+        return {p.parent.name: p for p in sorted((self.root / "framework/specs").glob("*/spec.md"))}
 
 
 class Product:
@@ -422,31 +422,26 @@ class Product:
         return self.manifest.get("status") == "prototype"
 
     # -- specs
-    @property
-    def brd_dir(self) -> Path:
+    def _spec_dir(self, kind: str) -> Path:
         specs = self.manifest.get("specs") or {}
-        if specs.get("brd"):
-            primary = self.ws.root / "openspec/specs" / specs["brd"]
-            if primary.exists():
-                return primary
-            local = self.dir / "specs/brd"
+        rel = specs.get(kind)
+        if rel:
+            local = self.dir / rel
             if local.exists():
                 return local
-            return primary
-        return self.ws.root / "openspec/specs/_prototype" / self.id / "brd"
+            ws_rel = self.ws.root / rel
+            if ws_rel.exists():
+                return ws_rel
+            return local
+        return self.dir / "specs" / kind
+
+    @property
+    def brd_dir(self) -> Path:
+        return self._spec_dir("brd")
 
     @property
     def tdd_dir(self) -> Path:
-        specs = self.manifest.get("specs") or {}
-        if specs.get("tdd"):
-            primary = self.ws.root / "openspec/specs" / specs["tdd"]
-            if primary.exists():
-                return primary
-            local = self.dir / "specs/tdd"
-            if local.exists():
-                return local
-            return primary
-        return self.ws.root / "openspec/specs/_prototype" / self.id / "tdd"
+        return self._spec_dir("tdd")
 
     @cached_property
     def brd(self) -> dict:
@@ -726,6 +721,6 @@ def iter_elements(manifest: dict) -> Iterable[tuple[str, dict]]:
 def find_root(start: Path | None = None) -> Path:
     p = (start or Path.cwd()).resolve()
     for cand in [p, *p.parents]:
-        if ((cand / "framework/contracts").is_dir() or (cand / "contracts").is_dir()) and (cand / "openspec").is_dir():
+        if ((cand / "framework/contracts").is_dir() or (cand / "contracts").is_dir()) and (cand / "framework/specs").is_dir():
             return cand
     return Path(__file__).resolve().parent.parent

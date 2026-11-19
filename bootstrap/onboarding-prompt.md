@@ -17,7 +17,7 @@ Once I reply, execute these steps in exact order:
 - Ensure `.venv` exists and `dpf` is installed (`python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'`).
 
 ### Step 2: Clean Customer Mode (Only if `customer` was selected)
-- Run `bash ./bootstrap/clean-up.sh --strip-examples` to remove worked examples (`examples/`), demo decks, and example golden snapshots while preserving `framework/`, `openspec/`, `registry/`, `products/`, `bootstrap/`, `.agents/`, and `dpf/`.
+- Run `bash ./bootstrap/clean-up.sh --strip-examples` to remove worked examples (`examples/`), demo decks, and example golden snapshots while preserving `framework/`, `registry/`, `products/`, `bootstrap/`, `.agents/`, and `dpf/`.
 
 ### Step 3: Configure Defaults or Run Layer-0 Terraform Bootstrap
 - Pass `--presentation-server-url <url>` when a Presentation Server URL was provided (or `""` if `local` / skipped).

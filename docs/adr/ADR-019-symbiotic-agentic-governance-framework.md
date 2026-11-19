@@ -79,7 +79,7 @@ compile time.
 4. **Closed-loop run-time feedback (`AGF -> DPF`).**
    Run-time lineage drift (`ADG-02`), General Ledger reconciliation variances (`ADG-03`),
    or schema blast-radius alerts emit `run-evidence.v1` breaches so
-   `dpf monitor --open-change` opens an OpenSpec change proposal citing the affected `BRD`
+   `dpf monitor --open-change` opens a structured change brief under `changes/` citing the affected `BRD`
    requirement. Ungoverned shadow tables or LookML projects discovered by `ADG-05` onboard
    into `dpf` via `dpf proto import-dataform` or `dpf proto import-looker`.
 

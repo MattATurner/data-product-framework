@@ -113,7 +113,11 @@ def check_design(p: Product, report: Report) -> None:
         report.check(not aerr, "acceptance.yaml conforms to acceptance.v1",
                      f"acceptance.yaml does not conform: {'; '.join(aerr[:4])}")
     if not (p.tdd_dir / "spec.md").exists():
-        report.fail(f"TDD spec missing: openspec/specs/{man['specs']['tdd']}/spec.md")
+        try:
+            tdd_disp = (p.tdd_dir / "spec.md").relative_to(ws.root).as_posix()
+        except ValueError:
+            tdd_disp = str(p.tdd_dir / "spec.md")
+        report.fail(f"TDD spec missing: {tdd_disp}")
         return
 
     g = ProductGraph(p)

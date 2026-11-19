@@ -245,7 +245,7 @@
                 "registry/glossary.yaml"
               ],
               "outputs": [
-                "openspec/specs/products/<domain>/<product>/brd/spec.md & brd.yaml"
+                "products/<id>/specs/brd/spec.md & brd.yaml"
               ],
               "business_rules": [
                 "Every metric and attribute must bind to an agreed term or alias in registry/glossary.yaml."
@@ -317,7 +317,7 @@
               "owner": "Named Business Owner",
               "status": "Implemented in DPF v0.3",
               "sla": "Human Gate Sign-Off",
-              "platform_service": "OpenSpec BRD Specification & Fillable 4-brd.pdf",
+              "platform_service": "DPF BRD Specification & Fillable 4a-brd.pdf",
               "inputs": [
                 "Validated brd/spec.md & brd/brd.yaml (zero G0 gaps)"
               ],
@@ -330,7 +330,7 @@
               "implementation": {
                 "mode": "chat_ui",
                 "summary": "Readable 4-page Markdown or PDF business specification signed by the business owner.",
-                "provisioned_via": "framework/templates/define/4-brd.pdf · openspec/specs/products/",
+                "provisioned_via": "framework/templates/define/4a-brd.pdf · products/<id>/specs/brd/",
                 "runtime": "Human Review & Git Approval",
                 "trigger": "Completion of Gate G0 Validation",
                 "entrypoint": "examples/sales_performance/specs/brd/spec.md",
@@ -542,7 +542,7 @@
                 "Approver identity, role, and scenario list"
               ],
               "outputs": [
-                "openspec/specs/products/<domain>/<product>/tdd/signoff.yaml"
+                "products/<id>/specs/tdd/signoff.yaml"
               ],
               "business_rules": [
                 "Editing semantics.md, grain_columns, history_semantics, or LookML metric filters changes semantic_digest and automatically invalidates signoff.yaml."
@@ -1059,7 +1059,7 @@
             "observability-policy.json, live BigQuery/AGF run-evidence.v1 telemetry"
           ],
           "outputs": [
-            "Targeted operational alerts and pre-populated openspec/changes/ delta proposals"
+            "Targeted operational alerts and pre-populated changes/ breach briefs"
           ],
           "business_rules": [
             "Freshness SLOs evaluate only inside the consuming team's business calendar (e.g. Mon-Fri 08:00-18:00 Australia/Perth).",
@@ -1068,7 +1068,7 @@
           "delivery_unit": "Composite Stage Pillar (4 sub-modules)",
           "implementation": {
             "mode": "multi_stack",
-            "summary": "Evaluates runtime evidence against business-calendar SLOs and auto-scaffolds OpenSpec change proposals naming the breached requirement.",
+            "summary": "Evaluates runtime evidence against business-calendar SLOs and auto-scaffolds structured change briefs under changes/ naming the breached requirement.",
             "provisioned_via": "dpf/monitor.py · framework/skills/monitor-data-product/",
             "runtime": "Scheduled CLI / Cloud Run Check + Git Change Loop",
             "trigger": "Scheduled 15m Watch or AGF Metadata Change Feed Alert",
@@ -1196,7 +1196,7 @@
             "description": "Opens requirement-traced delta specs for human review when breaches or new needs arise.",
             "is_atomic": true,
             "details": {
-              "purpose": "Human Change Proposal Gate closing the Day-2 loop: drafts pre-populated ADDED/MODIFIED/REMOVED delta specs under openspec/changes/ naming the affected BRD requirement.",
+              "purpose": "Human Change Proposal Gate closing the Day-2 loop: drafts pre-populated change briefs under changes/ naming the affected BRD requirement.",
               "owner": "Business Owner & Product Engineer",
               "status": "Implemented in DPF v0.3",
               "sla": "Hours-to-Outcome Fast-Track Loop",
@@ -1205,7 +1205,7 @@
                 "Detected runtime SLO/AGF breach or new stakeholder metric request"
               ],
               "outputs": [
-                "openspec/changes/<change-id>/ proposal ready to re-run Gates G0-G4"
+                "changes/<change-id>/ brief ready to re-run Gates G0-G4"
               ],
               "business_rules": [
                 "Every Day-2 change flows through the exact same human-gated digest and golden-copy checks in hours rather than ad-hoc hotfixes."
@@ -1213,10 +1213,10 @@
               "implementation": {
                 "mode": "chat_ui",
                 "summary": "Scaffolds structured change proposals linking operational alerts straight back to business requirements.",
-                "provisioned_via": "dpf/monitor.py · openspec/changes/",
+                "provisioned_via": "dpf/monitor.py · changes/",
                 "runtime": "CLI + Pull Request Review",
                 "trigger": "dpf monitor <product> --evidence <file> --open-change",
-                "entrypoint": "openspec/changes/README.md",
+                "entrypoint": "dpf/monitor.py",
                 "command": "dpf eval --id monitor-breach"
               }
             },

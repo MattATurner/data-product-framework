@@ -11,7 +11,7 @@ decides: conformance
 
 ## Decision
 
-Each conformed dimension has one owning domain, recorded in the bus matrix (registry/conformance.yaml). Changes to a conformed dimension need an OpenSpec change with cross-product impact analysis.
+Each conformed dimension has one owning domain, recorded in the bus matrix (registry/conformance.yaml). Changes to a conformed dimension need a reviewed cross-product change with impact analysis.
 
 ## Consequences
 

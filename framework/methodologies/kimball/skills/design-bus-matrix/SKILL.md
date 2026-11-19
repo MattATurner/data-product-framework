@@ -36,5 +36,5 @@ inside one product.
 
 ## Must
 
-- Treat a change to a conformed dimension as an OpenSpec change with cross-product impact
+- Treat a change to a conformed dimension as a reviewed cross-product change with impact
   analysis, never a local edit.

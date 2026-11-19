@@ -9,21 +9,8 @@ permissions:
   contents: read
 
 jobs:
-  specs:
-    name: OpenSpec (strict)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-      - run: npm install -g @fission-ai/openspec@1.14.0
-      - run: openspec validate --all --strict
-        env:
-          OPENSPEC_TELEMETRY: "0"
-
   gates:
-    name: Gates G0-G3, golden copies, evals and tests
+    name: Specs, gates G0-G3, golden copies, evals and tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -25,9 +25,9 @@ owner: <business-owner-team>
 steward: <data-steward-team>
 domain: <domain>
 classification: <INTERNAL>                # your organisation's classification label
-specs:                                    # folders under openspec/specs/
-  brd: products/<domain>/<product-name>/brd
-  tdd: products/<domain>/<product-name>/tdd
+specs:                                    # relative to products/<product_id>/
+  brd: specs/brd
+  tdd: specs/tdd
 brd_id: BRD-<DOMAIN>-<nnn>
 tdd_id: TDD-<DOMAIN>-<nnn>                # equals **TDD:** in tdd/spec.md
 satisfies: BRD-<DOMAIN>-<nnn>@<x.y.z>     # equals **Satisfies:** in tdd/spec.md and the BRD version

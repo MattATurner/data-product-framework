@@ -10,8 +10,8 @@ domain: sales
 classification: INTERNAL-COMMERCIAL
 registry_overlay: examples/registry
 specs:
-  brd: products/sales/sales-performance/brd
-  tdd: products/sales/sales-performance/tdd
+  brd: specs/brd
+  tdd: specs/tdd
 brd_id: BRD-SALES-002
 tdd_id: TDD-SALES-002
 satisfies: BRD-SALES-002@1.2.0

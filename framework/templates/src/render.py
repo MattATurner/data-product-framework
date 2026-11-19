@@ -325,7 +325,7 @@ def render_appendix(spec: dict) -> str:
     return (
         '<section class="appendix"><h2><span>For the data team: where each answer goes</span></h2>'
         "<p>Record the approved document in the repository with the <code>author-brd</code> skill, as "
-        "<code>openspec/specs/products/&lt;domain&gt;/&lt;product&gt;/brd/spec.md</code> and <code>brd.yaml</code>. "
+        "<code>products/&lt;product&gt;/specs/brd/spec.md</code> and <code>brd.yaml</code>. "
         "Put the use case on the Purpose line, for example <code>**Use case:** UC-SALES-001</code>. Then run "
         "<code>dpf brd validate &lt;product&gt;</code> (gate G0) and take any gaps back to the business.</p>%s"
         '<table><thead><tr><th style="width:34%%">Section</th><th style="width:12%%">Rubric group</th>'
@@ -612,7 +612,7 @@ def build_prioritisation(spec: dict, scoring: dict, version: str, portfolio: dic
 
 def brd_values(brd_dir: Path, use_case: str = "") -> dict:
     sys.path.insert(0, str(ROOT))
-    from dpf.specs import parse_spec  # noqa: E402  (the framework's own OpenSpec parser)
+    from dpf.specs import parse_spec  # noqa: E402  (the framework's own spec parser)
 
     brd = load(brd_dir / "brd.yaml")
     spec = parse_spec((brd_dir / "spec.md").read_text(encoding="utf-8"), brd_dir / "spec.md")

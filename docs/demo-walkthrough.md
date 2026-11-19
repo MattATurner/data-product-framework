@@ -202,19 +202,19 @@ What happens automatically:
 
 1. Scheduled monitoring evaluates live BigQuery freshness, volume, and Knowledge Catalog quality scan results against the product's observability policy, quietly skipping working-hours freshness checks on weekends or overnight so engineers never get paged for non-issues.
 
-2. When a genuine breach occurs, dpf monitor links the failure directly back to the affected BRD requirement and opens a pre-populated OpenSpec change proposal folder ready for triage.
+2. When a genuine breach occurs, dpf monitor links the failure directly back to the affected BRD requirement and opens a pre-populated change brief folder under changes/ ready for triage.
 
 When a human steps in:
 
-The product steward reviews the generated OpenSpec change proposal. If fixing the issue only changes technical plumbing (such as upgrading from 15-minute watermark polling to continuous Datastream CDC once network routing opens), Gate G1 sees the semantic digest is unchanged and requires zero business re-approval; if business rules change, the amendment loops cleanly back to Stage 02.
+The product steward reviews the generated change brief. If fixing the issue only changes technical plumbing (such as upgrading from 15-minute watermark polling to continuous Datastream CDC once network routing opens), Gate G1 sees the semantic digest is unchanged and requires zero business re-approval; if business rules change, the amendment loops cleanly back to Stage 02.
 
 Driving from the Agent Harness:
 
-Ask the agent: Evaluate sales_performance monitoring against tests/evals/monitor-breach/run-evidence.json, explain which business requirement breached, and show how DPF opens a traced OpenSpec change proposal.
+Ask the agent: Evaluate sales_performance monitoring against tests/evals/monitor-breach/run-evidence.json, explain which business requirement breached, and show how DPF opens a traced change brief.
 
 Driving from the Terminal:
 
-Run dpf monitor sales_performance --evidence tests/evals/monitor-breach/run-evidence.json --open-change to display the business-calendar evaluation output and scaffold a traced OpenSpec change folder.
+Run dpf monitor sales_performance --evidence tests/evals/monitor-breach/run-evidence.json --open-change to display the business-calendar evaluation output and scaffold a traced change brief folder under changes/.
 
 ---
 
@@ -278,7 +278,7 @@ Use these concise sequences at the podium when setting up and driving the demons
 
 6. Stage 05 Accept and Visualise: Deploy sales_performance to Looker, build the Stephen Few operational cockpit strictly over the LookML semantic layer, and check Gate G4 to show what blocks publication until AT-5 and AT-8 are attested.
 
-7. Stage 06 Monitor: Run dpf monitor on sales_performance using tests/evals/monitor-breach/run-evidence.json and explain the resulting OpenSpec change flow.
+7. Stage 06 Monitor: Run dpf monitor on sales_performance using tests/evals/monitor-breach/run-evidence.json and explain the resulting change brief flow.
 
 ---
 
