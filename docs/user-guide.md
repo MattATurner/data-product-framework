@@ -119,7 +119,7 @@ Gates are cumulative: `--gate G3` (or `--gate build`) runs G0 to G3, and `--gate
 | Attestation | A recorded human confirmation for a test that SQL cannot check | `dpf test attest` |
 | Static check | A check that `dpf` runs on the manifest and the generated files, for example `freshness_policy` | `acceptance.yaml` |
 | Quarantine and reject gate | Staging moves rows that fail a blocking quality rule (`QR-n`) to a `_rejects` view. A reject-gate assertion then stops every downstream refresh | generated staging |
-| Change brief | A structured breach or change folder: `change.yaml`, proposal, design, verification, operations, tasks | `changes/<id>/` |
+| Change brief | A single-file Markdown breach brief with front-matter, breach table, runbook links and checklist | `changes/<id>.md` |
 
 ## 3. Install DPF and run the first check
 
@@ -693,20 +693,19 @@ FAIL | freshness OB-1: sales_performance_monthly is 150 minutes old (limit 90) [
 1 failure(s), 0 warning(s)
 ```
 
-With `--open-change`, the breach becomes a structured change brief under `changes/` (scratch copy):
+With `--open-change`, the breach becomes a single-file Markdown change brief under `changes/` (scratch copy):
 
 ```text
 $ dpf monitor sales_performance --evidence tests/evals/monitor-breach/run-evidence.json --open-change
 …
 FAIL | freshness OB-1: sales_performance_monthly is 150 minutes old (limit 90) [R-10]
-     | opened change brief changes/monitor-sales-performance-freshness-20261007-0300/ (verify fixes with `dpf check sales_performance --gate G3`)
+     | opened change brief changes/monitor-sales-performance-freshness-20261007-0300.md (verify fixes with `dpf check sales_performance --gate G3`)
 ```
 
-The folder holds `change.yaml`, `proposal.md`, `design.md`, `verification.md`,
-`operations.md` and `tasks.md`. The proposal quotes the breach (OB-1, 150 min against a
-90 min limit, R-10) and links the runbook section `#freshness-or-volume-breach`.
-`change.yaml` sets `requires_spec_change: false`. An operational fix needs no spec edit until
-the investigation shows that a requirement or decision must change.
+The Markdown file carries YAML front-matter (`requires_spec_change: false`), quotes the
+breach (OB-1, 150 min against a 90 min limit, R-10), links the runbook section
+`#freshness-or-volume-breach`, and includes a verification checklist. An operational fix needs
+no spec edit until the investigation shows that a requirement or decision must change.
 
 Without `--evidence`, `dpf monitor` reads the deployed tables. Against the sandbox, at 06:45
 on a Tuesday in Perth:
@@ -1241,7 +1240,7 @@ Without `--evidence`, `dpf monitor` reads the deployed tables in BigQuery. Witho
 library it stops with this message:
 `pass --evidence <run-evidence.json>, or install google-cloud-bigquery to observe the deployed product`.
 
-`--open-change` writes `changes/monitor-<product>-<kind>-<YYYYMMDD-HHMM>/`. The kind
+`--open-change` writes `changes/monitor-<product>-<kind>-<YYYYMMDD-HHMM>.md`. The kind
 is `freshness`, `volume`, `check`, `schema-drift`, or `incident` for a mix.
 
 ### Respond to an alert
@@ -1269,9 +1268,9 @@ success or no new rows, `1` failure or breaking drift, `2` config or usage error
 ## 10. Change a product safely
 
 All changes after the first release flow through a normal Git pull request — and when a
-monitor breach triggers work, `dpf monitor --open-change` scaffolds a structured change brief
-under `changes/<id>/` (`change.yaml`, `proposal.md`, `design.md`, `verification.md`,
-`operations.md` and `tasks.md`). Because every product co-locates its specs beside
+monitor breach triggers work, `dpf monitor --open-change` writes a concise single-file
+Markdown breach brief (`changes/<id>.md`) quoting the breach, affected requirements, runbook
+link and checklist. Because every product co-locates its specs beside
 `product.yaml` (`products/<id>/specs/{brd,tdd}/`), Git diffs show requirement changes, design
 changes, SQL changes and golden-copy diffs together in one review, while `dpf validate` and
 `dpf check --gate G3` enforce spec structure and traceability mechanically.

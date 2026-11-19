@@ -300,9 +300,9 @@ dpf monitor sales_performance                                   # observe the de
 dpf monitor sales_performance --evidence run.json --open-change # evaluate a run-evidence.v1 file
 ```
 
-`--open-change` writes `changes/monitor-sales-performance-<kind>-<time>/`, a structured
-change brief (`change.yaml` with `requires_spec_change: false`) that quotes the breach and
-links this runbook. It goes through the gates like any other change.
+`--open-change` writes `changes/monitor-sales-performance-<kind>-<time>.md`, a single-file
+Markdown breach brief (`requires_spec_change: false`) that quotes the breach, lists the
+affected requirements, and links this runbook. It goes through the gates like any other change.
 
 ### Schema drift
 

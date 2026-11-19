@@ -18,7 +18,7 @@ TEMPLATE_PATHS = [
     ".github/workflows/ci.yml", "tests/contracts", "tests/evals/README.md", "tests/golden/README.md",
 ]
 AGENT_SYMLINKS = ("GEMINI.md", "CLAUDE.md", ".cursorrules", ".clinerules")
-EMPTY_DIRS = ["changes", "products", "tests/golden"]
+EMPTY_DIRS = ["products", "tests/golden"]
 EXCLUDED = ["examples/", "generated/", "evidence/", "tests/golden/*",
             "docs/fhd/", "docs/presentation/", "docs/index.html", "docs/data-product-framework-plan.md",
             "docs/demo-walkthrough.md"]

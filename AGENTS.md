@@ -71,8 +71,8 @@ the DPF spec conventions (`framework/specs/spec-conventions/spec.md`), enforced 
 alter `playback.md` or model grain/history needs no business re-approval.
 
 `dpf monitor <product> --open-change` turns a confirmed breach of the observability policy
-into a structured change brief under `changes/<id>/` with `change.yaml`, `proposal.md`,
-`design.md`, `verification.md`, `operations.md` and `tasks.md`.
+into a single-file Markdown breach brief (`changes/monitor-<product>-<kind>-<YYYYMMDD-HHMM>.md`)
+quoting the breach, affected requirements, runbook link, and verification checklist.
 
 ## Never fabricate evidence
 

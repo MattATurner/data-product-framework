@@ -116,12 +116,12 @@ def _kebab(s: str) -> str:
 
 
 def open_change(p: Product, ev: dict, breaches: list[Breach]) -> Path:
-    """Write a structured change brief under changes/ that turns the breach into tracked work."""
+    """Write a single-file Markdown change brief under changes/ that turns the breach into tracked work."""
     at = parse_ts(ev["observed_at"])
     kinds = sorted({b.kind for b in breaches})
     kind = kinds[0] if len(kinds) == 1 else "incident"
     cid = _kebab(f"monitor-{p.id}-{kind}-{at.strftime('%Y%m%d-%H%M')}")
-    d = p.ws.root / "changes" / cid
+    brief = p.ws.root / "changes" / f"{cid}.md"
     obs = p.manifest.get("observability") or {}
     runbook = (obs.get("alerting") or {}).get("runbook") or f"examples/{p.id}/RUNBOOK.md"
     reqs = sorted({r for b in breaches for r in b.requirements}, key=lambda x: int(x.split("-")[1]))
@@ -129,83 +129,39 @@ def open_change(p: Product, ev: dict, breaches: list[Breach]) -> Path:
     brd = f"{p.brd.get('brd_id')}@{p.brd.get('version')}"
     rows = "\n".join(f"| {b.kind} | {b.policy} | {b.observed} | {b.threshold} | {', '.join(b.requirements) or '—'} |"
                      for b in breaches)
-    write_text(d / "change.yaml",
-               f"product_id: {p.id}\n"
-               f"created: {at.date().isoformat()}\n"
-               f"kind: {kind}\n"
-               f"goal: Restore {p.id} to its observability policy after a {kind} breach\n"
-               f"affected_areas:\n  - products/{p.id}\n  - monitor-data-product\n"
-               "# Opened by `dpf monitor --open-change`: an operational fix requires no spec edit\n"
-               "# until the investigation shows a requirement or decision must change.\n"
-               "requires_spec_change: false\n")
-    write_text(d / "proposal.md", f"""# Proposal: restore {p.id} after a {kind} breach
+    req_yaml = "[" + ", ".join(reqs) + "]"
+    runbook_links = "\n".join(f"- `{runbook}#{a}`" for a in anchors)
+    write_text(brief, f"""---
+product_id: {p.id}
+created: {at.date().isoformat()}
+kind: {kind}
+run_id: {ev.get('run_id', 'n/a')}
+observed_at: {ev['observed_at']}
+requirements_at_risk: {req_yaml}
+requires_spec_change: false
+---
 
-## Why
+# Breach brief: restore {p.id} ({kind})
 
 `dpf monitor` found {len(breaches)} breach(es) of the observability policy at {ev['observed_at']}
-(run `{ev.get('run_id', 'n/a')}`):
+(run `{ev.get('run_id', 'n/a')}`), affecting `{p.id}` ({brd}){f' — requirements at risk: {", ".join(reqs)}' if reqs else ''}.
 
 | Kind | Policy | Observed | Threshold | Requirements |
 |---|---|---|---|---|
 {rows}
 
-## What Changes
+## Runbook
 
-- Find the cause using the runbook ({', '.join(f'`{runbook}#{a}`' for a in anchors)}).
-- Apply the operational fix: re-run, backfill, or accept a reviewed schema change.
-- If the cause is a design gap, update the product's BRD or TDD specs (`specs/brd/` or `specs/tdd/`) and set `requires_spec_change: true` in `change.yaml`.
+{runbook_links}
 
-## Capabilities
+## Action checklist
 
-- `monitor-data-product` (no change expected).
-
-## Products
-
-- `{p.id}` — {brd}. No BRD change is expected{f'; requirements at risk: {", ".join(reqs)}' if reqs else ''}.
-
-## Gates
-
-- G3 (`dpf check {p.id} --gate G3`) if the fix changes the manifest or SQL bodies.
-- G4 (`dpf check {p.id} --gate G4`) after a deployed run records new evidence.
+- [ ] **Investigate:** confirm the breach in the deployed project and follow the runbook section(s) above.
+- [ ] **Fix:** apply the operational fix (re-run, backfill, or accept a reviewed schema change with `--accept-schema`).
+- [ ] **Spec / design update (only if needed):** if the root cause is a design gap, update `specs/brd/` or `specs/tdd/`, set `requires_spec_change: true`, and re-sign `playback.md` (`dpf signoff {p.id}`) if the semantic digest changes.
+- [ ] **Verify:** run `dpf monitor {p.id} --evidence <new run-evidence.json>` (0 breaches). If code or manifest changed, run `dpf check {p.id} --gate G3` and record live evidence for G4 (`dpf test run {p.id} --live`).
 """)
-    write_text(d / "design.md", f"""# Design
-
-No design change is planned. If the investigation finds that the manifest, a SQL body or a
-methodology pack must change, describe it here, say whether the semantic digest changes, and
-re-sign `playback.md` with `dpf signoff {p.id}` when it does.
-""")
-    write_text(d / "verification.md", f"""# Verification
-
-- Re-run the observation and evaluate it: `dpf monitor {p.id} --evidence <new run-evidence.json>`
-  reports no breach.
-- If the build changed: `dpf test run {p.id} --live` records evidence for the new build digest.
-""")
-    write_text(d / "operations.md", f"""# Operations
-
-Observed at {ev['observed_at']}. Follow the runbook sections:
-
-{chr(10).join(f'- `{runbook}#{a}`' for a in anchors)}
-
-State any backfill or restatement window here before running it.
-""")
-    write_text(d / "tasks.md", f"""# Tasks
-
-## 1. Investigate
-
-- [ ] 1.1 Confirm the breach in the deployed project (alert, transfer run history, or quality scan result).
-- [ ] 1.2 Follow the runbook section(s) above and record the cause in operations.md.
-
-## 2. Fix
-
-- [ ] 2.1 Apply the operational fix (re-run, backfill, or accept the schema change with `--accept-schema`).
-- [ ] 2.2 If a spec or design change is needed, update `specs/brd/` or `specs/tdd/`, set `requires_spec_change: true`, and run `dpf validate`.
-
-## 3. Verify
-
-- [ ] 3.1 `dpf monitor {p.id} --evidence <new run-evidence.json>` reports no breach.
-- [ ] 3.2 If the build changed: `dpf check {p.id} --gate G3`, then `dpf check {p.id} --gate G4` after a deployed run.
-""")
-    return d
+    return brief
 
 
 def collect(p: Product) -> dict:
@@ -270,8 +226,8 @@ def monitor(p: Product, report: Report, evidence: dict | None = None, open_chang
         report.ok(f"no breach of the observability policy at {evidence['observed_at']}")
         return 0
     if open_change_on_breach:
-        d = open_change(p, evidence, breaches)
-        report.info(f"opened change brief {d.relative_to(p.ws.root)}/ (verify fixes with `dpf check {p.id} --gate G3`)")
+        brief = open_change(p, evidence, breaches)
+        report.info(f"opened change brief {brief.relative_to(p.ws.root)} (verify fixes with `dpf check {p.id} --gate G3`)")
     return 1
 
 

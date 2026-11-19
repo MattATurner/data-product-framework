@@ -10,5 +10,4 @@ expect:
   messages:
   - 'freshness OB-1: sales_performance_monthly is 150 minutes old (limit 90)'
   files:
-  - changes/monitor-sales-performance-freshness-*/proposal.md
-  - changes/monitor-sales-performance-freshness-*/change.yaml
+  - changes/monitor-sales-performance-freshness-*.md

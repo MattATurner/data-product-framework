@@ -202,7 +202,7 @@ What happens automatically:
 
 1. Scheduled monitoring evaluates live BigQuery freshness, volume, and Knowledge Catalog quality scan results against the product's observability policy, quietly skipping working-hours freshness checks on weekends or overnight so engineers never get paged for non-issues.
 
-2. When a genuine breach occurs, dpf monitor links the failure directly back to the affected BRD requirement and opens a pre-populated change brief folder under changes/ ready for triage.
+2. When a genuine breach occurs, dpf monitor links the failure directly back to the affected BRD requirement and writes a pre-populated Markdown change brief under changes/ ready for triage.
 
 When a human steps in:
 
@@ -214,7 +214,7 @@ Ask the agent: Evaluate sales_performance monitoring against tests/evals/monitor
 
 Driving from the Terminal:
 
-Run dpf monitor sales_performance --evidence tests/evals/monitor-breach/run-evidence.json --open-change to display the business-calendar evaluation output and scaffold a traced change brief folder under changes/.
+Run dpf monitor sales_performance --evidence tests/evals/monitor-breach/run-evidence.json --open-change to display the business-calendar evaluation output and write a traced Markdown change brief under changes/.
 
 ---
 

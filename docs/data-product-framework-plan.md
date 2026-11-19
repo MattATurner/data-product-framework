@@ -71,7 +71,7 @@ Each data product carries **two specs** — a BRD spec and a TDD spec — co-loc
 | **BRD spec** | Why are we building this, and what does the business need? | `products/<id>/specs/brd/spec.md` + `brd.yaml` | Business SME / analyst, facilitated by a data engineer | Business only. Outputs, level of detail, history behaviour, timeliness, exceptions, sensitivity. **No grain, no SCD, no BigQuery.** |
 | **TDD spec** | How will we satisfy it, and on which services? | `products/<id>/specs/tdd/spec.md` + `products/<id>/product.yaml` | Data engineer, agent-assisted | Technical. Methodology, grain, SCD, keys, conformance, services, cost. Declares `satisfies: BRD-…@<version>`. |
 | **Semantics** | What will the business actually receive? | `products/<id>/specs/tdd/playback.md` (`semantics.md`) | Derived from the TDD, **signed by the business** | BRD language, TDD content. The one document both parties read (§5.3). |
-| **Build** | Do it, and prove it. | `changes/<id>/tasks.md` + `generated/<id>/**` | Agent, reviewed by engineer | Artefacts only. Regenerable from BRD + TDD. |
+| **Build** | Do it, and prove it. | `generated/<id>/**` | Agent, reviewed by engineer | Artefacts only. Regenerable from BRD + TDD. |
 
 A pull request may update the BRD spec, the TDD spec, or both, while `dpf validate` and `dpf check --gate G3` enforce structure, traceability and golden-copy parity before merge.
 
@@ -892,7 +892,7 @@ data-product-framework/
 ├── bootstrap/                              # Layer-0 GCP project bootstrap, hydration & onboarding
 ├── registry/                               # platform defaults, MCP servers, BRD rubric + vocabulary; no example data
 ├── products/<product_id>/                  # product.yaml · specs/{brd,tdd}/ · sql/ · acceptance.yaml · adr/
-├── changes/<change-id>/                    # structured breach/change briefs (opened on demand by dpf monitor --open-change)
+├── changes/<change-id>.md                  # single-file breach briefs (opened on demand by dpf monitor --open-change)
 ├── generated/<product_id>/                 # disposable build output (gitignored)
 ├── evidence/<product_id>/                  # test-evidence.v1 per run, bound to a build digest
 ├── examples/                               # self-contained worked examples, registry overlay, extractor, seed, Terraform wrapper, runbook

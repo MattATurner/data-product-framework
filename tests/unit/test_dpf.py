@@ -216,19 +216,20 @@ def test_monitor_passes_clean_evidence(sales):
 
 
 def test_open_change_writes_a_change_brief(sales, tmp_path):
+    from dpf.core import front_matter
+
     ev = run_evidence("2026-10-07T03:00:00Z", "2026-10-07T00:30:00Z")
     breaches, _ = evaluate(sales, ev)
     # A stand-in product whose workspace root is the temporary directory.
     stub = SimpleNamespace(id=sales.id, manifest=sales.manifest, brd=sales.brd, ws=SimpleNamespace(root=tmp_path))
-    d = open_change(stub, ev, breaches)
-    assert d == tmp_path / "changes/monitor-sales-performance-freshness-20261007-0300"
-    assert {f.name for f in d.iterdir()} == {"change.yaml", "proposal.md", "design.md", "verification.md",
-                                            "operations.md", "tasks.md"}
-    meta = yaml.safe_load((d / "change.yaml").read_text(encoding="utf-8"))
+    brief = open_change(stub, ev, breaches)
+    assert brief == tmp_path / "changes/monitor-sales-performance-freshness-20261007-0300.md"
+    assert brief.is_file()
+    meta, body = front_matter(brief)
     assert meta["product_id"] == "sales_performance" and meta["requires_spec_change"] is False
-    proposal = (d / "proposal.md").read_text(encoding="utf-8")
-    assert "examples/sales_performance/RUNBOOK.md#freshness-or-volume-breach" in proposal
-    assert "requirements at risk: R-10" in proposal
+    assert meta["requirements_at_risk"] == ["R-10"]
+    assert "examples/sales_performance/RUNBOOK.md#freshness-or-volume-breach" in body
+    assert "requirements at risk: R-10" in body
 
 
 # ----------------------------------------------------------------- build and trace

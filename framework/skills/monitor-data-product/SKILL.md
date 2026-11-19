@@ -36,9 +36,9 @@ dpf monitor <product> --evidence run.json [--open-change]
 ```
 
 Freshness is only judged inside the policy's business calendar. A breach with
-`--open-change` scaffolds `changes/monitor-<product>-<kind>-<YYYYMMDD-HHMM>/`
-(`change.yaml` with `requires_spec_change: false`, plus proposal, design, verification, operations
-and tasks) so the fix goes through the same spec-driven gate loop as any other change. When a
+`--open-change` writes a single Markdown breach brief (`changes/monitor-<product>-<kind>-<YYYYMMDD-HHMM>.md`)
+quoting the breach, affected requirements, runbook link, and action checklist so the fix
+goes through the same spec-driven gate loop as any other pull request. When a
 Dataform workflow invocation fails, you may use `data-engineering-agent-api` (tier 3,
 ADR-017) to diagnose the invocation logs and propose a fix against
 `products/<product>/sql/*.sql` in a pull request—never hot-patching `generated/`.

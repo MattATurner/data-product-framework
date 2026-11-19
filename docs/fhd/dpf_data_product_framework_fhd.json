@@ -1205,7 +1205,7 @@
                 "Detected runtime SLO/AGF breach or new stakeholder metric request"
               ],
               "outputs": [
-                "changes/<change-id>/ brief ready to re-run Gates G0-G4"
+                "changes/<change-id>.md breach brief ready to re-run Gates G0-G4"
               ],
               "business_rules": [
                 "Every Day-2 change flows through the exact same human-gated digest and golden-copy checks in hours rather than ad-hoc hotfixes."
