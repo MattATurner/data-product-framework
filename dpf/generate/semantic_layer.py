@@ -52,31 +52,32 @@ _AGG_EXPR_RE = (
 
 def _infer_sql_measures(sql: str | None, grain: list[str], glossary: dict[str, str]) -> dict[str, dict]:
     """Infer numeric additive measures from authored business_view SQL SELECT items."""
-    from dpf.graph import strip_sql_comments
+    from dpf.sql import _select_clause_tokens, _sig_tokens
     import re
 
     if not sql:
         return {}
     grain_set = set(grain)
-    text = strip_sql_comments(sql)
-    # Inspect top-level SELECT items
-    m_sel = re.findall(r"\bSELECT\b(.*?)\bFROM\b", text, flags=re.I | re.S)
-    if not m_sel:
+    sel_toks = _select_clause_tokens(_sig_tokens(sql))
+    if not sel_toks:
         return {}
-    select_list = m_sel[-1]
-    items, depth, cur = [], 0, ""
-    for ch in select_list:
-        if ch == "(":
+    items: list[str] = []
+    cur: list[str] = []
+    depth = 0
+    for tok in sel_toks:
+        if tok.kind == "LPAREN":
             depth += 1
-        elif ch == ")":
-            depth -= 1
-        if ch == "," and depth == 0:
-            items.append(cur.strip())
-            cur = ""
+            cur.append(tok.value)
+        elif tok.kind == "RPAREN":
+            depth = max(0, depth - 1)
+            cur.append(tok.value)
+        elif tok.kind == "COMMA" and depth == 0:
+            items.append(" ".join(cur).strip())
+            cur = []
         else:
-            cur += ch
-    if cur.strip():
-        items.append(cur.strip())
+            cur.append(tok.value)
+    if cur:
+        items.append(" ".join(cur).strip())
 
     out: dict[str, dict] = {}
     for item in items:
@@ -309,7 +310,18 @@ def build_semantic_spec(p: Product, g: ProductGraph, digest: str, targets_overri
         if target_cube:
             mname = em["name"]
             agg = (em.get("aggregation") or "").lower()
-            m_type = "count" if agg == "count" else ("sum" if em.get("type", "simple") == "simple" else "number")
+            if em.get("type", "simple") != "simple":
+                m_type = "number"
+            else:
+                m_type = {
+                    "count": "count",
+                    "count_distinct": "count_distinct",
+                    "avg": "avg",
+                    "average": "avg",
+                    "min": "min",
+                    "max": "max",
+                    "sum": "sum",
+                }.get(agg, "sum")
             if not any(ms["name"] == mname for ms in target_cube["measures"]):
                 target_cube["measures"].append({
                     "name": mname,

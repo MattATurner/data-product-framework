@@ -367,6 +367,20 @@ resource "google_bigquery_analytics_hub_listing_iam_member" "{li}_subscriber" {{
                                  "and the dbt or Dataform CLI).")
         self.var("runner_service_account", "Service account the Cloud Run Job and Scheduler run as.")
         job_name = kebab_id("dpf", self.p.id, "runner")
+        env_blocks: list[str] = []
+        for k, v in project_vars(self.p).items():
+            if k.startswith("policy_tag_") and self.enforce_policy_tags:
+                tag = k.removeprefix("policy_tag_")
+                env_blocks.append(f"""        env {{
+          name  = {q("DPF_" + k.upper())}
+          value = google_data_catalog_policy_tag.{tag}.name
+        }}""")
+            else:
+                env_blocks.append(f"""        env {{
+          name  = {q("DPF_" + k.upper())}
+          value = {q(v)}
+        }}""")
+        env_hcl = ("\n" + "\n".join(env_blocks)) if env_blocks else ""
         self.emit("orchestration.tf", trace(implements="generate-artefacts"), f"""
 resource "google_cloud_run_v2_job" "runner" {{
   project  = var.project_id
@@ -376,7 +390,7 @@ resource "google_cloud_run_v2_job" "runner" {{
     template {{
       service_account = var.runner_service_account
       containers {{
-        image = var.runner_image
+        image = var.runner_image{env_hcl}
       }}
     }}
   }}
@@ -431,6 +445,14 @@ resource "google_dataform_repository_release_config" "product" {{
         if orch_engine == "cloud_run_jobs":
             self._cloud_run_job()
             if self.schedules_enabled:
+                self.emit("orchestration.tf", trace(implements="generate-artefacts"), """
+resource "google_cloud_run_v2_job_iam_member" "runner_invoker" {
+  project  = var.project_id
+  location = var.region
+  name     = google_cloud_run_v2_job.runner.name
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${var.runner_service_account}"
+}""")
                 for s in orch.get("schedules", []) or []:
                     sid = snake_id(s["id"])
                     cmd_args = (["dbt", "build", "--select", f"tag:{s['id']}", "--exclude", "tag:acceptance"]
@@ -446,7 +468,10 @@ resource "google_cloud_scheduler_job" "{sid}" {{
   http_target {{
     http_method = "POST"
     uri         = "https://${{var.region}}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${{var.project_id}}/jobs/${{google_cloud_run_v2_job.runner.name}}:run"
-    body        = base64encode(jsonencode({{ overrides = {{ containerOverrides = [{{ args = {hcl_list(cmd_args)} }}] }} }}))
+    headers = {{
+      "Content-Type" = "application/json"
+    }}
+    body = base64encode(jsonencode({{ overrides = {{ containerOverrides = [{{ args = {hcl_list(cmd_args)} }}] }} }}))
     oauth_token {{
       service_account_email = var.runner_service_account
     }}
@@ -461,6 +486,15 @@ resource "google_cloud_scheduler_job" "{sid}" {{
                 wf_body = """    main:
       params: [args]
       steps:
+        - create_compilation:
+            call: http.post
+            args:
+              url: https://dataform.googleapis.com/v1beta1/projects/${var.project_id}/locations/${var.region}/repositories/${var.dataform_repository}/compilationResults
+              auth:
+                type: OAuth2
+              body:
+                releaseConfig: ${google_dataform_repository_release_config.product.id}
+            result: compilation
         - invoke_dataform:
             call: http.post
             args:
@@ -468,14 +502,33 @@ resource "google_cloud_scheduler_job" "{sid}" {{
               auth:
                 type: OAuth2
               body:
-                releaseConfig: ${google_dataform_repository_release_config.product.id}
+                compilationResult: '$${compilation.body.name}'
                 invocationConfig:
                   includedTags: '$${[args.schedule]}'
                   transitiveDependenciesIncluded: false
                   fullyRefreshIncrementalTablesEnabled: false
             result: invocation
+        - poll_invocation:
+            call: http.get
+            args:
+              url: '$${"https://dataform.googleapis.com/v1beta1/" + invocation.body.name}'
+              auth:
+                type: OAuth2
+            result: status
+        - check_state:
+            switch:
+              - condition: '$${status.body.state == "RUNNING"}'
+                steps:
+                  - wait_retry:
+                      call: sys.sleep
+                      args:
+                        seconds: 10
+                  - retry_poll:
+                      next: poll_invocation
+              - condition: '$${status.body.state != "SUCCEEDED"}'
+                raise: '$${status.body}'
         - return_result:
-            return: '$${invocation.body}'"""
+            return: '$${status.body}'"""
             else:
                 self._cloud_run_job()
                 wf_body = """    main:
@@ -506,6 +559,12 @@ resource "google_workflows_workflow" "product" {{
   YAML
 }}""")
             if self.schedules_enabled:
+                self.emit("orchestration.tf", trace(implements="generate-artefacts"), """
+resource "google_project_iam_member" "workflow_invoker" {
+  project = var.project_id
+  role    = "roles/workflows.invoker"
+  member  = "serviceAccount:${var.workflow_service_account}"
+}""")
                 for s in orch.get("schedules", []) or []:
                     sid = snake_id(s["id"])
                     self.emit("orchestration.tf",
@@ -519,7 +578,10 @@ resource "google_cloud_scheduler_job" "{sid}" {{
   http_target {{
     http_method = "POST"
     uri         = "https://workflowexecutions.googleapis.com/v1/${{google_workflows_workflow.product.id}}/executions"
-    body        = base64encode(jsonencode({{ argument = jsonencode({{ schedule = {q(s["id"])} }}) }}))
+    headers = {{
+      "Content-Type" = "application/json"
+    }}
+    body = base64encode(jsonencode({{ argument = jsonencode({{ schedule = {q(s["id"])} }}) }}))
     oauth_token {{
       service_account_email = var.workflow_service_account
     }}
@@ -624,7 +686,8 @@ resource "google_dataform_repository_workflow_config" "{snake_id(s['id'])}" {{
         def transfer(rid: str, ob: dict, display: str, schedule: str, sql: str, elements: list[str]) -> None:
             checks.append(rid)
             sat = reqs_of(ob)
-            body = "\n".join("      " + line if line else "" for line in sql.splitlines())
+            safe_sql = re.sub(r"\$\{(?!var\.project_id\})", "$${", sql).replace("%{", "%%{")
+            body = "\n".join("      " + line if line else "" for line in safe_sql.splitlines())
             self.emit("monitoring.tf", trace(elements, sat, ob.get("implements") if not sat else None), f"""
 resource "google_bigquery_data_transfer_config" "{rid}" {{
   project              = var.project_id
@@ -651,7 +714,10 @@ resource "google_bigquery_data_transfer_config" "{rid}" {{
                      "every 24 hours", self.volume_sql(ob), [f"observability:{ob['id']}"])
 
         sources = self.man.get("sources", []) or []
-        src_filter = " OR ".join(f'\\"{s["system_id"]}\\"' for s in sources)
+        src_filter = " OR ".join(
+            '\\"' + str(s["system_id"]).replace("\\", "\\\\").replace('"', '\\"') + '\\"'
+            for s in sources
+        )
         metrics: list[tuple[str, str, str, str, str, str]] = []  # id, filter, resource type, title, anchor, header
         if sources:
             self.var("extractor_log_resource_type", "Monitored resource type the extractor's logs arrive under "

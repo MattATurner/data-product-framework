@@ -13,7 +13,9 @@ from dataclasses import dataclass, field
 
 from dpf.core import Product
 from dpf.graph import ProductGraph, body_refs
+from dpf.generate.render import is_timestamp
 from dpf.generate.testspec import action_name, quality_condition
+from dpf.sql import sql_escape_str
 
 INCREMENTAL_MARKER = "/* dpf:incremental */"
 MODEL_TARGET_MARKER = "/* dpf:model_target */"
@@ -69,8 +71,10 @@ def ref(name: str) -> str:
 
 
 def _key_concat(cols: list[str], alias: str) -> str:
-    parts = [f"CAST({alias}.{c} AS STRING)" for c in cols]
-    return parts[0] if len(parts) == 1 else "CONCAT(" + ", '|', ".join(parts) + ")"
+    if len(cols) == 1:
+        return f"COALESCE(CAST({alias}.{cols[0]} AS STRING), '')"
+    fields = ", ".join(f"{alias}.{c}" for c in cols)
+    return f"TO_JSON_STRING(STRUCT({fields}))"
 
 
 # ----------------------------------------------------------------- generated SQL
@@ -79,7 +83,7 @@ def staging_candidates_sql(body: str, nk: list[str], order: list[str], rules: li
     for r in rules:
         cond = quality_condition(r)
         if cond:
-            whens.append(f"    WHEN {cond} THEN '{r['id']}'")
+            whens.append(f"    WHEN {cond} THEN '{sql_escape_str(r['id'])}'")
     reason = ("  CASE\n" + "\n".join(whens) + "\n  END AS _reject_reason") if whens \
         else "  CAST(NULL AS STRING) AS _reject_reason"
     return (f"WITH typed AS (\n{indent(strip_leading_comments(body))}\n)\n"
@@ -89,13 +93,18 @@ def staging_candidates_sql(body: str, nk: list[str], order: list[str], rules: li
             f"{reason}\nFROM typed")
 
 
-def staging_view_sql(name: str, which: str) -> str:
+def staging_view_sql(name: str, which: str, nk: list[str] | None = None) -> str:
     if which == "current":
         return (f"SELECT * EXCEPT (_dpf_row_rank, _dpf_version_rank, _reject_reason)\n"
                 f"FROM {ref(name + '__candidates')}\nWHERE _dpf_row_rank = 1 AND _reject_reason IS NULL")
     if which == "rejects":
+        if nk:
+            nk_null = " OR ".join(f"{c} IS NULL" for c in nk)
+            rank_pred = f"(_dpf_row_rank = 1 OR {nk_null})"
+        else:
+            rank_pred = "_dpf_row_rank = 1"
         return (f"SELECT * EXCEPT (_dpf_row_rank, _dpf_version_rank)\n"
-                f"FROM {ref(name + '__candidates')}\nWHERE _dpf_row_rank = 1 AND _reject_reason IS NOT NULL")
+                f"FROM {ref(name + '__candidates')}\nWHERE {rank_pred} AND _reject_reason IS NOT NULL")
     return (f"SELECT * EXCEPT (_dpf_row_rank, _dpf_version_rank, _reject_reason)\n"
             f"FROM {ref(name + '__candidates')}\nWHERE _dpf_version_rank = 1 AND _reject_reason IS NULL")
 
@@ -104,7 +113,9 @@ def _unknown_value(col: str, attrs: dict, default: str) -> str:
     override = (attrs.get("unknown_member") or {}).get(col)
     if override is None:
         return default
-    return str(override) if isinstance(override, (int, float)) else "'" + str(override).replace("'", "\\'") + "'"
+    if isinstance(override, bool):
+        return "TRUE" if override else "FALSE"
+    return str(override) if isinstance(override, (int, float)) else "'" + sql_escape_str(str(override)) + "'"
 
 
 def dimension_scd2_sql(m: dict) -> str:
@@ -193,20 +204,34 @@ def fact_sql(m: dict, g: ProductGraph, tz: str) -> tuple[str, str | None]:
     flag_sel = "".join(f",\n    ({f['expression']}) AS {f['name']}" for f in flags)
     sel = [f"  s.{c}" for c in m.get("natural_key") or []]
     joins = []
+    used_cal_keys: set[str] = set()
+    used_sk_keys: set[str] = set()
     for i, r in enumerate(attrs.get("dim_refs", []) or [], 1):
         dim = g.get(r["dimension"])
         if dim is None:
             continue
         if dim.role == "calendar":
-            sel.append(f"  CAST(FORMAT_DATE('%Y%m%d', s.{r['from']}) AS INT64) AS date_key")
+            from_col = r["from"]
+            dk_alias = r.get("as") or ("date_key" if "date_key" not in used_cal_keys else f"date_key_{from_col}")
+            used_cal_keys.add(dk_alias)
+            date_expr = f"DATE(s.{from_col}, '{tz}')" if is_timestamp(from_col) else f"s.{from_col}"
+            sel.append(f"  CAST(FORMAT_DATE('%Y%m%d', {date_expr}) AS INT64) AS {dk_alias}")
             continue
-        alias, sk, nkc = f"d{i}", dim.model["surrogate_key"], r["natural_key"]
-        dim_nk = (dim.model.get("natural_key") or [nkc])[0]
-        sel.append(f"  s.{nkc}")
-        sel.append(f"  COALESCE({alias}.{sk}, -1) AS {sk}")
-        cond = f"{alias}.{dim_nk} = s.{nkc}"
+        alias, sk = f"d{i}", dim.model["surrogate_key"]
+        raw_nk = r["natural_key"]
+        src_nks = list(raw_nk) if isinstance(raw_nk, list) else [raw_nk]
+        dim_nks = list(dim.model.get("natural_key") or src_nks)
+        if len(dim_nks) > len(src_nks) and len(src_nks) == 1:
+            dim_nks = dim_nks[:1]
+        sk_alias = r.get("as") or (sk if sk not in used_sk_keys else f"{sk}_{src_nks[0]}")
+        used_sk_keys.add(sk_alias)
+        for col in src_nks:
+            sel.append(f"  s.{col}")
+        sel.append(f"  COALESCE({alias}.{sk}, -1) AS {sk_alias}")
+        cond = " AND ".join(f"{alias}.{dk} = s.{skc}" for dk, skc in zip(dim_nks, src_nks))
         if int((dim.model.get("attributes") or {}).get("scd_type", 1) or 1) == 2:
-            as_at = f"TIMESTAMP(s.{r['as_at']}, '{tz}')"
+            as_at_col = r["as_at"]
+            as_at = f"s.{as_at_col}" if is_timestamp(as_at_col) else f"TIMESTAMP(s.{as_at_col}, '{tz}')"
             cond += f"\n AND {as_at} >= {alias}.valid_from\n AND {as_at} < {alias}.valid_to"
         joins.append(f"LEFT JOIN {ref(dim.name)} AS {alias}\n  ON {cond}")
     if attrs.get("event_date"):
@@ -221,8 +246,10 @@ def fact_sql(m: dict, g: ProductGraph, tz: str) -> tuple[str, str | None]:
             seen.add(key)
             uniq.append(line)
     window = attrs.get("restatement_window_days")
-    predicate = (f"{attrs['event_date']} >= DATE_SUB(CURRENT_DATE('{tz}'), INTERVAL {int(window)} DAY)"
-                 if window and attrs.get("event_date") else None)
+    ev_col = attrs.get("event_date")
+    ev_lhs = f"DATE({ev_col}, '{tz}')" if is_timestamp(ev_col) else ev_col
+    predicate = (f"{ev_lhs} >= DATE_SUB(CURRENT_DATE('{tz}'), INTERVAL {int(window)} DAY)"
+                 if window and ev_col else None)
     sql = "\n".join([
         "WITH source_rows AS (",
         f"  SELECT\n    *{flag_sel}",
@@ -267,10 +294,10 @@ def bqml_model_sql(m: dict, body: str) -> str:
         elif isinstance(v, (int, float)):
             opt_parts.append(f"{k}={v}")
         elif isinstance(v, list):
-            arr = ", ".join("'" + str(x) + "'" if isinstance(x, str) else str(x) for x in v)
+            arr = ", ".join("'" + sql_escape_str(str(x)) + "'" if isinstance(x, str) else str(x) for x in v)
             opt_parts.append(f"{k}=[{arr}]")
         else:
-            opt_parts.append(f"{k}='{v}'")
+            opt_parts.append(f"{k}='{sql_escape_str(str(v))}'")
     return (f"CREATE OR REPLACE MODEL {MODEL_TARGET_MARKER}\n"
             f"OPTIONS({', '.join(opt_parts)}) AS\n"
             f"{strip_leading_comments(body)}")
@@ -329,7 +356,7 @@ def build_plan(p: Product, g: ProductGraph, spec: dict, skills: dict[str, str]) 
                                   tags=tags, description=desc + " Rows failing a quarantine rule are excluded.",
                                   header=header(n)))
             actions.append(Action(name=f"{name}_rejects", kind="view", dataset="staging", subdir="staging",
-                                  sql=staging_view_sql(name, "rejects"), model=name, layer="staging", tags=tags,
+                                  sql=staging_view_sql(name, "rejects", m["natural_key"]), model=name, layer="staging", tags=tags,
                                   description=f"Latest {name} rows that failed a quarantine rule, with _reject_reason.",
                                   header=header(n, {"part": "rejects", "satisfies": ",".join(sorted(
                                       {x for r in rules for x in r.get("brd_requirement_id") or []}))
@@ -371,12 +398,21 @@ def build_plan(p: Product, g: ProductGraph, spec: dict, skills: dict[str, str]) 
                                   inputs=list(n.inputs), **common))
 
     # -- assertions from the test specification
+    all_scheds = [s["id"] for s in (man.get("orchestration") or {}).get("schedules", []) or []]
     for case in spec["cases"]:
         if case["method"] != "automated":
             continue
         acceptance = case["kind"] == "acceptance"
         model = case.get("model")
-        tags = ["acceptance"] if acceptance else list(scheds.get(model, []))
+        if acceptance:
+            tags = ["acceptance"]
+        elif model in scheds:
+            tags = list(scheds[model])
+        elif model and (nd := g.get(model)) is not None and nd.kind == "upstream":
+            down_tags = sorted({t for d in g.downstream(model) for t in scheds.get(d, [])})
+            tags = [s for s in all_scheds if s in down_tags] or list(all_scheds[:1])
+        else:
+            tags = []
         hdr = {"test": case["id"], "model": model, "satisfies": ",".join(case.get("satisfies") or [])}
         if case.get("verifies"):
             hdr["verifies"] = ",".join(case["verifies"])

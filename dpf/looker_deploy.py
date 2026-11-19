@@ -149,9 +149,10 @@ def _resolve_folder_id(cli: LookerCliRunner, folder: str) -> tuple[str | None, s
         for f in payload:
             if isinstance(f, dict) and str(f.get("name", "")).strip().lower() == target:
                 return str(f.get("id")), ""
-        for f in payload:
-            if isinstance(f, dict) and f.get("is_shared_root"):
-                return str(f.get("id")), ""
+        if target == "shared":
+            for f in payload:
+                if isinstance(f, dict) and f.get("is_shared_root"):
+                    return str(f.get("id")), ""
     elif isinstance(payload, str):
         shared_fallback: str | None = None
         for ln in payload.splitlines():
@@ -164,7 +165,7 @@ def _resolve_folder_id(cli: LookerCliRunner, folder: str) -> tuple[str | None, s
                     return fid, ""
                 if is_shared and not shared_fallback:
                     shared_fallback = fid
-        if shared_fallback:
+        if target == "shared" and shared_fallback:
             return shared_fallback, ""
     return None, f"Looker folder '{folder}' not found"
 
@@ -209,7 +210,7 @@ def deploy_looker(
     looker_cfg = spec.get("looker") or {}
     lkr_project = looker_cfg.get("project_name") or p.id
     conn_name = looker_cfg.get("connection") or f"bigquery_{p.id}"
-    auth_mode = looker_cfg.get("auth_mode") or "service_account"
+    auth_mode = looker_cfg.get("auth_mode") or "oauth"
     gcp_proj = ((p.manifest.get("deployment") or {}).get("gcp_project") or "").strip()
     if not gcp_proj:
         report.fail(
@@ -382,7 +383,10 @@ def deploy_looker(
         if proc_dep.returncode == 0:
             report.ok(f"deployed Looker project '{lkr_project}' to production")
         else:
-            report.warn(f"Looker project deploy note: {(proc_dep.stderr or proc_dep.stdout or '').strip()}")
+            report.fail(f"Looker project deploy failed: {(proc_dep.stderr or proc_dep.stdout or '').strip()}")
+            cli.run(["session", "update", "production"], dev_session=False)
+            return {}
+        cli.run(["session", "update", "production"], dev_session=False)
 
     # 6. Import / sync LookML dashboards as UDDs
     folder_id, f_err = _resolve_folder_id(cli, folder)
@@ -396,7 +400,8 @@ def deploy_looker(
         dname = dash["name"]
         lookml_id = f"{p.id}::{dname}"
         ok_imp_d, imp_obj, d_err = cli.run_json(
-            ["dashboard", "import", "lookml", lookml_id, folder_id, "--sync", "--plain"], dev_session=True
+            ["dashboard", "import", "lookml", lookml_id, folder_id, "--sync", "--plain"],
+            dev_session=not uses_git,
         )
         udd_id: str | None = None
         if ok_imp_d:
@@ -414,7 +419,7 @@ def deploy_looker(
         dashboards_out.append({"name": dname, "udd_id": udd_id, "url": dash_url})
 
     if verify_queries and dashboards_out:
-        verify_looker_dashboards(cli, dashboards_out, report)
+        verify_looker_dashboards(cli, dashboards_out, report, dev_session=not uses_git)
 
     return {
         "product_id": p.id,
@@ -430,13 +435,15 @@ def verify_looker_dashboards(
     cli: LookerCliRunner,
     dashboards: list[dict[str, Any]],
     report: Report,
+    *,
+    dev_session: bool = False,
 ) -> list[dict[str, Any]]:
     tile_results: list[dict[str, Any]] = []
     for d in dashboards:
         udd_id = str(d["udd_id"])
         ok_cat, cat_obj, cat_err = cli.run_json(
             ["dashboard", "cat", udd_id],
-            dev_session=True,
+            dev_session=dev_session,
         )
         if not ok_cat or not isinstance(cat_obj, dict):
             report.fail(f"failed to inspect elements of dashboard {udd_id}: {cat_err}")
@@ -453,7 +460,7 @@ def verify_looker_dashboards(
             if not qid:
                 continue
             title = el.get("title") or f"query:{qid}"
-            ok_q, q_rows, q_err = cli.run_json(["query", "runquery", str(qid), "--format", "json"], dev_session=True, timeout=120)
+            ok_q, q_rows, q_err = cli.run_json(["query", "runquery", str(qid), "--format", "json"], dev_session=dev_session, timeout=120)
             if not ok_q:
                 report.fail(f"tile '{title}' (query {qid}) failed in BigQuery/Looker: {q_err}")
                 tile_results.append({"dashboard": d["name"], "tile": title, "query_id": qid, "status": "failed", "error": q_err})
@@ -479,6 +486,7 @@ def verify_looker(
     profile: str | None = None,
     host: str | None = None,
     port: str | None = None,
+    folder: str = "Shared",
 ) -> dict[str, Any]:
     report.head(f"looker · verify — {product_id}", gate="looker")
     cli_bin = find_looker_cli()
@@ -495,7 +503,9 @@ def verify_looker(
     lkr_project = ((spec.get("looker") or {}).get("project_name")) or p.id
     cli = LookerCliRunner(cli_bin, profile=profile, host=host, port=port)
 
-    ok_val, val_obj, val_err = cli.run_json(["api", "project", "validate_project", lkr_project], dev_session=True)
+    # Validate against production workspace (never mask undeployed dev-branch LookML)
+    cli.run(["session", "update", "production"], dev_session=False)
+    ok_val, val_obj, val_err = cli.run_json(["api", "project", "validate_project", lkr_project], dev_session=False)
     if not ok_val:
         report.fail(f"Looker validate_project failed on '{lkr_project}': {val_err}")
         return {}
@@ -511,10 +521,10 @@ def verify_looker(
 
     base_url = resolve_looker_base_url(profile=profile, host_override=host)
     dashboards: list[dict[str, Any]] = []
-    folder_id, _ = _resolve_folder_id(cli, "Shared")
+    folder_id, _ = _resolve_folder_id(cli, folder)
     dash_list: list[dict[str, Any]] = []
     if folder_id:
-        ok_fcat, fcat_obj, _ = cli.run_json(["folder", "cat", folder_id], dev_session=True)
+        ok_fcat, fcat_obj, _ = cli.run_json(["folder", "cat", folder_id], dev_session=False)
         if ok_fcat and isinstance(fcat_obj, dict):
             dash_list = list(fcat_obj.get("dashboards") or [])
     for dash in spec.get("dashboards") or []:
@@ -541,5 +551,5 @@ def verify_looker(
             "url": f"{base_url}/dashboards/{uid}" if base_url else f"/dashboards/{uid}",
         })
 
-    tiles = verify_looker_dashboards(cli, dashboards, report) if dashboards else []
+    tiles = verify_looker_dashboards(cli, dashboards, report, dev_session=False) if dashboards else []
     return {"product_id": p.id, "looker_project": lkr_project, "dashboards": dashboards, "tiles": tiles}

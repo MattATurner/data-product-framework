@@ -301,6 +301,15 @@ def _render_view_lkml(
     bool_dims = {d["name"] for d in cube.get("dimensions") or [] if d["type"] == "boolean"}
     cube_metrics = [m for m in (spec.get("metrics") or []) if m.get("model") == cname]
 
+    tagged_cols: dict[str, str] = {}
+    policy_hidden_cols: set[str] = set()
+    for pt in cube.get("policy_tags") or []:
+        for col in pt.get("columns") or []:
+            if auth_mode == "service_account":
+                tagged_cols[col] = snake_id("can_view", pt["tag"])
+            else:
+                policy_hidden_cols.add(col)
+
     if hub:
         lines = [
             hdr,
@@ -308,6 +317,20 @@ def _render_view_lkml(
             "",
             f"view: +{cname} {{",
         ]
+        for d in cube.get("dimensions") or []:
+            dname = d["name"]
+            if dname not in tagged_cols and dname not in policy_hidden_cols:
+                continue
+            blk = "dimension_group" if d["type"] == "time" else "dimension"
+            fname = _dg_base_and_tfs(dname, {x["name"] for x in cube.get("dimensions") or []}, d.get("datatype"))[0] \
+                if d["type"] == "time" else dname
+            lines.append("")
+            lines.append(f"  {blk}: {fname} {{")
+            if dname in policy_hidden_cols:
+                lines.append("    hidden: yes")
+            if dname in tagged_cols:
+                lines.append(f"    required_access_grants: [{tagged_cols[dname]}]")
+            lines.append("  }")
         for mt in cube_metrics:
             lines.extend(_render_metric_measure(mt, bool_dims))
         lines.append("}")
@@ -323,14 +346,6 @@ def _render_view_lkml(
     all_cols = {d["name"] for d in cube.get("dimensions") or []}
     sk = cube.get("surrogate_key")
     grain = list(cube.get("grain_columns") or [])
-    tagged_cols: dict[str, str] = {}
-    policy_hidden_cols: set[str] = set()
-    for pt in cube.get("policy_tags") or []:
-        for col in pt.get("columns") or []:
-            if auth_mode == "service_account":
-                tagged_cols[col] = snake_id("can_view", pt["tag"])
-            else:
-                policy_hidden_cols.add(col)
 
     pk_col: str | None = None
     if sk:
@@ -339,8 +354,13 @@ def _render_view_lkml(
         pk_col = grain[0]
 
     if pk_col is None:
-        concat_parts = ", '|', ".join(f"CAST(${{TABLE}}.{c} AS STRING)" for c in (grain or ["1"]))
-        pk_sql = f"CONCAT({concat_parts})" if len(grain) > 1 else f"CAST(${{TABLE}}.{grain[0]} AS STRING)"
+        if len(grain) > 1:
+            fields = ", ".join(f"${{TABLE}}.{c}" for c in grain)
+            pk_sql = f"TO_JSON_STRING(STRUCT({fields}))"
+        elif len(grain) == 1:
+            pk_sql = f"CAST(${{TABLE}}.{grain[0]} AS STRING)"
+        else:
+            pk_sql = "CAST(1 AS STRING)"
         lines += [
             "",
             "  dimension: _dpf_pk {",
@@ -369,12 +389,18 @@ def _render_view_lkml(
             lines += [
                 "",
                 f"  dimension_group: {dg_name} {{",
+            ]
+            if d.get("hidden") or dname in policy_hidden_cols:
+                lines.append("    hidden: yes")
+            lines += [
                 "    type: time",
                 f"    timeframes: [{', '.join(tfs)}]",
                 f"    datatype: {dtype}",
             ]
             if desc:
                 lines.append(f"    description: {_lkml_str(desc)}")
+            if dname in tagged_cols:
+                lines.append(f"    required_access_grants: [{tagged_cols[dname]}]")
             lines += [
                 f"    sql: ${{TABLE}}.{dname} ;;",
                 "  }",
@@ -450,13 +476,30 @@ def _render_metric_measure(mt: dict, bool_dims: set[str]) -> list[str]:
         sql_expr = col if "${" in col else f"${{TABLE}}.{col}"
         lines.append(f"    sql: {sql_expr} ;;")
     elif agg == "count":
-        lines.append("    type: count")
         if mt.get("filter"):
-            kv_filters, _ = _parse_measure_filter(mt["filter"], bool_dims)
-            for fk, fv in kv_filters:
-                lines.append(f"    filters: [{fk}: {_lkml_str(fv)}]")
+            kv_filters, raw_pred = _parse_measure_filter(mt["filter"], bool_dims)
+            if kv_filters:
+                lines.append("    type: count")
+                for fk, fv in kv_filters:
+                    lines.append(f"    filters: [{fk}: {_lkml_str(fv)}]")
+            elif raw_pred:
+                lines.append("    type: sum")
+                lines.append(f"    sql: CASE WHEN ({raw_pred}) THEN 1 ELSE 0 END ;;")
+            else:
+                lines.append("    type: count")
+        else:
+            lines.append("    type: count")
     else:
-        lines.append("    type: sum")
+        lkml_agg = {
+            "sum": "sum",
+            "avg": "average",
+            "average": "average",
+            "min": "min",
+            "max": "max",
+            "count_distinct": "count_distinct",
+            "median": "median",
+        }.get(agg, "sum")
+        lines.append(f"    type: {lkml_agg}")
         if mt.get("filter"):
             kv_filters, raw_pred = _parse_measure_filter(mt["filter"], bool_dims)
             if kv_filters:
@@ -543,14 +586,18 @@ def _render_explore_lkml(p: Product, g: ProductGraph, spec: dict, explore: dict,
             ]
     else:
         for j in joins_cfg:
-            lines += [
+            jlines = [
                 "",
                 f"  join: {j['view']} {{",
                 f"    type: {j.get('type', 'left_outer')}",
                 f"    relationship: {j['relationship']}",
-                f"    sql_on: {j['sql_on']} ;;",
-                "  }",
             ]
+            if j.get("sql_on"):
+                jlines.append(f"    sql_on: {j['sql_on']} ;;")
+            elif j.get("foreign_key"):
+                jlines.append(f"    foreign_key: {j['foreign_key']}")
+            jlines.append("  }")
+            lines += jlines
 
     dg_name = f"{p.id}_default_datagroup"
     exp_fields = explore_field_map(explore, cubes_by_name)
@@ -615,7 +662,8 @@ def _render_dashboard_lkml(p: Product, spec: dict, dash: dict, explores_by_name:
     hdr = _hdr(p, spec["version"], f"dashboard:{dname}", reqs)
 
     if dash.get("file"):
-        fpath = p.dir / dash["file"]
+        from dpf.sql import safe_subpath
+        fpath = safe_subpath(p.dir, dash["file"])
         raw = fpath.read_text(encoding="utf-8") if fpath.exists() else ""
         stripped = "\n".join(ln for ln in raw.splitlines() if not ln.strip().startswith("# dpf:"))
         return hdr + "\n" + stripped.strip() + "\n"

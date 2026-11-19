@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from dpf.core import Product
 from dpf.graph import ProductGraph
+from dpf.sql import id_sort_key, sql_escape_str
 
 PLATFORM = "test-data-product"
 
@@ -50,10 +51,13 @@ def quality_condition(rule: dict) -> str | None:
             parts.append(f"{col} < {rule['min']}")
         if rule.get("max") is not None:
             parts.append(f"{col} > {rule['max']}")
-        return " OR ".join(parts) or None
+        return f"COALESCE({' OR '.join(parts)}, TRUE)" if parts else None
     if t == "set_membership":
-        vals = ", ".join("'" + str(v).replace("'", "\\'") + "'" for v in rule.get("values") or [])
-        return f"{col} NOT IN ({vals})"
+        raw_vals = list(rule.get("values") or [])
+        if not raw_vals:
+            return "TRUE"
+        vals = ", ".join("'" + sql_escape_str(str(v)) + "'" for v in raw_vals)
+        return f"COALESCE({col} NOT IN ({vals}), TRUE)"
     if t == "custom_sql" and rule.get("expression"):
         return f"NOT COALESCE(({rule['expression']}), FALSE)"
     return None
@@ -124,13 +128,27 @@ def build_test_spec(p: Product, g: ProductGraph, digest: str) -> dict:
                 max_pct = min(rule_pcts) if rule_pcts else q_cfg.get("max_reject_pct")
                 rule_rows = [r["max_reject_rows"] for r in rules if r.get("max_reject_rows") is not None]
                 max_rows = min(rule_rows) if rule_rows else q_cfg.get("max_reject_rows")
-                if max_pct is not None:
+                nk_cols = list(m.get("natural_key") or grain)
+                nk_null = " OR ".join(f"{c} IS NULL" for c in nk_cols)
+                rank_where = f"WHERE _dpf_row_rank = 1 OR {nk_null}" if nk_null else "WHERE _dpf_row_rank = 1"
+                if max_pct is not None and max_rows is not None:
                     gate_sql = (f"SELECT\n"
                                 f"  COUNTIF(_reject_reason IS NOT NULL) AS rejected_rows,\n"
                                 f"  COUNT(*) AS candidate_rows,\n"
                                 f"  SAFE_DIVIDE(COUNTIF(_reject_reason IS NOT NULL) * 100.0, COUNT(*)) AS reject_pct\n"
                                 f"FROM {{{{ ref('{name}__candidates') }}}}\n"
-                                f"WHERE _dpf_row_rank = 1\n"
+                                f"{rank_where}\n"
+                                f"HAVING SAFE_DIVIDE(COUNTIF(_reject_reason IS NOT NULL) * 100.0, COUNT(*)) > {max_pct}\n"
+                                f"    OR COUNTIF(_reject_reason IS NOT NULL) > {max_rows}")
+                    desc = (f"{name}: quarantined rows ({', '.join(r['id'] for r in rules)}) do not exceed "
+                            f"{max_pct}% or {max_rows} row(s)")
+                elif max_pct is not None:
+                    gate_sql = (f"SELECT\n"
+                                f"  COUNTIF(_reject_reason IS NOT NULL) AS rejected_rows,\n"
+                                f"  COUNT(*) AS candidate_rows,\n"
+                                f"  SAFE_DIVIDE(COUNTIF(_reject_reason IS NOT NULL) * 100.0, COUNT(*)) AS reject_pct\n"
+                                f"FROM {{{{ ref('{name}__candidates') }}}}\n"
+                                f"{rank_where}\n"
                                 f"HAVING SAFE_DIVIDE(COUNTIF(_reject_reason IS NOT NULL) * 100.0, COUNT(*)) > {max_pct}")
                     desc = f"{name}: quarantined row share ({', '.join(r['id'] for r in rules)}) does not exceed {max_pct}%"
                 elif max_rows is not None:
@@ -158,7 +176,7 @@ def build_test_spec(p: Product, g: ProductGraph, digest: str) -> dict:
                                 f"  COUNT(*) AS candidate_rows,\n"
                                 f"  SAFE_DIVIDE(COUNTIF(_reject_reason IS NOT NULL) * 100.0, COUNT(*)) AS reject_pct\n"
                                 f"FROM {{{{ ref('{name}__candidates') }}}}\n"
-                                f"WHERE _dpf_row_rank = 1\n"
+                                f"{rank_where}\n"
                                 f"HAVING SAFE_DIVIDE(COUNTIF(_reject_reason IS NOT NULL) * 100.0, COUNT(*)) > {warn_pct}")
                     add(id=f"reject_warn:{name}", kind="reject_gate", method="automated", severity="warn", model=name,
                         description=f"{name}: warn when quarantined row share exceeds {warn_pct}%",
@@ -232,7 +250,7 @@ def build_test_spec(p: Product, g: ProductGraph, digest: str) -> dict:
 
     ax_owner = p.scenario_ids
     for t in (p.acceptance or {}).get("tests", []) or []:
-        reqs = sorted({ax_owner[a] for a in t["verifies"] if a in ax_owner}, key=lambda x: int(x.split("-")[1]))
+        reqs = sorted({ax_owner[a] for a in t["verifies"] if a in ax_owner}, key=id_sort_key)
         base = dict(id=f"acceptance:{t['id']}", method=t["method"], description=t["description"],
                     verifies=list(t["verifies"]), satisfies=reqs, tags=["acceptance"])
         if t["method"] == "automated":

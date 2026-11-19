@@ -151,30 +151,20 @@ def _ensure_staging_columns(sql: str, nk: list[str]) -> tuple[str, list[str]]:
     if "_ingest_ts" not in cols:
         extras.append("  CURRENT_TIMESTAMP() AS _ingest_ts")
     if extras:
-        # Insert extra columns immediately before top-level FROM.
-        text = strip_sql_comments(sql)
-        depth, i, n, from_pos = 0, 0, len(text), -1
-        while i < n:
-            c = text[i]
-            if c == "(":
+        # Insert extra columns immediately before the depth-0 FROM token in the original SQL.
+        from dpf.sql import tokenize_sql
+        depth, from_pos = 0, -1
+        for tok in tokenize_sql(sql):
+            if tok.kind == "LPAREN":
                 depth += 1
-            elif c == ")":
+            elif tok.kind == "RPAREN":
                 depth = max(0, depth - 1)
-            elif c in ("'", '"', "`"):
-                j = text.find(c, i + 1)
-                i = n if j < 0 else j
-            elif depth == 0 and text[i:i + 4].upper() == "FROM" and (i == 0 or not text[i - 1].isalnum()) \
-                    and (i + 4 >= n or not text[i + 4].isalnum()):
-                from_pos = i
-            i += 1
+            elif depth == 0 and tok.kind == "WORD" and tok.value.upper() == "FROM":
+                from_pos = tok.start
         if from_pos > 0:
-            # Locate corresponding FROM in original sql from the end.
-            m = list(re.finditer(r"\bFROM\b", sql, re.I))
-            if m:
-                pos = m[-1].start()
-                head = sql[:pos].rstrip()
-                tail = sql[pos:]
-                sql = head + ",\n" + ",\n".join(extras) + "\n" + tail
+            head = sql[:from_pos].rstrip()
+            tail = sql[from_pos:]
+            sql = head + ",\n" + ",\n".join(extras) + "\n" + tail
     if not nk:
         nk = [next((c for c in cols if c not in ("source_modified_ts", "_ingest_ts", "_batch_id")), cols[0])]
     top = _blank_literals_and_parens(sql)

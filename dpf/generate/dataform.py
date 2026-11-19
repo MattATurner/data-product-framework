@@ -16,7 +16,8 @@ def _sql(a: Action) -> str:
     if MODEL_TARGET_MARKER in sql:
         sql = sql.replace(MODEL_TARGET_MARKER, "${self()}")
     if INCREMENTAL_MARKER in sql:
-        pred = sub_vars(a.incremental_predicate or "", lambda v: f"${{dataform.projectConfig.vars.{v}}}")
+        raw_pred = (a.incremental_predicate or "").replace("\\", "\\\\").replace("`", "\\`").replace("${", "\\${")
+        pred = sub_vars(raw_pred, lambda v: f"${{dataform.projectConfig.vars.{v}}}")
         sql = sql.replace(INCREMENTAL_MARKER, f"${{when(incremental(), `WHERE {pred}`)}}" if pred else "")
     return sql.rstrip() + "\n"
 

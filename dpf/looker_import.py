@@ -291,7 +291,7 @@ def import_looker(
             report.warn(f"skipping invalid LookML dashboard '{df.name}'")
             continue
         d0 = parsed[0]
-        dname = str(d0.get("dashboard") or df.name.removesuffix(".dashboard.lookml")).replace("-", "_")
+        dname = re.sub(r"[^A-Za-z0-9_]+", "_", str(d0.get("dashboard") or df.name.removesuffix(".dashboard.lookml"))).strip("_") or "dashboard"
         dtitle = str(d0.get("title") or dname.replace("_", " ").title())
         for elem in d0.get("elements") or []:
             if elem.get("model"):
@@ -299,8 +299,10 @@ def import_looker(
         for flt in d0.get("filters") or []:
             if flt.get("model"):
                 flt["model"] = pid
+        from dpf.sql import safe_subpath
         rel_path = f"lookml/{dname}.dashboard.lookml"
-        write_text(pdir / rel_path, yaml.safe_dump(parsed, sort_keys=False, allow_unicode=True, width=1000))
+        out_path = safe_subpath(pdir, rel_path)
+        write_text(out_path, yaml.safe_dump(parsed, sort_keys=False, allow_unicode=True, width=1000))
         dashboards.append({
             "name": dname,
             "title": dtitle,

@@ -64,11 +64,22 @@ def glossary_bindings(p: Product, g: ProductGraph) -> dict[str, dict[str, str]]:
     return out
 
 
+def _brd_assumptions(brd: dict) -> list[str]:
+    """Collect active working assumptions from BRD open_questions (ADR-009) plus any legacy assumptions list."""
+    out: list[str] = []
+    for q in brd.get("open_questions") or []:
+        if isinstance(q, dict) and q.get("assumption"):
+            qid = q.get("id")
+            out.append(f"{qid}: {q['assumption']}" if qid else str(q["assumption"]))
+    for a in brd.get("assumptions") or []:
+        out.append(a if isinstance(a, str) else (a.get("text") or a.get("assumption") or json.dumps(a)))
+    return out
+
+
 def data_product(p: Product) -> dict:
     man = p.manifest
     obs = man.get("observability") or {}
-    assumptions = [a if isinstance(a, str) else (a.get("text") or a.get("assumption") or json.dumps(a))
-                   for a in p.brd.get("assumptions") or []]
+    assumptions = _brd_assumptions(p.brd)
     g = ProductGraph(p)
     ports = []
     for pt in man.get("output_ports", []) or []:
@@ -147,14 +158,15 @@ def catalog_registration(p: Product, g: ProductGraph) -> dict:
     entry_proj = dep.get("gcp_project") if ds.get("gold") else (
         (g.upstream_nodes[0].model.get("_upstream_project") if g.upstream_nodes else None) or dep.get("gcp_project"))
     entry_ds = ds.get("gold") or (g.upstream_nodes[0].model.get("_upstream_dataset") if g.upstream_nodes else p.id)
+    brd_assumptions = _brd_assumptions(p.brd)
     out = {
         "entry_ref": f"bigquery.googleapis.com/projects/{entry_proj}/datasets/{entry_ds}",
         "aspects": {
             "owner": man.get("owner"), "domain": man.get("domain"), "classification": man.get("classification"),
             "service_levels": {"freshness": obs.get("freshness") or [], "slo": obs.get("slo") or {}},
             "grain": grain, "refresh_cadence": cadence or "on demand",
-            "status": "provisional" if p.brd.get("assumptions") else man.get("status", "draft"),
-            "assumptions": [str(a) for a in p.brd.get("assumptions") or []],
+            "status": "provisional" if brd_assumptions else man.get("status", "draft"),
+            "assumptions": brd_assumptions,
             "glossary_bindings": bindings,
             "data_product": {"product_id": p.id, "version": str(man.get("version")), "brd": man.get("satisfies")},
         },
@@ -203,7 +215,11 @@ def catalog_registration(p: Product, g: ProductGraph) -> dict:
                     }
                     for t in sorted((man.get("governance") or {}).get("policy_tags") or [], key=lambda x: x["id"])
                 ],
-                "birth_quarantine_cleared": True,
+                "birth_quarantine_cleared": bool(
+                    not p.is_prototype
+                    and semantics_signed(p)
+                    and man.get("status") == "published"
+                ),
             },
             "cde-financial-governance-v1": {
                 "cde_terms": sorted(agf.get("cde_terms") or []),

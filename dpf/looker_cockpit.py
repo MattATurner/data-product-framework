@@ -237,10 +237,22 @@ def _discover_native_udd_url(
     return None
 
 
-def _render_cockpit_html(payload: dict[str, Any], *, targets: dict[str, float]) -> str:
-    payload_json = json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")
+def _render_cockpit_html(payload: dict[str, Any], *, targets: dict[str, float], live_token: str = "") -> str:
+    payload_json = (
+        json.dumps(payload, ensure_ascii=False)
+        .replace("</", "<\\/")
+        .replace("<!--", "<\\!--")
+        .replace("\u2028", "\\u2028")
+        .replace("\u2029", "\\u2029")
+    )
     targets_json = json.dumps(targets, ensure_ascii=False)
-    return _COCKPIT_HTML_TEMPLATE.replace("__LOOKML_PAYLOAD_JSON__", payload_json).replace("__TARGETS_JSON__", targets_json)
+    token_json = json.dumps(live_token, ensure_ascii=False)
+    return (
+        _COCKPIT_HTML_TEMPLATE
+        .replace("__LOOKML_PAYLOAD_JSON__", payload_json)
+        .replace("__TARGETS_JSON__", targets_json)
+        .replace("__LIVE_API_TOKEN__", token_json)
+    )
 
 
 def resolve_presentation_server_url(
@@ -467,14 +479,30 @@ def _serve_live_cockpit(
     initial_html: str,
     report: Report,
 ) -> None:
-    state = {"html": initial_html}
+    import secrets as _secrets
+    live_token = _secrets.token_urlsafe(24)
+    state = {"html": initial_html.replace('"" /* __LIVE_TOKEN_FALLBACK__ */', json.dumps(live_token))}
+    if "__LIVE_API_TOKEN__" in initial_html:
+        state["html"] = initial_html.replace("__LIVE_API_TOKEN__", json.dumps(live_token))
+    allowed_hosts = {f"127.0.0.1:{port_num}", f"localhost:{port_num}"}
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, fmt: str, *args: Any) -> None:
             return
 
-        def do_GET(self) -> None:
+        def _check_host(self) -> bool:
+            host = (self.headers.get("Host") or "").strip().lower()
+            return host in allowed_hosts
+
+        def do_POST(self) -> None:
+            if not self._check_host():
+                self.send_error(403, "Forbidden Host")
+                return
             if self.path.startswith("/api/lookml-telemetry"):
+                req_token = (self.headers.get("X-DPF-Token") or "").strip()
+                if not _secrets.compare_digest(req_token, live_token):
+                    self.send_error(403, "Invalid or missing session token")
+                    return
                 qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
                 df = (qs.get("date_filter") or [date_filter])[0]
                 fresh, errs = fetch_lookml_telemetry(
@@ -493,6 +521,15 @@ def _serve_live_cockpit(
                 self.send_header("Cache-Control", "no-store")
                 self.end_headers()
                 self.wfile.write(body)
+                return
+            self.send_error(404)
+
+        def do_GET(self) -> None:
+            if not self._check_host():
+                self.send_error(403, "Forbidden Host")
+                return
+            if self.path.startswith("/api/lookml-telemetry"):
+                self.send_error(405, "Use POST with X-DPF-Token")
                 return
             body = state["html"].encode("utf-8")
             self.send_response(200)
@@ -1139,6 +1176,10 @@ _COCKPIT_HTML_TEMPLATE = """<!DOCTYPE html>
     return true;
   }
 
+  function safeUrl(u) {
+    return typeof u === 'string' && new RegExp('^https?://', 'i').test(u.trim()) ? u.trim() : '';
+  }
+
   function renderHeaderAndDrawer() {
     const m = PAYLOAD.meta || {};
     document.getElementById('hdr-semantic-pill').textContent =
@@ -1147,13 +1188,15 @@ _COCKPIT_HTML_TEMPLATE = """<!DOCTYPE html>
       `Product v${m.product_version} · Build ${(m.build_digest || '').slice(0, 19)}… · Filter: ${m.date_filter} · Queried ${m.queried_at_utc}`;
 
     const lnkDash = document.getElementById('lnk-native-dash');
-    if (m.native_dashboard_url) {
-      lnkDash.href = m.native_dashboard_url;
+    const safeDash = safeUrl(m.native_dashboard_url);
+    if (safeDash) {
+      lnkDash.href = safeDash;
       lnkDash.style.display = 'inline-flex';
     }
     const lnkExp = document.getElementById('lnk-explore');
-    if (m.looker_explore_url) {
-      lnkExp.href = `${m.looker_explore_url}?fields=dim_date.year_month,dim_customer.customer_segment,dim_product.product_category,fct_order_line.net_sales,fct_order_line.units_sold,fct_order_line.order_line_count`;
+    const safeExp = safeUrl(m.looker_explore_url);
+    if (safeExp) {
+      lnkExp.href = `${safeExp}?fields=dim_date.year_month,dim_customer.customer_segment,dim_product.product_category,fct_order_line.net_sales,fct_order_line.units_sold,fct_order_line.order_line_count`;
       lnkExp.style.display = 'inline-flex';
     }
 
@@ -1242,24 +1285,56 @@ _COCKPIT_HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function renderBullets() {
-    const rows = (PAYLOAD.data.order_line_ledger || []).filter((r) => matchesFilter(r));
+    const isFiltered = Boolean(STATE.quarter || STATE.region || STATE.segment || STATE.category);
+    const headline = (!isFiltered && (PAYLOAD.data.headline_summary || []).length)
+      ? PAYLOAD.data.headline_summary[0]
+      : null;
+    const cubeRows = (PAYLOAD.data.slice_cube || []).filter((r) => matchesFilter(r));
     let netSales = 0, units = 0, activeLines = 0, rawNet = 0, activeGross = 0, activeDisc = 0, cancelledShielded = 0, cancelledCount = 0;
-    rows.forEach((r) => {
-      const isCanc = r['fct_order_line.is_cancelled'] === true || String(r['fct_order_line.is_cancelled']).toLowerCase() === 'yes';
-      netSales += Number(r['fct_order_line.net_sales'] || 0);
-      units += Number(r['fct_order_line.units_sold'] || 0);
-      rawNet += Number(r['fct_order_line.net_amount'] || 0);
-      if (isCanc) {
-        cancelledCount += 1;
-        cancelledShielded += Number(r['fct_order_line.net_amount'] || 0);
-      } else {
-        activeLines += 1;
+
+    if (headline) {
+      netSales = Number(headline['fct_order_line.net_sales'] || 0);
+      units = Number(headline['fct_order_line.units_sold'] || 0);
+      activeLines = Number(headline['fct_order_line.order_line_count'] || 0);
+      rawNet = Number(headline['fct_order_line.net_amount'] || 0);
+      activeGross = Number(headline['fct_order_line.gross_amount'] || 0);
+      activeDisc = Number(headline['fct_order_line.discount_amount'] || 0);
+      const totalCount = Number(headline['fct_order_line.count'] || activeLines);
+      cancelledCount = Math.max(0, totalCount - activeLines);
+      cancelledShielded = Math.max(0, rawNet - netSales);
+    } else if (cubeRows.length) {
+      cubeRows.forEach((r) => {
+        const ns = Number(r['fct_order_line.net_sales'] || 0);
+        const rn = Number(r['fct_order_line.net_amount'] || 0);
+        const al = Number(r['fct_order_line.order_line_count'] || 0);
+        const tc = Number(r['fct_order_line.count'] || al);
+        netSales += ns;
+        units += Number(r['fct_order_line.units_sold'] || 0);
+        activeLines += al;
+        rawNet += rn;
         activeGross += Number(r['fct_order_line.gross_amount'] || 0);
         activeDisc += Number(r['fct_order_line.discount_amount'] || 0);
-      }
-    });
+        cancelledCount += Math.max(0, tc - al);
+        cancelledShielded += Math.max(0, rn - ns);
+      });
+    } else {
+      const rows = (PAYLOAD.data.order_line_ledger || []).filter((r) => matchesFilter(r));
+      rows.forEach((r) => {
+        const isCanc = r['fct_order_line.is_cancelled'] === true || String(r['fct_order_line.is_cancelled']).toLowerCase() === 'yes';
+        netSales += Number(r['fct_order_line.net_sales'] || 0);
+        units += Number(r['fct_order_line.units_sold'] || 0);
+        rawNet += Number(r['fct_order_line.net_amount'] || 0);
+        if (isCanc) {
+          cancelledCount += 1;
+          cancelledShielded += Number(r['fct_order_line.net_amount'] || 0);
+        } else {
+          activeLines += 1;
+          activeGross += Number(r['fct_order_line.gross_amount'] || 0);
+          activeDisc += Number(r['fct_order_line.discount_amount'] || 0);
+        }
+      });
+    }
 
-    const isFiltered = Boolean(STATE.quarter || STATE.region || STATE.segment || STATE.category);
     const salesTarget = isFiltered ? Math.max(netSales * 0.9, 500) : TARGETS.net_sales;
     const salesMax = Math.max(netSales, salesTarget) * 1.25 || 1000;
     const unitsTarget = isFiltered ? Math.max(Math.round(units * 0.9), 1) : TARGETS.units_sold;
@@ -1599,7 +1674,7 @@ _COCKPIT_HTML_TEMPLATE = """<!DOCTYPE html>
       return true;
     });
 
-    const expBase = (PAYLOAD.meta || {}).looker_explore_url || '';
+    const expBase = safeUrl((PAYLOAD.meta || {}).looker_explore_url || '');
     const tbody = document.getElementById('ledger-tbody');
     tbody.innerHTML = tabFiltered.map((r) => {
       const isCanc = r['fct_order_line.is_cancelled'] === true || String(r['fct_order_line.is_cancelled']).toLowerCase() === 'yes';
@@ -1693,12 +1768,17 @@ _COCKPIT_HTML_TEMPLATE = """<!DOCTYPE html>
     });
   });
 
+  const LIVE_API_TOKEN = __LIVE_API_TOKEN__ || "" /* __LIVE_TOKEN_FALLBACK__ */;
+
   document.getElementById('btn-live-refresh').addEventListener('click', async () => {
     const btn = document.getElementById('btn-live-refresh');
     const orig = btn.textContent;
     btn.textContent = '↻ Querying Looker…';
     try {
-      const resp = await fetch('/api/lookml-telemetry');
+      const resp = await fetch('/api/lookml-telemetry', {
+        method: 'POST',
+        headers: { 'X-DPF-Token': LIVE_API_TOKEN },
+      });
       if (!resp.ok) throw new Error('Not connected to live local dpf looker cockpit --serve endpoint');
       const data = await resp.json();
       if (data.ok && data.payload) {

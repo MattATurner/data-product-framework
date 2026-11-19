@@ -27,7 +27,8 @@ def marker(fields: dict, prefix: str = "--") -> str:
             v = ",".join(str(x) for x in v)
         if v in (None, ""):
             continue
-        parts.append(f"{k}={str(v).replace(' ', '_')}")
+        clean = re.sub(r"[\r\n\t]+", " ", str(v)).strip().replace(" ", "_")
+        parts.append(f"{k}={clean}")
     return f"{prefix} dpf: " + " ".join(parts)
 
 
@@ -69,7 +70,7 @@ def js(value) -> str:
 
 
 def py_list(values: list[str]) -> str:
-    return "[" + ", ".join("'" + v.replace("'", "\\'") + "'" for v in values) + "]"
+    return "[" + ", ".join(repr(str(v)) for v in values) + "]"
 
 
 def undefined_vars(p: Product, g: ProductGraph, sqls: list[str]) -> list[str]:
@@ -91,7 +92,7 @@ def snake_id(*parts: str) -> str:
 
 def duration_minutes(iso: str) -> int:
     m = re.match(r"^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$", iso or "")
-    if not m:
+    if not m or not any(m.groups()):
         raise ValueError(f"not an ISO 8601 duration: {iso}")
     d, h, mi, s = (int(x or 0) for x in m.groups())
     return d * 1440 + h * 60 + mi + (1 if s else 0)
@@ -100,6 +101,6 @@ def duration_minutes(iso: str) -> int:
 def dts_schedule(iso: str) -> str:
     """Data Transfer Service schedule text for a check interval."""
     minutes = duration_minutes(iso)
-    if minutes % 60 == 0:
+    if minutes >= 60 and minutes % 60 == 0:
         return f"every {minutes // 60} hours"
     return f"every {max(minutes, 15)} minutes"
