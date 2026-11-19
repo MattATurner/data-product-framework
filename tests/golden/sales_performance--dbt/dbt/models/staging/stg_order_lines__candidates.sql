@@ -34,6 +34,6 @@ SELECT
   ROW_NUMBER() OVER (PARTITION BY order_id, order_line_no, source_modified_ts ORDER BY _ingest_ts DESC) AS _dpf_version_rank,
   CASE
     WHEN customer_id IS NULL THEN 'QR-1'
-    WHEN quantity < 0 THEN 'QR-2'
+    WHEN COALESCE(quantity < 0, TRUE) THEN 'QR-2'
   END AS _reject_reason
 FROM typed

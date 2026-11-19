@@ -68,12 +68,9 @@ module "apis" {
 }
 
 module "service_account" {
-  source                 = "../modules/service-account"
-  project_id             = local.resolved_project_id
-  org_id                 = var.org_id
-  impersonation_account  = local.impersonation_member
-  gcp_account_name       = var.gcp_account_name
-  grant_org_policy_admin = var.relax_domain_org_policy
+  source                = "../modules/service-account"
+  project_id            = local.resolved_project_id
+  impersonation_account = local.impersonation_member
 
   depends_on = [module.project, module.apis]
 }
@@ -88,15 +85,14 @@ resource "time_sleep" "iam_propagation" {
   ]
 }
 
+# Applied via the caller's provider (never elevating dpf-deployer to organization-root policyAdmin).
 module "org_policies" {
-  count      = var.relax_domain_org_policy && var.org_id != "0" && var.org_id != "" ? 1 : 0
-  source     = "../modules/org-policies"
-  project_id = local.resolved_project_id
-  providers = {
-    google = google.impersonated
-  }
+  count                       = var.relax_domain_org_policy || length(var.allowed_domain_customer_ids) > 0 ? 1 : 0
+  source                      = "../modules/org-policies"
+  project_id                  = local.resolved_project_id
+  allowed_domain_customer_ids = var.allowed_domain_customer_ids
 
-  depends_on = [time_sleep.iam_propagation]
+  depends_on = [module.project, module.apis]
 }
 
 module "dpf_foundation" {

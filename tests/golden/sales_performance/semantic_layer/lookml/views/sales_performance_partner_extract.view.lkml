@@ -6,7 +6,7 @@ view: sales_performance_partner_extract {
     primary_key: yes
     hidden: yes
     type: string
-    sql: CONCAT(CAST(${TABLE}.year_month AS STRING), '|', CAST(${TABLE}.product_category AS STRING), '|', CAST(${TABLE}.region AS STRING)) ;;
+    sql: TO_JSON_STRING(STRUCT(${TABLE}.year_month, ${TABLE}.product_category, ${TABLE}.region)) ;;
   }
 
   dimension: year_month {

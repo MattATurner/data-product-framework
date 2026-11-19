@@ -66,14 +66,14 @@ Starting a new workspace or cloud environment (`bootstrap/deploy.sh`):
 
 ```bash
 # 1a. New GCP project — Workshop / Demo mode (keeps worked examples & re-stamps goldens)
-source bootstrap/deploy.sh \
+./bootstrap/deploy.sh \
   --project-id my-dpf-demo \
   --region us-central1 \
   --timezone Australia/Perth \
   --relax-domain-policy
 
 # 1b. New GCP project — Clean customer workspace (strips worked examples & demo decks first)
-source bootstrap/deploy.sh \
+./bootstrap/deploy.sh \
   --clean-examples \
   --project-id acme-dpf \
   --region australia-southeast1 \

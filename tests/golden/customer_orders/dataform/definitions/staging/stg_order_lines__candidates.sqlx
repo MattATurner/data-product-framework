@@ -23,6 +23,6 @@ SELECT
   ROW_NUMBER() OVER (PARTITION BY order_id, order_line_no ORDER BY source_modified_ts DESC, _ingest_ts DESC) AS _dpf_row_rank,
   ROW_NUMBER() OVER (PARTITION BY order_id, order_line_no, source_modified_ts ORDER BY _ingest_ts DESC) AS _dpf_version_rank,
   CASE
-    WHEN quantity < 0 THEN 'QR-2'
+    WHEN COALESCE(quantity < 0, TRUE) THEN 'QR-2'
   END AS _reject_reason
 FROM typed

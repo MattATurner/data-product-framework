@@ -3,11 +3,11 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = ">= 5.30"
+      version = ">= 5.30, < 7.0"
     }
     google-beta = {
       source  = "hashicorp/google-beta"
-      version = ">= 5.30"
+      version = ">= 5.30, < 7.0"
     }
   }
 }
@@ -51,6 +51,18 @@ resource "google_project_service_identity" "bq_dts_agent" {
   service  = "bigquerydatatransfer.googleapis.com"
 }
 
+resource "google_project_iam_member" "dataplex_agent_roles" {
+  for_each = toset([
+    "roles/bigquery.dataViewer",
+    "roles/bigquery.jobUser",
+  ])
+  project = var.project_id
+  role    = each.value
+  member  = "serviceAccount:service-${var.project_number}@gcp-sa-dataplex.iam.gserviceaccount.com"
+
+  depends_on = [google_project_service_identity.dataplex_agent]
+}
+
 # 2. Custom Dataform execution service account (satisfies strict act-as checks and policy-tag reads).
 resource "google_service_account" "dataform_runner" {
   project      = var.project_id
@@ -64,7 +76,6 @@ resource "google_project_iam_member" "dataform_runner_roles" {
     "roles/bigquery.dataOwner",
     "roles/bigquery.jobUser",
     "roles/datacatalog.viewer",
-    "roles/bigquerydatapolicy.maskedReader",
     "roles/datacatalog.categoryFineGrainedReader",
   ])
   project = var.project_id
@@ -121,7 +132,8 @@ resource "google_storage_bucket" "dpf_state" {
   name                        = var.state_bucket_name
   location                    = var.region
   uniform_bucket_level_access = true
-  force_destroy               = true
+  public_access_prevention    = "enforced"
+  force_destroy               = false
 
   versioning {
     enabled = true

@@ -30,7 +30,7 @@ current_values AS (
   FROM {{ ref('stg_products') }}
 )
 SELECT
-  FARM_FINGERPRINT(CONCAT(CAST(v.product_id AS STRING), '|', CAST(v.version_no AS STRING))) AS sk_product,
+  FARM_FINGERPRINT(CONCAT(COALESCE(CAST(v.product_id AS STRING), ''), '|', CAST(v.version_no AS STRING))) AS sk_product,
   v.product_id,
   v.product_category,
   c.product_name,

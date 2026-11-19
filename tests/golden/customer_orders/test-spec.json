@@ -1,6 +1,6 @@
 {
   "product_id": "customer_orders",
-  "artefact_digest": "sha256:51b951981cebe28fe84817d86cc9d50cf98622c6204fc29f9f5824da816d3c0c",
+  "artefact_digest": "sha256:2088a86f5d7cca97d7fcd60e960c9324a748fd2e5eebe4d8dabb3b2fb08e068d",
   "cases": [
     {
       "id": "grain:stg_customers",

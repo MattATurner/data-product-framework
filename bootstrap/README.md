@@ -31,7 +31,7 @@ gcloud auth application-default login
 
 * **1. Workshop / Demo Mode** (keep `examples/sales_performance` and `examples/customer_orders`):
   ```bash
-  source bootstrap/deploy.sh \
+  ./bootstrap/deploy.sh \
     --project-id my-dpf-demo \
     --region us-central1 \
     --timezone Australia/Perth \
@@ -39,7 +39,7 @@ gcloud auth application-default login
   ```
 * **2. Clean Customer Workspace Mode** (strip worked examples first):
   ```bash
-  source bootstrap/deploy.sh \
+  ./bootstrap/deploy.sh \
     --clean-examples \
     --project-id acme-dpf \
     --region australia-southeast1 \
@@ -62,7 +62,7 @@ gcloud auth application-default login
 # Hydrate local timezone, region, and optional Presentation Server URL without Terraform:
 python3 bootstrap/hydrate_workspace.py --offline --region us-central1 --timezone Australia/Perth
 
-# Reset local Layer-0 Terraform caches (add --strip-examples to remove worked examples):
+# Reset local Layer-0 Terraform caches (add --reset-state to wipe local tfstate, or --strip-examples for a clean customer repo):
 ./bootstrap/clean-up.sh
 ```
 

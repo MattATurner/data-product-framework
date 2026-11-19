@@ -2,9 +2,9 @@
   "product_id": "customer_orders",
   "engine": "dataform",
   "dpf_version": "0.3.0",
-  "build_digest": "sha256:51b951981cebe28fe84817d86cc9d50cf98622c6204fc29f9f5824da816d3c0c",
+  "build_digest": "sha256:2088a86f5d7cca97d7fcd60e960c9324a748fd2e5eebe4d8dabb3b2fb08e068d",
   "files": {
-    "README.md": "sha256:1ae7a87901524fcb23f43f809ea309beb4ca4ab201dda424fb5d413d36d4682d",
+    "README.md": "sha256:92773bdab829a7621321f285d0cb68f72b13d95df8ce9af8e026e2b7dc98eda1",
     "catalog-registration.json": "sha256:b330531c4586240fba6021e41106d2d785af09b2737a28c74b74a84c49076485",
     "dag.json": "sha256:cba1fb8061594c22b5ad6bbb083a359ef136b571e314363387c3f26cece74b7a",
     "dag.md": "sha256:891358ecc18a30513e76268f83d1b538f4696303738acdb4897969d35d5dc593",
@@ -30,13 +30,13 @@
     "dataform/definitions/sources/raw_orders.sqlx": "sha256:03cbdd4f321d32278cbd9b0ee5ae8cd40cb73ee70ed48cf68194b913282ca8c2",
     "dataform/definitions/staging/stg_customers.sqlx": "sha256:a477d19e841bd2e1c3cb9eaeaa896331618a838d26839c510f2e2bac2a098c16",
     "dataform/definitions/staging/stg_customers__candidates.sqlx": "sha256:741561fc304d99478f04c5fdabdd09afe9e08ded564dcb103fde66ad73745a7e",
-    "dataform/definitions/staging/stg_customers_rejects.sqlx": "sha256:3afc8ff0d62da8c9a403a4afe006cf3e053c01e66cb1bf3a428f7a12755dd5ad",
+    "dataform/definitions/staging/stg_customers_rejects.sqlx": "sha256:d5d684bddb7d0882d1b5b3ce6587a1730aa5cf2b676fd983a4df31c01aa17d88",
     "dataform/definitions/staging/stg_order_lines.sqlx": "sha256:d38d4f48888f0fef671bbadb5f5873b98cb3eb6b7498e0bc2c185bfb9717a05f",
-    "dataform/definitions/staging/stg_order_lines__candidates.sqlx": "sha256:cdba68e2f9c6c623be84cc9a738bb8847060a47dcccebd178a70d628d9feb763",
-    "dataform/definitions/staging/stg_order_lines_rejects.sqlx": "sha256:754180fcbfd54d5c479f5f90b58bfdb754f664b27e2b85566163f375db9faa04",
+    "dataform/definitions/staging/stg_order_lines__candidates.sqlx": "sha256:e06be5eca4bb589c232471563f14a223c29aaabd482c6d821d683ecdad81c751",
+    "dataform/definitions/staging/stg_order_lines_rejects.sqlx": "sha256:0fc5ebd5c2b727b9e343440bc2864e29a5c05f31d17816fd3b9c3b5a5fa81a12",
     "dataform/definitions/staging/stg_orders.sqlx": "sha256:4c2f49cd8a1c539919fafd156f03136398451b55d32c449b0a0322eab37262e1",
     "dataform/definitions/staging/stg_orders__candidates.sqlx": "sha256:a22bc9751414a3ac8214816dc447c568fa17d88fec489a3f4f26761f192f2686",
-    "dataform/definitions/staging/stg_orders_rejects.sqlx": "sha256:e1a71c4d2c38901f1a5098c477b04c258c2e2d26a05504638c80248b42ee7a2c",
+    "dataform/definitions/staging/stg_orders_rejects.sqlx": "sha256:8f4211679a74b75cac10c4a7a9ff292445d645e79a5438323b49fb279e5ce9ac",
     "dataform/workflow_settings.yaml": "sha256:44f30f8e148c1cd49b369cce13936bae3bdbe1055a6af9930ff3992fcf5717b3",
     "observability-policy.json": "sha256:c4c31f0bc147131a9691eab23cbee25375eff40b2afbc39cf49501c37ad1e9c3",
     "quality-policy.json": "sha256:0ae3cef655b1c029dc7f6a9bea7d4484c88c5aeebe60c215cec9a4f0ecaa97b7",
@@ -55,6 +55,6 @@
     "terraform/outputs.tf": "sha256:f9264136c0cb89d8484dcca55a72635b44ad240e61689111de97ba4f78da8983",
     "terraform/variables.tf": "sha256:b043e84ac5d6450ee4c49084a5e67ac04bf0c0061d2a355fccd5b527886d7284",
     "terraform/versions.tf": "sha256:9f235306521de3fd81e20671419ebfbed11f9303b26f5229c0cd31edcd898357",
-    "test-spec.json": "sha256:19f5af04a8991e5379d1b44174a160103fb935ca3c13e8c8ba3f3fc1da74be54"
+    "test-spec.json": "sha256:8a6811b7eca1d34f4e97c0f1ebb803d00f8cf04e816a7bac1995917fd335579c"
   }
 }

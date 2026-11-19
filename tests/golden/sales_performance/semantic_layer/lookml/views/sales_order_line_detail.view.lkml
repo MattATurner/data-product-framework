@@ -6,7 +6,7 @@ view: sales_order_line_detail {
     primary_key: yes
     hidden: yes
     type: string
-    sql: CONCAT(CAST(${TABLE}.order_id AS STRING), '|', CAST(${TABLE}.order_line_no AS STRING)) ;;
+    sql: TO_JSON_STRING(STRUCT(${TABLE}.order_id, ${TABLE}.order_line_no)) ;;
   }
 
   dimension: order_id {

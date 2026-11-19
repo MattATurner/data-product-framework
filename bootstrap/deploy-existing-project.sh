@@ -12,7 +12,12 @@
 #     --timezone Pacific/Auckland
 ####################################################################################
 
-set -uo pipefail
+if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+  echo "Error: run ./bootstrap/deploy-existing-project.sh directly instead of sourcing it." >&2
+  return 1
+fi
+
+set -euo pipefail
 
 PROJECT_ID=""
 PROJECT_NUMBER=""
@@ -20,6 +25,7 @@ GCP_ACCOUNT=""
 REGION="us-central1"
 TIMEZONE="Australia/Perth"
 DATAFORM_REPO="sales-performance"
+DATAFORM_REPO_SET="false"
 CLEAN_EXAMPLES="false"
 AUTO_CONFIRM="false"
 PRESENTATION_SERVER_URL="${DPF_PRESENTATION_SERVER_URL:-}"
@@ -31,17 +37,17 @@ if [[ -n "${FHD_SERVER_URL}" ]]; then FHD_URL_SET="true"; fi
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --project-id)              PROJECT_ID="$2"; shift 2 ;;
-    --project-number)          PROJECT_NUMBER="$2"; shift 2 ;;
-    --account)                 GCP_ACCOUNT="$2"; shift 2 ;;
-    --region)                  REGION="$2"; shift 2 ;;
-    --timezone)                TIMEZONE="$2"; shift 2 ;;
-    --dataform-repo)           DATAFORM_REPO="$2"; shift 2 ;;
-    --presentation-server-url) PRESENTATION_SERVER_URL="$2"; PRESENTATION_URL_SET="true"; shift 2 ;;
-    --fhd-server-url)          FHD_SERVER_URL="$2"; FHD_URL_SET="true"; shift 2 ;;
+    --project-id)              PROJECT_ID="${2:?Missing value for --project-id}"; shift 2 ;;
+    --project-number)          PROJECT_NUMBER="${2:?Missing value for --project-number}"; shift 2 ;;
+    --account)                 GCP_ACCOUNT="${2:?Missing value for --account}"; shift 2 ;;
+    --region)                  REGION="${2:?Missing value for --region}"; shift 2 ;;
+    --timezone)                TIMEZONE="${2:?Missing value for --timezone}"; shift 2 ;;
+    --dataform-repo)           DATAFORM_REPO="${2:?Missing value for --dataform-repo}"; DATAFORM_REPO_SET="true"; shift 2 ;;
+    --presentation-server-url) PRESENTATION_SERVER_URL="${2:?Missing value for --presentation-server-url}"; PRESENTATION_URL_SET="true"; shift 2 ;;
+    --fhd-server-url)          FHD_SERVER_URL="${2:?Missing value for --fhd-server-url}"; FHD_URL_SET="true"; shift 2 ;;
     --clean-examples)          CLEAN_EXAMPLES="true"; shift ;;
     --yes|-y)                  AUTO_CONFIRM="true"; shift ;;
-    *) echo "Unknown option: $1"; exit 2 ;;
+    *) echo "Unknown option: $1" >&2; exit 2 ;;
   esac
 done
 
@@ -64,7 +70,11 @@ if [[ "${AUTO_CONFIRM}" != "true" && "${PRESENTATION_URL_SET}" != "true" ]]; the
 fi
 
 if [[ -z "${GCP_ACCOUNT}" ]]; then
-  GCP_ACCOUNT=$(gcloud auth list --filter=status:ACTIVE --format="value(account)" | head -n 1)
+  GCP_ACCOUNT=$(gcloud auth list --filter=status:ACTIVE --format="value(account)" | head -n 1 || true)
+fi
+if [[ -z "${GCP_ACCOUNT}" ]]; then
+  echo "No active gcloud account found. Run: gcloud auth login && gcloud auth application-default login (or pass --account)" >&2
+  exit 1
 fi
 
 if [[ -z "${PROJECT_ID}" ]]; then
@@ -72,12 +82,24 @@ if [[ -z "${PROJECT_ID}" ]]; then
 fi
 
 if [[ -z "${PROJECT_ID}" || "${PROJECT_ID}" == "(unset)" ]]; then
+  if [[ "${AUTO_CONFIRM}" == "true" ]]; then
+    echo "Error: --project-id is required under --yes when gcloud default project is unset." >&2
+    exit 1
+  fi
   read -r -p "Enter your existing GCP Project ID: " PROJECT_ID
+fi
+
+if [[ "${CLEAN_EXAMPLES}" == "true" && "${DATAFORM_REPO_SET}" != "true" ]]; then
+  DATAFORM_REPO="${PROJECT_ID}"
 fi
 
 if [[ -z "${PROJECT_NUMBER}" ]]; then
   PROJECT_NUMBER=$(gcloud projects describe "${PROJECT_ID}" --format="value(projectNumber)" 2>/dev/null || true)
   if [[ -z "${PROJECT_NUMBER}" ]]; then
+    if [[ "${AUTO_CONFIRM}" == "true" ]]; then
+      echo "Error: could not resolve project number for ${PROJECT_ID} under --yes; pass --project-number." >&2
+      exit 1
+    fi
     read -r -p "Enter the 12-digit GCP Project Number for ${PROJECT_ID}: " PROJECT_NUMBER
   fi
 fi
@@ -87,18 +109,28 @@ echo "  DPF Layer-0 Bootstrap (Existing Project / Non-Org-Admin)"
 echo "  gcp_account_name : ${GCP_ACCOUNT}"
 echo "  project_id       : ${PROJECT_ID}"
 echo "  project_number   : ${PROJECT_NUMBER}"
+echo "  dataform_repo    : ${DATAFORM_REPO}"
 echo "  region           : ${REGION}"
 echo "  business_timezone: ${TIMEZONE}"
 echo "  presentation_url : ${PRESENTATION_SERVER_URL:-<local-only>}"
 echo "*********************************************************"
 
-pushd "${REPO_ROOT}/bootstrap/terraform" >/dev/null || exit 1
+export TF_LOG=INFO
+export TF_LOG_PATH="${REPO_ROOT}/bootstrap/tf.log"
+
+pushd "${REPO_ROOT}/bootstrap/terraform" >/dev/null
 
 terraform init
 terraform validate
 
+tf_apply_args=()
+if [[ "${AUTO_CONFIRM}" == "true" ]]; then
+  tf_apply_args+=(-auto-approve)
+fi
+
 # Passing org_id="0" and a non-empty project_number signals Terraform to skip project creation and org policies.
-terraform apply \
+set +e
+terraform apply "${tf_apply_args[@]}" \
   -var="gcp_account_name=${GCP_ACCOUNT}" \
   -var="project_id=${PROJECT_ID}" \
   -var="project_number=${PROJECT_NUMBER}" \
@@ -108,6 +140,7 @@ terraform apply \
   -var="business_timezone=${TIMEZONE}" \
   -var="default_dataform_repository=${DATAFORM_REPO}"
 tf_exit=$?
+set -e
 
 if [[ ${tf_exit} -eq 0 ]]; then
   terraform output -json > tf-output.json
@@ -116,7 +149,7 @@ if [[ ${tf_exit} -eq 0 ]]; then
     gcloud storage cp tf-output.json "gs://${state_bucket}/terraform/output/tf-output.json"
     gcloud storage cp terraform.tfstate "gs://${state_bucket}/terraform/state/terraform.tfstate"
   fi
-  popd >/dev/null || exit 1
+  popd >/dev/null
 
   hydrate_args=("${REPO_ROOT}/bootstrap/terraform/tf-output.json")
   if [[ "${PRESENTATION_URL_SET}" == "true" ]]; then
@@ -128,6 +161,7 @@ if [[ ${tf_exit} -eq 0 ]]; then
   python3 "${REPO_ROOT}/bootstrap/hydrate_workspace.py" "${hydrate_args[@]}"
   echo "Done."
 else
-  popd >/dev/null || exit 1
-  return ${tf_exit} 2>/dev/null || exit ${tf_exit}
+  popd >/dev/null
+  echo "Terraform exited with code ${tf_exit}. Inspect bootstrap/tf.log for details." >&2
+  exit ${tf_exit}
 fi

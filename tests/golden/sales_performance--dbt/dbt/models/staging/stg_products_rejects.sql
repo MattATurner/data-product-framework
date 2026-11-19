@@ -6,4 +6,4 @@
 -- dpf: model=stg_products layer=staging role=staging skill=transform-raw-to-staging satisfies=R-6 implements=conform-staging part=rejects
 SELECT * EXCEPT (_dpf_row_rank, _dpf_version_rank)
 FROM {{ ref('stg_products__candidates') }}
-WHERE _dpf_row_rank = 1 AND _reject_reason IS NOT NULL
+WHERE (_dpf_row_rank = 1 OR product_id IS NULL) AND _reject_reason IS NOT NULL

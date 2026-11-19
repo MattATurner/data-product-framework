@@ -22,6 +22,6 @@ covers:
 - AX-12
 - AX-13
 - AX-14
-semantic_digest: sha256:fbb10538b7d6dc5df2b98d3717d5daa4a643db59bdfcf67913c3f764a642bbbd
+semantic_digest: sha256:a150ed7fbaaad14ab6b7c55950a70e66062188526040def5b4d9a139f989a702
 note: Example signature for the reference implementation. A real product is signed
   by its named business owner after reading semantics.md.

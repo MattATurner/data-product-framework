@@ -74,3 +74,9 @@ variable "relax_domain_org_policy" {
   type        = bool
   default     = false
 }
+
+variable "allowed_domain_customer_ids" {
+  description = "Optional Cloud Identity / Workspace customer IDs (e.g. ['C01234567']) to allowlist at project scope instead of allow_all."
+  type        = list(string)
+  default     = []
+}

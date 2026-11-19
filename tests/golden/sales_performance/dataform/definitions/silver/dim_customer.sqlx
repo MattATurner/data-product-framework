@@ -49,7 +49,7 @@ current_values AS (
   FROM ${ref("stg_customers")}
 )
 SELECT
-  FARM_FINGERPRINT(CONCAT(CAST(v.customer_id AS STRING), '|', CAST(v.version_no AS STRING))) AS sk_customer,
+  FARM_FINGERPRINT(CONCAT(COALESCE(CAST(v.customer_id AS STRING), ''), '|', CAST(v.version_no AS STRING))) AS sk_customer,
   v.customer_id,
   v.customer_segment,
   v.region,
