@@ -160,6 +160,7 @@ def cmd_check(ws, args, report):
     if upto >= 3:
         validate(ws, report)
         lint(ws, report)
+    env = getattr(args, "env", None)
     for p in products:
         check_brd(p, report, write_gaps=False)
         if upto >= 1:
@@ -168,10 +169,10 @@ def cmd_check(ws, args, report):
             compose(p, report, write=False)
             check_acceptance(p, report)
         if upto >= 3:
-            b = generate(p, report, check=True, write=False)
+            b = generate(p, report, check=(env is None), write=False, env=env)
             check_trace(p, report, b)
         if upto >= 4:
-            check_evidence(p, report, b)
+            check_evidence(p, report, b, environment=env)
 
 
 def cmd_proto(ws, args, report):
@@ -302,13 +303,17 @@ def cmd_proto(ws, args, report):
             report.fail(f"products/{pid}/product.yaml does not exist")
             return
         man = load_yaml(mpath)
+        import re as _re
         slug = pid.replace("_", "-")
+        id_token = _re.sub(r"[^A-Z0-9]", "", pid.upper()) or "PRODUCT"
         domain = man.get("domain", "commerce")
         brd_rel = f"products/{domain}/{slug}/brd"
         tdd_rel = f"products/{domain}/{slug}/tdd"
         man["status"] = "draft"
-        man.setdefault("brd_id", f"BRD-{slug.upper()}-001")
-        man.setdefault("tdd_id", f"TDD-{slug.upper()}-001")
+        man.setdefault("classification", "INTERNAL")
+        man.setdefault("steward", "data-analytics")
+        man.setdefault("brd_id", f"BRD-{id_token}-001")
+        man.setdefault("tdd_id", f"TDD-{id_token}-001")
         man.setdefault("satisfies", f"{man['brd_id']}@1.0.0")
         man.setdefault("specs", {"brd": brd_rel, "tdd": tdd_rel})
         first_model = f"obt_{pid}"
@@ -317,11 +322,10 @@ def cmd_proto(ws, args, report):
             first_model = (up0.get("models") or [t.get("name") for t in (up0.get("tables") or [])] or [first_model])[0]
         obs_default = {
             "freshness": [{"id": "OB-1", "model": first_model, "max_staleness": "PT24H"}],
+            "schema_drift": {"on_additive": "land_and_record", "on_breaking": "quarantine_and_alert"},
             "alerting": {"notification_channel_var": "alert_channel"},
             "slo": {"objective": 0.99, "window": "P28D"},
         }
-        if man.get("sources"):
-            obs_default["schema_drift"] = {"on_additive": "land_and_record", "on_breaking": "quarantine_and_alert"}
         man.setdefault("observability", obs_default)
         man.setdefault("governance", {"register": "knowledge_catalog", "registered_via": "knowledge-catalog-mcp"})
         write_text(mpath, yaml.safe_dump(man, sort_keys=False))
@@ -346,7 +350,7 @@ def cmd_proto(ws, args, report):
                 "history_behaviour": [{"id": "HB-1", "attribute": "record details", "question": "If details change, should past records show old or current values?", "answer": "Current values are fine.", "satisfies": ["R-1"]}],
                 "totalling": {"can_be_summed_across": ["days"], "satisfies": ["R-1"]},
                 "timeliness": {"freshness_need": "daily", "justification": "[NEEDS-DECISION: timeliness]", "expected_users": "analytics team", "satisfies": ["R-1"]},
-                "exceptions": [],
+                "exceptions": ["[NEEDS-DECISION: exceptions]"],
                 "fitness": {"unusable_row": "[NEEDS-DECISION: fitness]", "on_bad_data": "quarantine and warn", "satisfies": ["R-1"]},
                 "sources_believed": [{"system": (man.get("sources") or [{}])[0].get("system_id", "source"), "holds": ", ".join((man.get("sources") or [{}])[0].get("entities") or ["records"]), "authority": "system of record"}],
                 "protection": {"who_may_access": [man.get("owner", "analytics")], "satisfies": ["R-1"]},
@@ -539,6 +543,7 @@ def build_parser() -> argparse.ArgumentParser:
     product_args(sp)
     sp.add_argument("--gate", choices=list(GATE_ALIASES), default="G3",
                     help="highest gate to check: proto/prototype, G0/describe/define, G1/design, G2/compose, G3/build (default), G4/accept/test")
+    sp.add_argument("--env", help="evaluate G3/G4 against a specific deployment.environments.<env> profile")
     sp.set_defaults(fn=cmd_check)
 
     proto = sub.add_parser("proto", help="fast prototyping cheat code (status: prototype)")

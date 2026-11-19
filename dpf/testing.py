@@ -317,16 +317,33 @@ def load_evidence(p: Product) -> list[dict]:
     return out
 
 
-def latest_results(p: Product, digest: str) -> tuple[dict[str, dict], dict[str, dict]]:
-    """(current, stale): latest result per test id for this digest, and for other digests."""
+ENV_ALIASES = {"prod": "production", "production": "production"}
+PROD_ENVS = {"prod", "production"}
+
+
+def _env_matches(doc_env: str | None, required_env: str | None) -> bool:
+    if not required_env:
+        return True
+    if not doc_env:
+        return False
+    if required_env in PROD_ENVS:
+        return doc_env in PROD_ENVS
+    return doc_env == required_env
+
+
+def latest_results(p: Product, digest: str, environment: str | None = None) -> tuple[dict[str, dict], dict[str, dict]]:
+    """(current, stale): latest result per test id for this digest (+ env if given), and for other digests."""
     current: dict[str, dict] = {}
     stale: dict[str, dict] = {}
     for doc in sorted(load_evidence(p), key=lambda d: d.get("recorded_at", "")):
         if p.ws.validate({k: v for k, v in doc.items() if not k.startswith("_")}, "test-evidence.v1"):
             continue
+        if not _env_matches(doc.get("environment"), environment):
+            continue
         target = current if doc.get("artefact_digest") == digest else stale
         for r in doc.get("results", []):
-            target[r["test_id"]] = {**r, "recorded_at": doc.get("recorded_at"), "file": doc["_file"]}
+            target[r["test_id"]] = {**r, "recorded_at": doc.get("recorded_at"), "file": doc["_file"],
+                                    "environment": doc.get("environment")}
     return current, stale
 
 
@@ -339,14 +356,15 @@ def case_status(case: dict, current: dict, stale: dict, static: dict[str, list[s
     return "stale" if case["id"] in stale else "missing"
 
 
-def check_evidence(p: Product, report: Report, b: Build | None = None) -> None:
-    report.head(f"G4 · evidence — {p.id}", gate="G4")
-    b = b or build(p)
+def check_evidence(p: Product, report: Report, b: Build | None = None, environment: str | None = None) -> None:
+    env_label = f" [{environment}]" if environment else ""
+    report.head(f"G4 · evidence — {p.id}{env_label}", gate="G4")
+    b = b or build(p, env=environment)
     if not b.ok:
         report.fail("the build does not generate; evidence cannot be evaluated")
         return
     static = run_static(b)
-    current, stale = latest_results(p, b.digest)
+    current, stale = latest_results(p, b.digest, environment=environment)
     counts: dict[str, int] = {}
     for case in b.spec["cases"]:
         st = case_status(case, current, stale, static)
@@ -394,24 +412,36 @@ def render_live_sql(p: Product, b: Build, sql: str) -> str:
         return f"`{dep.get('gcp_project')}.{ds.get(relation_dataset(p, b.graph, n))}.{n}`"
 
     out = sub_refs(sql, _tbl)
-    return sub_vars(out, lambda v: vals.get(v, ""))
+    return sub_vars(out, lambda v: vals.get(v, "")).rstrip().rstrip(";")
 
 
 def now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
+DEFAULT_MAX_BYTES_BILLED = 10 * 1024 ** 3  # 10 GiB default safety ceiling per live test query
+DEFAULT_QUERY_TIMEOUT_MS = 120_000
+
+
 def run_tests(p: Product, report: Report, live: bool = False, environment: str = "test",
-              only: list[str] | None = None) -> int:
-    b = build(p)
-    report.head(f"test run — {p.id}", gate="G4")
-    if not b.ok:
-        for prob in b.problems:
+              only: list[str] | None = None, max_bytes_billed: int | None = None) -> int:
+    envs = (p.manifest.get("deployment") or {}).get("environments") or {}
+    target_p = retarget_env(p, environment) if (live and environment in envs) else p
+    target_b = build(target_p)
+    report.head(f"test run — {p.id}" + (f" [{environment}]" if live else ""), gate="G4")
+    if not target_b.ok:
+        for prob in target_b.problems:
             report.fail(prob)
         return 1
-    static = run_static(b)
+    if only:
+        known_ids = {c["id"] for c in target_b.spec["cases"]}
+        unknown = [x for x in only if x not in known_ids]
+        if unknown:
+            report.fail(f"--only named unknown test case(s): {', '.join(unknown)}")
+            return 1
+    static = run_static(target_b)
     results = []
-    for case in b.spec["cases"]:
+    for case in target_b.spec["cases"]:
         if only and case["id"] not in only:
             continue
         if case["method"] == "static":
@@ -427,44 +457,61 @@ def run_tests(p: Product, report: Report, live: bool = False, environment: str =
     except ImportError:
         report.fail("--live needs google-cloud-bigquery (pip install google-cloud-bigquery)")
         return 1
-    envs = (p.manifest.get("deployment") or {}).get("environments") or {}
-    live_p = retarget_env(p, environment) if environment in envs else p
-    live_b = build(live_p) if live_p is not p else b
-    client = bigquery.Client(project=(live_p.manifest.get("deployment") or {}).get("gcp_project"))
-    for case in b.spec["cases"]:
+    dep = target_p.manifest.get("deployment") or {}
+    client = bigquery.Client(project=dep.get("gcp_project"), location=dep.get("region") or None)
+    bytes_limit = max_bytes_billed if max_bytes_billed is not None else DEFAULT_MAX_BYTES_BILLED
+    job_cfg = bigquery.QueryJobConfig(
+        maximum_bytes_billed=bytes_limit,
+        job_timeout_ms=DEFAULT_QUERY_TIMEOUT_MS,
+        labels={"dpf_product": re.sub(r"[^a-z0-9_-]", "_", p.id.lower())[:63], "dpf_gate": "g4"},
+    )
+    for case in target_b.spec["cases"]:
         if case["method"] != "automated" or (only and case["id"] not in only):
             continue
-        sql = render_live_sql(live_p, live_b, case["sql"])
+        sql = render_live_sql(target_p, target_b, case["sql"])
         try:
-            rows = list(client.query(f"SELECT COUNT(*) AS n FROM (\n{sql}\n)").result())
+            job = client.query(f"SELECT COUNT(*) AS n FROM (\n{sql}\n)", job_config=job_cfg)
+            rows = list(job.result())
             n = int(rows[0]["n"])
             status = "passed" if n == 0 else "failed"
-            results.append({"test_id": case["id"], "status": status, "failing_rows": n, "finished_at": now_iso()})
+            entry: dict = {"test_id": case["id"], "status": status, "failing_rows": n, "finished_at": now_iso()}
+            if getattr(job, "job_id", None):
+                entry["note"] = f"bq_job_id={job.job_id}"
+            results.append(entry)
             (report.ok if n == 0 else report.warn if case["severity"] == "warn" else report.fail)(
                 f"{case['id']}: {n} failing row(s)")
         except Exception as exc:  # noqa: BLE001 - recorded as a failed result
             results.append({"test_id": case["id"], "status": "failed", "note": str(exc)[:500], "finished_at": now_iso()})
             report.fail(f"{case['id']}: {exc}")
+    if not results:
+        report.fail("no test cases executed; refusing to record empty evidence")
+        return 1
     run_id = datetime.now(timezone.utc).strftime("run-%Y%m%dT%H%M%SZ")
-    doc = {"product_id": p.id, "artefact_digest": b.digest, "run_id": run_id, "environment": environment,
+    doc = {"product_id": p.id, "artefact_digest": target_b.digest, "run_id": run_id, "environment": environment,
            "recorded_at": now_iso(), "results": results}
     errs = p.ws.validate(doc, "test-evidence.v1")
     if errs:
         report.fail(f"evidence does not conform to test-evidence.v1: {errs[0]}")
         return 1
     write_json(p.evidence_dir / f"{run_id}.json", doc)
-    report.info(f"recorded evidence/{p.id}/{run_id}.json")
+    report.info(f"recorded evidence/{p.id}/{run_id}.json (digest {target_b.digest[:19]}…, env={environment})")
     return 1 if report.failures else 0
 
 
 def attest(p: Product, report: Report, test: str, by: str, role: str, note: str | None = None,
            environment: str = "test", links: list[str] | None = None) -> int:
-    b = build(p)
+    envs = (p.manifest.get("deployment") or {}).get("environments") or {}
+    target_p = retarget_env(p, environment) if environment in envs else p
+    b = build(target_p)
     report.head(f"attest — {p.id} {test}", gate="G4")
+    if not b.ok:
+        for prob in b.problems:
+            report.fail(prob)
+        return 1
     case_id = test if test.startswith("acceptance:") else f"acceptance:{test}"
     case = next((c for c in b.spec.get("cases", []) if c["id"] == case_id), None)
     if case is None or case["method"] != "attestation":
-        report.fail(f"{test} is not an attestation in products/{p.id}/acceptance.yaml")
+        report.fail(f"{test} is not an attestation in {p.rel_dir}/acceptance.yaml")
         return 1
     if role != case.get("attested_by_role"):
         report.fail(f"{test} must be attested by role '{case.get('attested_by_role')}', not '{role}'")
@@ -476,8 +523,12 @@ def attest(p: Product, report: Report, test: str, by: str, role: str, note: str 
         res["links"] = list(links)
     doc = {"product_id": p.id, "artefact_digest": b.digest, "run_id": run_id, "environment": environment,
            "recorded_at": now_iso(), "results": [res]}
+    errs = p.ws.validate(doc, "test-evidence.v1")
+    if errs:
+        report.fail(f"attestation does not conform to test-evidence.v1: {errs[0]}")
+        return 1
     write_json(p.evidence_dir / f"{run_id}.json", doc)
-    report.ok(f"recorded attestation of {test} by {by} ({role}) for build {b.digest[:19]}…")
+    report.ok(f"recorded attestation of {test} by {by} ({role}) for build {b.digest[:19]}… (env={environment})")
     return 0
 
 

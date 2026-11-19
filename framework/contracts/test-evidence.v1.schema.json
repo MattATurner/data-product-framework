@@ -26,8 +26,11 @@
     "environment": {
       "type": "string",
       "enum": [
+        "dev",
         "sandbox",
         "test",
+        "staging",
+        "prod",
         "production"
       ]
     },
