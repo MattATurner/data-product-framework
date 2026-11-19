@@ -114,8 +114,16 @@ def build(p: Product, engine: str | None = None, env: str | None = None,
         return b
     g = ProductGraph(q)
     b.graph = g
-    b.digest = q.build_digest(engine if engine and engine != declared_engine(p) else None)
+    b.digest = q.build_digest(
+        engine if engine and engine != declared_engine(p) else None,
+        semantic_targets=semantic_targets,
+    )
     b.spec = build_test_spec(q, g, b.digest)
+    if not q.is_prototype and g.models:
+        from dpf.methodology import run_rules
+        rule_rep = Report(quiet=True, stream=io.StringIO())
+        run_rules(q, rule_rep, g, test_spec=b.spec)
+        b.problems += [f"design rule (G3): {m}" for m in rule_rep.messages(Report.FAIL)]
     b.actions = build_plan(q, g, b.spec, skill_map(dag)) if eng in RENDERERS else []
     missing = undefined_vars(q, g, [a.sql for a in b.actions])
     if missing:

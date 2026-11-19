@@ -14,9 +14,11 @@ import re
 from datetime import date
 
 from dpf.core import LAYERS, Product, Report, front_matter, iter_elements, write_text
-from dpf.graph import ProductGraph, strip_sql_comments
+from dpf.graph import ProductGraph
 from dpf.methodology import history_point_in_time, recommend, run_rules
 from dpf.specs import split_ids
+from dpf.sql import blank_literals_and_parens as _blank_literals_and_parens
+from dpf.sql import find_staging_violations, safe_subpath, strip_sql_literals
 
 PORT_MATERIALISATION = {
     "bigquery_view": {"view"},
@@ -464,16 +466,23 @@ def _semantic_layer(p: Product, g: ProductGraph, report: Report) -> None:
                 if jnode:
                     is_scd2 = (
                         int((jnode.model.get("attributes") or {}).get("scd_type", 1) or 1) == 2
-                        or jnode.model.get("history_semantics") == "scd2"
+                        or jnode.model.get("history_semantics") in ("point_in_time", "full_history", "scd2")
                     )
                     sk = jnode.model.get("surrogate_key")
                     nks = list(jnode.model.get("natural_key") or [])
                     sql_on = j.get("sql_on") or ""
-                    if is_scd2 and sk and f".{sk}" not in sql_on and any(f".{nk}" in sql_on for nk in nks):
-                        report.fail(
-                            f"explore '{ename}' join '{jview}': joins SCD2 dimension on natural key instead of "
-                            f"surrogate key '{sk}' (causes fanout across historical versions)"
-                        )
+                    fk = j.get("foreign_key") or ""
+                    if is_scd2 and sk:
+                        if sql_on and f".{sk}" not in sql_on and any(f".{nk}" in sql_on for nk in nks):
+                            report.fail(
+                                f"explore '{ename}' join '{jview}': joins SCD2 dimension on natural key instead of "
+                                f"surrogate key '{sk}' (causes fanout across historical versions)"
+                            )
+                        elif fk and fk != sk and fk in nks:
+                            report.fail(
+                                f"explore '{ename}' join '{jview}': foreign_key '{fk}' joins SCD2 dimension on "
+                                f"natural key instead of surrogate key '{sk}'"
+                            )
                     for vr, fr in field_ref_re.findall(sql_on):
                         if vr != "TABLE" and f"{vr}.{fr}" not in reach:
                             report.fail(
@@ -486,9 +495,35 @@ def _semantic_layer(p: Product, g: ProductGraph, report: Report) -> None:
     for dash in sl.get("dashboards") or []:
         dname = dash["name"]
         if dash.get("file"):
-            fpath = p.dir / dash["file"]
+            try:
+                fpath = safe_subpath(p.dir, dash["file"])
+            except ValueError as exc:
+                report.fail(f"dashboard '{dname}': invalid file path ({exc})")
+                continue
             if not fpath.exists():
-                report.fail(f"dashboard '{dname}': LookML file '{dash['file']}' does not exist under products/{p.id}/")
+                report.fail(f"dashboard '{dname}': LookML file '{dash['file']}' does not exist under {p.rel_dir}/")
+                continue
+            try:
+                import yaml
+                doc = yaml.safe_load(fpath.read_text(encoding="utf-8"))
+                dash_objs = doc if isinstance(doc, list) else ([doc] if isinstance(doc, dict) else [])
+                for dobj in dash_objs:
+                    if not isinstance(dobj, dict):
+                        continue
+                    for el in dobj.get("elements") or []:
+                        if not isinstance(el, dict):
+                            continue
+                        etype = str(el.get("type") or "").lower()
+                        if etype in ("looker_pie", "looker_donut_multiples", "pie", "donut"):
+                            report.fail(f"dashboard '{dname}' file '{dash['file']}': element '{el.get('name')}' uses forbidden chart type '{etype}'")
+                        if etype in ("looker_bar", "looker_column"):
+                            for ax in el.get("y_axis_scale_mode") if isinstance(el.get("y_axis_scale_mode"), list) else []:
+                                pass
+                            for ax in el.get("y_axes") or []:
+                                if isinstance(ax, dict) and ax.get("unpinAxis") is True:
+                                    report.fail(f"dashboard '{dname}' file '{dash['file']}': bar/column element '{el.get('name')}' unpins Y-axis from zero")
+            except Exception as exc:  # noqa: BLE001
+                report.fail(f"dashboard '{dname}': LookML file '{dash['file']}' is not valid YAML: {exc}")
             continue
         dexp = dash.get("explore")
         if dexp and dexp not in explores_by_name:
@@ -597,6 +632,10 @@ def _references(p: Product, g: ProductGraph, report: Report) -> None:
         if node is None:
             report.fail(f"{t['id']}: model '{t.get('model')}' is not declared")
             continue
+        if node.kind == "model" and (node.model.get("materialisation") or "view") in ("view", "materialized_view"):
+            report.fail(f"{t['id']}: policy tags can only be attached to physical tables/incremental_tables, "
+                        f"not {node.model.get('materialisation') or 'view'} '{node.name}'")
+            continue
         cols = g.output_columns(node.name)
         bad = [c for c in t["columns"] if cols is not None and c not in cols]
         if bad:
@@ -673,9 +712,10 @@ def _agf_governance(p: Product, g: ProductGraph, report: Report) -> None:
                 report.fail(f"AGF C10: deployment.environments.{env_name}.region '{ereg}' is outside "
                             f"governance.agf.allowed_regions ({', '.join(allowed_regions)})")
 
+    agf_failures_before = report.failures
     terms = p.registry.glossary_terms
     known_term_ids = {t["id"] for t in terms}
-    if agf.get("cde_terms") and known_term_ids:
+    if agf.get("cde_terms"):
         bad_cde = [c for c in agf["cde_terms"] if c not in known_term_ids]
         if bad_cde:
             report.fail(f"AGF DC-2: unknown cde_terms {', '.join(bad_cde)} (not in registry glossary)")
@@ -691,8 +731,28 @@ def _agf_governance(p: Product, g: ProductGraph, report: Report) -> None:
         (t["model"], c) for t in (gov.get("policy_tags") or []) for c in (t.get("columns") or [])
     }
     for un in g.upstream_nodes:
-        for c in un.model.get("_policy_tags") or []:
-            tagged_cols.add((un.name, c))
+        for pt in un.model.get("_policy_tags") or []:
+            if isinstance(pt, str):
+                tagged_cols.add((un.name, pt))
+            elif isinstance(pt, dict):
+                if pt.get("columns"):
+                    for col in pt["columns"]:
+                        tagged_cols.add((un.name, col))
+                elif pt.get("column"):
+                    tagged_cols.add((un.name, pt["column"]))
+
+    def _ancestors(start: str) -> set[str]:
+        seen: set[str] = set()
+        stack = [start]
+        while stack:
+            cur = stack.pop()
+            if cur in seen:
+                continue
+            seen.add(cur)
+            nd = g.get(cur)
+            if nd:
+                stack.extend(nd.inputs)
+        return seen
 
     semantic_names = {n.name for n in g.semantic_nodes}
     restricted_cols: set[tuple[str, str]] = set()
@@ -712,42 +772,59 @@ def _agf_governance(p: Product, g: ProductGraph, report: Report) -> None:
         if tier == "RESTRICTED":
             restricted_cols.add((mname, cname))
 
+    # Propagate restricted columns from glossary terms and staging/untagged ancestors into semantic models.
+    # Physical tables/incremental_tables copy bytes and MUST carry governance.policy_tags directly;
+    # BigQuery views inherit column policy tags from their underlying base tables (and cannot attach their own).
+    materialised_semantic = {
+        n.name for n in g.semantic_nodes
+        if n.kind == "model" and (n.model.get("materialisation") or "view") in ("table", "incremental_table")
+    }
+    base_restricted = set(restricted_cols)
     for n in g.semantic_nodes:
-        for c in g.output_columns(n.name) or []:
-            if c in restricted_term_cols:
+        ncols = g.output_columns(n.name)
+        anc = _ancestors(n.name)
+        anc_restricted = {c for (m, c) in base_restricted if m in anc}
+        if ncols is None:
+            if (anc_restricted or restricted_term_cols) and n.name in materialised_semantic:
+                report.fail(
+                    f"AGF C6: cannot statically verify restricted-column protection on '{n.name}' "
+                    "(avoid SELECT * when AGF is enabled)"
+                )
+            continue
+        for c in ncols:
+            if c in restricted_term_cols or (c in anc_restricted and n.name in materialised_semantic):
                 restricted_cols.add((n.name, c))
 
-    untagged = sorted((m, c) for (m, c) in restricted_cols if m in semantic_names and (m, c) not in tagged_cols)
+    untagged = sorted(
+        (m, c) for (m, c) in restricted_cols
+        if m in semantic_names and (m, c) not in tagged_cols
+        and (m in materialised_semantic or (m, c) in base_restricted)
+    )
     if untagged:
         report.fail("AGF C6: restricted column(s) "
                     + ", ".join(f"{m}.{c}" for m, c in untagged)
                     + " must be protected by governance.policy_tags")
 
-    def _ancestors(start: str) -> set[str]:
-        seen: set[str] = set()
-        stack = [start]
-        while stack:
-            cur = stack.pop()
-            if cur in seen:
-                continue
-            seen.add(cur)
-            nd = g.get(cur)
-            if nd:
-                stack.extend(nd.inputs)
-        return seen
-
     for port in p.manifest.get("output_ports") or []:
         if port.get("access") != "sharing_listing" or not port.get("model"):
             continue
         pm = port["model"]
-        pcols = set(g.output_columns(pm) or [])
+        raw_pcols = g.output_columns(pm)
         anc = _ancestors(pm)
         anc_restricted_names = {c for (m, c) in restricted_cols if m in anc} | restricted_term_cols
+        if raw_pcols is None:
+            if anc_restricted_names:
+                report.fail(
+                    f"AGF C6: external sharing_listing port '{port['name']}' on {pm} uses SELECT * "
+                    "and cannot prove exclusion of restricted column(s)"
+                )
+            continue
+        pcols = set(raw_pcols)
         leaked = sorted(pcols & anc_restricted_names)
         if leaked:
             report.fail(f"AGF C6: external sharing_listing port '{port['name']}' exposes restricted column(s) "
                         f"{', '.join(leaked)} on {pm}")
-    if not report.failures:
+    if report.failures == agf_failures_before:
         report.ok("AGF (ADG-00) governance contract checks passed")
 
 
@@ -814,44 +891,7 @@ def _capture(p: Product, report: Report) -> None:
 
 ROW_LEVEL_RULES = {"not_null", "range", "set_membership", "custom_sql"}
 FRESHNESS_MATERIALISED = {"table", "incremental_table", "materialized_view"}
-DATAFORM_JS = re.compile(r"\$\{\s*(?:ref|self|when)\s*\(|\bdataform\.projectConfig\b")
-
-
-def _blank_literals_and_parens(sql: str) -> str:
-    """Strip SQL comments, string literals and parenthesised subqueries, leaving depth-0 SQL."""
-    text = strip_sql_comments(sql)
-    out: list[str] = []
-    depth, i, n = 0, 0, len(text)
-    while i < n:
-        c = text[i]
-        if c in ("'", '"', "`"):
-            j = i + 1
-            while j < n:
-                if text[j] == "\\" and j + 1 < n:
-                    j += 2
-                    continue
-                if text[j] == c:
-                    break
-                j += 1
-            if depth == 0:
-                out.append(" '' ")
-            i = j + 1
-            continue
-        if c == "(":
-            depth += 1
-            if depth == 1:
-                out.append(" () ")
-        elif c == ")":
-            depth = max(0, depth - 1)
-        elif depth == 0:
-            out.append(c)
-        i += 1
-    return "".join(out)
-
-
-def _strip_literals(sql: str) -> str:
-    text = strip_sql_comments(sql)
-    return re.sub(r"'(?:\\.|[^'])*'|\"(?:\\.|[^\"])*\"", "''", text)
+DATAFORM_JS = re.compile(r"\$\{\s*(?:ref|self|when|resolve|name|schema)\s*\(|\bdataform\.projectConfig\b")
 
 
 def _staging(p: Product, g: ProductGraph, report: Report) -> None:
@@ -859,26 +899,27 @@ def _staging(p: Product, g: ProductGraph, report: Report) -> None:
     tdd_decisions = {d.meta.get("decision") for d in p.tdd_spec.requirements if d.meta.get("decision")}
     for n in g.models:
         raw_body = p.body(n.model) or ""
-        if raw_body and DATAFORM_JS.search(_strip_literals(raw_body)):
+        if raw_body and DATAFORM_JS.search(strip_sql_literals(raw_body)):
             report.fail(f"{n.name}: body contains Dataform-specific '${{...}}' syntax; use engine-neutral "
                         "{{ ref('...') }} / {{ var('...') }} (or import with `dpf proto import-dataform`)")
         if n.layer != "staging":
             continue
-        top = _blank_literals_and_parens(raw_body)
-        if re.search(r"\b(QUALIFY|LIMIT)\b", top, re.I):
-            report.fail(f"{n.name}: top-level QUALIFY or LIMIT in a staging body bypasses dpf deduplication and "
+        violations = find_staging_violations(raw_body)
+        if violations["qualify_limit"]:
+            scope = ", ".join(violations["qualify_limit"])
+            report.fail(f"{n.name}: {scope} QUALIFY or LIMIT in a staging body bypasses dpf deduplication and "
                         "quarantine; declare natural_key and dedupe_order in product.yaml instead")
-        where_m = re.search(r"\bWHERE\b(.*)$", top, re.I | re.S)
-        if where_m and not re.match(r"^\s*TRUE\s*;?\s*$", where_m.group(1), re.I):
+        if violations["where"]:
+            scope = ", ".join(violations["where"])
             from dpf.generate.render import parse_markers
             allow = next((mk for mk in parse_markers(raw_body)
                           if str(mk.get("allow_staging_filter", "")).lower() in ("true", "1", "yes")), None)
             if allow is None:
-                report.fail(f"{n.name}: top-level WHERE in a staging body silently drops rows before quarantine; "
+                report.fail(f"{n.name}: {scope} WHERE in a staging body silently drops rows before quarantine; "
                             "move row validation to quality.rules (on_fail: quarantine), or mark an intentional "
                             "source-scope filter with '-- dpf: allow_staging_filter=true decision=D-n'")
             elif p.is_prototype:
-                report.warn(f"{n.name}: staging body uses an allowed top-level WHERE filter; convert row validation "
+                report.warn(f"{n.name}: staging body uses an allowed {scope} WHERE filter; convert row validation "
                             "to quality.rules (on_fail: quarantine) or bind decision=D-n before G1")
             elif allow.get("decision") not in tdd_decisions:
                 report.fail(f"{n.name}: '-- dpf: allow_staging_filter=true' must cite a valid TDD decision=D-n at G1 "
@@ -923,15 +964,25 @@ def _envy(p: Product, g: ProductGraph, report: Report) -> None:
 
 
 def _signoff(p: Product, report: Report) -> None:
+    if not p.semantics_path.exists():
+        report.fail(f"playback / semantics document missing: {p.semantics_path.relative_to(p.ws.root)}")
+        return
     so = p.signoff
     if so is None:
         report.fail("semantics are not signed: run `dpf signoff` once the business owner has accepted semantics.md")
         return
     errs = p.ws.validate(so, "signoff.v1")
     report.check(not errs, "signoff.yaml conforms to signoff.v1", f"signoff.yaml invalid: {'; '.join(errs[:3])}")
+    if so.get("product_id") != p.id:
+        report.fail(f"signoff.yaml product_id {so.get('product_id')!r} does not match '{p.id}'")
+    expected_role = (p.registry.defaults.get("gates") or {}).get("g0_approver", "business_owner")
+    if expected_role and so.get("role") != expected_role:
+        report.fail(f"signoff.yaml role is {so.get('role')!r}; platform policy requires '{expected_role}'")
     digest = p.semantic_digest()
-    signed_digest = so.get("playback_digest") or so.get("semantic_digest")
-    report.check(signed_digest == digest, f"signature matches current semantics ({digest[:19]}…)",
+    sem_dig = so.get("semantic_digest")
+    pb_dig = so.get("playback_digest")
+    digest_ok = (sem_dig == digest) and (pb_dig is None or pb_dig == digest)
+    report.check(digest_ok, f"signature matches current semantics ({digest[:19]}…)",
                  "signature is invalid: semantics.md / playback.md or a model's grain/history changed since sign-off")
     report.check(so.get("brd") == _brd_ref(p), f"signed against {_brd_ref(p)}",
                  f"signed against {so.get('brd')}, the BRD is now {_brd_ref(p)}")

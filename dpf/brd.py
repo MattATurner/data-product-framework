@@ -22,13 +22,19 @@ def _get(d: dict, dotted: str):
     return cur
 
 
+NEEDS_DECISION = re.compile(r"\[NEEDS-DECISION\b", re.I)
+
+
 def _filled(v) -> bool:
     if v is None:
         return False
     if isinstance(v, str):
-        return bool(v.strip())
-    if isinstance(v, (list, dict)):
-        return len(v) > 0
+        s = v.strip()
+        return bool(s) and not NEEDS_DECISION.search(s)
+    if isinstance(v, list):
+        return len(v) > 0 and all(_filled(item) for item in v)
+    if isinstance(v, dict):
+        return len(v) > 0 and not any(NEEDS_DECISION.search(s) for s in _strings(v))
     return True
 
 
@@ -109,15 +115,19 @@ def check_brd(p: Product, report: Report, write_gaps: bool = True) -> list[dict]
                          "context": r.name})
         for s in r.scenarios:
             sid = s.meta.get("id")
-            if not sid:
-                report.fail(f"{rid}: scenario '{s.name}' has no '**ID:** AX-n' line")
+            if not sid or not re.fullmatch(r"AX-\d+", sid):
+                report.fail(f"{rid}: scenario '{s.name}' has no valid '**ID:** AX-n' line"
+                            + (f" (got {sid!r})" if sid else ""))
                 continue
             if sid in ax_ids:
                 report.fail(f"scenario id {sid} is used twice")
             ax_ids.append(sid)
             if not {"WHEN", "THEN"} <= s.keywords:
                 report.fail(f"{sid} '{s.name}' needs WHEN and THEN steps")
-    if req_ids:
+    active_ids = [r for r in req_ids if r not in deferred_ids]
+    if not active_ids:
+        report.fail("BRD spec has no active requirements (add at least one active '### Requirement:' with '**ID:** R-n')")
+    else:
         report.ok(f"{len(req_ids)} requirements, {len(ax_ids)} acceptance scenarios")
     if deferred_ids:
         report.info(f"deferred requirement(s) (excluded from G1–G4 until status is active): {', '.join(deferred_ids)}")
@@ -180,14 +190,25 @@ def check_brd(p: Product, report: Report, write_gaps: bool = True) -> list[dict]
     report.check(not undefined, "every figure and attribute is defined in the glossary",
                  f"not in the business glossary: {', '.join(undefined)}", warn=True)
 
+    # -- unresolved [NEEDS-DECISION] placeholders
+    nd_hits = [s for s in ([spec.raw] + _strings({k: v for k, v in brd.items() if k != "changelog"}))
+               if NEEDS_DECISION.search(s)]
+    if nd_hits:
+        report.fail(f"BRD still contains {len(nd_hits)} unresolved [NEEDS-DECISION] marker(s); resolve before G0")
+
     # -- open questions and approval
     for q in brd.get("open_questions", []) or []:
+        qid = q.get("id") or "open question"
         if not q.get("assumption"):
-            report.fail(f"open question {q.get('id')} has no working assumption: {q.get('question')}")
-            gaps.append({"group": "open", "field": q.get("id"), "question": q.get("question", ""),
+            report.fail(f"open question {qid} has no working assumption: {q.get('question')}")
+            gaps.append({"group": "open", "field": qid, "question": q.get("question", ""),
                          "context": f"owner {q.get('owner', 'unassigned')}"})
         else:
-            report.warn(f"open question {q.get('id')} proceeds on an assumption; the product stays provisional")
+            missing_meta = [k for k in ("owner", "due") if not _filled(q.get(k))]
+            if missing_meta:
+                report.fail(f"open question {qid} proceeds on an assumption but is missing {', '.join(missing_meta)} (ADR-009)")
+            else:
+                report.warn(f"open question {qid} proceeds on an assumption; the product stays provisional")
     report.check(brd.get("status") == "approved", "BRD is approved by the business owner",
                  f"BRD status is '{brd.get('status')}'; G0 needs 'approved'")
 

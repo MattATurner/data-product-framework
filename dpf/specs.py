@@ -14,8 +14,13 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
+KNOWN_META_KEYS = frozenset({
+    "id", "status", "brd", "tdd", "version", "owner", "steward", "domain", "product",
+    "decision", "satisfies", "verifies", "model", "grain", "layer", "methodology", "adr",
+    "source", "priority", "due",
+})
 META_LINE = re.compile(r"^\s*\*\*[A-Za-z][A-Za-z ]*:\*\*")
-META_PAIR = re.compile(r"\*\*([A-Za-z][A-Za-z ]*):\*\*\s*(.*?)\s*(?=\s·\s\*\*|$)")
+META_PAIR = re.compile(r"\*\*([A-Za-z][A-Za-z ]*):\*\*\s*(.*?)\s*(?=\s[·|]\s\*\*|$)")
 NORMATIVE = re.compile(r"\b(SHALL|MUST)\b")
 STEP = re.compile(r"^\s*-\s+\*\*(GIVEN|WHEN|THEN|AND|BECAUSE)\*\*\s+(.*)$")
 
@@ -25,6 +30,16 @@ def parse_meta(line: str) -> dict[str, str]:
     for k, v in META_PAIR.findall(line.strip()):
         out[k.strip().lower().replace(" ", "_")] = v.strip()
     return out
+
+
+def is_meta_line(line: str) -> bool:
+    """True only when a bold-keyed line consists solely of recognized DPF metadata keys (never normative prose)."""
+    if not META_LINE.match(line):
+        return False
+    parsed = parse_meta(line)
+    if not parsed:
+        return False
+    return set(parsed).issubset(KNOWN_META_KEYS)
 
 
 def split_ids(value: str | None) -> list[str]:
@@ -125,7 +140,7 @@ def parse_spec(text: str, path: Path | None = None) -> Spec:
                 continue
             if req is None:
                 continue
-            if META_LINE.match(line):
+            if is_meta_line(line):
                 meta = parse_meta(line)
                 (scen.meta if scen else req.meta).update(meta)
                 continue
@@ -133,10 +148,10 @@ def parse_spec(text: str, path: Path | None = None) -> Spec:
                 scen.lines.append(line)
             else:
                 req.body_lines.append(line)
-        elif section == "Purpose" and META_LINE.match(line):
+        elif section == "Purpose" and is_meta_line(line):
             spec.purpose_meta.update(parse_meta(line))
 
     spec.sections = {k: "\n".join(v).strip() for k, v in section_lines.items()}
-    purpose = [l for l in section_lines.get("Purpose", []) if not META_LINE.match(l)]
+    purpose = [l for l in section_lines.get("Purpose", []) if not is_meta_line(l)]
     spec.purpose = "\n".join(purpose).strip()
     return spec

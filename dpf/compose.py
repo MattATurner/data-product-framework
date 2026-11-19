@@ -87,6 +87,11 @@ class Composer:
         skills = ws.skills
         layers = man.get("layers") or {}
 
+        for prob in self.g.problems:
+            self.fail(prob)
+        if self.g.cycle:
+            self.fail(f"model graph contains a cycle: {' -> '.join(self.g.cycle)}")
+
         def skill_node(s, stage, scope, instance, detail=None) -> DagNode:
             d = s.dpf
             return DagNode(id=f"{stage}:{instance}" if scope != "product" else f"{stage}:{s.id}",
@@ -145,9 +150,9 @@ class Composer:
             self._engine_checks(n)
 
         # -- model edges (typed)
-        by_instance = {nd.instance: nd for nd in self.nodes if nd.scope in ("model", "source")}
+        model_by_instance = {nd.instance: nd for nd in self.nodes if nd.scope == "model"}
         for n in self.g.models:
-            consumer = by_instance.get(n.name)
+            consumer = model_by_instance.get(n.name)
             if consumer is None:
                 continue
             for i in n.inputs:
@@ -283,6 +288,8 @@ def check_acceptance(p: Product, report: Report) -> bool:
     ok = True
     verified: set[str] = set()
     seen: set[str] = set()
+    from dpf.sql import id_sort_key
+    known_models = {m["name"] for _, m in p.models()} | {n.name for n in ProductGraph(p).upstream_nodes}
     for t in tests:
         if t["id"] in seen:
             report.fail(f"{t['id']} is declared twice")
@@ -293,11 +300,10 @@ def check_acceptance(p: Product, report: Report) -> bool:
             report.fail(f"{t['id']} verifies {', '.join(unknown)}, which the BRD does not define")
             ok = False
         verified |= {a for a in t["verifies"] if a in known}
-        known_models = {m["name"] for _, m in p.models()} | {n.name for n in ProductGraph(p).upstream_nodes}
         if t.get("model") and t["model"] not in known_models:
             report.fail(f"{t['id']} targets model '{t['model']}', which is not declared")
             ok = False
-    missing = sorted(set(known) - verified, key=lambda x: int(x.split("-")[1]))
+    missing = sorted(set(known) - verified, key=id_sort_key)
     report.check(not missing, f"every business scenario is verified by an acceptance test ({len(known)} AX, {len(tests)} AT)",
                  f"business scenario(s) with no acceptance test: {', '.join(missing)}")
     by_method: dict[str, int] = {}

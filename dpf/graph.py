@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from functools import cached_property
 
 from dpf.core import LAYERS, Product, retarget_env
+from dpf.sql import select_columns, strip_sql_comments
 
 REF = re.compile(r"\{\{\s*ref\(\s*['\"]([A-Za-z0-9_]+)['\"]\s*\)\s*\}\}")
 VAR = re.compile(r"\{\{\s*var\(\s*['\"]([A-Za-z0-9_]+)['\"]\s*\)\s*\}\}")
@@ -25,74 +26,6 @@ def body_refs(body: str | None) -> list[str]:
 
 def body_vars(body: str | None) -> list[str]:
     return list(dict.fromkeys(VAR.findall(body or "")))
-
-
-def strip_sql_comments(sql: str) -> str:
-    sql = re.sub(r"/\*.*?\*/", " ", sql, flags=re.S)
-    return "\n".join(re.sub(r"--.*$", "", line) for line in sql.splitlines())
-
-
-def select_columns(sql: str | None) -> list[str] | None:
-    """Best-effort output column names of the final top-level SELECT of a body.
-
-    Good enough for design checks (does a model expose column X?). Returns None when the
-    select list cannot be read (for example `SELECT *`).
-    """
-    if not sql:
-        return None
-    text = strip_sql_comments(sql)
-    # find top-level SELECT ... FROM pairs (depth 0)
-    depth, i, n = 0, 0, len(text)
-    last_select = None
-    tokens = []
-    while i < n:
-        c = text[i]
-        if c == "(":
-            depth += 1
-        elif c == ")":
-            depth -= 1
-        elif c in "'\"":
-            j = text.find(c, i + 1)
-            i = n if j < 0 else j
-        elif depth == 0 and text[i:i + 6].upper() == "SELECT" and (i == 0 or not text[i - 1].isalnum() and text[i - 1] != "_"):
-            last_select = i + 6
-        elif depth == 0 and last_select is not None and text[i:i + 4].upper() == "FROM" and not text[i - 1].isalnum() \
-                and (i + 4 >= n or not text[i + 4].isalnum()):
-            tokens.append(text[last_select:i])
-            last_select = None
-        i += 1
-    if not tokens:
-        return None
-    select_list = tokens[-1]
-    items, depth, cur = [], 0, ""
-    for c in select_list:
-        if c == "(":
-            depth += 1
-        elif c == ")":
-            depth -= 1
-        if c == "," and depth == 0:
-            items.append(cur)
-            cur = ""
-        else:
-            cur += c
-    items.append(cur)
-    cols = []
-    for item in items:
-        item = item.strip()
-        if not item:
-            continue
-        if item.upper().startswith("DISTINCT "):
-            item = item[9:].strip()
-        if item.endswith("*") or re.search(r"\*\s+EXCEPT", item, re.I):
-            return None
-        m = re.search(r"\bAS\s+([A-Za-z_][A-Za-z0-9_]*)\s*$", item, re.I)
-        if m:
-            cols.append(m.group(1))
-            continue
-        m = re.search(r"([A-Za-z_][A-Za-z0-9_]*)\s*$", item)
-        if m:
-            cols.append(m.group(1))
-    return cols
 
 
 @dataclass
@@ -110,8 +43,9 @@ class Node:
 
 
 class ProductGraph:
-    def __init__(self, product: Product):
+    def __init__(self, product: Product, _visiting: frozenset[str] | None = None):
         self.p = product
+        self._visiting = (_visiting or frozenset()) | {product.id}
         self.nodes: dict[str, Node] = {}
         self.problems: list[str] = []
         self._build()
@@ -148,13 +82,27 @@ class ProductGraph:
             if up_id == p.id:
                 self.problems.append(f"upstream product '{up_id}' cannot reference itself")
                 return
+            if up_id in self._visiting:
+                self.problems.append(f"circular upstream product dependency involving '{up_id}'")
+                return
             if up_id not in p.ws.product_dirs():
                 self.problems.append(f"upstream product '{up_id}' is not found in products/{up_id}/product.yaml")
                 return
             up_prod = p.ws.product(up_id)
-            if p.active_env and p.active_env in ((up_prod.manifest.get("deployment") or {}).get("environments") or {}):
-                up_prod = retarget_env(up_prod, p.active_env)
-            up_g = ProductGraph(up_prod)
+            if p.active_env:
+                up_envs = (up_prod.manifest.get("deployment") or {}).get("environments") or {}
+                if p.active_env in up_envs:
+                    up_prod = retarget_env(up_prod, p.active_env)
+                elif up_envs:
+                    self.problems.append(
+                        f"upstream product '{up_id}' does not declare environment '{p.active_env}' "
+                        f"(known: {', '.join(sorted(up_envs))}); refusing to bind silently to default/prod")
+                    return
+            up_g = ProductGraph(up_prod, _visiting=self._visiting)
+            if up_g.problems:
+                self.problems.extend(f"upstream '{up_id}': {prob}" for prob in up_g.problems)
+            if up_g.cycle:
+                self.problems.append(f"upstream '{up_id}' has a model cycle: {' -> '.join(up_g.cycle)}")
             up_dep = up_prod.manifest.get("deployment") or {}
             up_ds = up_dep.get("datasets") or {}
             up_pts = (up_prod.manifest.get("governance") or {}).get("policy_tags") or []

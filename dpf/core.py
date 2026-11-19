@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import sys
 from dataclasses import dataclass, field
@@ -15,6 +16,7 @@ import yaml
 
 from dpf import __version__
 from dpf.specs import Spec, parse_spec
+from dpf.sql import id_sort_key, safe_subpath
 
 LAYERS = ("staging", "silver", "gold")
 
@@ -33,6 +35,15 @@ class Report:
         self.entries: list[dict] = []
         self.section = ""
         self.gate = ""
+        self._pending: str | None = None
+        self._color = (
+            not os.environ.get("NO_COLOR")
+            and hasattr(self.stream, "isatty")
+            and self.stream.isatty()
+        )
+
+    def _style(self, code: str, text: str) -> str:
+        return f"\033[{code}m{text}\033[0m" if self._color else text
 
     # -- emitters
     def head(self, title: str, gate: str | None = None) -> None:
@@ -41,7 +52,7 @@ class Report:
         if gate is not None:
             self.gate = gate
         if not (self.json_mode or self.quiet):
-            print(f"\n\033[1m{title}\033[0m", file=self.stream)
+            print(f"\n{self._style('1', title)}", file=self.stream)
             self._pending = None
 
     def _add(self, level: str, msg: str, **ctx: Any) -> None:
@@ -50,8 +61,8 @@ class Report:
             entry.update(ctx)
         self.entries.append(entry)
         if not self.json_mode and not (self.quiet and level in (self.OK, self.INFO)):
-            if getattr(self, "_pending", None):
-                print(f"\n\033[1m{self._pending}\033[0m", file=self.stream)
+            if self._pending:
+                print(f"\n{self._style('1', self._pending)}", file=self.stream)
                 self._pending = None
             print(f"{self._GLYPH[level]}| {msg}", file=self.stream)
 
@@ -96,9 +107,9 @@ class Report:
         else:
             print(file=self.stream)
             if self.failures:
-                print(f"\033[31m{self.failures} failure(s), {self.warnings} warning(s)\033[0m", file=self.stream)
+                print(self._style("31", f"{self.failures} failure(s), {self.warnings} warning(s)"), file=self.stream)
             else:
-                print(f"\033[32mall checks passed ({self.warnings} warning(s))\033[0m", file=self.stream)
+                print(self._style("32", f"all checks passed ({self.warnings} warning(s))"), file=self.stream)
         return 1 if self.failures else 0
 
 
@@ -108,7 +119,7 @@ def load_yaml(path: Path) -> Any:
 
 
 def front_matter(md: Path) -> tuple[dict, str]:
-    txt = md.read_text(encoding="utf-8")
+    txt = md.read_text(encoding="utf-8").replace("\r\n", "\n")
     m = re.match(r"^---\n(.*?)\n---\n?(.*)$", txt, re.S)
     if not m:
         return {}, txt
@@ -523,13 +534,13 @@ class Product:
     def requirement_ids(self) -> list[str]:
         ids = [r.meta.get("id") for r in self.brd_spec.requirements
                if r.meta.get("id") and r.meta.get("status", "active").lower() != "deferred"]
-        return sorted(set(ids), key=lambda x: int(x.split("-")[1]))
+        return sorted(set(ids), key=id_sort_key)
 
     @cached_property
     def deferred_requirement_ids(self) -> list[str]:
         ids = [r.meta.get("id") for r in self.brd_spec.requirements
                if r.meta.get("id") and r.meta.get("status", "").lower() == "deferred"]
-        return sorted(set(ids), key=lambda x: int(x.split("-")[1]))
+        return sorted(set(ids), key=id_sort_key)
 
     @cached_property
     def scenario_ids(self) -> dict[str, str]:
@@ -565,30 +576,45 @@ class Product:
             ]
         sl = self.manifest.get("semantic_layer")
         if sl:
+            dash_entries = []
+            for d in (sl.get("dashboards") or []):
+                file_digest = None
+                if d.get("file"):
+                    try:
+                        fp = safe_subpath(self.dir, d["file"])
+                        file_digest = sha256(normalise_text(fp.read_text(encoding="utf-8"))) if fp.exists() else None
+                    except ValueError:
+                        file_digest = None
+                dash_entries.append({
+                    "name": d["name"],
+                    "explore": d.get("explore"),
+                    "file": d.get("file"),
+                    "file_digest": file_digest,
+                    "tiles": [{"name": t.get("name") or t.get("id"), "kind": t["kind"],
+                               "measures": t.get("measures"),
+                               "dimensions": t.get("dimensions")} for t in (d.get("tiles") or [])],
+                })
             payload["semantic_layer"] = {
                 "metrics": sorted(
-                    [{"name": m["name"], "model": m.get("model"), "expr": m.get("expr") or m.get("sql"),
+                    [{"name": m["name"], "model": m.get("model"),
+                      "expr": m.get("expr") or m.get("sql"),
+                      "measure": m.get("measure"), "aggregation": m.get("aggregation"),
                       "type": m.get("type"), "filter": m.get("filter")}
                      for m in (sl.get("metrics") or [])],
                     key=lambda d: d["name"]),
                 "explores": sorted(
-                    [{"name": e["name"], "from": e.get("from"), "joins": e.get("joins")}
+                    [{"name": e["name"], "from": e.get("from"), "joins": e.get("joins"),
+                      "sql_always_where": e.get("sql_always_where")}
                      for e in (sl.get("explores") or [])],
                     key=lambda d: d["name"]),
-                "dashboards": sorted(
-                    [{"name": d["name"], "explore": d.get("explore"), "file": d.get("file"),
-                      "tiles": [{"name": t.get("name") or t.get("id"), "kind": t["kind"],
-                                 "measures": t.get("measures"),
-                                 "dimensions": t.get("dimensions")} for t in (d.get("tiles") or [])]}
-                     for d in (sl.get("dashboards") or [])],
-                    key=lambda d: d["name"]),
+                "dashboards": sorted(dash_entries, key=lambda d: d["name"]),
             }
         return sha256(canonical(payload))
 
     def playback_digest(self) -> str:
         return self.semantic_digest()
 
-    def build_digest(self, engine: str | None = None) -> str:
+    def build_digest(self, engine: str | None = None, semantic_targets: list[str] | None = None) -> str:
         """Digest of every input the build is generated from. Evidence is bound to it."""
         parts: dict[str, Any] = {
             "dpf": __version__,
@@ -605,12 +631,17 @@ class Product:
             "rules": {k: {kk: vv for kk, vv in v.items() if not kk.startswith("_")} for k, v in self.ws.rules.items()},
             "adapters": {k: {kk: vv for kk, vv in v.items() if not kk.startswith("_")} for k, v in self.ws.adapters.items()},
         }
+        if semantic_targets is not None:
+            parts["semantic_targets"] = sorted(semantic_targets)
         sl = self.manifest.get("semantic_layer") or {}
         ext_files: dict[str, str | None] = {}
         for d in sl.get("dashboards") or []:
             if d.get("file"):
-                fp = self.dir / d["file"]
-                ext_files[d["file"]] = fp.read_text(encoding="utf-8") if fp.exists() else None
+                try:
+                    fp = safe_subpath(self.dir, d["file"])
+                    ext_files[d["file"]] = fp.read_text(encoding="utf-8") if fp.exists() else None
+                except ValueError:
+                    ext_files[d["file"]] = None
         if ext_files:
             parts["lookml_files"] = ext_files
         return sha256(canonical(parts))

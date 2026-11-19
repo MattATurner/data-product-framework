@@ -23,9 +23,11 @@ CLOUD_IMPORT = re.compile(
     r"pyodbc|pymssql|snowflake|boto3|azure|sqlalchemy|apache_beam|pyspark)\b", re.M)
 CODE_GLOBS = ("examples/**/*.py", "products/**/*.py")
 PROSE_GLOBS = ("*.md", "docs/**/*.md", "framework/**/*.md", "openspec/**/*.md", "products/**/*.md",
-               "examples/**/*.md", "registry/**/*.yaml", "openspec/**/*.yaml", "docs/**/*.html")
+               "examples/**/*.md", "bootstrap/**/*.md", ".agents/**/*.md",
+               "registry/**/*.yaml", "openspec/**/*.yaml", "docs/**/*.html")
 RETIRED = {  # retired product name -> current name (prose only)
     r"\bDataplex\b": "Knowledge Catalog",
+    r"\bVertex AI\b": "Gemini Platform",
     r"\bBigLake metastore\b": "Lakehouse runtime catalog",
     r"\bAnalytics Hub\b": "BigQuery sharing",
     r"\bDataproc Serverless\b": "Managed Service for Apache Spark",
@@ -46,12 +48,15 @@ def _files(root: Path, globs: tuple[str, ...]) -> list[Path]:
 
 
 def _strip_code(text: str) -> str:
-    """Blank fenced blocks, inline code and URLs (identifiers there may keep API names); keep line numbers."""
+    """Blank fenced blocks, inline code, URLs, and GCP IAM/API/Terraform identifiers; keep line numbers."""
     keep_lines = lambda m: "\n" * m.group(0).count("\n")  # noqa: E731
     text = re.sub(r"```.*?```", keep_lines, text, flags=re.S)
     text = re.sub(r"<(pre|code)\b.*?</\1>", keep_lines, text, flags=re.S | re.I)
+    text = re.sub(r"\\u003c(pre|code)\b.*?\\u003c/\1>", keep_lines, text, flags=re.S | re.I)
     text = re.sub(r"`[^`\n]*`", "", text)
-    return re.sub(r"https?://\S+", "", text)
+    text = re.sub(r"https?://\S+", "", text)
+    text = re.sub(r"\b(?:roles/[A-Za-z0-9._-]+|google_dataplex_[A-Za-z0-9_]+|dataplex\.googleapis\.com|@gcp-sa-dataplex\S*)", "", text)
+    return text
 
 
 def lint_tiers(ws: Workspace, report: Report) -> None:
@@ -122,6 +127,7 @@ def lint_code(ws: Workspace, report: Report) -> None:
             continue
         if str(skill.get("tool_tier")) != m.get("tier"):
             report.fail(f"{rel}: marker says tier {m.get('tier')} but skill {m['skill']} is tier {skill.get('tool_tier')}")
+            continue
         if m.get("tier") == "5":
             adr = m.get("adr")
             if not adr or adr not in ws.adrs:
@@ -141,7 +147,7 @@ def lint_terms(ws: Workspace, report: Report) -> None:
         rules = {k: v for k, v in RETIRED.items() if rel not in NAMING_TABLE or v == "Knowledge Catalog"}
         for i, line in enumerate(text.splitlines(), 1):
             for pat, current in rules.items():
-                m = re.search(pat, line)
+                m = re.search(pat, line, re.I)
                 if m:
                     hits.append(f"{rel}:{i} '{m.group(0)}' (say {current})")
     report.check(not hits, "prose uses current product names (Knowledge Catalog, BigQuery sharing, ...)",
