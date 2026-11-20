@@ -23,6 +23,9 @@ META_LINE = re.compile(r"^\s*\*\*[A-Za-z][A-Za-z ]*:\*\*")
 META_PAIR = re.compile(r"\*\*([A-Za-z][A-Za-z ]*):\*\*\s*(.*?)\s*(?=\s[·|]\s\*\*|$)")
 NORMATIVE = re.compile(r"\b(SHALL|MUST)\b")
 STEP = re.compile(r"^\s*-\s+\*\*(GIVEN|WHEN|THEN|AND|BECAUSE)\*\*\s+(.*)$")
+MD_IMAGE = re.compile(r"!\[[^\]]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
+FENCED_BLOCK = re.compile(r"```.*?```", re.S)
+HTML_COMMENT = re.compile(r"<!--.*?-->", re.S)
 
 
 def parse_meta(line: str) -> dict[str, str]:
@@ -100,7 +103,18 @@ class Spec:
 
     @property
     def has_requirements(self) -> bool:
-        return "Requirements" in self.sections
+        return any(k == "Requirements" or k.endswith("Requirements") for k in self.sections)
+
+    @property
+    def image_links(self) -> list[str]:
+        """Relative local image paths referenced via Markdown `![...](path)` outside code fences and comments."""
+        stripped = HTML_COMMENT.sub("", FENCED_BLOCK.sub("", self.raw))
+        out: list[str] = []
+        for target in MD_IMAGE.findall(stripped):
+            if target.startswith(("http://", "https://", "data:", "#")):
+                continue
+            out.append(target)
+        return out
 
     def requirement(self, req_id: str, key: str = "id") -> Requirement | None:
         for r in self.requirements:

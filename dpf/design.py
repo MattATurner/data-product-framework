@@ -129,6 +129,7 @@ def check_design(p: Product, report: Report) -> None:
         report.fail(f"{model} reads '{ref}', which is not declared")
 
     _binding(p, report)
+    _tdd_structure(p, report)
     _decisions(p, g, report)
     _elements(p, report)
     _roles(p, g, report)
@@ -164,6 +165,61 @@ def _binding(p: Product, report: Report) -> None:
                  f"manifest is stale: it satisfies {man.get('satisfies')} but the BRD is {current}")
     report.check(man.get("brd_id") == p.brd.get("brd_id"), "manifest names the right BRD",
                  f"manifest brd_id {man.get('brd_id')!r} differs from {p.brd.get('brd_id')!r}")
+
+
+_RECOMMENDED_TDD_SECTIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("Executive Design Summary", ("executive", "summary", "overview")),
+    ("Solution Architecture", ("architecture",)),
+    ("Modular Functional Breakdown", ("functional", "fhd", "modular")),
+    ("Data Flow & Lifecycle", ("data flow", "lifecycle")),
+    ("Data Model & Entity Relationships", ("data model", "entity")),
+    ("Security, Privacy & Governance", ("security", "governance", "privacy")),
+    ("Operational Readiness & Feasibility", ("operational", "readiness", "feasibility")),
+)
+
+
+def _tdd_structure(p: Product, report: Report) -> None:
+    """Option B TDD v2 check: hard-fail broken image links; warn on missing enterprise sections/diagrams."""
+    spec = p.tdd_spec
+    links = spec.image_links
+    missing_assets: list[str] = []
+    for rel in links:
+        try:
+            target = safe_subpath(p.tdd_dir, rel)
+        except ValueError:
+            missing_assets.append(f"{rel} (path escapes specs/tdd/)")
+            continue
+        if not target.is_file():
+            missing_assets.append(rel)
+    if missing_assets:
+        report.fail(f"TDD references missing visual asset(s): {', '.join(missing_assets)}")
+    elif links:
+        report.ok(f"all {len(links)} TDD visual asset(s) exist on disk")
+
+    sec_lower = [k.lower() for k in spec.sections]
+    missing_secs = [
+        label for label, needles in _RECOMMENDED_TDD_SECTIONS
+        if not any(any(n in s for n in needles) for s in sec_lower)
+    ]
+    if missing_secs:
+        report.warn(
+            "TDD omits recommended narrative section(s): "
+            + ", ".join(missing_secs)
+            + " (see framework/templates/design/tdd-spec.md)"
+        )
+    if not links:
+        report.warn(
+            "TDD embeds no visual diagrams under assets/ "
+            "(recommended: architecture, functional breakdown, data flow, entity model)"
+        )
+    has_dashboards = bool(((p.manifest.get("semantic_layer") or {}).get("dashboards")))
+    if has_dashboards and not any(
+        any(k in s for k in ("consumer", "dashboard", "mockup", "wireframe", "presentation"))
+        for s in sec_lower
+    ):
+        report.warn(
+            "product declares BI dashboard(s) but TDD omits a Consumer Experience & Dashboard Mockup section"
+        )
 
 
 def _decisions(p: Product, g: ProductGraph, report: Report) -> None:

@@ -9,9 +9,11 @@ people, parseable and validated by `dpf`, and testable through its scenarios.
 
 ### Requirement: Specification structure
 
-Every specification SHALL contain a `## Purpose` section and a `## Requirements` section. Each
-`### Requirement:` SHALL state one behaviour using SHALL or MUST and SHALL have at least one
-`#### Scenario:` written with bold WHEN and THEN steps.
+Every specification SHALL contain a `## Purpose` section and a normative requirements section
+(`## Requirements`, or a named appendix section whose heading ends with `Requirements` such as
+`## Appendix A — Normative Technical Requirements`). Each `### Requirement:` SHALL state one
+behaviour using SHALL or MUST and SHALL have at least one `#### Scenario:` written with bold
+WHEN and THEN steps.
 
 #### Scenario: Requirement without a scenario
 
@@ -23,6 +25,25 @@ Every specification SHALL contain a `## Purpose` section and a `## Requirements`
 
 - **WHEN** a requirement body contains neither SHALL nor MUST
 - **THEN** validation SHALL fail
+
+#### Scenario: Narrative-first TDD with requirements in an appendix
+
+- **WHEN** a product TDD places plain-English architecture, data flow, functional breakdown and
+  data model sections ahead of `## Appendix A — Normative Technical Requirements`
+- **THEN** validation SHALL accept the specification and parse every `### Requirement:` block
+  in that appendix
+
+### Requirement: Referenced visual assets exist
+
+Whenever a specification embeds a local diagram or mockup via a relative Markdown image link
+(such as `assets/architecture.svg`), the referenced file SHALL exist under the specification's
+directory.
+
+#### Scenario: Broken diagram link in a TDD
+
+- **WHEN** a product TDD embeds `![Solution Architecture](assets/missing.svg)` and the file
+  does not exist
+- **THEN** G1 validation SHALL fail and name the missing asset path
 
 ### Requirement: Identifiers live in metadata lines
 

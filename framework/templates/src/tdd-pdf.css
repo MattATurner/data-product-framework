@@ -1,0 +1,744 @@
+/* Publication-grade Enterprise Technical Design Document (TDD v2) PDF Stylesheet.
+ * Rendered via WeasyPrint from any DPF Markdown TDD (`specs/tdd/spec.md`).
+ */
+
+@page portrait_body {
+  size: A4 portrait;
+  margin: 16mm 14mm 16mm 14mm;
+  @top-left {
+    content: string(tdd-id) " \00B7  " string(doc-title);
+    font: 500 7.4pt "Inter", Roboto, "Liberation Sans", sans-serif;
+    color: #64748b;
+    border-bottom: 0.4pt solid #e2e8f0;
+    padding-bottom: 2.2mm;
+    margin-bottom: 2.5mm;
+    vertical-align: bottom;
+  }
+  @top-right {
+    content: string(section-label);
+    font: 600 7.4pt "Inter", Roboto, "Liberation Sans", sans-serif;
+    color: #1d4ed8;
+    border-bottom: 0.4pt solid #e2e8f0;
+    padding-bottom: 2.2mm;
+    margin-bottom: 2.5mm;
+    vertical-align: bottom;
+  }
+  @bottom-left {
+    content: string(doc-footer);
+    font: 500 7.4pt "Inter", Roboto, "Liberation Sans", sans-serif;
+    color: #64748b;
+    border-top: 0.4pt solid #e2e8f0;
+    padding-top: 2.2mm;
+    vertical-align: top;
+  }
+  @bottom-right {
+    content: "Page " counter(page) " of " counter(pages);
+    font: 600 7.4pt "Inter", Roboto, "Liberation Sans", sans-serif;
+    color: #475569;
+    border-top: 0.4pt solid #e2e8f0;
+    padding-top: 2.2mm;
+    vertical-align: top;
+  }
+}
+
+@page {
+  size: A4 portrait;
+  margin: 16mm 14mm 16mm 14mm;
+  @top-left {
+    content: string(tdd-id) " \00B7  " string(doc-title);
+    font: 500 7.4pt "Inter", Roboto, "Liberation Sans", sans-serif;
+    color: #64748b;
+    border-bottom: 0.4pt solid #e2e8f0;
+    padding-bottom: 2.2mm;
+    vertical-align: bottom;
+  }
+  @top-right {
+    content: string(section-label);
+    font: 600 7.4pt "Inter", Roboto, "Liberation Sans", sans-serif;
+    color: #1d4ed8;
+    border-bottom: 0.4pt solid #e2e8f0;
+    padding-bottom: 2.2mm;
+    vertical-align: bottom;
+  }
+  @bottom-left {
+    content: string(doc-footer);
+    font: 500 7.4pt "Inter", Roboto, "Liberation Sans", sans-serif;
+    color: #64748b;
+    border-top: 0.4pt solid #e2e8f0;
+    padding-top: 2.2mm;
+    vertical-align: top;
+  }
+  @bottom-right {
+    content: "Page " counter(page) " of " counter(pages);
+    font: 600 7.4pt "Inter", Roboto, "Liberation Sans", sans-serif;
+    color: #475569;
+    border-top: 0.4pt solid #e2e8f0;
+    padding-top: 2.2mm;
+    vertical-align: top;
+  }
+}
+
+@page cover {
+  size: A4 portrait;
+  margin: 0 15mm 15mm 15mm;
+  @top-left { content: none; border: none; }
+  @top-right { content: none; border: none; }
+  @bottom-left {
+    content: string(doc-footer);
+    font: 500 7.4pt "Inter", Roboto, "Liberation Sans", sans-serif;
+    color: #64748b;
+    border-top: 0.4pt solid #e2e8f0;
+    padding-top: 2.2mm;
+    vertical-align: top;
+  }
+  @bottom-right {
+    content: "Page " counter(page) " of " counter(pages);
+    font: 600 7.4pt "Inter", Roboto, "Liberation Sans", sans-serif;
+    color: #475569;
+    border-top: 0.4pt solid #e2e8f0;
+    padding-top: 2.2mm;
+    vertical-align: top;
+  }
+}
+
+@page landscape_plate {
+  size: A4 landscape;
+  margin: 12mm 11mm 12mm 11mm;
+  @top-left {
+    content: string(tdd-id) " \00B7  " string(doc-title);
+    font: 500 7.3pt "Inter", Roboto, "Liberation Sans", sans-serif;
+    color: #64748b;
+    border-bottom: 0.4pt solid #e2e8f0;
+    padding-bottom: 1.8mm;
+    vertical-align: bottom;
+  }
+  @top-right {
+    content: string(section-label);
+    font: 600 7.3pt "Inter", Roboto, "Liberation Sans", sans-serif;
+    color: #1d4ed8;
+    border-bottom: 0.4pt solid #e2e8f0;
+    padding-bottom: 1.8mm;
+    vertical-align: bottom;
+  }
+  @bottom-left {
+    content: string(doc-footer);
+    font: 500 7.3pt "Inter", Roboto, "Liberation Sans", sans-serif;
+    color: #64748b;
+    border-top: 0.4pt solid #e2e8f0;
+    padding-top: 1.8mm;
+    vertical-align: top;
+  }
+  @bottom-right {
+    content: "Page " counter(page) " of " counter(pages);
+    font: 600 7.3pt "Inter", Roboto, "Liberation Sans", sans-serif;
+    color: #475569;
+    border-top: 0.4pt solid #e2e8f0;
+    padding-top: 1.8mm;
+    vertical-align: top;
+  }
+}
+
+/* ---- Base Typography ------------------------------------------------------------------- */
+* { box-sizing: border-box; }
+html {
+  font-family: "Inter", Roboto, "Liberation Sans", Arial, sans-serif;
+  font-size: 9pt;
+  line-height: 1.44;
+  color: #1e293b;
+}
+body { margin: 0; }
+
+p { margin: 0 0 2.3mm; }
+strong { font-weight: 600; color: #0f172a; }
+em { font-style: italic; }
+a { color: #1d4ed8; text-decoration: none; }
+
+code {
+  font-family: "JetBrains Mono", "DejaVu Sans Mono", ui-monospace, monospace;
+  font-size: 7.5pt;
+  background: #f1f5f9;
+  color: #0f172a;
+  padding: 0.15mm 0.7mm;
+  border-radius: 0.7mm;
+  border: 0.3pt solid #e2e8f0;
+  overflow-wrap: anywhere;
+}
+
+/* ---- Cover Page ------------------------------------------------------------------------ */
+.cover-page {
+  page: cover;
+  break-after: page;
+}
+.cover-band {
+  margin: 0 -15mm 8mm -15mm;
+  padding: 12mm 15mm 9.5mm 15mm;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 68%, #1d4ed8 100%);
+  color: #ffffff;
+}
+.cover-kicker {
+  font-size: 7.5pt;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #93c5fd;
+  margin-bottom: 2.2mm;
+}
+.cover-title {
+  string-set: doc-title content(text);
+  font-size: 24pt;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  color: #ffffff;
+  margin: 0 0 2mm;
+}
+.cover-subtitle {
+  font-size: 11.2pt;
+  font-weight: 400;
+  color: #dbeafe;
+  margin: 0 0 4.5mm;
+}
+.cover-meta-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2mm;
+}
+.cover-pill {
+  display: inline-block;
+  padding: 0.9mm 2.6mm;
+  border-radius: 999px;
+  font-size: 7.5pt;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.14);
+  border: 0.5pt solid rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+}
+.cover-pill.accent {
+  background: #eff6ff;
+  color: #1e3a8a;
+  border-color: #bfdbfe;
+}
+.hidden-strings {
+  visibility: hidden;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  font-size: 1pt;
+  overflow: hidden;
+}
+.hidden-strings .s-tdd { string-set: tdd-id content(text); }
+.hidden-strings .s-footer { string-set: doc-footer content(text); }
+
+/* DPF 5-Step Lifecycle Strip */
+.lifecycle-strip {
+  display: flex;
+  gap: 1.8mm;
+  margin: 0 0 5mm;
+}
+.lifecycle-step {
+  flex: 1;
+  border: 0.6pt solid #cbd5e1;
+  border-radius: 1.6mm;
+  padding: 1.5mm 2mm;
+  background: #ffffff;
+  font-size: 7.1pt;
+  color: #64748b;
+}
+.lifecycle-step b {
+  display: block;
+  font-size: 7.8pt;
+  font-weight: 600;
+  color: #334155;
+}
+.lifecycle-step.done {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #166534;
+}
+.lifecycle-step.done b { color: #14532d; }
+.lifecycle-step.active {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #dbeafe;
+}
+.lifecycle-step.active b { color: #ffffff; }
+
+.purpose-box {
+  background: #f8fafc;
+  border: 0.6pt solid #e2e8f0;
+  border-left: 1.4mm solid #1d4ed8;
+  border-radius: 1.5mm;
+  padding: 3mm 4mm;
+  margin-bottom: 4.5mm;
+  font-size: 8.8pt;
+  color: #334155;
+}
+.purpose-box p:last-child { margin-bottom: 0; }
+
+.cover-grid-label {
+  font-size: 7.4pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #475569;
+  margin: 3.5mm 0 1.8mm;
+}
+
+.doc-control-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 5mm;
+  font-size: 8.2pt;
+}
+.doc-control-table th {
+  width: 29%;
+  text-align: left;
+  font-weight: 600;
+  color: #334155;
+  background: #f1f5f9;
+  border: 0.5pt solid #cbd5e1;
+  padding: 1.4mm 2.4mm;
+}
+.doc-control-table td {
+  color: #0f172a;
+  background: #ffffff;
+  border: 0.5pt solid #cbd5e1;
+  padding: 1.4mm 2.4mm;
+}
+
+/* Table of Contents with exact resolved page numbers */
+.toc-card {
+  border: 0.6pt solid #cbd5e1;
+  border-radius: 2mm;
+  padding: 3.2mm 4.2mm 2.8mm;
+  background: #ffffff;
+}
+.toc-title {
+  font-size: 7.8pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #1d4ed8;
+  margin: 0 0 2.2mm;
+  padding-bottom: 1.2mm;
+  border-bottom: 0.5pt solid #e2e8f0;
+}
+.toc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2mm 7mm;
+}
+.toc-row {
+  display: flex;
+  align-items: baseline;
+  font-size: 8.1pt;
+  color: #1e293b;
+  gap: 1.5mm;
+}
+.toc-row.is-appendix { color: #475569; }
+.toc-row .toc-name {
+  font-weight: 500;
+  color: inherit;
+  flex: 0 1 auto;
+}
+.toc-row .toc-dots {
+  flex: 1;
+  border-bottom: 0.7pt dotted #cbd5e1;
+  margin: 0 1mm;
+  min-width: 4mm;
+}
+.toc-row .toc-pg {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 7.8pt;
+  font-weight: 700;
+  color: #1d4ed8;
+  flex: 0 0 auto;
+}
+.toc-row.is-appendix .toc-pg { color: #475569; }
+
+/* ---- Sections -------------------------------------------------------------------------- */
+.tdd-section {
+  page: portrait_body;
+  margin-bottom: 4.5mm;
+}
+.tdd-section.page-break-before {
+  break-before: page;
+}
+.tdd-section.landscape-section {
+  page: landscape_plate;
+  break-before: page;
+}
+
+h2.sec-title {
+  string-set: section-label attr(data-section);
+  font-size: 13pt;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 2.8mm;
+  padding-bottom: 1.4mm;
+  border-bottom: 1.1pt solid #1d4ed8;
+  display: flex;
+  align-items: center;
+  gap: 2.4mm;
+  break-after: avoid;
+}
+.landscape-section h2.sec-title {
+  font-size: 12pt;
+  margin: 0 0 2.2mm;
+  padding-bottom: 1mm;
+}
+h2.sec-title.appendix-title {
+  border-bottom-color: #475569;
+}
+h2.sec-title .sec-badge {
+  display: inline-block;
+  padding: 0.6mm 2.1mm;
+  border-radius: 1.1mm;
+  background: #1d4ed8;
+  color: #ffffff;
+  font-size: 8pt;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+h2.sec-title.appendix-title .sec-badge {
+  background: #334155;
+}
+
+h3.sub-title {
+  font-size: 10pt;
+  font-weight: 700;
+  color: #1e3a8a;
+  margin: 3.4mm 0 1.4mm;
+  break-after: avoid;
+}
+.landscape-section h3.sub-title {
+  font-size: 9.2pt;
+  margin: 2mm 0 1mm;
+}
+
+/* Lists */
+ul.body-list, ol.body-list {
+  margin: 0 0 2.4mm;
+  padding-left: 4.8mm;
+}
+ul.body-list li, ol.body-list li {
+  margin-bottom: 1.3mm;
+  break-inside: avoid;
+}
+
+/* Multi-column plain-English walkthrough cards under widescreen landscape diagrams */
+.landscape-walkthrough ul.body-list {
+  list-style: none;
+  padding-left: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2mm 2.6mm;
+  margin: 1.4mm 0 0;
+}
+.landscape-walkthrough.cols-2 ul.body-list {
+  grid-template-columns: 1fr 1fr;
+}
+.landscape-walkthrough ul.body-list li {
+  background: #f8fafc;
+  border: 0.5pt solid #e2e8f0;
+  border-left: 0.9mm solid #1d4ed8;
+  border-radius: 1.2mm;
+  padding: 1.4mm 2.2mm;
+  margin-bottom: 0;
+  font-size: 7.45pt;
+  line-height: 1.33;
+}
+.landscape-prose-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.6mm;
+  margin-top: 1.8mm;
+}
+.landscape-prose-card {
+  background: #f8fafc;
+  border: 0.5pt solid #e2e8f0;
+  border-top: 1mm solid #1d4ed8;
+  border-radius: 1.3mm;
+  padding: 1.8mm 2.5mm;
+  font-size: 7.35pt;
+  line-height: 1.32;
+  break-inside: avoid;
+}
+.landscape-prose-card h3.sub-title {
+  margin: 0 0 1mm;
+  font-size: 8.3pt;
+}
+.landscape-prose-card p { margin: 0 0 1.2mm; }
+.landscape-prose-card p:last-child { margin-bottom: 0; }
+.landscape-prose-card ul.body-list {
+  display: block;
+  list-style: disc;
+  padding-left: 3.4mm;
+  margin: 0;
+}
+.landscape-prose-card ul.body-list li {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-bottom: 0.8mm;
+  font-size: 7.25pt;
+}
+
+/* ---- Figures & Diagram Plates ---------------------------------------------------------- */
+figure.diagram-frame {
+  margin: 0 0 2mm;
+  padding: 1.6mm;
+  background: #ffffff;
+  border: 0.6pt solid #cbd5e1;
+  border-radius: 1.8mm;
+  text-align: center;
+  break-inside: avoid;
+}
+figure.diagram-frame img {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  max-height: 92mm;
+  width: auto;
+  height: auto;
+}
+figure.diagram-frame.tall-plate {
+  margin: 0.5mm 0 1.8mm;
+  padding: 2mm;
+}
+figure.diagram-frame.tall-plate img {
+  max-height: 158mm;
+}
+figure.diagram-frame.compact-plate img {
+  max-height: 76mm;
+}
+figure.diagram-frame.medium-plate img {
+  max-height: 86mm;
+}
+figure.diagram-frame.dashboard-plate img {
+  max-height: 118mm;
+}
+figure.diagram-frame figcaption {
+  margin-top: 1.2mm;
+  font-size: 7.4pt;
+  font-weight: 500;
+  color: #475569;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 1.2mm;
+}
+figure.diagram-frame figcaption .fig-num {
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.interactive-note {
+  font-size: 7.4pt;
+  color: #64748b;
+  margin: -1mm 0 1.6mm;
+  font-style: italic;
+}
+
+/* ---- Data Tables ----------------------------------------------------------------------- */
+table.data-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin: 1.2mm 0 3mm;
+  font-size: 7.9pt;
+  line-height: 1.35;
+}
+table.data-table thead { display: table-header-group; }
+table.data-table tr { break-inside: avoid; }
+table.data-table th {
+  text-align: left;
+  font-size: 7pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #1e3a8a;
+  background: #eff6ff;
+  border: 0.5pt solid #bfdbfe;
+  padding: 1.4mm 1.8mm;
+  vertical-align: bottom;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+table.data-table td {
+  border: 0.5pt solid #cbd5e1;
+  padding: 1.35mm 1.8mm;
+  vertical-align: top;
+  color: #1e293b;
+  overflow-wrap: break-word;
+}
+table.data-table td code {
+  font-size: 7pt;
+  overflow-wrap: break-word;
+}
+table.data-table tbody tr:nth-child(even) td {
+  background: #f8fafc;
+}
+.landscape-section table.data-table {
+  font-size: 7.45pt;
+  margin: 1mm 0 0;
+}
+.landscape-section table.data-table th,
+.landscape-section table.data-table td {
+  padding: 1.05mm 1.6mm;
+}
+.landscape-section p {
+  font-size: 7.8pt;
+  margin-bottom: 1.2mm;
+}
+
+/* ---- Appendix A: Normative Decision Cards ---------------------------------------------- */
+.decision-card {
+  border: 0.6pt solid #cbd5e1;
+  border-radius: 1.6mm;
+  margin-bottom: 3mm;
+  background: #ffffff;
+  break-inside: avoid;
+  overflow: hidden;
+}
+.decision-head {
+  background: #f8fafc;
+  border-bottom: 0.5pt solid #e2e8f0;
+  padding: 1.6mm 2.8mm;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2.5mm;
+}
+.decision-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 2mm;
+  flex: 1 1 auto;
+  min-width: 45%;
+}
+.dec-id {
+  display: inline-block;
+  padding: 0.35mm 1.8mm;
+  border-radius: 1mm;
+  background: #1d4ed8;
+  color: #ffffff;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 7.4pt;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+.dec-title {
+  font-size: 8.9pt;
+  font-weight: 700;
+  color: #0f172a;
+}
+.dec-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 1mm;
+  flex: 0 1 auto;
+}
+.dec-chip {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 6.7pt;
+  font-weight: 600;
+  padding: 0.3mm 1.5mm;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1e40af;
+  border: 0.4pt solid #bfdbfe;
+  white-space: nowrap;
+}
+.dec-chip.adr {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+.dec-chip.grain {
+  background: #ecfdf5;
+  color: #065f46;
+  border-color: #6ee7b7;
+}
+.decision-body {
+  padding: 2mm 2.8mm 1.8mm;
+  font-size: 8.4pt;
+  color: #1e293b;
+}
+.decision-body p { margin: 0 0 1.5mm; }
+.shall-kw {
+  font-weight: 700;
+  color: #1d4ed8;
+}
+.scenario-box {
+  margin-top: 1.4mm;
+  padding-top: 1.4mm;
+  border-top: 0.5pt dashed #cbd5e1;
+}
+.scenario-title {
+  font-size: 7.7pt;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 0.8mm;
+}
+.scenario-steps {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 7.9pt;
+}
+.scenario-steps td {
+  padding: 0.4mm 0;
+  vertical-align: top;
+}
+.scenario-steps td.kw-col {
+  width: 14mm;
+  padding-right: 1.4mm;
+}
+.kw-pill {
+  display: inline-block;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 6.4pt;
+  font-weight: 700;
+  padding: 0.2mm 1.3mm;
+  border-radius: 0.8mm;
+  background: #f1f5f9;
+  color: #334155;
+  border: 0.35pt solid #cbd5e1;
+}
+.kw-pill.then {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
+.kw-pill.when {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+/* Blockquote & Code Blocks */
+blockquote {
+  margin: 2mm 0 2.5mm;
+  padding: 1.8mm 3mm;
+  background: #f8fafc;
+  border-left: 1mm solid #94a3b8;
+  color: #475569;
+  font-size: 8.4pt;
+}
+pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 2.2mm 3mm;
+  border-radius: 1.5mm;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 7.4pt;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  break-inside: avoid;
+}
+pre code {
+  background: transparent;
+  border: none;
+  color: inherit;
+  padding: 0;
+}

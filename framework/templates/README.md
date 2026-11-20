@@ -29,7 +29,7 @@ flowchart LR
 | Define | 3 | [`define/3-prioritisation.pdf`](define/3-prioritisation.pdf) | decision forum | the matrix and a signed decision for each use case | [UC-SALES-001](../../examples/sales_performance/define/prioritisation.pdf); [seed portfolio](../../examples/use-case-portfolio/prioritisation.pdf) |
 | Define | 4a | [`define/4a-brd.pdf`](define/4a-brd.pdf) | business owner | business requirements, or ... | [BRD-SALES-002](../../examples/sales_performance/define/brd.pdf) |
 | Define | 4b | [`define/4b-prd.pdf`](define/4b-prd.pdf) | product manager | ... product requirements, with the same rubric | none yet |
-| Design | 5 | [`design/tdd-spec.md`](design/tdd-spec.md) | data engineer | the technical design: one decision for each design area | [TDD-SALES-002](../../examples/sales_performance/specs/tdd/spec.md) |
+| Design | 5 | [`design/tdd-spec.md`](design/tdd-spec.md) | data engineer | narrative & visual TDD v2 (architecture, FHD, data flow, ER model, optional dashboard mockup) + normative Appendix A decisions | [TDD-SALES-002](../../examples/sales_performance/specs/tdd/spec.md) |
 | Design | 5 | [`design/semantics.md`](design/semantics.md) | data engineer; signed by the business owner | the design played back in business language | [sales-performance](../../examples/sales_performance/specs/tdd/semantics.md) |
 | Design | 5 | [`design/product.yaml`](design/product.yaml) | data engineer | the resolved design (contract `product-manifest.v1`) | [sales_performance](../../examples/sales_performance/product.yaml) |
 | Design | 5 | [`design/adr.md`](design/adr.md) | data engineer | a record of each departure from a platform default | [ADR-SALES-002-01](../../examples/sales_performance/adr/ADR-SALES-002-01-kimball-in-silver.md), [ADR-SALES-002-02](../../examples/sales_performance/adr/ADR-SALES-002-02-watermark-not-cdc.md) |
@@ -117,8 +117,13 @@ The Design templates show where each rule applies. In summary, G1 passes when:
 
 - `tdd_id` and `satisfies` agree across the TDD Purpose line, `product.yaml` and the current
   BRD version;
-- every TDD decision has a unique `D-n`, cites known requirement ids, has a SHALL statement
-  and a scenario, and every BRD requirement is satisfied by at least one decision;
+- every visual asset embedded in `tdd/spec.md` (such as `assets/architecture.svg`,
+  `assets/functional-hierarchy.svg`, `assets/data-flow.svg`, `assets/entity-model.svg`,
+  `assets/dashboard-mockup.png`) exists on disk (missing narrative sections emit non-blocking
+  warnings);
+- every TDD decision in `## Appendix A — Normative Technical Requirements` (or `## Requirements`)
+  has a unique `D-n`, cites known requirement ids, has a SHALL statement and a scenario, and
+  every BRD requirement is satisfied by at least one decision;
 - every gold model has a decision with **Model:** and **Grain:**, and the grain matches
   `grain_columns`;
 - every element of `product.yaml` cites a requirement or a platform capability, and every
@@ -170,3 +175,14 @@ make templates
 
 The renderer writes the blank templates to `define/` and the filled worked examples beside
 their example folders. Rendering the same sources twice gives identical files.
+
+## Render a rich TDD PDF
+
+Any TDD v2 Markdown specification (`specs/tdd/spec.md`) can be rendered into an executive PDF
+with a cover page, auto-numbered table of contents, landscape diagram plates, and structured
+Appendix A decision cards:
+
+```bash
+make tdd-pdf                                              # renders examples/sales_performance/specs/tdd/tdd.pdf
+make tdd-pdf SPEC=products/<id>/specs/tdd/spec.md         # renders products/<id>/specs/tdd/tdd.pdf
+```

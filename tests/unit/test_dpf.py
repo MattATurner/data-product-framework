@@ -1583,3 +1583,64 @@ def test_presentation_server_first_run_resolution(tmp_path, monkeypatch):
     assert resolve_presentation_server_url(twin_ws, prompt_on_first_run=False) == "https://example-decks.a.run.app"
 
 
+def test_tdd_v2_appendix_requirements_and_visual_asset_gate(tmp_path):
+    from dpf.design import check_design
+
+    # 1. Spec parser recognises named appendix requirements headings and ignores commented images
+    spec = parse_spec("""# Demo TDD
+
+## Purpose
+
+**TDD:** TDD-DEMO-001 · **Satisfies:** BRD-DEMO-001@1.0.0
+
+Narrative overview.
+
+## 1. Executive Design Summary
+
+Plain English summary.
+
+<!-- ![Commented placeholder](assets/placeholder.svg) -->
+![Architecture](assets/architecture.svg)
+
+## Appendix A — Normative Technical Requirements
+
+### Requirement: Grain
+**Decision:** D-1 · **Satisfies:** R-1 · **Model:** demo_gold · **Grain:** id
+
+`demo_gold` SHALL hold one row per id.
+
+#### Scenario: Unique id
+- **WHEN** built
+- **THEN** duplicates SHALL fail
+""")
+    assert spec.has_purpose and spec.has_requirements
+    assert len(spec.requirements) == 1 and spec.requirements[0].meta["decision"] == "D-1"
+    assert spec.image_links == ["assets/architecture.svg"]
+
+    # 2. Upgraded sales_performance TDD v2 passes G1 with 0 failures and 0 warnings
+    ws_live = Workspace(ROOT)
+    r_sales = quiet()
+    check_design(ws_live.product("sales_performance"), r_sales)
+    assert r_sales.failures == 0, r_sales.messages("fail")
+    assert r_sales.warnings == 0, r_sales.messages("warn")
+
+    # 3. Lightweight customer_orders TDD passes G1 (0 failures) with non-blocking structural warnings
+    r_cust = quiet()
+    check_design(ws_live.product("customer_orders"), r_cust)
+    assert r_cust.failures == 0, r_cust.messages("fail")
+    assert any("recommended narrative section" in m for m in r_cust.messages("warn"))
+
+    # 4. Broken image asset link in a TDD hard-fails G1
+    twin_ws = _clone_workspace(tmp_path)
+    tdd_path = twin_ws.root / "examples/sales_performance/specs/tdd/spec.md"
+    tdd_path.write_text(
+        tdd_path.read_text(encoding="utf-8") + "\n![Missing Diagram](assets/does-not-exist.svg)\n",
+        encoding="utf-8",
+    )
+    r_broken = quiet()
+    check_design(twin_ws.product("sales_performance"), r_broken)
+    assert r_broken.failures >= 1
+    assert any("missing visual asset" in m and "assets/does-not-exist.svg" in m for m in r_broken.messages("fail"))
+
+
+

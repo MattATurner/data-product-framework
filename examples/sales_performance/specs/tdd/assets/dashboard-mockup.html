@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Executive Sales Performance — Dashboard Mockup (TDD-SALES-002)</title>
+<style>
+  :root {
+    --canvas: #f5f6f8;
+    --surface: #ffffff;
+    --border: #dfe3e8;
+    --ink: #111827;
+    --muted: #5f6368;
+    --subtle: #94a3b8;
+    --primary: #1d4ed8;
+    --primary-soft: #eff6ff;
+    --bar: #3b6ea5;
+    --bar-accent: #1e40af;
+    --teal: #0f766e;
+    --warn-bg: #fff7ed;
+    --warn-ink: #9a3412;
+    --badge-bg: #eef2ff;
+    --badge-ink: #3730a3;
+    --cancel-bg: #fef2f2;
+    --cancel-ink: #b91c1c;
+    --ok-bg: #ecfdf5;
+    --ok-ink: #047857;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1440px;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-variant-numeric: tabular-nums;
+    padding: 22px 26px 24px;
+  }
+  .mockup-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .title-block h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.2px; }
+  .title-block p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .meta-pills { display: flex; gap: 8px; align-items: center; }
+  .pill {
+    font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--surface); color: #334155;
+  }
+  .pill.wire { background: #fef3c7; border-color: #fcd34d; color: #92400e; }
+  .pill.pii { background: #ffe4e6; border-color: #fda4af; color: #9f1239; }
+  .pill.slo { background: var(--ok-bg); border-color: #6ee7b7; color: var(--ok-ink); }
+
+  /* Filter Bar */
+  .filter-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    position: relative;
+  }
+  .filter-chip {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    padding: 5px 11px;
+    min-width: 168px;
+    background: #f8fafc;
+  }
+  .filter-chip label {
+    font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.45px; color: var(--muted);
+  }
+  .filter-chip span {
+    font-size: 12.5px; font-weight: 600; color: var(--ink); margin-top: 1px;
+  }
+  .filter-note {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Annotation Callout Dot */
+  .callout-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #1e293b; color: #ffffff;
+    font-size: 10px; font-weight: 700; flex-shrink: 0;
+  }
+
+  /* KPI Strip */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+  .kpi-top { display: flex; justify-content: space-between; align-items: baseline; }
+  .kpi-label { font-size: 11.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+  .kpi-sub { font-size: 10.5px; color: var(--subtle); }
+  .kpi-val-row { display: flex; align-items: baseline; gap: 12px; margin-top: 6px; }
+  .kpi-val { font-size: 30px; font-weight: 700; letter-spacing: -0.6px; color: var(--ink); }
+  .kpi-delta { font-size: 12px; font-weight: 600; color: var(--ok-ink); background: var(--ok-bg); padding: 2px 7px; border-radius: 999px; }
+  .kpi-foot { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+  /* Charts Row */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .card-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .card-title { font-size: 13.5px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 7px; }
+  .card-meta { font-size: 10.5px; color: var(--muted); }
+
+  /* Ranked Horizontal Bars (Zero-Anchored) */
+  .bar-list { display: flex; flex-direction: column; gap: 11px; margin-top: 8px; }
+  .bar-row { display: grid; grid-template-columns: 108px 1fr 66px; align-items: center; gap: 10px; }
+  .bar-lbl { font-size: 12px; font-weight: 500; color: #334155; text-align: right; }
+  .bar-track { height: 20px; background: #f1f5f9; border-left: 1.5px solid #475569; position: relative; border-radius: 0 3px 3px 0; }
+  .bar-fill { height: 100%; background: var(--bar); border-radius: 0 3px 3px 0; }
+  .bar-fill.top { background: var(--bar-accent); }
+  .bar-num { font-size: 12px; font-weight: 600; color: var(--ink); text-align: right; }
+  .axis-ticks {
+    display: grid; grid-template-columns: 108px 1fr 66px; gap: 10px;
+    margin-top: 6px; font-size: 10px; color: var(--muted);
+  }
+  .axis-scale { display: flex; justify-content: space-between; border-top: 1px solid #cbd5e1; padding-top: 3px; }
+
+  /* Drill-Down Table */
+  table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 4px; }
+  th {
+    text-align: left; font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.35px; color: var(--muted); border-bottom: 1.5px solid #cbd5e1;
+    padding: 7px 10px; background: #f8fafc;
+  }
+  th.num, td.num { text-align: right; }
+  td { padding: 7px 10px; border-bottom: 1px solid #eef2f6; color: #1e293b; }
+  tr.cancelled td { background: #fffafb; color: #64748b; }
+  .status-pill {
+    display: inline-block; padding: 2px 7px; border-radius: 999px;
+    font-size: 10px; font-weight: 700;
+  }
+  .status-pill.ok { background: var(--ok-bg); color: var(--ok-ink); }
+  .status-pill.cancel { background: var(--cancel-bg); color: var(--cancel-ink); }
+
+  /* Footer Annotations Strip */
+  .annotations {
+    margin-top: 12px;
+    background: #ffffff;
+    border: 1px dashed #94a3b8;
+    border-radius: 8px;
+    padding: 9px 14px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    font-size: 11px;
+    color: #334155;
+    line-height: 1.4;
+  }
+  .ann-item { display: flex; gap: 7px; align-items: flex-start; }
+</style>
+</head>
+<body>
+  <div class="mockup-banner">
+    <div class="title-block">
+      <h1>Executive Sales Performance — Dashboard Wireframe</h1>
+      <p>Looker Dashboard: executive_sales_pulse · Explore: order_lines · Illustrative sample figures (AUD, excl. tax &amp; cancelled lines)</p>
+    </div>
+    <div class="meta-pills">
+      <span class="pill wire">ILLUSTRATIVE MOCKUP</span>
+      <span class="pill slo">Freshness SLO: ≤ 90m (Perth Mon–Fri)</span>
+      <span class="pill pii">Contact PII Masked (always_null)</span>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <span class="callout-num">1</span>
+    <div class="filter-chip"><label>Order Date</label><span>Last 365 days (Partition)</span></div>
+    <div class="filter-chip"><label>Region</label><span>All Regions</span></div>
+    <div class="filter-chip"><label>Customer Segment</label><span>All Segments (As-At Sale)</span></div>
+    <div class="filter-chip"><label>Product Category</label><span>All Categories (As-At Sale)</span></div>
+    <div class="filter-note">
+      <span>Aggregate Awareness: <strong>sales_performance_monthly</strong> · Zero Looker PDTs</span>
+    </div>
+  </div>
+
+  <!-- 3 KPI Tiles -->
+  <div class="kpi-grid">
+    <div class="card">
+      <div class="kpi-top">
+        <span class="kpi-label">Net Sales (AUD)</span>
+        <span class="kpi-sub">fct_order_line.net_sales</span>
+      </div>
+      <div class="kpi-val-row">
+        <span class="kpi-val">$14.82M</span>
+        <span class="kpi-delta">+11.4% YoY</span>
+      </div>
+      <div class="kpi-foot">Gross less discount · Excludes tax &amp; cancelled lines · Reconciles to Finance</div>
+    </div>
+    <div class="card">
+      <div class="kpi-top">
+        <span class="kpi-label">Units Sold</span>
+        <span class="kpi-sub">fct_order_line.units_sold</span>
+      </div>
+      <div class="kpi-val-row">
+        <span class="kpi-val">124,680</span>
+        <span class="kpi-delta">+8.2% YoY</span>
+      </div>
+      <div class="kpi-foot">Additive across all periods, segments, regions &amp; categories</div>
+    </div>
+    <div class="card">
+      <div class="kpi-top">
+        <span class="kpi-label">Order Lines</span>
+        <span class="kpi-sub">fct_order_line.order_line_count</span>
+      </div>
+      <div class="kpi-val-row">
+        <span class="kpi-val">38,410</span>
+        <span class="kpi-delta">+6.7% YoY</span>
+      </div>
+      <div class="kpi-foot">Non-cancelled lines counted once at latest amended values</div>
+    </div>
+  </div>
+
+  <!-- 3 Charts Row -->
+  <div class="charts-grid">
+    <!-- Monthly Net Sales Trend (SVG Line Chart) -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title"><span class="callout-num">2</span> Monthly Net Sales Trend (AUD)</span>
+        <span class="card-meta">dim_date.year_month · Zero baseline</span>
+      </div>
+      <svg viewBox="0 0 510 198" width="100%" height="198">
+        <!-- Gridlines (0 to $2.0M) -->
+        <line x1="46" y1="162" x2="496" y2="162" stroke="#64748b" stroke-width="1.2"/>
+        <line x1="46" y1="126" x2="496" y2="126" stroke="#e2e8f0" stroke-width="1"/>
+        <line x1="46" y1="90"  x2="496" y2="90"  stroke="#e2e8f0" stroke-width="1"/>
+        <line x1="46" y1="54"  x2="496" y2="54"  stroke="#e2e8f0" stroke-width="1"/>
+        <line x1="46" y1="18"  x2="496" y2="18"  stroke="#e2e8f0" stroke-width="1"/>
+        <!-- Y-Axis Labels -->
+        <g font-family="Inter, sans-serif" font-size="10" fill="#64748b" text-anchor="end">
+          <text x="40" y="165">$0</text>
+          <text x="40" y="129">$0.5M</text>
+          <text x="40" y="93">$1.0M</text>
+          <text x="40" y="57">$1.5M</text>
+          <text x="40" y="21">$2.0M</text>
+        </g>
+        <!-- Line Path (12 months illustrative trend) -->
+        <path d="M 60 98 L 99 92 L 138 78 L 177 83 L 216 74 L 255 66 L 294 70 L 333 61 L 372 56 L 411 49 L 450 44 L 489 37"
+              fill="none" stroke="#1e40af" stroke-width="2.4" stroke-linejoin="round"/>
+        <!-- Subtle data points -->
+        <g fill="#1e40af">
+          <circle cx="60" cy="98" r="3"/><circle cx="99" cy="92" r="3"/><circle cx="138" cy="78" r="3"/>
+          <circle cx="177" cy="83" r="3"/><circle cx="216" cy="74" r="3"/><circle cx="255" cy="66" r="3"/>
+          <circle cx="294" cy="70" r="3"/><circle cx="333" cy="61" r="3"/><circle cx="372" cy="56" r="3"/>
+          <circle cx="411" cy="49" r="3"/><circle cx="450" cy="44" r="3"/><circle cx="489" cy="37" r="4"/>
+        </g>
+        <text x="489" y="27" text-anchor="end" font-family="Inter, sans-serif" font-size="10.5" font-weight="700" fill="#1e40af">$1.74M</text>
+        <!-- X-Axis Months -->
+        <g font-family="Inter, sans-serif" font-size="9.5" fill="#64748b" text-anchor="middle">
+          <text x="60" y="178">Dec</text><text x="99" y="178">Jan</text><text x="138" y="178">Feb</text>
+          <text x="177" y="178">Mar</text><text x="216" y="178">Apr</text><text x="255" y="178">May</text>
+          <text x="294" y="178">Jun</text><text x="333" y="178">Jul</text><text x="372" y="178">Aug</text>
+          <text x="411" y="178">Sep</text><text x="450" y="178">Oct</text><text x="489" y="178">Nov</text>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Net Sales by Region (Zero-Anchored Ranked Horizontal Bar) -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">Net Sales by Region</span>
+        <span class="card-meta">As-at sale date</span>
+      </div>
+      <div class="bar-list">
+        <div class="bar-row"><span class="bar-lbl">ANZ</span><div class="bar-track"><div class="bar-fill top" style="width:92%"></div></div><span class="bar-num">$5.52M</span></div>
+        <div class="bar-row"><span class="bar-lbl">APAC</span><div class="bar-track"><div class="bar-fill" style="width:71%"></div></div><span class="bar-num">$4.26M</span></div>
+        <div class="bar-row"><span class="bar-lbl">EMEA</span><div class="bar-track"><div class="bar-fill" style="width:49%"></div></div><span class="bar-num">$2.94M</span></div>
+        <div class="bar-row"><span class="bar-lbl">North America</span><div class="bar-track"><div class="bar-fill" style="width:35%"></div></div><span class="bar-num">$2.10M</span></div>
+      </div>
+      <div class="axis-ticks">
+        <span></span>
+        <div class="axis-scale"><span>$0</span><span>$2M</span><span>$4M</span><span>$6M</span></div>
+        <span></span>
+      </div>
+    </div>
+
+    <!-- Net Sales by Product Category (Zero-Anchored Ranked Horizontal Bar) -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">Net Sales by Product Category</span>
+        <span class="card-meta">Merchandising range</span>
+      </div>
+      <div class="bar-list">
+        <div class="bar-row"><span class="bar-lbl">Enterprise</span><div class="bar-track"><div class="bar-fill top" style="width:88%"></div></div><span class="bar-num">$5.28M</span></div>
+        <div class="bar-row"><span class="bar-lbl">Widgets</span><div class="bar-track"><div class="bar-fill" style="width:67%"></div></div><span class="bar-num">$4.02M</span></div>
+        <div class="bar-row"><span class="bar-lbl">Gadgets</span><div class="bar-track"><div class="bar-fill" style="width:54%"></div></div><span class="bar-num">$3.24M</span></div>
+        <div class="bar-row"><span class="bar-lbl">Accessories</span><div class="bar-track"><div class="bar-fill" style="width:38%"></div></div><span class="bar-num">$2.28M</span></div>
+      </div>
+      <div class="axis-ticks">
+        <span></span>
+        <div class="axis-scale"><span>$0</span><span>$2M</span><span>$4M</span><span>$6M</span></div>
+        <span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Line Drill-Down Table -->
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title"><span class="callout-num">3</span> Order Line Drill-Down Detail <span class="card-meta" style="font-weight:500">(Click any chart figure to filter · Limit 100 · Contact PII excluded)</span></span>
+      <span class="card-meta"><span class="callout-num" style="margin-right:4px">4</span> Reconciles 1:1 to Monthly Net Sales</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Line</th>
+          <th>Order Date</th>
+          <th>Customer Name</th>
+          <th>Segment (As-At)</th>
+          <th>Product Category (As-At)</th>
+          <th>Status</th>
+          <th class="num">Units</th>
+          <th class="num">Net Sales (AUD)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>SO-1001</strong></td><td>1</td><td>2026-03-14</td><td>Southern Cross Retail</td><td>SMB</td><td>GADGETS</td>
+          <td><span class="status-pill ok">COMPLETE</span></td><td class="num">12</td><td class="num">$1,440.00</td>
+        </tr>
+        <tr>
+          <td><strong>SO-1001</strong></td><td>2</td><td>2026-03-14</td><td>Southern Cross Retail</td><td>SMB</td><td>GADGETS</td>
+          <td><span class="status-pill ok">COMPLETE</span></td><td class="num">6</td><td class="num">$810.00</td>
+        </tr>
+        <tr class="cancelled">
+          <td><strong>SO-1003</strong></td><td>1</td><td>2026-04-02</td><td>Harbour Logistics Pty</td><td>ENTERPRISE</td><td>WIDGETS</td>
+          <td><span class="status-pill cancel">CANCELLED</span></td><td class="num">0</td><td class="num">$0.00</td>
+        </tr>
+        <tr>
+          <td><strong>SO-1042</strong></td><td>1</td><td>2026-06-18</td><td>Southern Cross Retail</td><td>ENTERPRISE</td><td>WIDGETS</td>
+          <td><span class="status-pill ok">COMPLETE</span></td><td class="num">25</td><td class="num">$4,750.00</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Architectural Callouts -->
+  <div class="annotations">
+    <div class="ann-item"><span class="callout-num">1</span><span><strong>Mandatory partition filter:</strong> Order Date defaults to 365 days on the partitioned fact table; all 4 filters bind directly to LookML Explore <em>order_lines</em>.</span></div>
+    <div class="ann-item"><span class="callout-num">2</span><span><strong>Stephen Few visual guardrails:</strong> Zero-anchored axes enforced by G1/G3 (no pies, no truncated bars); history stays at the segment/category valid on order date.</span></div>
+    <div class="ann-item"><span class="callout-num">3</span><span><strong>Transparent cancellations:</strong> Order SO-1003 stays visible for audit investigation, badged CANCELLED, and contributes $0.00 to net sales totals.</span></div>
+    <div class="ann-item"><span class="callout-num">4</span><span><strong>Zero PII leakage:</strong> Contact email and phone are omitted from drill-down detail and masked to NULL via BigQuery policy tag <em>pii_contact</em>.</span></div>
+  </div>
+</body>
+</html>

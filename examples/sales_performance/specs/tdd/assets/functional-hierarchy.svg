@@ -1,0 +1,337 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2214 682" width="100%" height="100%">
+<defs>
+
+    <style>
+      .fd-font { font-family: 'Inter', 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+      .fd-mono { font-family: 'JetBrains Mono', 'Roboto Mono', ui-monospace, SFMono-Regular, monospace; }
+    </style>
+    <filter id="card-shadow" x="-4%" y="-4%" width="108%" height="112%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0F172A" flood-opacity="0.06"/>
+    </filter>
+  
+</defs>
+<rect x="0" y="0" width="2214" height="682" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+<text x="48" y="38" class="fd-font" font-size="18" font-weight="700" fill="#0F172A">SLS — Sales Performance Data Product</text>
+<text x="48" y="58" class="fd-font" font-size="12" font-weight="500" fill="#64748B">Functional Hierarchy Diagram (FHD) · Root: SLS-00</text>
+<line x1="1107.0" y1="158.0" x2="1107.0" y2="184.0" stroke="#64748B" stroke-width="1.75"/>
+<line x1="247.0" y1="184.0" x2="1967.0" y2="184.0" stroke="#64748B" stroke-width="1.75"/>
+<line x1="247.0" y1="184.0" x2="247.0" y2="210.0" stroke="#64748B" stroke-width="1.75"/>
+<line x1="677.0" y1="184.0" x2="677.0" y2="210.0" stroke="#64748B" stroke-width="1.75"/>
+<line x1="1107.0" y1="184.0" x2="1107.0" y2="210.0" stroke="#64748B" stroke-width="1.75"/>
+<line x1="1537.0" y1="184.0" x2="1537.0" y2="210.0" stroke="#64748B" stroke-width="1.75"/>
+<line x1="1967.0" y1="184.0" x2="1967.0" y2="210.0" stroke="#64748B" stroke-width="1.75"/>
+<line x1="34.0" y1="246.0" x2="48.0" y2="246.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="34.0" y1="246.0" x2="34.0" y2="510.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="34.0" y1="334.0" x2="70.0" y2="334.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="34.0" y1="422.0" x2="70.0" y2="422.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="34.0" y1="510.0" x2="70.0" y2="510.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="464.0" y1="246.0" x2="478.0" y2="246.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="464.0" y1="246.0" x2="464.0" y2="510.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="464.0" y1="334.0" x2="500.0" y2="334.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="464.0" y1="422.0" x2="500.0" y2="422.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="464.0" y1="510.0" x2="500.0" y2="510.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="894.0" y1="246.0" x2="908.0" y2="246.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="894.0" y1="246.0" x2="894.0" y2="598.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="894.0" y1="334.0" x2="930.0" y2="334.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="894.0" y1="422.0" x2="930.0" y2="422.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="894.0" y1="510.0" x2="930.0" y2="510.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="894.0" y1="598.0" x2="930.0" y2="598.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1324.0" y1="246.0" x2="1338.0" y2="246.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1324.0" y1="246.0" x2="1324.0" y2="598.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1324.0" y1="334.0" x2="1360.0" y2="334.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1324.0" y1="422.0" x2="1360.0" y2="422.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1324.0" y1="510.0" x2="1360.0" y2="510.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1324.0" y1="598.0" x2="1360.0" y2="598.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1754.0" y1="246.0" x2="1768.0" y2="246.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1754.0" y1="246.0" x2="1754.0" y2="510.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1754.0" y1="334.0" x2="1790.0" y2="334.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1754.0" y1="422.0" x2="1790.0" y2="422.0" stroke="#94A3B8" stroke-width="1.5"/>
+<line x1="1754.0" y1="510.0" x2="1790.0" y2="510.0" stroke="#94A3B8" stroke-width="1.5"/>
+<g filter="url(#card-shadow)">
+<rect x="877.0" y="84.0" width="460.0" height="74.0" rx="6" fill="#0F172A" stroke="#0F172A" stroke-width="1.75"/>
+<rect x="877.0" y="84.0" width="5" height="74.0" rx="2.5" fill="#38BDF8"/>
+<rect x="889.0" y="95.0" width="57.0" height="20" rx="4" fill="#1E293B"/>
+<text x="917.5" y="109.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#38BDF8">SLS-00</text>
+<rect x="1276.0" y="96.0" width="51.0" height="18" rx="4" fill="#1E293B"/>
+<text x="1301.5" y="108.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#E2E8F0">DOMAIN</text>
+<text x="954.0" y="109.5" class="fd-font" font-size="12" font-weight="700" fill="#FFFFFF">Sales Performance Product</text>
+<text x="889.0" y="130.0" class="fd-font" font-size="10.8" font-weight="400" fill="#CBD5E1">Delivers governed net sales, drill-down line detail, Looker BI, and</text>
+<text x="889.0" y="144.0" class="fd-font" font-size="10.8" font-weight="400" fill="#CBD5E1">partner sharing.</text>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="48.0" y="210.0" width="398.0" height="72.0" rx="6" fill="#F8FAFC" stroke="#1A73E8" stroke-width="1.75"/>
+<rect x="48.0" y="210.0" width="5" height="72.0" rx="2.5" fill="#1A73E8"/>
+<rect x="60.0" y="221.0" width="57.0" height="20" rx="4" fill="#E8F0FE"/>
+<text x="88.5" y="235.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#174EA6">SLS-01</text>
+<rect x="385.0" y="222.0" width="51.0" height="18" rx="4" fill="#E8F0FE"/>
+<text x="410.5" y="234.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#174EA6">DOMAIN</text>
+<text x="125.0" y="235.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">1. Capture &amp; Land</text>
+<text x="60.0" y="256.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Extracts ERP changes behind NAT and lands append-only raw</text>
+<text x="60.0" y="270.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">batches.</text>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="70.0" y="298.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="70.0" y="298.0" width="5" height="72.0" rx="2.5" fill="#0891B2"/>
+<rect x="82.0" y="309.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="121.8" y="323.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">SLS-01-01</text>
+<rect x="385.0" y="310.0" width="51.0" height="18" rx="4" fill="#CFFAFE"/>
+<text x="410.5" y="322.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#155E75">INGEST</text>
+<text x="169.5" y="323.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Outbound Watermark Extractor</text>
+<text x="82.0" y="344.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Pulls ERP deltas every 15 minutes with a 15-minute</text>
+<text x="82.0" y="358.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">overlap window.</text>
+<polygon points="432.0,353.5 436.5,358.0 432.0,362.5 427.5,358.0" fill="none" stroke="#0891B2" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="432.0" cy="358.0" r="1.2" fill="#0891B2"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="70.0" y="386.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="70.0" y="386.0" width="5" height="72.0" rx="2.5" fill="#059669"/>
+<rect x="82.0" y="397.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="121.8" y="411.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">SLS-01-02</text>
+<rect x="392.0" y="398.0" width="44.0" height="18" rx="4" fill="#D1FAE5"/>
+<text x="414.0" y="410.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#065F46">CRUD</text>
+<text x="169.5" y="411.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Watermark Control Ledger</text>
+<text x="82.0" y="432.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Persists high-watermark timestamps and batch audit</text>
+<text x="82.0" y="446.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">records per entity.</text>
+<polygon points="432.0,441.5 436.5,446.0 432.0,450.5 427.5,446.0" fill="none" stroke="#059669" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="432.0" cy="446.0" r="1.2" fill="#059669"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="70.0" y="474.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="70.0" y="474.0" width="5" height="72.0" rx="2.5" fill="#0891B2"/>
+<rect x="82.0" y="485.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="121.8" y="499.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">SLS-01-03</text>
+<rect x="385.0" y="486.0" width="51.0" height="18" rx="4" fill="#CFFAFE"/>
+<text x="410.5" y="498.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#155E75">INGEST</text>
+<text x="169.5" y="499.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Immutable Raw Landing</text>
+<text x="82.0" y="520.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Appends raw ERP snapshots partitioned by ingest</text>
+<text x="82.0" y="534.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">timestamp.</text>
+<polygon points="432.0,529.5 436.5,534.0 432.0,538.5 427.5,534.0" fill="none" stroke="#0891B2" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="432.0" cy="534.0" r="1.2" fill="#0891B2"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="478.0" y="210.0" width="398.0" height="72.0" rx="6" fill="#F8FAFC" stroke="#1A73E8" stroke-width="1.75"/>
+<rect x="478.0" y="210.0" width="5" height="72.0" rx="2.5" fill="#1A73E8"/>
+<rect x="490.0" y="221.0" width="57.0" height="20" rx="4" fill="#E8F0FE"/>
+<text x="518.5" y="235.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#174EA6">SLS-02</text>
+<rect x="815.0" y="222.0" width="51.0" height="18" rx="4" fill="#E8F0FE"/>
+<text x="840.5" y="234.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#174EA6">DOMAIN</text>
+<text x="555.0" y="235.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">2. Stage &amp; Quality Gate</text>
+<text x="490.0" y="256.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Deduplicates amended rows, quarantines invalid lines, and</text>
+<text x="490.0" y="270.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">gates publishing.</text>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="500.0" y="298.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="500.0" y="298.0" width="5" height="72.0" rx="2.5" fill="#2563EB"/>
+<rect x="512.0" y="309.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="551.8" y="323.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">SLS-02-01</text>
+<rect x="815.0" y="310.0" width="51.0" height="18" rx="4" fill="#DBEAFE"/>
+<text x="840.5" y="322.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#1E40AF">BIZ FN</text>
+<text x="599.5" y="323.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Natural-Key Deduplicator</text>
+<text x="512.0" y="344.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Selects latest row per natural key ordered by source</text>
+<text x="512.0" y="358.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">change time.</text>
+<polygon points="862.0,353.5 866.5,358.0 862.0,362.5 857.5,358.0" fill="none" stroke="#2563EB" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="862.0" cy="358.0" r="1.2" fill="#2563EB"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="500.0" y="386.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="500.0" y="386.0" width="5" height="72.0" rx="2.5" fill="#059669"/>
+<rect x="512.0" y="397.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="551.8" y="411.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">SLS-02-02</text>
+<rect x="822.0" y="398.0" width="44.0" height="18" rx="4" fill="#D1FAE5"/>
+<text x="844.0" y="410.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#065F46">CRUD</text>
+<text x="599.5" y="411.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Order-Line Reject Ledger</text>
+<text x="512.0" y="432.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Quarantines lines with null customer or negative</text>
+<text x="512.0" y="446.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">quantity with rule IDs.</text>
+<polygon points="862.0,441.5 866.5,446.0 862.0,450.5 857.5,446.0" fill="none" stroke="#059669" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="862.0" cy="446.0" r="1.2" fill="#059669"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="500.0" y="474.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="500.0" y="474.0" width="5" height="72.0" rx="2.5" fill="#2563EB"/>
+<rect x="512.0" y="485.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="551.8" y="499.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">SLS-02-03</text>
+<rect x="815.0" y="486.0" width="51.0" height="18" rx="4" fill="#DBEAFE"/>
+<text x="840.5" y="498.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#1E40AF">BIZ FN</text>
+<text x="599.5" y="499.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Blocking Quality Gate</text>
+<text x="512.0" y="520.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Halts Silver and Gold refresh whenever any reject row or</text>
+<text x="512.0" y="534.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">grain breach occurs.</text>
+<polygon points="862.0,529.5 866.5,534.0 862.0,538.5 857.5,534.0" fill="none" stroke="#2563EB" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="862.0" cy="534.0" r="1.2" fill="#2563EB"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="908.0" y="210.0" width="398.0" height="72.0" rx="6" fill="#F8FAFC" stroke="#1A73E8" stroke-width="1.75"/>
+<rect x="908.0" y="210.0" width="5" height="72.0" rx="2.5" fill="#1A73E8"/>
+<rect x="920.0" y="221.0" width="57.0" height="20" rx="4" fill="#E8F0FE"/>
+<text x="948.5" y="235.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#174EA6">SLS-03</text>
+<rect x="1245.0" y="222.0" width="51.0" height="18" rx="4" fill="#E8F0FE"/>
+<text x="1270.5" y="234.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#174EA6">DOMAIN</text>
+<text x="985.0" y="235.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">3. Conformed Integration</text>
+<text x="920.0" y="256.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Maintains Kimball SCD2 conformed dimensions and 90-day</text>
+<text x="920.0" y="270.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">incremental facts.</text>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="930.0" y="298.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="930.0" y="298.0" width="5" height="72.0" rx="2.5" fill="#059669"/>
+<rect x="942.0" y="309.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="981.8" y="323.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">SLS-03-01</text>
+<rect x="1252.0" y="310.0" width="44.0" height="18" rx="4" fill="#D1FAE5"/>
+<text x="1274.0" y="322.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#065F46">CRUD</text>
+<text x="1029.5" y="323.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Customer SCD2 Ledger</text>
+<text x="942.0" y="344.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Tracks point-in-time segment and region while masking</text>
+<text x="942.0" y="358.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">contact PII.</text>
+<polygon points="1292.0,353.5 1296.5,358.0 1292.0,362.5 1287.5,358.0" fill="none" stroke="#059669" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="1292.0" cy="358.0" r="1.2" fill="#059669"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="930.0" y="386.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="930.0" y="386.0" width="5" height="72.0" rx="2.5" fill="#059669"/>
+<rect x="942.0" y="397.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="981.8" y="411.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">SLS-03-02</text>
+<rect x="1252.0" y="398.0" width="44.0" height="18" rx="4" fill="#D1FAE5"/>
+<text x="1274.0" y="410.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#065F46">CRUD</text>
+<text x="1029.5" y="411.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Product SCD2 Ledger</text>
+<text x="942.0" y="432.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Preserves historical product category aligned to</text>
+<text x="942.0" y="446.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Merchandising.</text>
+<polygon points="1292.0,441.5 1296.5,446.0 1292.0,450.5 1287.5,446.0" fill="none" stroke="#059669" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="1292.0" cy="446.0" r="1.2" fill="#059669"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="930.0" y="474.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="930.0" y="474.0" width="5" height="72.0" rx="2.5" fill="#059669"/>
+<rect x="942.0" y="485.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="981.8" y="499.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">SLS-03-03</text>
+<rect x="1252.0" y="486.0" width="44.0" height="18" rx="4" fill="#D1FAE5"/>
+<text x="1274.0" y="498.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#065F46">CRUD</text>
+<text x="1029.5" y="499.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Calendar Dimension Ledger</text>
+<text x="942.0" y="520.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Provides conformed daily, monthly, and quarterly</text>
+<text x="942.0" y="534.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">reporting keys.</text>
+<polygon points="1292.0,529.5 1296.5,534.0 1292.0,538.5 1287.5,534.0" fill="none" stroke="#059669" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="1292.0" cy="534.0" r="1.2" fill="#059669"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="930.0" y="562.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="930.0" y="562.0" width="5" height="72.0" rx="2.5" fill="#059669"/>
+<rect x="942.0" y="573.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="981.8" y="587.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">SLS-03-04</text>
+<rect x="1252.0" y="574.0" width="44.0" height="18" rx="4" fill="#D1FAE5"/>
+<text x="1274.0" y="586.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#065F46">CRUD</text>
+<text x="1029.5" y="587.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Order-Line Fact Ledger</text>
+<text x="942.0" y="608.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Rebuilds 90-day incremental partitions resolving as-at</text>
+<text x="942.0" y="622.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">surrogate keys.</text>
+<polygon points="1292.0,617.5 1296.5,622.0 1292.0,626.5 1287.5,622.0" fill="none" stroke="#059669" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="1292.0" cy="622.0" r="1.2" fill="#059669"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="1338.0" y="210.0" width="398.0" height="72.0" rx="6" fill="#F8FAFC" stroke="#1A73E8" stroke-width="1.75"/>
+<rect x="1338.0" y="210.0" width="5" height="72.0" rx="2.5" fill="#1A73E8"/>
+<rect x="1350.0" y="221.0" width="57.0" height="20" rx="4" fill="#E8F0FE"/>
+<text x="1378.5" y="235.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#174EA6">SLS-04</text>
+<rect x="1675.0" y="222.0" width="51.0" height="18" rx="4" fill="#E8F0FE"/>
+<text x="1700.5" y="234.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#174EA6">DOMAIN</text>
+<text x="1415.0" y="235.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">4. Consume &amp; Share</text>
+<text x="1350.0" y="256.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Publishes Gold rollups, drill-down views, Looker BI, and</text>
+<text x="1350.0" y="270.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">partner sharing.</text>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="1360.0" y="298.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="1360.0" y="298.0" width="5" height="72.0" rx="2.5" fill="#059669"/>
+<rect x="1372.0" y="309.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="1411.8" y="323.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">SLS-04-01</text>
+<rect x="1682.0" y="310.0" width="44.0" height="18" rx="4" fill="#D1FAE5"/>
+<text x="1704.0" y="322.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#065F46">CRUD</text>
+<text x="1459.5" y="323.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Monthly Rollup Ledger</text>
+<text x="1372.0" y="344.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Materialises monthly net sales by segment, category, and</text>
+<text x="1372.0" y="358.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">region.</text>
+<polygon points="1722.0,353.5 1726.5,358.0 1722.0,362.5 1717.5,358.0" fill="none" stroke="#059669" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="1722.0" cy="358.0" r="1.2" fill="#059669"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="1360.0" y="386.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="1360.0" y="386.0" width="5" height="72.0" rx="2.5" fill="#2563EB"/>
+<rect x="1372.0" y="397.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="1411.8" y="411.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">SLS-04-02</text>
+<rect x="1675.0" y="398.0" width="51.0" height="18" rx="4" fill="#DBEAFE"/>
+<text x="1700.5" y="410.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#1E40AF">BIZ FN</text>
+<text x="1459.5" y="411.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Line-Detail Authorized View</text>
+<text x="1372.0" y="432.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Exposes reconcilable order-line drill-down with zero</text>
+<text x="1372.0" y="446.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">contact PII.</text>
+<polygon points="1722.0,441.5 1726.5,446.0 1722.0,450.5 1717.5,446.0" fill="none" stroke="#2563EB" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="1722.0" cy="446.0" r="1.2" fill="#2563EB"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="1360.0" y="474.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="1360.0" y="474.0" width="5" height="72.0" rx="2.5" fill="#059669"/>
+<rect x="1372.0" y="485.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="1411.8" y="499.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">SLS-04-03</text>
+<rect x="1682.0" y="486.0" width="44.0" height="18" rx="4" fill="#D1FAE5"/>
+<text x="1704.0" y="498.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#065F46">CRUD</text>
+<text x="1459.5" y="499.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Partner Sharing Ledger</text>
+<text x="1372.0" y="520.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Builds closed-month aggregate table inside isolated</text>
+<text x="1372.0" y="534.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">sharing dataset.</text>
+<polygon points="1722.0,529.5 1726.5,534.0 1722.0,538.5 1717.5,534.0" fill="none" stroke="#059669" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="1722.0" cy="534.0" r="1.2" fill="#059669"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="1360.0" y="562.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="1360.0" y="562.0" width="5" height="72.0" rx="2.5" fill="#D97706"/>
+<rect x="1372.0" y="573.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="1411.8" y="587.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">SLS-04-04</text>
+<rect x="1655.5" y="574.0" width="70.5" height="18" rx="4" fill="#FEF3C7"/>
+<text x="1690.8" y="586.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#92400E">UI / HITL</text>
+<text x="1459.5" y="587.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Executive Sales Pulse BI</text>
+<text x="1372.0" y="608.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Serves Looker order_lines Explore and Stephen Few</text>
+<text x="1372.0" y="622.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">executive dashboard.</text>
+<polygon points="1722.0,617.5 1726.5,622.0 1722.0,626.5 1717.5,622.0" fill="none" stroke="#D97706" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="1722.0" cy="622.0" r="1.2" fill="#D97706"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="1768.0" y="210.0" width="398.0" height="72.0" rx="6" fill="#F8FAFC" stroke="#1A73E8" stroke-width="1.75"/>
+<rect x="1768.0" y="210.0" width="5" height="72.0" rx="2.5" fill="#1A73E8"/>
+<rect x="1780.0" y="221.0" width="57.0" height="20" rx="4" fill="#E8F0FE"/>
+<text x="1808.5" y="235.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#174EA6">SLS-05</text>
+<rect x="2105.0" y="222.0" width="51.0" height="18" rx="4" fill="#E8F0FE"/>
+<text x="2130.5" y="234.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#174EA6">DOMAIN</text>
+<text x="1845.0" y="235.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">5. Govern &amp; Monitor</text>
+<text x="1780.0" y="256.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Provisions IAM, policy tags, Knowledge Catalog metadata, and</text>
+<text x="1780.0" y="270.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">SLO alerts.</text>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="1790.0" y="298.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="1790.0" y="298.0" width="5" height="72.0" rx="2.5" fill="#2563EB"/>
+<rect x="1802.0" y="309.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="1841.8" y="323.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">SLS-05-01</text>
+<rect x="2105.0" y="310.0" width="51.0" height="18" rx="4" fill="#DBEAFE"/>
+<text x="2130.5" y="322.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#1E40AF">BIZ FN</text>
+<text x="1889.5" y="323.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">IAM &amp; Policy-Tag Provisioner</text>
+<text x="1802.0" y="344.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Applies dataset grants, pii_contact masking, and</text>
+<text x="1802.0" y="358.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Dataform schedules.</text>
+<polygon points="2152.0,353.5 2156.5,358.0 2152.0,362.5 2147.5,358.0" fill="none" stroke="#2563EB" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="2152.0" cy="358.0" r="1.2" fill="#2563EB"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="1790.0" y="386.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="1790.0" y="386.0" width="5" height="72.0" rx="2.5" fill="#7C3AED"/>
+<rect x="1802.0" y="397.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="1841.8" y="411.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">SLS-05-02</text>
+<rect x="2111.5" y="398.0" width="44.5" height="18" rx="4" fill="#EDE9FE"/>
+<text x="2133.8" y="410.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#5B21B6">AGENT</text>
+<text x="1889.5" y="411.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Knowledge Catalog Publisher</text>
+<text x="1802.0" y="432.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Publishes ports, glossary terms, lineage, and daily</text>
+<text x="1802.0" y="446.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">quality scan links.</text>
+<polygon points="2152.0,441.5 2156.5,446.0 2152.0,450.5 2147.5,446.0" fill="none" stroke="#7C3AED" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="2152.0" cy="446.0" r="1.2" fill="#7C3AED"/>
+</g>
+<g filter="url(#card-shadow)">
+<rect x="1790.0" y="474.0" width="376.0" height="72.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.25"/>
+<rect x="1790.0" y="474.0" width="5" height="72.0" rx="2.5" fill="#2563EB"/>
+<rect x="1802.0" y="485.0" width="79.5" height="20" rx="4" fill="#F1F5F9"/>
+<text x="1841.8" y="499.0" text-anchor="middle" class="fd-mono" font-size="10.5" font-weight="700" fill="#0F172A">SLS-05-03</text>
+<rect x="2105.0" y="486.0" width="51.0" height="18" rx="4" fill="#DBEAFE"/>
+<text x="2130.5" y="498.0" text-anchor="middle" class="fd-mono" font-size="9.5" font-weight="700" fill="#1E40AF">BIZ FN</text>
+<text x="1889.5" y="499.5" class="fd-font" font-size="12" font-weight="700" fill="#0F172A">Business-Calendar SLO Monitor</text>
+<text x="1802.0" y="520.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">Audits 90-minute Perth freshness, daily volume, and</text>
+<text x="1802.0" y="534.0" class="fd-font" font-size="10.8" font-weight="400" fill="#475569">breaking schema drift.</text>
+<polygon points="2152.0,529.5 2156.5,534.0 2152.0,538.5 2147.5,534.0" fill="none" stroke="#2563EB" stroke-width="1.5"><title>Atomic Delivery Unit (Sealed Module · Cannot be decomposed further)</title></polygon>
+<circle cx="2152.0" cy="534.0" r="1.2" fill="#2563EB"/>
+</g>
+</svg>

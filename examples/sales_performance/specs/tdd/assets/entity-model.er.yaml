@@ -1,0 +1,559 @@
+title: Sales Performance — Entity-Relationship Model
+subtitle: TDD-SALES-002 · BigQuery (us-central1) · Dimensional & Consumption Schema
+groups:
+- id: silver
+  label: Integration Layer — Silver (Kimball)
+  subtitle: 'Dataset: slv_sales'
+  color: blue
+- id: gold
+  label: Consumption & Sharing Layer — Gold
+  subtitle: 'Datasets: gold_sales, share_sales_partner'
+  color: emerald
+entities:
+- id: dim_customer
+  name: dim_customer
+  schema: slv_sales
+  type: dimension
+  badge: DIM · SCD2
+  group: silver
+  subtitle: one row per customer per validity period
+  description: one row per customer per validity period
+  position:
+    col: 0
+  columns:
+  - name: sk_customer
+    type: INT64
+    key: SK
+    nullable: false
+    description: Deterministic surrogate key (FARM_FINGERPRINT); -1 = Unknown member.
+  - name: customer_id
+    type: STRING
+    key: NK
+    nullable: false
+    description: Natural business key from source system.
+  - name: customer_segment
+    type: STRING
+    nullable: false
+    scd2: true
+    description: SCD Type 2 tracked attribute (retains point-in-time value).
+  - name: region
+    type: STRING
+    nullable: false
+    scd2: true
+    description: SCD Type 2 tracked attribute (retains point-in-time value).
+  - name: customer_name
+    type: STRING
+    nullable: true
+    pii: false
+    policy_tag: null
+    description: Current-value attribute.
+  - name: customer_email
+    type: STRING
+    nullable: true
+    pii: true
+    policy_tag: pii_contact (always_null)
+    description: 'Current-value attribute. Policy tag: pii_contact (always_null)'
+  - name: customer_phone
+    type: STRING
+    nullable: true
+    pii: true
+    policy_tag: pii_contact (always_null)
+    description: 'Current-value attribute. Policy tag: pii_contact (always_null)'
+  - name: valid_from
+    type: TIMESTAMP
+    key: PK
+    nullable: false
+    description: Inclusive start of SCD2 validity window.
+  - name: valid_to
+    type: TIMESTAMP
+    nullable: false
+    description: Exclusive end of SCD2 validity window (9999-12-31 if current).
+  - name: is_current
+    type: BOOL
+    nullable: false
+    description: TRUE for the single active version per natural key.
+  keys_footer:
+  - GRAIN (customer_id, valid_from)
+  - CONFORMED (sales domain)
+  physical_footer:
+  - kind: storage
+    text: TABLE · UNKNOWN MEMBER (-1)
+  - kind: policy
+    text: 'MASK pii_contact (always_null): customer_email, customer_phone'
+- id: dim_product
+  name: dim_product
+  schema: slv_sales
+  type: dimension
+  badge: DIM · SCD2
+  group: silver
+  subtitle: one row per product per validity period
+  description: one row per product per validity period
+  position:
+    col: 0
+  columns:
+  - name: sk_product
+    type: INT64
+    key: SK
+    nullable: false
+    description: Deterministic surrogate key (FARM_FINGERPRINT); -1 = Unknown member.
+  - name: product_id
+    type: STRING
+    key: NK
+    nullable: false
+    description: Natural business key from source system.
+  - name: product_category
+    type: STRING
+    nullable: false
+    scd2: true
+    description: SCD Type 2 tracked attribute (retains point-in-time value).
+  - name: product_name
+    type: STRING
+    nullable: true
+    pii: false
+    policy_tag: null
+    description: Current-value attribute.
+  - name: valid_from
+    type: TIMESTAMP
+    key: PK
+    nullable: false
+    description: Inclusive start of SCD2 validity window.
+  - name: valid_to
+    type: TIMESTAMP
+    nullable: false
+    description: Exclusive end of SCD2 validity window (9999-12-31 if current).
+  - name: is_current
+    type: BOOL
+    nullable: false
+    description: TRUE for the single active version per natural key.
+  keys_footer:
+  - GRAIN (product_id, valid_from)
+  - CONFORMED (sales domain)
+  physical_footer:
+  - kind: storage
+    text: TABLE · UNKNOWN MEMBER (-1)
+- id: dim_date
+  name: dim_date
+  schema: slv_sales
+  type: calendar
+  badge: DIM · DATE
+  group: silver
+  subtitle: one row per calendar day
+  description: one row per calendar day
+  position:
+    col: 0
+  columns:
+  - name: date_key
+    type: INT64
+    key: PK
+    nullable: false
+    description: Integer YYYYMMDD calendar key.
+  - name: calendar_date
+    type: DATE
+    key: UK
+    nullable: false
+    description: Calendar date.
+  - name: year_month
+    type: STRING
+    nullable: false
+    description: YYYY-MM reporting month.
+  - name: year_quarter
+    type: STRING
+    nullable: false
+    description: YYYY-Q# reporting quarter.
+  - name: year
+    type: INT64
+    nullable: false
+    description: Calendar year.
+  - name: is_weekend
+    type: BOOL
+    nullable: false
+    description: Weekend indicator.
+  keys_footer:
+  - GRAIN (date_key)
+  - CONFORMED (sales domain)
+  physical_footer:
+  - kind: storage
+    text: TABLE
+- id: fct_order_line
+  name: fct_order_line
+  schema: slv_sales
+  type: fact
+  badge: FACT · INC
+  group: silver
+  subtitle: one row per order line at its latest amended values
+  description: one row per order line at its latest amended values
+  position:
+    col: 1
+  columns:
+  - name: order_id
+    type: STRING
+    key: PK
+    nullable: false
+    description: Transaction grain key column.
+  - name: order_line_no
+    type: INT64
+    key: PK
+    nullable: false
+    description: Transaction grain key column.
+  - name: sk_customer
+    type: INT64
+    key: FK
+    nullable: false
+    description: Point-in-time surrogate key to dim_customer (as at order_date).
+  - name: sk_product
+    type: INT64
+    key: FK
+    nullable: false
+    description: Point-in-time surrogate key to dim_product (as at order_date).
+  - name: date_key
+    type: INT64
+    key: FK
+    nullable: false
+    description: Foreign key to dim_date.date_key.
+  - name: order_date
+    type: DATE
+    nullable: false
+    description: Partition event date.
+  - name: quantity
+    type: NUMERIC
+    nullable: false
+    additive: true
+    description: Additive fact measure.
+  - name: gross_amount
+    type: NUMERIC
+    nullable: false
+    additive: true
+    description: Additive fact measure.
+  - name: discount_amount
+    type: NUMERIC
+    nullable: false
+    additive: true
+    description: Additive fact measure.
+  - name: net_amount
+    type: NUMERIC
+    nullable: false
+    additive: true
+    description: Additive fact measure.
+  - name: is_cancelled
+    type: BOOL
+    nullable: false
+    description: 'Derived flag: order_status = ''CANCELLED''.'
+  - name: order_status
+    type: STRING
+    nullable: true
+    description: Degenerate transaction attribute.
+  - name: source_modified_ts
+    type: TIMESTAMP
+    nullable: true
+    description: Degenerate transaction attribute.
+  keys_footer:
+  - GRAIN (order_id, order_line_no)
+  physical_footer:
+  - kind: storage
+    text: INCREMENTAL TABLE · PART BY order_date (90d)
+  - kind: storage
+    text: CLUSTER BY (sk_customer, sk_product)
+- id: sales_performance_monthly
+  name: sales_performance_monthly
+  schema: gold_sales
+  type: table
+  badge: GOLD · TABLE
+  group: gold
+  subtitle: one row per month per customer segment per product category per region
+  description: one row per month per customer segment per product category per region
+  position:
+    col: 2
+  columns:
+  - name: year_month
+    type: STRING
+    key: PK
+    nullable: false
+    additive: false
+    pii: false
+    policy_tag: null
+  - name: customer_segment
+    type: STRING
+    key: PK
+    nullable: false
+    additive: false
+    pii: false
+    policy_tag: null
+  - name: product_category
+    type: STRING
+    key: PK
+    nullable: false
+    additive: false
+    pii: false
+    policy_tag: null
+  - name: region
+    type: STRING
+    key: PK
+    nullable: false
+    additive: false
+    pii: false
+    policy_tag: null
+  - name: net_sales
+    type: NUMERIC
+    key: ''
+    nullable: true
+    additive: true
+    pii: false
+    policy_tag: null
+  - name: units_sold
+    type: NUMERIC
+    key: ''
+    nullable: true
+    additive: true
+    pii: false
+    policy_tag: null
+  - name: order_line_count
+    type: INT64
+    key: ''
+    nullable: true
+    additive: true
+    pii: false
+    policy_tag: null
+  keys_footer:
+  - GRAIN (year_month, customer_segment, product_category, region)
+  physical_footer:
+  - kind: storage
+    text: TABLE
+- id: sales_order_line_detail
+  name: sales_order_line_detail
+  schema: gold_sales
+  type: view
+  badge: GOLD · VIEW
+  group: gold
+  subtitle: one row per order line at its latest amended values
+  description: one row per order line at its latest amended values
+  position:
+    col: 2
+  columns:
+  - name: order_id
+    type: STRING
+    key: PK
+    nullable: false
+    additive: false
+    pii: false
+    policy_tag: null
+  - name: order_line_no
+    type: INT64
+    key: PK
+    nullable: false
+    additive: false
+    pii: false
+    policy_tag: null
+  - name: order_date
+    type: DATE
+    key: ''
+    nullable: true
+    additive: false
+    pii: false
+    policy_tag: null
+  - name: year_month
+    type: STRING
+    key: ''
+    nullable: true
+    additive: false
+    pii: false
+    policy_tag: null
+  - name: customer_id
+    type: STRING
+    key: ''
+    nullable: true
+    additive: false
+    pii: false
+    policy_tag: null
+  - name: customer_name
+    type: STRING
+    key: ''
+    nullable: true
+    additive: false
+    pii: false
+    policy_tag: null
+  - name: customer_segment
+    type: STRING
+    key: ''
+    nullable: true
+    additive: false
+    pii: false
+    policy_tag: null
+  - name: region
+    type: STRING
+    key: ''
+    nullable: true
+    additive: false
+    pii: false
+    policy_tag: null
+  - name: product_id
+    type: STRING
+    key: ''
+    nullable: true
+    additive: false
+    pii: false
+    policy_tag: null
+  - name: product_name
+    type: STRING
+    key: ''
+    nullable: true
+    additive: false
+    pii: false
+    policy_tag: null
+  - name: product_category
+    type: STRING
+    key: ''
+    nullable: true
+    additive: false
+    pii: false
+    policy_tag: null
+  - name: order_status
+    type: STRING
+    key: ''
+    nullable: true
+    additive: false
+    pii: false
+    policy_tag: null
+  - name: is_cancelled
+    type: BOOL
+    key: ''
+    nullable: true
+    additive: false
+    pii: false
+    policy_tag: null
+  - name: quantity
+    type: NUMERIC
+    key: ''
+    nullable: true
+    additive: true
+    pii: false
+    policy_tag: null
+  - name: gross_amount
+    type: NUMERIC
+    key: ''
+    nullable: true
+    additive: false
+    pii: false
+    policy_tag: null
+  - name: discount_amount
+    type: NUMERIC
+    key: ''
+    nullable: true
+    additive: false
+    pii: false
+    policy_tag: null
+  - name: net_amount
+    type: NUMERIC
+    key: ''
+    nullable: true
+    additive: true
+    pii: false
+    policy_tag: null
+  - name: counted_net_amount
+    type: NUMERIC
+    key: ''
+    nullable: true
+    additive: true
+    pii: false
+    policy_tag: null
+  keys_footer:
+  - GRAIN (order_id, order_line_no)
+  physical_footer:
+  - kind: storage
+    text: AUTHORIZED VIEW · EXCLUDES PII
+- id: sales_performance_partner_extract
+  name: sales_performance_partner_extract
+  schema: share_sales_partner
+  type: sharing
+  badge: SHARING PORT
+  group: gold
+  subtitle: one row per closed month per product category per region
+  description: one row per closed month per product category per region
+  position:
+    col: 2
+  columns:
+  - name: year_month
+    type: STRING
+    key: PK
+    nullable: false
+    additive: false
+    pii: false
+    policy_tag: null
+  - name: product_category
+    type: STRING
+    key: PK
+    nullable: false
+    additive: false
+    pii: false
+    policy_tag: null
+  - name: region
+    type: STRING
+    key: PK
+    nullable: false
+    additive: false
+    pii: false
+    policy_tag: null
+  - name: net_sales
+    type: NUMERIC
+    key: ''
+    nullable: true
+    additive: true
+    pii: false
+    policy_tag: null
+  - name: units_sold
+    type: NUMERIC
+    key: ''
+    nullable: true
+    additive: true
+    pii: false
+    policy_tag: null
+  keys_footer:
+  - GRAIN (year_month, product_category, region)
+  physical_footer:
+  - kind: storage
+    text: 'SHARING LISTING (TABLE) · SCHEDULE: monthly'
+relationships:
+- from: dim_customer
+  from_column: sk_customer
+  to: fct_order_line
+  to_column: sk_customer
+  from_cardinality: '1'
+  to_cardinality: 0..*
+  style: solid
+  label: sk_customer (as at)
+- from: dim_product
+  from_column: sk_product
+  to: fct_order_line
+  to_column: sk_product
+  from_cardinality: '1'
+  to_cardinality: 0..*
+  style: solid
+  label: sk_product (as at)
+- from: dim_date
+  from_column: date_key
+  to: fct_order_line
+  to_column: date_key
+  from_cardinality: '1'
+  to_cardinality: 0..*
+  style: solid
+  label: date_key
+- from: fct_order_line
+  to: sales_performance_monthly
+  from_cardinality: '1'
+  to_cardinality: arrow
+  style: dashed
+  color: '#059669'
+  label: agg rollup
+- from: fct_order_line
+  to: sales_order_line_detail
+  from_cardinality: '1'
+  to_cardinality: arrow
+  style: dashed
+  color: '#059669'
+  label: 1:1 drill
+- from: fct_order_line
+  to: sales_performance_partner_extract
+  from_cardinality: '1'
+  to_cardinality: arrow
+  style: dashed
+  color: '#7C3AED'
+  label: closed months

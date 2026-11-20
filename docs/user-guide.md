@@ -798,8 +798,25 @@ readers (`external_readers`). `dpf tdd resolve` shows how each answer maps to a 
 
 ### 6.2 The TDD
 
-Each design decision is a `### Requirement:` block. Its first line holds metadata in the form
-`**Key:** value · **Key:** value`. Keys are not case-sensitive.
+A DPF Technical Design Document (`specs/tdd/spec.md`) serves two audiences in one file:
+
+1. **Plain-English architecture & visual design (Sections 1–8):** Executive Design Summary,
+   Solution Architecture (`assets/architecture.svg`), Modular Functional Breakdown
+   (`assets/functional-hierarchy.svg`), End-to-End Runtime Data Flow (`assets/data-flow.svg`),
+   Data Model & Entity Relationships (`assets/entity-model.svg`), Consumer Experience &
+   Dashboard Mockups (`assets/dashboard-mockup.png`, when BI is in scope), Security &
+   Governance, and Operational Readiness & Feasibility.
+2. **Machine-verifiable requirements & technical appendices (Appendices A–D):** Formal `D-n`
+   decisions in `## Appendix A — Normative Technical Requirements` (or `## Requirements` for
+   lightweight legacy TDDs), Traceability & Derivations, Physical Implementation Reference,
+   and ADRs / Source Feasibility Evidence.
+
+G1 emits non-blocking warnings when recommended narrative sections or diagrams are omitted,
+and **hard-fails** whenever an embedded local image path (`assets/...`) points to a missing
+file or any Appendix A requirement check fails.
+
+Each normative design decision is a `### Requirement:` block. Its first line holds metadata in
+the form `**Key:** value · **Key:** value`. Keys are not case-sensitive.
 
 ```markdown
 **TDD:** TDD-SALES-002 · **Satisfies:** BRD-SALES-002@1.2.0 · **Version:** 1.2.0 · **Owner:** Data Analytics

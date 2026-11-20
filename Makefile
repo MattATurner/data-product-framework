@@ -1,4 +1,4 @@
-.PHONY: help install lock check gates golden evals test ci templates
+.PHONY: help install lock check gates golden evals test ci templates tdd-pdf
 
 PY      ?= python3
 DPF     ?= $(PY) -m dpf
@@ -37,3 +37,7 @@ ci: check evals test ## everything CI runs
 
 templates: ## render the Define-stage PDFs and worked examples (needs .github/requirements/templates.txt)
 	$(PY) framework/templates/src/render.py
+
+SPEC ?= examples/sales_performance/specs/tdd/spec.md
+tdd-pdf: ## render a Markdown TDD v2 specification into a rich executive PDF (SPEC=path/to/spec.md)
+	$(PY) framework/templates/src/render_tdd_pdf.py $(SPEC)
