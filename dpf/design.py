@@ -1100,6 +1100,27 @@ def resolution_report(p: Product) -> str:
         lines.append(f"| `{src}` | {str(val or '—').replace('|', '/')} | {d['derives']} |")
     lines += ["", f"**Methodology recommendation:** `{rec}`", ""]
     lines += [f"- {r}" for r in reasons] or ["- No shared definitions with other teams and no point-in-time history: the `direct` default suffices."]
+    # Per-requirement Business -> Design mapping table (when specs/brd/spec.md exists)
+    if (p.brd_dir / "spec.md").exists():
+        tdd_exists = (p.tdd_dir / "spec.md").exists()
+        by_req: dict[str, list[str]] = {}
+        if tdd_exists:
+            for d in p.tdd_spec.requirements:
+                did = d.meta.get("decision") or d.name
+                label = f"{did} ({d.name})"
+                for r_id in d.ids("satisfies"):
+                    by_req.setdefault(r_id, []).append(label)
+        lines += [
+            "",
+            "## Business Requirements → Design Decisions",
+            "",
+            "| BRD Req | Requirement | Driven Design Decision(s) |",
+            "|---|---|---|",
+        ]
+        for req in p.brd_spec.requirements:
+            rid = req.meta.get("id") or "—"
+            decs = "; ".join(by_req.get(rid, [])) or ("*(not yet decided in TDD)*" if tdd_exists else "*(to be resolved)*")
+            lines.append(f"| `{rid}` | {req.name.replace('|', '/')} | {decs.replace('|', '/')} |")
     stale = stale_reasons(p) if (p.tdd_dir / "spec.md").exists() else []
     if stale:
         lines += ["", "**Stale:**", ""] + [f"- {s}" for s in stale]

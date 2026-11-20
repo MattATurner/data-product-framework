@@ -50,24 +50,32 @@ and physical reference tables in Appendices A–D.
    cites `brd_requirement_id` or the platform capability it `implements`.
 
 6. Generate the co-located visual views under `products/<product>/specs/tdd/assets/` (using
-   the workspace's diagramming skills where available, verifying zero overlaps before embedding):
-   - `assets/architecture.svg` — Solution & platform architecture diagram (services, layers,
-     network boundaries, and cross-cutting governance).
-   - `assets/functional-hierarchy.svg` — Chronological Functional Hierarchy Diagram (FHD)
-     decomposing modular capabilities and atomic single-writer persistence units.
-   - `assets/data-flow.svg` — Runtime data flow diagram tracing capture, deduplication,
-     blocking/quarantine quality gates, history/restatement windows, and publishing ports.
-   - `assets/entity-model.svg` — Crow's Foot Entity-Relationship diagram showing tables vs.
-     rounded views, keys (`PK`/`SK`/`NK`/`FK`/`*`), policy-tagged PII columns, SCD2 tracked
-     attributes, and BigQuery grain/partition/cluster footers.
-   - `assets/dashboard-mockup.png` — *(When BI / dashboards are declared in `semantic_layer.dashboards`)*
-     Annotated low-clutter dashboard wireframe aligned with the declared filters, KPIs, and
-     zero-baseline charts.
+   the workspace's diagramming skills where available, verifying zero overlaps before embedding;
+   embed 2x `.png` in Markdown so GitHub, browsers, and PDFs preserve exact fonts and icons,
+   and link the companion `.svg` / `.html` sources directly below each image):
+   - `assets/architecture.png` (+ `.svg`) — Solution & platform architecture diagram (services,
+     layers, network boundaries, and cross-cutting governance).
+   - `assets/functional-hierarchy.png` (+ `.svg`, `.html`) — Chronological Functional Hierarchy
+     Diagram (FHD) decomposing modular capabilities and atomic single-writer persistence units.
+   - `assets/data-flow.png` (+ `.svg`) — Runtime data flow diagram tracing capture,
+     deduplication, blocking/quarantine quality gates, history/restatement windows, and
+     publishing ports.
+   - `assets/entity-model.png` (+ `.svg`, `.html`, `.er.yaml`) — Crow's Foot Entity-Relationship
+     diagram showing tables vs. rounded views, keys (`PK`/`SK`/`NK`/`FK`/`*`), policy-tagged
+     PII columns, SCD2 tracked attributes, and BigQuery grain/partition/cluster footers.
+   - `assets/dashboard-mockup.png` (+ `.html`) — *(When BI / dashboards are declared in
+     `semantic_layer.dashboards`)* Annotated low-clutter dashboard wireframe aligned with the
+     declared filters, KPIs, and zero-baseline charts.
 
 7. Write `products/<product>/specs/tdd/spec.md` following `framework/templates/design/tdd-spec.md`:
    - `## Purpose` with `**TDD:**`, `**Satisfies:**`, `**Version:**`, `**Owner:**` metadata
      and a Document Control table.
-   - Sections 1–8 in plain English embedding the visual assets from `assets/`.
+   - Sections 1–8 in plain English embedding the `.png` visual assets from `assets/` (with
+     companion `.svg` / `.html` links), starting in Section 1 with a complete **How Business
+     Requirements Drive the Design** table mapping every active BRD requirement (`R-1`..`R-n`)
+     to its resulting technical choice, rationale, ruled-out alternatives, and Decision/ADR IDs,
+     followed by plain-English explanations of the major architectural trade-offs (e.g. batch
+     vs. streaming, Kimball SCD2 vs. `direct`, blocking quarantine vs. warn).
    - `## Appendix A — Normative Technical Requirements` containing one `### Requirement:`
      per decision with `**Decision:** D-n · **Satisfies:** R-..` (plus `**Model:**` and
      `**Grain:**` for every consumption model, `**Layer:**` + `**Methodology:**` for layer

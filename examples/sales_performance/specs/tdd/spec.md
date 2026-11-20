@@ -15,12 +15,13 @@ manifest is `examples/sales_performance/product.yaml`.
 | Field | Value |
 |---|---|
 | Document ID & Version | TDD-SALES-002 · v1.2.0 |
-| Linked BRD & Use Case | BRD-SALES-002@1.2.0 · Use case UC-SALES-001 |
+| Linked BRD & Use Case | [BRD-SALES-002@1.2.0](../brd/spec.md) · Use case UC-SALES-001 |
 | Domain & Classification | Sales · INTERNAL-COMMERCIAL |
 | Target Cloud Environment | Google Cloud · Project `data-product-framework` · Region `us-central1` (United States residency) |
 | Accountable Business Owner | Sales Operations |
 | Technical Owner / Data Steward | Data Analytics |
-| Business Playback Sign-Off | `examples/sales_performance/specs/tdd/semantics.md` (`signoff.yaml`) |
+| Business Playback Sign-Off | [semantics.md](semantics.md) (`signoff.yaml`) |
+| Executive PDF Edition | [tdd.pdf](tdd.pdf) (Formatted PDF with landscape diagram plates) |
 
 ---
 
@@ -50,22 +51,60 @@ analytics partner.
 **Out of scope (Non-goals):** Forecasting and pipeline reporting; margin, cost, and
 profitability analysis; and commission calculation.
 
-### Key Architectural Decisions at a Glance
+### How Business Requirements Drive the Design
 
-| Business Need | Plain-English Design Choice | Rationale | Reference |
-|---|---|---|---|
-| Shared Finance and Merchandising definitions plus point-in-time history | Kimball dimensional star schema in Silver (`slv_sales`), direct business views in Gold (`gold_sales`) | Plain views over current source data cannot preserve historical segment/category values or enforce cross-team conformed dimensions | D-1, D-2, D-4, D-5, D-6, ADR-SALES-002-01 |
-| Hourly daytime freshness despite on-premises NAT boundary | Outbound 15-minute watermark extraction with 15-minute overlap lookback, paired with hourly Dataform builds | Live inspection showed the PostgreSQL source sits behind corporate NAT without logical replication; outbound HTTPS works today and upgrades cleanly to CDC later | D-10, ADR-SALES-002-02, ADR-015 |
-| Unusable orders must never produce partial figures | Row-level quarantine (`stg_order_lines_rejects`) wired to a blocking publication gate | Any null customer or negative quantity halts Gold refresh and alerts the team so consumers keep seeing the last complete snapshot | D-12 |
-| Mask customer contact details for general analysts | BigQuery policy tag (`pii_contact`, `always_null`) on `dim_customer`, plus omission from line-detail views | Analysts can identify customers and segments while email and phone remain hidden unless the reader holds fine-grained access | D-13 |
-| External analytics partner needs monthly figures with zero internal access | Dedicated sharing dataset built monthly for closed months only, published via a BigQuery sharing listing | Partner receives subscriber-only listing access with zero customer-level columns and zero dataset or project roles | D-14 |
-| Interactive executive BI without shadow SQL pipelines | Governed LookML Explore (`order_lines`) and Stephen Few dashboard (`executive_sales_pulse`) with zero Looker PDTs | Aggregate awareness accelerates monthly queries on governed BigQuery tables while keeping masking and metric logic single-sourced | D-19, ADR-018 |
+Every technical choice in this document traces back to one or more approved business
+requirements in [BRD-SALES-002](../brd/spec.md). Nothing is over-engineered ahead of a stated
+business need, and every departure from the platform default is explicitly justified below.
+
+| BRD Req | What the Business Asked For | Resulting Technical Choice | Why This Choice (and What Was Ruled Out) | Decision / ADR |
+|---|---|---|---|---|
+| **R-1, R-7** | Net sales by segment, category, and region that total cleanly across every dimension for ~120 daily users | Additive transaction fact (`fct_order_line`), pre-aggregated monthly table (`sales_performance_monthly`), and Looker aggregate awareness | Declaring all four base measures strictly additive guarantees consistent rollups without double counting; pre-materialising the monthly table keeps BI fast for ~120 users without Looker PDTs (ruled out ad-hoc PDTs and live-only monthly views) | D-2, D-7, D-15, D-19, ADR-018 |
+| **R-2, R-3** | Drill from any summary total down to individual order lines, counting each amended line exactly once | Order-line atomic grain (`order_id, order_line_no`), deterministic staging deduplication (`source_modified_ts DESC`), and an authorized detail view | Line-level drill-down fixes the fact grain at the order line rather than order header or monthly aggregate; staging deduplication collapses repeated extracts and ERP amendments to latest values before Silver builds | D-3, D-16, D-17 |
+| **R-4, R-5, R-6** | Preserve segment, region, and category as at the sale date; reconcile revenue with Finance and categories with Merchandising | Kimball dimensional star schema in Silver (`slv_sales`) with SCD Type 2 dimensions (`dim_customer`, `dim_product`) and Conformed Dimension registry | A simpler `direct` view over current ERP data overwrites historical months when customers re-segment or products recategorise, and allows Finance and Merchandising keys to drift; Kimball SCD2 + conformance solves both (ruled out `direct` in Silver; Gold remains `direct`) | D-1, D-4, D-5, D-6, ADR-SALES-002-01 |
+| **R-8** | Keep cancelled lines visible for investigation while excluding them from net sales | Retain cancelled rows in Silver (`is_cancelled = TRUE`), expose them in `sales_order_line_detail` (`counted_net_amount = 0`), and exclude centrally in Gold & LookML | Dropping cancelled lines at ingest breaks Finance variance audits; leaving exclusion filters to individual analysts causes conflicting revenue headlines | D-8 |
+| **R-9** | Restate figures for corrections within 90 days; freeze published history older than 90 days | Daily `order_date` partitioning with a 90-day incremental rebuild window on `fct_order_line` | Full-table hourly rebuilds waste compute and would silently alter closed periods past 90 days; partition-scoped 90-day incremental merges enforce the exact accounting freeze boundary | D-9 |
+| **R-10** | Fresh figures hourly during Perth working hours (08:00–18:00), alerting if figures fall behind | Batch 15-minute outbound watermark capture (15-minute overlap lookback), hourly Dataform batch (`:10` Perth), and 90-minute business-hours SLO (`OB-1`) | Hourly daytime freshness does **not** require streaming (Pub/Sub / Dataflow), and live inspection showed `pg_local` sits behind corporate NAT with logical replication off (ruled out streaming and inbound CDC for v1; capture skill swaps cleanly to CDC later) | D-10, D-11, D-18, ADR-SALES-002-02, ADR-015 |
+| **R-11** | Order lines with no customer or negative quantity are unusable; stop and alert instead of publishing partial data | Staging reject ledger (`stg_order_lines_rejects`, rules `QR-1` & `QR-2`) wired to a blocking publication gate (`gate_behaviour: block`) | Warn-only checks would leak incomplete numbers into executive dashboards; a blocking gate halts Gold refresh and freezes published tables on the last complete trusted snapshot until bad rows are corrected (ruled out warn-only gates) | D-12, D-18 |
+| **R-12** | General analysts must see customer identity and segment, but never email or phone | BigQuery column-level policy tag (`pii_contact`, `always_null`) on `dim_customer`, OAuth caller pass-through in Looker, and contact columns omitted from detail views | Dataset-level restrictions would block analysts from customer names and segments, while maintaining a second masked table creates drift; column masking enforces one table for all roles (ruled out separate masked copies) | D-13, D-19 |
+| **R-13** | External analytics partner receives monthly closed-period category/region totals with zero internal system access | Dedicated sharing dataset (`share_sales_partner`), monthly closed-period batch table, and a BigQuery sharing listing (`sales_performance_monthly_extract`) | Granting dataset IAM violates zero internal access, and emailed CSVs break governance; subscriber-only listing access gives the partner governed monthly data with zero customer columns and zero internal IAM roles (ruled out IAM grants and file drops) | D-11, D-14 |
+
+### Why This Architecture? (Key Trade-Offs Explained)
+
+- **Why Batch instead of Streaming?** Business requirement `R-10` asks for hourly daytime
+  availability (`08:00–18:00` Perth), not sub-second operational telemetry. Running an
+  always-on streaming stack (Pub/Sub + Dataflow) would add cost and operational complexity
+  with zero business payoff, and the source PostgreSQL host sits behind NAT without logical
+  replication enabled. A lightweight 15-minute outbound batch extractor paired with hourly
+  Dataform batch runs comfortably meets the 90-minute SLO and can switch to Datastream CDC
+  later without touching Silver or Gold.
+
+- **Why Kimball SCD Type 2 instead of Simple Views?** The framework defaults to simple
+  `direct` SQL views because they are cheapest to build and maintain. Here, three explicit
+  business rules — historical segment/region/category attribution (`R-4`, `R-6`), Finance
+  revenue reconciliation (`R-5`), and shared Merchandising product definitions (`R-6`) —
+  make `direct` views mathematically incapable of answering the BRD. Kimball SCD Type 2 is
+  applied strictly in Silver where history and conformance live, while Gold stays lightweight
+  `direct` views (`D-2`).
+
+- **Why Blocking Quarantine instead of Warn-and-Publish?** Requirement `R-11` explicitly
+  prefers slightly older complete numbers over fresh partial figures. Staging left-joins
+  orders so NULL customers are never silently dropped, writes failing lines to
+  `stg_order_lines_rejects`, and blocks every downstream Gold refresh until resolved.
+
+- **Why BigQuery Native Storage, Column Masking, and Sharing Listings instead of Open Tables or Looker PDTs?**
+  Every internal consumer reads via BigQuery or governed Looker, and the sole external
+  consumer (`R-13`) is served cleanly via a BigQuery sharing listing — so native BigQuery
+  storage (`D-11`) avoids open-format operational overhead while unlocking column-level
+  policy-tag masking (`R-12`) and zero-PDT Looker aggregate awareness (`D-19`).
 
 ---
 
 ## 2. Solution Architecture
 
-![Sales Performance — Solution Architecture](assets/architecture.svg)
+![Sales Performance — Solution Architecture](assets/architecture.png)
+
+Source assets: [Vector SVG](assets/architecture.svg)
 
 ### Plain-English Platform Walkthrough
 
@@ -101,9 +140,9 @@ profitability analysis; and commission calculation.
 
 ## 3. Modular Functional Breakdown (FHD)
 
-![Sales Performance — Modular Functional Breakdown (SLS-00)](assets/functional-hierarchy.svg)
+![Sales Performance — Modular Functional Breakdown (SLS-00)](assets/functional-hierarchy.png)
 
-Interactive functional explorer: [Open Functional Hierarchy Explorer](assets/functional-hierarchy.html)
+Source assets: [Vector SVG](assets/functional-hierarchy.svg) · [Interactive FHD HTML (open locally)](assets/functional-hierarchy.html)
 
 ### Module Ownership Summary
 
@@ -124,7 +163,9 @@ boundaries across the delivery lifecycle.
 
 ## 4. End-to-End Data Flow & Processing Lifecycle
 
-![Sales Performance — End-to-End Runtime Data Flow](assets/data-flow.svg)
+![Sales Performance — End-to-End Runtime Data Flow](assets/data-flow.png)
+
+Source assets: [Vector SVG](assets/data-flow.svg)
 
 ### Capture and Refresh Cadence
 
@@ -173,9 +214,9 @@ never see partial or half-updated numbers.
 
 ## 5. Data Model & Entity Relationships
 
-![Sales Performance — Entity-Relationship Model](assets/entity-model.svg)
+![Sales Performance — Entity-Relationship Model](assets/entity-model.png)
 
-Interactive schema explorer: [Open Interactive Entity-Relationship Explorer](assets/entity-model.html)
+Source assets: [Vector SVG](assets/entity-model.svg) · [Interactive ER HTML (open locally)](assets/entity-model.html) · [Schema Spec YAML](assets/entity-model.er.yaml)
 
 ### Entity and Grain Summary
 
@@ -219,7 +260,7 @@ Interactive schema explorer: [Open Interactive Entity-Relationship Explorer](ass
 
 ![Executive Sales Performance — Dashboard Wireframe](assets/dashboard-mockup.png)
 
-Interactive HTML wireframe: [View Dashboard Wireframe HTML](assets/dashboard-mockup.html)
+Source assets: [Interactive Wireframe HTML (open locally)](assets/dashboard-mockup.html)
 
 ### Stakeholder User Journeys
 

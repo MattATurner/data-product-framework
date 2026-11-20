@@ -1642,5 +1642,12 @@ Plain English summary.
     assert r_broken.failures >= 1
     assert any("missing visual asset" in m and "assets/does-not-exist.svg" in m for m in r_broken.messages("fail"))
 
+    # 5. resolution_report maps every BRD requirement to its driving design decision(s)
+    from dpf.design import resolution_report
+    rep_md = resolution_report(ws_live.product("sales_performance"))
+    assert "## Business Requirements → Design Decisions" in rep_md
+    assert "| `R-4` |" in rep_md and "D-1 (Kimball dimensional in silver)" in rep_md
+    assert "| `R-10` |" in rep_md and "D-10 (Outbound 15-minute watermark capture)" in rep_md
+
 
 

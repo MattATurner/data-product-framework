@@ -60,6 +60,8 @@ def _inline(text: str, highlight_shall: bool = False, soft_wrap_code: bool = Fal
         lbl, href = m.group(1), m.group(2)
         if href.startswith(("http://", "https://", "#")):
             return f'<a href="{href}">{lbl}</a>'
+        if lbl.strip() == href.strip():
+            return f"<code>{href}</code>"
         return f"<span>{lbl}</span> (<code>{href}</code>)"
 
     s = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", _link, s)
@@ -239,7 +241,7 @@ def _render_block(blk: dict[str, Any], base_dir: Path, fig_counter: list[int], p
         return f'<h4 style="font-size:8.8pt;margin:2mm 0 1mm;color:#334155">{_inline(blk["text"])}</h4>'
     if btype == "p":
         txt = blk["text"]
-        if txt.lower().startswith("interactive "):
+        if txt.lower().startswith(("interactive ", "source assets:", "vector source:")):
             return f'<p class="interactive-note">{_inline(txt)}</p>'
         return f"<p>{_inline(txt)}</p>"
     if btype == "quote":

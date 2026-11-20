@@ -33,14 +33,16 @@ Workflow:
 1. Run `dpf tdd resolve {product}` to see rubric derivations and the recommended methodology.
 2. Inspect live source systems via the registered inspection tool (tier 2 MCP where available)
    and record results in Section 8 and Appendix D.
-3. Produce the co-located visual views in `specs/tdd/assets/`:
-   - `architecture.svg` — Solution & platform topology diagram
-   - `functional-hierarchy.svg` — Modular Functional Hierarchy Diagram (FHD)
-   - `data-flow.svg` — End-to-end runtime data flow & quality quarantine gate diagram
-   - `entity-model.svg` — Crow's Foot Entity-Relationship & Dimensional Schema diagram
-   - `dashboard-mockup.png` — (Optional, whenever BI / dashboards are in scope)
-4. Write Sections 1 to 8 in plain English so an Architecture Review Board can understand every
-   trade-off without reading SQL or YAML.
+3. Produce the co-located visual views in `specs/tdd/assets/` (embed 2x `.png` in Markdown so
+   GitHub, browsers, and PDF render exact fonts and icons; link companion `.svg`/`.html` below):
+   - `architecture.png` (+ `architecture.svg`) — Solution & platform topology diagram
+   - `functional-hierarchy.png` (+ `.svg`, `.html`) — Modular Functional Hierarchy Diagram (FHD)
+   - `data-flow.png` (+ `data-flow.svg`) — End-to-end runtime data flow & quality quarantine gate diagram
+   - `entity-model.png` (+ `.svg`, `.html`, `.er.yaml`) — Crow's Foot Entity-Relationship diagram
+   - `dashboard-mockup.png` (+ `.html`) — (Optional, whenever BI / dashboards are in scope)
+4. Write Sections 1 to 8 in plain English so an Architecture Review Board can trace every
+   technical choice back to its driving BRD requirement (`R-n`) and understand every trade-off
+   without reading SQL or YAML.
 5. Complete Appendix A (`## Appendix A — Normative Technical Requirements`) with one
    `### Requirement:` block per decision (`D-1`..`D-n`), citing every active BRD requirement
    (`R-n`) and declaring **Model:** + **Grain:** for every consumption (gold) model.
@@ -65,21 +67,36 @@ enables, tracing directly to the BRD business questions (`BQ-1`..`BQ-n`).}
 
 - **Out of scope (Non-goals):** {Carry forward the BRD non-goals verbatim so boundaries are unmistakable.}
 
-### Key Architectural Decisions at a Glance
+### How Business Requirements Drive the Design
 
-| Business Need | Plain-English Design Choice | Rationale | Reference |
-|---|---|---|---|
-| {Shared definitions / history} | {Direct views vs. Kimball dimensional integration} | {Why this choice is right-sized for the BRD signals} | D-1, {ADR} |
-| {Freshness & source connectivity} | {Capture mechanism and schedule} | {Feasibility & network constraints} | D-4, {ADR} |
-| {Data trust & unusable rows} | {Quarantine reject relation + blocking gate} | {Consumers never see partial figures} | D-6 |
-| {Sensitive attributes & access} | {Least-privilege roles + column masking / sharing listing} | {Protects restricted fields without blocking analysts} | D-7, D-8 |
+Every technical choice below traces directly back to an approved business requirement in the
+linked BRD. Cover every active requirement (`R-1`..`R-n`) and explain what alternative was
+ruled out so reviewers can see why the architecture is right-sized.
+
+| BRD Req | What the Business Asked For | Resulting Technical Choice | Why This Choice (and What Was Ruled Out) | Decision / ADR |
+|---|---|---|---|---|
+| **R-1, R-n** | {Plain-English summary of reporting / totalling need} | {Fact / table materialisation / BI layer choice} | {Why this fits user volume and additivity; what was ruled out} | D-2, D-n |
+| **R-n** | {Point-in-time history / cross-team agreement} | {Direct views vs. Kimball SCD Type 2 + conformed dimensions} | {Why `direct` can or cannot satisfy the BRD signals} | D-1, {ADR} |
+| **R-n** | {Freshness cadence and working hours} | {Batch watermark vs. CDC vs. streaming; schedule and SLO} | {Why batch/CDC/streaming matches the cadence and source constraints} | D-4, {ADR} |
+| **R-n** | {Bad data and completeness rules} | {Quarantine reject relation + blocking vs. warn gate} | {Why consumers must never see partial figures} | D-6 |
+| **R-n** | {Sensitive attributes and external sharing} | {Policy-tag masking, least-privilege IAM, or sharing listing} | {Protects restricted fields without duplicating tables or opening internal access} | D-7, D-8 |
+
+### Why This Architecture? (Key Trade-Offs Explained)
+
+- **Why {Batch / CDC / Streaming}?** {Plain-English explanation tied to the freshness BRD requirement (`R-n`) and live source feasibility.}
+
+- **Why {Kimball SCD Type 2 / Direct Views}?** {Plain-English explanation tied to history (`HB-n`) and cross-team agreement (`AG-n`) requirements.}
+
+- **Why {Blocking Quarantine / Other Key Trade-Off}?** {Plain-English explanation of the cost, complexity, or governance trade-off accepted by the business.}
 
 ---
 
 ## 2. Solution Architecture
 
-<!-- Embed the rendered platform & network architecture diagram:
-![{Product name} — Solution Architecture](assets/architecture.svg)
+<!-- Embed the 2x PNG for reliable rendering on GitHub, browsers, and PDF; link vector source below:
+![{Product name} — Solution Architecture](assets/architecture.png)
+
+Source assets: [Vector SVG](assets/architecture.svg)
 -->
 
 ### Plain-English Platform Walkthrough
@@ -97,10 +114,10 @@ enables, tracing directly to the BRD business questions (`BQ-1`..`BQ-n`).}
 ## 3. Modular Functional Breakdown (FHD)
 
 <!-- Embed the rendered Functional Hierarchy Diagram (FHD) showing chronological pillars and atomic delivery units:
-![{Product name} — Modular Functional Breakdown](assets/functional-hierarchy.svg)
--->
+![{Product name} — Modular Functional Breakdown](assets/functional-hierarchy.png)
 
-{Optional link to interactive HTML explorer: `[Open Interactive FHD Explorer](assets/functional-hierarchy.html)`}
+Source assets: [Vector SVG](assets/functional-hierarchy.svg) · [Interactive FHD HTML (open locally)](assets/functional-hierarchy.html)
+-->
 
 ### Module Ownership Summary
 
@@ -120,7 +137,9 @@ primary write table`).}
 ## 4. End-to-End Data Flow & Processing Lifecycle
 
 <!-- Embed the runtime data flow & quality quarantine diagram:
-![{Product name} — End-to-End Runtime Data Flow](assets/data-flow.svg)
+![{Product name} — End-to-End Runtime Data Flow](assets/data-flow.png)
+
+Source assets: [Vector SVG](assets/data-flow.svg)
 -->
 
 ### Capture and Refresh Cadence
@@ -143,10 +162,10 @@ any restatement window using one concrete dated example.}
 ## 5. Data Model & Entity Relationships
 
 <!-- Embed the Crow's Foot Entity-Relationship diagram:
-![{Product name} — Entity-Relationship Model](assets/entity-model.svg)
--->
+![{Product name} — Entity-Relationship Model](assets/entity-model.png)
 
-{Optional link to interactive ER explorer: `[Open Interactive ER Model](assets/entity-model.html)`}
+Source assets: [Vector SVG](assets/entity-model.svg) · [Interactive ER HTML (open locally)](assets/entity-model.html) · [Schema Spec YAML](assets/entity-model.er.yaml)
+-->
 
 ### Entity and Grain Summary
 

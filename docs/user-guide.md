@@ -800,12 +800,15 @@ readers (`external_readers`). `dpf tdd resolve` shows how each answer maps to a 
 
 A DPF Technical Design Document (`specs/tdd/spec.md`) serves two audiences in one file:
 
-1. **Plain-English architecture & visual design (Sections 1–8):** Executive Design Summary,
-   Solution Architecture (`assets/architecture.svg`), Modular Functional Breakdown
-   (`assets/functional-hierarchy.svg`), End-to-End Runtime Data Flow (`assets/data-flow.svg`),
-   Data Model & Entity Relationships (`assets/entity-model.svg`), Consumer Experience &
-   Dashboard Mockups (`assets/dashboard-mockup.png`, when BI is in scope), Security &
-   Governance, and Operational Readiness & Feasibility.
+1. **Plain-English architecture & visual design (Sections 1–8):** Executive Design Summary
+   (including a complete *How Business Requirements Drive the Design* table mapping each BRD
+   requirement `R-n` to its technical choice and ruled-out alternatives), Solution Architecture
+   (`assets/architecture.png` + `.svg`), Modular Functional Breakdown
+   (`assets/functional-hierarchy.png` + `.svg`/`.html`), End-to-End Runtime Data Flow
+   (`assets/data-flow.png` + `.svg`), Data Model & Entity Relationships
+   (`assets/entity-model.png` + `.svg`/`.html`), Consumer Experience & Dashboard Mockups
+   (`assets/dashboard-mockup.png`, when BI is in scope), Security & Governance, and Operational
+   Readiness & Feasibility.
 2. **Machine-verifiable requirements & technical appendices (Appendices A–D):** Formal `D-n`
    decisions in `## Appendix A — Normative Technical Requirements` (or `## Requirements` for
    lightweight legacy TDDs), Traceability & Derivations, Physical Implementation Reference,
